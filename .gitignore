@@ -22,6 +22,9 @@
 # misc
 .DS_Store
 
+# agent tooling — local-only working files
+.agent/tmp/
+
 # fonts
 # *.woff
 # *.woff2
