@@ -67,33 +67,48 @@ function App() {
 
 ### Creating a Window with Menu Bar
 
+`MenuBar` accepts a `menus` array describing each top-level entry. Each menu's
+`items` is JSX (typically a fragment of `MenuItem` components), not data — this
+keeps the dropdown content fully customizable. MenuBar is controlled: the parent
+owns `openMenuIndex` and reacts to `onMenuOpen` / `onMenuClose`.
+
 ```tsx
-import { Window, MenuBar } from '@liiift-studio/mac-os9-ui';
+import { useState } from 'react';
+import { Window, MenuBar, MenuItem } from '@liiift-studio/mac-os9-ui';
 
 function MyApp() {
-	const menuItems = [
-		{
-			label: 'File',
-			items: [
-				{ label: 'New', onClick: () => console.log('New') },
-				{ label: 'Open...', onClick: () => console.log('Open') },
-				{ type: 'separator' },
-				{ label: 'Quit', onClick: () => console.log('Quit') },
-			],
-		},
-		{
-			label: 'Edit',
-			items: [
-				{ label: 'Cut', onClick: () => console.log('Cut') },
-				{ label: 'Copy', onClick: () => console.log('Copy') },
-				{ label: 'Paste', onClick: () => console.log('Paste') },
-			],
-		},
-	];
+	const [openMenu, setOpenMenu] = useState<number | undefined>();
 
 	return (
 		<Window title="My Application">
-			<MenuBar items={menuItems} />
+			<MenuBar
+				openMenuIndex={openMenu}
+				onMenuOpen={setOpenMenu}
+				onMenuClose={() => setOpenMenu(undefined)}
+				menus={[
+					{
+						label: 'File',
+						items: (
+							<>
+								<MenuItem label="New" shortcut="⌘N" onClick={() => console.log('New')} />
+								<MenuItem label="Open..." shortcut="⌘O" onClick={() => console.log('Open')} />
+								<MenuItem label="" separator />
+								<MenuItem label="Quit" shortcut="⌘Q" onClick={() => console.log('Quit')} />
+							</>
+						),
+					},
+					{
+						label: 'Edit',
+						items: (
+							<>
+								<MenuItem label="Cut" shortcut="⌘X" onClick={() => console.log('Cut')} />
+								<MenuItem label="Copy" shortcut="⌘C" onClick={() => console.log('Copy')} />
+								<MenuItem label="Paste" shortcut="⌘V" onClick={() => console.log('Paste')} />
+							</>
+						),
+					},
+				]}
+			/>
 			{/* Your content here */}
 		</Window>
 	);
