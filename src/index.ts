@@ -10,7 +10,7 @@ export { Button, type ButtonProps } from './components/Button';
 export { Icon, IconLibrary, type IconProps, type IconLibraryProps, type IconName } from './components/Icon';
 export { IconButton, type IconButtonProps } from './components/IconButton';
 export { Checkbox, type CheckboxProps } from './components/Checkbox';
-export { Radio, type RadioProps } from './components/Radio';
+export { Radio, RadioGroup, type RadioProps, type RadioGroupProps } from './components/Radio';
 export { TextField, type TextFieldProps } from './components/TextField';
 export { Select, type SelectProps, type SelectOption } from './components/Select';
 export { Tabs, TabPanel, type TabsProps, type TabPanelProps } from './components/Tabs';
