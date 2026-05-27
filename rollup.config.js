@@ -145,13 +145,24 @@ export default [
 		],
 	},
 
-	// Bundle TypeScript declaration files
+	// Bundle TypeScript declaration files.
+	//
+	// We emit BOTH dist/index.d.ts (for the ESM conditional export and the
+	// top-level `types` field) and dist/index.d.cts (for the CJS conditional
+	// export). Under TypeScript's node16/nodenext module resolution, CJS
+	// consumers resolve types via the `require.types` conditional, which
+	// package.json points at `./dist/index.d.cts`. Without the .d.cts file
+	// those consumers get "Cannot find type definitions" errors.
 	{
 		input: 'dist/types/index.d.ts',
 		output: [
 			{
 				file: 'dist/index.d.ts',
 				format: 'esm',
+			},
+			{
+				file: 'dist/index.d.cts',
+				format: 'cjs',
 			},
 		],
 		plugins: [dts()],
