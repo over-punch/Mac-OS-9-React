@@ -332,10 +332,17 @@ export const Window = forwardRef<HTMLDivElement, WindowProps>(
 		const currentWidth = hasBeenResized ? internalSize.width : width;
 		const currentHeight = hasBeenResized ? internalSize.height : height;
 
-		// Handle mouse down on title bar to start dragging
-		const handleTitleBarMouseDown = useCallback(
-			(event: React.MouseEvent<HTMLDivElement>) => {
+		// Pointer-down on the title bar starts a drag. Pointer Events (instead
+		// of mouse events) unify mouse, touch, and pen input so the component
+		// works on tablets and phones — previously it was mouse-only.
+		const handleTitleBarPointerDown = useCallback(
+			(event: React.PointerEvent<HTMLDivElement>) => {
 				if (!draggable) return;
+
+				// Only react to primary button / primary contact. Ignores
+				// right-click and secondary touches that browsers report
+				// alongside the primary one.
+				if (event.button !== 0 || !event.isPrimary) return;
 
 				// Don't start drag if clicking on buttons
 				if ((event.target as HTMLElement).closest('button')) {
@@ -354,12 +361,12 @@ export const Window = forwardRef<HTMLDivElement, WindowProps>(
 				dragWindowRef.current = windowElement;
 
 				const rect = windowElement.getBoundingClientRect();
-				
+
 				// Get the parent container to calculate position relative to it
 				const parent = windowElement.offsetParent as HTMLElement;
 				const parentRect = parent ? parent.getBoundingClientRect() : { left: 0, top: 0 };
 
-				// Store drag start info - offset from mouse to window position within parent
+				// Store drag start info - offset from pointer to window position within parent
 				// This accounts for the parent's coordinate system
 				dragStartRef.current = {
 					x: event.clientX - (rect.left - parentRect.left),
@@ -371,10 +378,11 @@ export const Window = forwardRef<HTMLDivElement, WindowProps>(
 			[draggable]
 		);
 
-		// Handle mouse down on resize handle to start resizing
-		const handleResizeMouseDown = useCallback(
-			(event: React.MouseEvent<HTMLDivElement>) => {
+		// Pointer-down on the resize handle starts a resize gesture.
+		const handleResizePointerDown = useCallback(
+			(event: React.PointerEvent<HTMLDivElement>) => {
 				if (!resizable) return;
+				if (event.button !== 0 || !event.isPrimary) return;
 
 				event.preventDefault();
 				event.stopPropagation();
@@ -401,12 +409,15 @@ export const Window = forwardRef<HTMLDivElement, WindowProps>(
 		);
 
 		// Resize listeners. Depends only on `isResizing` so they attach once
-		// when the user grabs the handle and detach on mouseup, regardless of
-		// how often the parent re-renders during the gesture (issue #9).
+		// when the user grabs the handle and detach on pointerup, regardless
+		// of how often the parent re-renders during the gesture (issue #9).
+		// Pointer events instead of mouse events give us mouse/touch/pen
+		// uniformity (issue #11); pointercancel covers system interruptions.
 		useEffect(() => {
 			if (!isResizing) return;
 
-			const handleMouseMove = (event: MouseEvent) => {
+			const handlePointerMove = (event: PointerEvent) => {
+				if (!event.isPrimary) return;
 				event.preventDefault();
 				if (!resizeStartRef.current) return;
 
@@ -434,27 +445,31 @@ export const Window = forwardRef<HTMLDivElement, WindowProps>(
 				liveOnResize?.({ width: newWidth, height: newHeight });
 			};
 
-			const handleMouseUp = () => {
+			const handlePointerEnd = () => {
 				setIsResizing(false);
 				resizeStartRef.current = null;
 			};
 
-			document.addEventListener('mousemove', handleMouseMove);
-			document.addEventListener('mouseup', handleMouseUp);
+			document.addEventListener('pointermove', handlePointerMove);
+			document.addEventListener('pointerup', handlePointerEnd);
+			document.addEventListener('pointercancel', handlePointerEnd);
 
 			return () => {
-				document.removeEventListener('mousemove', handleMouseMove);
-				document.removeEventListener('mouseup', handleMouseUp);
+				document.removeEventListener('pointermove', handlePointerMove);
+				document.removeEventListener('pointerup', handlePointerEnd);
+				document.removeEventListener('pointercancel', handlePointerEnd);
 			};
 		}, [isResizing]);
 
 		// Drag listeners. Same effect-deps strategy as resize — attach once
 		// on drag start, detach on drag end (issue #9). The boundary clamp
 		// (issue #12) prevents the window from being lost off-screen.
+		// Pointer events for touch / pen support (issue #11).
 		useEffect(() => {
 			if (!isDragging) return;
 
-			const handleMouseMove = (event: MouseEvent) => {
+			const handlePointerMove = (event: PointerEvent) => {
+				if (!event.isPrimary) return;
 				event.preventDefault();
 				if (!dragStartRef.current) return;
 
@@ -505,18 +520,20 @@ export const Window = forwardRef<HTMLDivElement, WindowProps>(
 				if (!hasBeenDragged) setHasBeenDragged(true);
 			};
 
-			const handleMouseUp = () => {
+			const handlePointerEnd = () => {
 				setIsDragging(false);
 				dragStartRef.current = null;
 				dragWindowRef.current = null;
 			};
 
-			document.addEventListener('mousemove', handleMouseMove);
-			document.addEventListener('mouseup', handleMouseUp);
+			document.addEventListener('pointermove', handlePointerMove);
+			document.addEventListener('pointerup', handlePointerEnd);
+			document.addEventListener('pointercancel', handlePointerEnd);
 
 			return () => {
-				document.removeEventListener('mousemove', handleMouseMove);
-				document.removeEventListener('mouseup', handleMouseUp);
+				document.removeEventListener('pointermove', handlePointerMove);
+				document.removeEventListener('pointerup', handlePointerEnd);
+				document.removeEventListener('pointercancel', handlePointerEnd);
 			};
 		}, [isDragging, hasBeenDragged]);
 
@@ -566,10 +583,11 @@ export const Window = forwardRef<HTMLDivElement, WindowProps>(
 
 			if (title) {
 				return (
-					<div 
-						className={titleBarClassNames} 
+					<div
+						className={titleBarClassNames}
 						data-numControls={[onClose, onMinimize, onMaximize].filter(Boolean).length}
-						onMouseDown={handleTitleBarMouseDown}
+						onPointerDown={handleTitleBarPointerDown}
+						style={draggable ? { touchAction: 'none' } : undefined}
 					>
 						{showControls && (
 							<div className={mergeClasses(styles.controls, classes?.controls)}>
@@ -651,9 +669,10 @@ export const Window = forwardRef<HTMLDivElement, WindowProps>(
 				{renderTitleBar()}
 				<div className={contentClassNames}>{children}</div>
 				{resizable && (
-					<div 
-						className={styles.resizeHandle} 
-						onMouseDown={handleResizeMouseDown}
+					<div
+						className={styles.resizeHandle}
+						onPointerDown={handleResizePointerDown}
+						style={{ touchAction: 'none' }}
 						aria-hidden="true"
 					/>
 				)}

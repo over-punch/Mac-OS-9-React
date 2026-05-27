@@ -125,10 +125,13 @@ export const Scrollbar = forwardRef<HTMLDivElement, ScrollbarProps>(
 			[disabled, onChange, isVertical]
 		);
 
-		// Handle thumb drag start
-		const handleThumbMouseDown = useCallback(
-			(event: React.MouseEvent) => {
+		// Pointer-down on the thumb starts a drag. Pointer Events instead
+		// of mouse events give us mouse/touch/pen support — previously the
+		// thumb was un-draggable on tablets and phones (issue #11).
+		const handleThumbPointerDown = useCallback(
+			(event: React.PointerEvent) => {
 				if (disabled) return;
+				if (event.button !== 0 || !event.isPrimary) return;
 				event.preventDefault();
 				event.stopPropagation();
 				setIsDragging(true);
@@ -138,11 +141,13 @@ export const Scrollbar = forwardRef<HTMLDivElement, ScrollbarProps>(
 			[disabled, isVertical, value]
 		);
 
-		// Handle drag move
+		// Handle drag move. Pointer events for touch/pen uniformity;
+		// pointercancel covers system interruptions on mobile.
 		useEffect(() => {
 			if (!isDragging || !onChange || !trackRef.current) return;
 
-			const handleMouseMove = (event: MouseEvent) => {
+			const handlePointerMove = (event: PointerEvent) => {
+				if (!event.isPrimary) return;
 				const currentPos = isVertical ? event.clientY : event.clientX;
 				const delta = currentPos - dragStartPos;
 
@@ -154,16 +159,18 @@ export const Scrollbar = forwardRef<HTMLDivElement, ScrollbarProps>(
 				onChange(newValue);
 			};
 
-			const handleMouseUp = () => {
+			const handlePointerEnd = () => {
 				setIsDragging(false);
 			};
 
-			document.addEventListener('mousemove', handleMouseMove);
-			document.addEventListener('mouseup', handleMouseUp);
+			document.addEventListener('pointermove', handlePointerMove);
+			document.addEventListener('pointerup', handlePointerEnd);
+			document.addEventListener('pointercancel', handlePointerEnd);
 
 			return () => {
-				document.removeEventListener('mousemove', handleMouseMove);
-				document.removeEventListener('mouseup', handleMouseUp);
+				document.removeEventListener('pointermove', handlePointerMove);
+				document.removeEventListener('pointerup', handlePointerEnd);
+				document.removeEventListener('pointercancel', handlePointerEnd);
 			};
 		}, [isDragging, dragStartPos, dragStartValue, onChange, isVertical]);
 
@@ -194,8 +201,9 @@ export const Scrollbar = forwardRef<HTMLDivElement, ScrollbarProps>(
 						style={{
 							[isVertical ? 'height' : 'width']: `${thumbSize}%`,
 							[isVertical ? 'top' : 'left']: `${thumbPos}%`,
+							touchAction: 'none',
 						}}
-						onMouseDown={handleThumbMouseDown}
+						onPointerDown={handleThumbPointerDown}
 					/>
 				</div>
 
