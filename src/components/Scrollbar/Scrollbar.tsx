@@ -20,7 +20,8 @@ export interface ScrollbarProps {
 
 	/**
 	 * Viewport size relative to content size (0-1)
-	 * Used to calculate thumb size
+	 * Used to calculate thumb size AND the page-step size for
+	 * PageUp/PageDown keyboard navigation.
 	 */
 	viewportRatio?: number;
 
@@ -39,6 +40,25 @@ export interface ScrollbarProps {
 	 * @default false
 	 */
 	disabled?: boolean;
+
+	/**
+	 * Accessible label for the scrollbar track. Required for AT users
+	 * unless `controls` points at an element with a known accessible name.
+	 */
+	ariaLabel?: string;
+
+	/**
+	 * ID of the scrollable region this scrollbar controls. Surfaces as
+	 * `aria-controls` per WAI-ARIA scrollbar pattern.
+	 */
+	controls?: string;
+
+	/**
+	 * Per-keystroke increment for Arrow keys, expressed as a fraction of
+	 * the full track (0-1).
+	 * @default 0.1
+	 */
+	step?: number;
 }
 
 /**
@@ -66,6 +86,9 @@ export const Scrollbar = forwardRef<HTMLDivElement, ScrollbarProps>(
 			onChange,
 			className = '',
 			disabled = false,
+			ariaLabel,
+			controls,
+			step = 0.1,
 		},
 		ref
 	) => {
@@ -75,6 +98,17 @@ export const Scrollbar = forwardRef<HTMLDivElement, ScrollbarProps>(
 		const [dragStartValue, setDragStartValue] = useState(0);
 
 		const isVertical = orientation === 'vertical';
+
+		// Helper used by both arrow buttons and keyboard handler to clamp
+		// the next value into the valid 0-1 range before notifying.
+		const commitValue = useCallback(
+			(next: number) => {
+				if (disabled || !onChange) return;
+				const clamped = Math.max(0, Math.min(1, next));
+				if (clamped !== value) onChange(clamped);
+			},
+			[disabled, onChange, value]
+		);
 
 		// Calculate thumb size based on viewport ratio
 		const thumbSize = Math.max(viewportRatio * 100, 10); // Minimum 10% size
@@ -94,17 +128,47 @@ export const Scrollbar = forwardRef<HTMLDivElement, ScrollbarProps>(
 			.join(' ');
 
 		// Handle arrow clicks
-		const handleDecrement = useCallback(() => {
-			if (disabled || !onChange) return;
-			const newValue = Math.max(0, value - 0.1);
-			onChange(newValue);
-		}, [disabled, onChange, value]);
+		const handleDecrement = useCallback(() => commitValue(value - step), [commitValue, step, value]);
+		const handleIncrement = useCallback(() => commitValue(value + step), [commitValue, step, value]);
 
-		const handleIncrement = useCallback(() => {
-			if (disabled || !onChange) return;
-			const newValue = Math.min(1, value + 0.1);
-			onChange(newValue);
-		}, [disabled, onChange, value]);
+		// WAI-ARIA scrollbar keyboard interaction.
+		// Arrow keys step by `step`, PageUp/PageDown step by `viewportRatio`,
+		// Home/End jump to the extremes. The handler is attached to the
+		// focusable track so it only fires when the scrollbar itself has focus.
+		const handleKeyDown = useCallback(
+			(event: React.KeyboardEvent<HTMLDivElement>) => {
+				if (disabled) return;
+				const decKey = isVertical ? 'ArrowUp' : 'ArrowLeft';
+				const incKey = isVertical ? 'ArrowDown' : 'ArrowRight';
+				switch (event.key) {
+					case decKey:
+						event.preventDefault();
+						commitValue(value - step);
+						break;
+					case incKey:
+						event.preventDefault();
+						commitValue(value + step);
+						break;
+					case 'PageUp':
+						event.preventDefault();
+						commitValue(value - viewportRatio);
+						break;
+					case 'PageDown':
+						event.preventDefault();
+						commitValue(value + viewportRatio);
+						break;
+					case 'Home':
+						event.preventDefault();
+						commitValue(0);
+						break;
+					case 'End':
+						event.preventDefault();
+						commitValue(1);
+						break;
+				}
+			},
+			[commitValue, disabled, isVertical, step, value, viewportRatio]
+		);
 
 		// Handle track clicks
 		const handleTrackClick = useCallback(
@@ -183,11 +247,16 @@ export const Scrollbar = forwardRef<HTMLDivElement, ScrollbarProps>(
 					ref={trackRef}
 					className={styles.track}
 					onClick={handleTrackClick}
+					onKeyDown={handleKeyDown}
 					role="scrollbar"
+					tabIndex={disabled ? -1 : 0}
 					aria-valuenow={Math.round(value * 100)}
 					aria-valuemin={0}
 					aria-valuemax={100}
 					aria-orientation={orientation}
+					aria-label={ariaLabel}
+					aria-controls={controls}
+					aria-disabled={disabled || undefined}
 				>
 					<div
 						className={styles.thumb}
