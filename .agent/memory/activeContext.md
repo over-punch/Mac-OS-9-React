@@ -1,9 +1,43 @@
 # Active Context
 
 ## Current Focus
-Library architecture improvements for better integration into consumer applications.
+Landing fixes for the 20 Critical findings from the 2026-05-27 panel review (see `.agent/memory/deep-review.md` and `progress.md`). Twelve PRs are open against `main`; each closes one or more critical issues.
 
 ## Recent Changes
+
+### Critical-fix PR series (2026-05-27)
+Twelve feature-branch PRs, one per file/concern, closing all 20 Critical issues from the panel review. Each was typechecked locally before push.
+
+| PR | Branch | Closes | Touch |
+|----|--------|--------|-------|
+| #125 | `fix/progress-md-refresh` | #20 | `.agent/memory/progress.md` |
+| #126 | `fix/readme-menubar-example` | #19 | `README.md` |
+| #127 | `fix/token-gray500-sync` | #17 | `src/tokens/index.ts` |
+| #128 | `fix/checkbox-aria-checked` | #13 | `Checkbox.tsx` |
+| #129 | `fix/dts-cjs-emission` | #18 | `rollup.config.js` |
+| #130 | `fix/url-scheme-validation` | #8 | new `src/utils/url.ts`, Button + MenuBar |
+| #131 | `fix/scrollbar-keyboard-a11y` | #16 | `Scrollbar.tsx` |
+| #132 | `fix/menuitem-keyboard-submenu` | #15 | `MenuItem.tsx` |
+| #133 | `fix/radio-group` | #14 | `Radio.tsx`, public exports |
+| #134 | `fix/dialog-modal-correctness` | #1–#7 | `Dialog.tsx` (rewrite) |
+| #135 | `fix/window-state-correctness` | #9, #10, #12 | `Window.tsx` |
+| #136 | `fix/pointer-events` | #11 | `Window.tsx`, `Scrollbar.tsx` |
+
+**Stacking:** #136 is based on #135 (both touch `Window.tsx`). #136 will rebase cleanly when #135 lands. If #131 lands before #136, expect a small Scrollbar.tsx conflict around the thumb's `onMouseDown` → `onPointerDown` swap.
+
+**New public surface introduced by this series:**
+- `RadioGroup` component + `RadioGroupProps` type (PR #133)
+- `sanitizeUrl` is internal-only — not exported (PR #130)
+- `Dialog`: `role`, `ariaLabel`, `ariaLabelledBy`, `ariaDescribedBy` props (PR #134)
+- `Window`: `boundary` prop (PR #135)
+- `Scrollbar`: `ariaLabel`, `controls`, `step` props (PR #131)
+
+**Active decisions:**
+- Touch/pointer support uses Pointer Events with document-level listeners (no `setPointerCapture`), so the gesture model is unchanged from the mouse-event implementation
+- Dialog scroll lock is now reference-counted at the module level — stacked dialogs no longer fight over `document.body.style.overflow`
+- Radio still works standalone; `RadioGroup` is purely additive (uses internal context to opt children in)
+
+
 
 ### Global Styles Separation (2026-02-18) - v0.3.0
 - **Problem:** Main stylesheet (`theme.css`) included global `html` and `body` styles that overrode consumer applications' base styles
