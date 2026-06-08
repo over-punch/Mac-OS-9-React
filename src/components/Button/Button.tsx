@@ -2,6 +2,7 @@
 // Enhanced with polymorphic support, loading states, and icon support
 
 import React, { forwardRef, ButtonHTMLAttributes, AnchorHTMLAttributes } from 'react';
+import { sanitizeUrl } from '../../utils/url';
 import styles from './Button.module.css';
 
 // Common props shared by button and link variants
@@ -240,7 +241,13 @@ export const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonPr
 		// Handle link-specific props
 		if (isLink) {
 			const { href, target, rel, download, ...linkProps } = restProps as ButtonAsLink;
-			
+
+			// Block javascript:/data:/vbscript: hrefs before they reach the DOM.
+			// sanitizeUrl returns undefined for unsafe schemes; an anchor with no
+			// href is non-functional but still visible, which is the desired
+			// fail-closed behavior for untrusted input.
+			const safeHref = sanitizeUrl(href);
+
 			// Auto-add security rel for external links
 			let finalRel = rel;
 			if (target === '_blank' && !rel) {
@@ -259,7 +266,7 @@ export const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonPr
 			return (
 				<a
 					ref={ref as React.Ref<HTMLAnchorElement>}
-					href={disabled || loading ? undefined : href}
+					href={disabled || loading ? undefined : safeHref}
 					target={target}
 					rel={finalRel}
 					download={download}

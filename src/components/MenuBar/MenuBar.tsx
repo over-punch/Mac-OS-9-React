@@ -2,6 +2,7 @@
 // Horizontal menu bar with dropdown menus, logo support, and status area
 
 import React, { forwardRef, useRef, useState, useEffect, useCallback } from 'react';
+import { sanitizeUrl } from '../../utils/url';
 import styles from './MenuBar.module.css';
 
 export interface Menu {
@@ -321,12 +322,16 @@ export const MenuBar = forwardRef<HTMLDivElement, MenuBarProps>(
 							.filter(Boolean)
 							.join(' ');
 
-						// For link-type menus, render as anchor if href is provided
+						// For link-type menus, render as anchor if href is provided.
+						// sanitizeUrl strips javascript:/data:/vbscript: schemes before the
+						// href reaches the DOM, preventing stored-XSS when consumers wire
+						// menus from CMS or user-supplied data.
 						if (menu.type === 'link' && menu.href) {
+							const safeHref = sanitizeUrl(menu.href);
 							return (
 								<div key={index} className={styles.menuContainer}>
 									<a
-										href={menu.href}
+										href={safeHref}
 										className={menuButtonClassNames}
 										onClick={(e) => {
 											if (menu.onClick) {
