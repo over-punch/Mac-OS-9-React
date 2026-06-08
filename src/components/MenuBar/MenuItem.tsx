@@ -1,7 +1,7 @@
 // MenuItem component - Mac OS 9 style
 // Individual menu item for use within MenuBar
 
-import React, { forwardRef, useState } from 'react';
+import React, { forwardRef, useCallback, useRef, useState } from 'react';
 import styles from './MenuItem.module.css';
 
 export interface MenuItemProps {
@@ -135,6 +135,21 @@ export const MenuItem = forwardRef<HTMLButtonElement, MenuItemProps>(
 		const [isSubmenuOpen, setIsSubmenuOpen] = useState(false);
 		const effectiveHasSubmenu = hasSubmenu || !!items;
 
+		// Internal refs to the trigger button and submenu container, used by the
+		// keyboard handler to move focus into / out of the submenu. The trigger
+		// ref is fanned out so the consumer's forwardRef still receives the node.
+		const buttonRef = useRef<HTMLButtonElement | null>(null);
+		const submenuRef = useRef<HTMLDivElement | null>(null);
+
+		const setButtonRef = useCallback(
+			(node: HTMLButtonElement | null) => {
+				buttonRef.current = node;
+				if (typeof ref === 'function') ref(node);
+				else if (ref) (ref as React.MutableRefObject<HTMLButtonElement | null>).current = node;
+			},
+			[ref]
+		);
+
 		// Class names
 		const menuItemClassNames = [
 			styles.menuItem,
@@ -155,6 +170,27 @@ export const MenuItem = forwardRef<HTMLButtonElement, MenuItemProps>(
 			onClick?.(event);
 		};
 
+		// WAI-ARIA menu pattern: ArrowRight opens the submenu and moves focus
+		// to its first item; ArrowLeft closes the submenu and returns focus
+		// to the parent. Hover behavior (mouse enter/leave) is unchanged.
+		const handleKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>) => {
+			if (!effectiveHasSubmenu || disabled) return;
+			if (event.key === 'ArrowRight') {
+				event.preventDefault();
+				setIsSubmenuOpen(true);
+				// Defer focus until after the submenu renders.
+				queueMicrotask(() => {
+					const firstItem =
+						submenuRef.current?.querySelector<HTMLElement>('[role="menuitem"]');
+					firstItem?.focus();
+				});
+			} else if (event.key === 'ArrowLeft' && isSubmenuOpen) {
+				event.preventDefault();
+				setIsSubmenuOpen(false);
+				buttonRef.current?.focus();
+			}
+		};
+
 		return (
 			<div
 				className={styles.menuItemContainer}
@@ -163,16 +199,19 @@ export const MenuItem = forwardRef<HTMLButtonElement, MenuItemProps>(
 				style={{ position: 'relative', width: '100%' }}
 			>
 				<button
-					ref={ref}
+					ref={setButtonRef}
 					type="button"
 					className={menuItemClassNames}
 					onClick={handleClick}
+					onKeyDown={handleKeyDown}
 					onFocus={onFocus}
 					onBlur={onBlur}
 					disabled={disabled}
 					role="menuitem"
 					aria-disabled={disabled}
 					aria-checked={checked ? 'true' : undefined}
+					aria-haspopup={effectiveHasSubmenu ? 'menu' : undefined}
+					aria-expanded={effectiveHasSubmenu ? isSubmenuOpen : undefined}
 				>
 					{/* Checkmark area */}
 					<span className={styles.checkmark}>{checked && '✓'}</span>
@@ -192,7 +231,7 @@ export const MenuItem = forwardRef<HTMLButtonElement, MenuItemProps>(
 
 				{/* Submenu */}
 				{items && isSubmenuOpen && (
-					<div className={styles.submenu} role="menu">
+					<div ref={submenuRef} className={styles.submenu} role="menu">
 						{items}
 					</div>
 				)}
