@@ -168,11 +168,16 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
 	const labelClassNames = [styles.label, styles[`label--${size}`]].filter(Boolean).join(' ');
 
 		// ARIA attributes
+		//
+		// Note: we deliberately do NOT set `aria-checked`. Per ARIA 1.2,
+		// `aria-checked` cannot be used on a native <input type="checkbox">
+		// — the host language already exposes the checked state. The
+		// tri-state ("mixed") indicator is the DOM `indeterminate` property,
+		// which the effect above sets on the input via ref.
 		const ariaAttributes = {
 			'aria-label': !label ? ariaLabel : undefined,
 			'aria-describedby': ariaDescribedBy,
 			'aria-invalid': error,
-			'aria-checked': indeterminate ? ('mixed' as const) : undefined,
 		};
 
 		return (
