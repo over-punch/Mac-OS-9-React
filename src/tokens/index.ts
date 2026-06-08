@@ -1,6 +1,12 @@
 // Mac OS 9 Design Tokens
 // Extracted from Figma file: vy2T5MCXFz7QWf4Ba86eqN
 // Reference: docs/figma-map.md
+//
+// NOTE: These TypeScript tokens MUST stay in sync with the CSS custom
+// properties declared in src/styles/theme.css. Components consume the CSS
+// variables at runtime; this TS export is the public API for consumers
+// who want to read the same values from JavaScript. Keep both files
+// updated together when changing any token value.
 
 /**
  * Color tokens based on Mac OS 9 grayscale palette
@@ -12,7 +18,7 @@ export const colors = {
 	gray200: '#EEEEEE', // 19:2507 - Base UI background
 	gray300: '#DDDDDD', // 18:60 - Inferred mid-tone
 	gray400: '#CCCCCC', // 18:1970 - Inferred mid-tone
-	gray500: '#999999', // 20:7306 - Inferred mid-tone
+	gray500: '#BBBBBB', // 20:7306 - Inferred mid-tone (matches --color-gray-500)
 	gray600: '#666666', // 18:52 - Inferred dark tone
 	gray700: '#4D4D4D', // 18:46 - Inferred dark tone
 	gray800: '#333333', // 45:184845 - Inferred very dark
