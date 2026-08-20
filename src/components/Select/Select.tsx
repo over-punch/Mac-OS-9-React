@@ -12,7 +12,9 @@
 //  - A hidden input carries the value, so the control still participates in
 //    native form submission and FormData exactly as the old <select> did
 
-'use client';
+// Note: no per-file 'use client' directive. The library ships as a single
+// bundle and Rollup applies the "use client" banner to the whole output,
+// so per-file directives are silently dropped at bundle time.
 
 import React, { forwardRef, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useOutsideClick } from '../../hooks/useOutsideClick';

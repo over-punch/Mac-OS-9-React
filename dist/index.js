@@ -1621,19 +1621,6 @@ function useMenuPosition({ open, anchorRef, menuRef, align = 'left', padding = 8
 
 var styles$8 = {"wrapper":"Select-module_wrapper","wrapper--full-width":"Select-module_wrapper--full-width","wrapper--disabled":"Select-module_wrapper--disabled","wrapper--label-top":"Select-module_wrapper--label-top","wrapper--label-left":"Select-module_wrapper--label-left","wrapper--label-right":"Select-module_wrapper--label-right","label":"Select-module_label","label--sm":"Select-module_label--sm","label--md":"Select-module_label--md","label--lg":"Select-module_label--lg","select":"Select-module_select","select--sm":"Select-module_select--sm","select--md":"Select-module_select--md","select--lg":"Select-module_select--lg","select--full-width":"Select-module_select--full-width","select--error":"Select-module_select--error","helper-text":"Select-module_helper-text","error-message":"Select-module_error-message","wrapper--sm":"Select-module_wrapper--sm","wrapper--md":"Select-module_wrapper--md","wrapper--lg":"Select-module_wrapper--lg","value":"Select-module_value","placeholder":"Select-module_placeholder","arrow":"Select-module_arrow","listbox":"Select-module_listbox","option":"Select-module_option","option--active":"Select-module_option--active","option--disabled":"Select-module_option--disabled","optionCheck":"Select-module_optionCheck","optionGroupLabel":"Select-module_optionGroupLabel"};
 
-// Select component - Mac OS 9 style
-// Custom listbox with full keyboard support and pixel-accurate popup
-//
-// Correctness notes (panel review #38, #49):
-//  - Built on a button + role="listbox" popup rather than a native <select>.
-//    A native control only lets the closed box be themed; the opened option
-//    list is drawn by the OS, which broke the library's whole premise of
-//    pixel-perfect Mac OS 9 fidelity. The JSDoc also claimed arrow-key
-//    combobox behaviour that was never implemented (#38)
-//  - Generic over the option value, so a literal union such as
-//    'red' | 'blue' survives into onValueChange instead of widening (#49)
-//  - A hidden input carries the value, so the control still participates in
-//    native form submission and FormData exactly as the old <select> did
 /** Index of the first option that isn't disabled, searching in `step` order. */
 function findEnabled(options, from, step) {
     for (let i = from; i >= 0 && i < options.length; i += step) {
