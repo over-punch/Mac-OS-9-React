@@ -126,6 +126,22 @@
 }
 
 /* ========================================
+ * Menu Button Label
+ * ======================================== */
+
+.menuLabel {
+	/* The label was previously an <h3>, purely for its visual weight — which
+	 * put a spurious heading into the document outline for every menu. This
+	 * reproduces the browser's default h3 box exactly, so the appearance is
+	 * unchanged while the heading semantics are gone. */
+	display: block;
+	font-size: 1.17em;
+	font-weight: bold;
+	margin-block: 1em;
+	margin-inline: 0;
+}
+
+/* ========================================
  * Menu Button States
  * ======================================== */
 

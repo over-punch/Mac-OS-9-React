@@ -17,7 +17,16 @@ export { Tabs, TabPanel, type TabsProps, type TabPanelProps } from './components
 export { Window, type WindowProps, type WindowClasses } from './components/Window';
 export { Dialog, type DialogProps } from './components/Dialog';
 // export { TitleBar, type TitleBarProps } from './components/TitleBar'; // Hidden - needs visual refinement
-export { MenuBar, MenuItem, MenuDropdown, type MenuBarProps, type MenuItemProps, type Menu, type MenuDropdownProps } from './components/MenuBar';
+export {
+	MenuBar,
+	MenuItem,
+	MenuDropdown,
+	type MenuBarProps,
+	type MenuItemProps,
+	type Menu,
+	type MenuItemData,
+	type MenuDropdownProps,
+} from './components/MenuBar';
 export { Scrollbar, type ScrollbarProps } from './components/Scrollbar';
 export { 
 	ListView, 

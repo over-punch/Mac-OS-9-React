@@ -1,7 +1,16 @@
 // Tabs component - Mac OS 9 style
 // Classic tabbed navigation with raised tab appearance
 
-import React, { useState, useCallback, Children, isValidElement, ReactElement } from 'react';
+import React, {
+	useState,
+	useCallback,
+	useMemo,
+	useId,
+	forwardRef,
+	Children,
+	isValidElement,
+	ReactElement,
+} from 'react';
 import styles from './Tabs.module.css';
 
 export interface TabPanelProps {
@@ -44,9 +53,15 @@ TabPanel.displayName = 'TabPanel';
 
 export interface TabsProps {
 	/**
-	 * Tab panels as children
+	 * Tab panels as children.
+	 *
+	 * Typed as ReactNode rather than `ReactElement<TabPanelProps>[]`: the
+	 * stricter type rejected every ordinary way of building a tab list —
+	 * `{condition && <TabPanel …/>}`, a `<>…</>` wrapper, `null` from a map —
+	 * even though the runtime handled all of them. Non-element children are
+	 * filtered out at render time.
 	 */
-	children: ReactElement<TabPanelProps> | ReactElement<TabPanelProps>[];
+	children: React.ReactNode;
 
 	/**
 	 * Index of the default active tab (uncontrolled)
@@ -93,8 +108,15 @@ export interface TabsProps {
 
 	/**
 	 * ARIA label for the tab list
+	 * @default 'Tabs'
 	 */
 	ariaLabel?: string;
+
+	/**
+	 * ID of an element that labels the tab list. Takes precedence over
+	 * `ariaLabel`.
+	 */
+	ariaLabelledBy?: string;
 }
 
 /**
@@ -129,26 +151,44 @@ export interface TabsProps {
  * </Tabs>
  * ```
  */
-export const Tabs: React.FC<TabsProps> = ({
-	children,
-	defaultActiveTab = 0,
-	activeTab: controlledActiveTab,
-	onChange,
-	size = 'md',
-	fullWidth = false,
-	className = '',
-	tabListClassName = '',
-	panelClassName = '',
-	ariaLabel = 'Tabs',
-}) => {
+export const Tabs = forwardRef<HTMLDivElement, TabsProps>(function Tabs(
+	{
+		children,
+		defaultActiveTab = 0,
+		activeTab: controlledActiveTab,
+		onChange,
+		size = 'md',
+		fullWidth = false,
+		className = '',
+		tabListClassName = '',
+		panelClassName = '',
+		ariaLabel = 'Tabs',
+		ariaLabelledBy,
+	},
+	ref
+) {
 	// Controlled vs uncontrolled state
 	const [uncontrolledActiveTab, setUncontrolledActiveTab] = useState(defaultActiveTab);
 	const isControlled = controlledActiveTab !== undefined;
 	const activeTabIndex = isControlled ? controlledActiveTab : uncontrolledActiveTab;
 
-	// Extract tab information from children
-	const tabs = Children.toArray(children).filter(
-		(child): child is ReactElement<TabPanelProps> => isValidElement(child)
+	// Unique per Tabs instance. The ids used to be `tab-0` / `panel-0`, which
+	// collided the moment a page rendered two Tabs — duplicate DOM ids, and
+	// aria-controls on the second set pointing at the first set's panels.
+	const baseId = useId();
+
+	// Extract tab information from children.
+	//
+	// Memoised on `children`: this array was rebuilt on every render and fed
+	// into the dependency list of handleTabChange and handleKeyDown, so both
+	// callbacks were recreated every render and every tab button's props
+	// churned along with them.
+	const tabs = useMemo(
+		() =>
+			Children.toArray(children).filter(
+				(child): child is ReactElement<TabPanelProps> => isValidElement(child)
+			),
+		[children]
 	);
 
 	// Handle tab change
@@ -168,7 +208,7 @@ export const Tabs: React.FC<TabsProps> = ({
 	// Keyboard navigation
 	const handleKeyDown = useCallback(
 		(event: React.KeyboardEvent, currentIndex: number) => {
-			let newIndex = currentIndex;
+			let newIndex: number;
 
 			switch (event.key) {
 				case 'ArrowLeft':
@@ -239,8 +279,13 @@ export const Tabs: React.FC<TabsProps> = ({
 		.join(' ');
 
 	return (
-		<div className={containerClassNames}>
-			<div role="tablist" aria-label={ariaLabel} className={tabListClassNames}>
+		<div ref={ref} className={containerClassNames}>
+			<div
+				role="tablist"
+				aria-label={ariaLabelledBy ? undefined : ariaLabel}
+				aria-labelledby={ariaLabelledBy}
+				className={tabListClassNames}
+			>
 				{tabs.map((tab, index) => {
 					const isActive = index === activeTabIndex;
 					const isDisabled = tab.props.disabled;
@@ -261,8 +306,8 @@ export const Tabs: React.FC<TabsProps> = ({
 							role="tab"
 							type="button"
 							aria-selected={isActive}
-							aria-controls={`panel-${index}`}
-							id={`tab-${index}`}
+							aria-controls={`${baseId}-panel-${index}`}
+							id={`${baseId}-tab-${index}`}
 							tabIndex={isActive ? 0 : -1}
 							disabled={isDisabled}
 							className={tabClassNames}
@@ -282,9 +327,15 @@ export const Tabs: React.FC<TabsProps> = ({
 					<div
 						key={index}
 						role="tabpanel"
-						id={`panel-${index}`}
-						aria-labelledby={`tab-${index}`}
+						id={`${baseId}-panel-${index}`}
+						aria-labelledby={`${baseId}-tab-${index}`}
 						hidden={!isActive}
+						// A tab panel must be reachable from the tab list. When the
+						// panel holds nothing focusable — static text, an image —
+						// Tab from the selected tab skipped straight past the
+						// content, so the panel was unreachable by keyboard and
+						// unreadable in a screen reader's focus mode.
+						tabIndex={isActive ? 0 : undefined}
 						className={panelContainerClassNames}
 					>
 						{isActive && tab.props.children}
@@ -293,7 +344,7 @@ export const Tabs: React.FC<TabsProps> = ({
 			})}
 		</div>
 	);
-};
+});
 
 Tabs.displayName = 'Tabs';
 

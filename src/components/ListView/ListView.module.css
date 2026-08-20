@@ -187,3 +187,22 @@
 		outline: 2px solid var(--color-text);
 	}
 }
+
+/* ========================================
+ * Empty / loading placeholder
+ * ======================================== */
+
+.placeholder {
+	/* Shown in place of the rows when the list is empty or loading */
+	display: flex;
+	align-items: center;
+	justify-content: center;
+
+	padding: var(--spacing-6) var(--spacing-4);
+
+	font-family: var(--font-system);
+	font-size: var(--font-size-md);
+	color: var(--color-gray-600);
+
+	text-align: center;
+}

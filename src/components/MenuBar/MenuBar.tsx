@@ -1,9 +1,44 @@
 // MenuBar component - Mac OS 9 style
 // Horizontal menu bar with dropdown menus, logo support, and status area
 
-import React, { forwardRef, useRef, useState, useEffect, useCallback } from 'react';
+import React, { forwardRef, useRef, useState, useEffect, useCallback, useId } from 'react';
 import { sanitizeUrl } from '../../utils/url';
+import { MenuItem } from './MenuItem';
 import styles from './MenuBar.module.css';
+
+/**
+ * A dropdown entry described as data rather than JSX.
+ *
+ * `Menu.items` accepts either React nodes or an array of these. The data form
+ * exists because the JSX-only shape made menus impossible to serialise, diff,
+ * or drive from a CMS, an API response, or a config file — anything that
+ * wanted a menu had to construct React elements first.
+ */
+export interface MenuItemData {
+	/** Item label text */
+	label: string;
+
+	/** Keyboard shortcut to display, e.g. "⌘S" */
+	shortcut?: string;
+
+	/** Whether the item is disabled */
+	disabled?: boolean;
+
+	/** Whether the item shows a checkmark */
+	checked?: boolean;
+
+	/** Whether a separator line follows this item */
+	separator?: boolean;
+
+	/** Icon rendered before the label */
+	icon?: React.ReactNode;
+
+	/** Invoked when the item is chosen */
+	onClick?: () => void;
+
+	/** Nested submenu entries */
+	submenu?: readonly MenuItemData[];
+}
 
 export interface Menu {
 	/**
@@ -18,10 +53,14 @@ export interface Menu {
 	type?: 'dropdown' | 'link';
 
 	/**
-	 * Menu items (content of the dropdown)
+	 * Menu items (content of the dropdown).
+	 *
+	 * Either React nodes — typically `<MenuItem>` elements — or an array of
+	 * {@link MenuItemData}, which MenuBar renders for you.
+	 *
 	 * Required when type is 'dropdown'
 	 */
-	items?: React.ReactNode;
+	items?: React.ReactNode | readonly MenuItemData[];
 
 	/**
 	 * Link href (for link-type menus)
@@ -44,14 +83,27 @@ export interface Menu {
 
 export interface MenuBarProps {
 	/**
-	 * Array of menus to display
+	 * Array of menus to display. Never mutated by MenuBar.
 	 */
-	menus: Menu[];
+	menus: readonly Menu[];
 
 	/**
-	 * Index of the currently open menu (controlled)
+	 * Index of the currently open menu (controlled).
+	 *
+	 * Pair with `onMenuOpen` / `onMenuClose`. For the uncontrolled equivalent
+	 * use `defaultOpenMenuIndex`.
 	 */
 	openMenuIndex?: number;
+
+	/**
+	 * Index of the menu open on first render (uncontrolled).
+	 *
+	 * Every controllable prop in the library follows the same `X` /
+	 * `defaultX` pairing — `activeTab` / `defaultActiveTab` on Tabs,
+	 * `position` / `defaultPosition` on Window. MenuBar had only the
+	 * controlled half.
+	 */
+	defaultOpenMenuIndex?: number;
 
 	/**
 	 * Callback when a menu is opened
@@ -85,11 +137,33 @@ export interface MenuBarProps {
 	rightContent?: React.ReactNode | React.ReactNode[];
 }
 
+/** Narrows `Menu.items` to the data form. */
+function isMenuItemDataArray(items: Menu['items']): items is readonly MenuItemData[] {
+	return Array.isArray(items) && (items.length === 0 || !React.isValidElement(items[0]));
+}
+
+/** Renders the data form of a menu into MenuItem elements. */
+function renderMenuItemData(items: readonly MenuItemData[]): React.ReactNode {
+	return items.map((item, index) => (
+		<MenuItem
+			key={`${item.label}-${index}`}
+			label={item.label}
+			shortcut={item.shortcut}
+			disabled={item.disabled}
+			checked={item.checked}
+			separator={item.separator}
+			icon={item.icon}
+			onClick={item.onClick}
+			items={item.submenu ? renderMenuItemData(item.submenu) : undefined}
+		/>
+	));
+}
+
 /**
  * Mac OS 9 style MenuBar component
- * 
+ *
  * Horizontal menu bar with dropdown menus, logo support, and status area.
- * 
+ *
  * Features:
  * - Classic Mac OS 9 menu bar styling
  * - Horizontal menu layout
@@ -97,16 +171,16 @@ export interface MenuBarProps {
  * - Link-type menu items for navigation
  * - Logo/icon support on the left
  * - Status area on the right (clock, system indicators, etc.)
- * - Keyboard navigation (Left/Right for menus, Up/Down for items)
+ * - Full WAI-ARIA menubar semantics with a roving tabindex
+ * - Keyboard navigation (Left/Right for menus, Down to open, Escape to close)
  * - Click outside to close
- * - Escape key to close
- * - Controlled state (consumers manage open/closed)
+ * - Controlled or uncontrolled open state
  * - Disabled menu support
- * 
+ *
  * @example
  * ```tsx
  * const [openMenu, setOpenMenu] = useState<number | undefined>();
- * 
+ *
  * <MenuBar
  *   leftContent={<img src="/logo.png" alt="Logo" width={16} height={16} />}
  *   openMenuIndex={openMenu}
@@ -116,148 +190,192 @@ export interface MenuBarProps {
  *     {
  *       label: 'File',
  *       type: 'dropdown',
- *       items: (
- *         <>
- *           <MenuItem label="Open..." shortcut="⌘O" onClick={() => {}} />
- *           <MenuItem label="Save" shortcut="⌘S" onClick={() => {}} />
- *         </>
- *       ),
+ *       // Data form — no JSX required
+ *       items: [
+ *         { label: 'Open…', shortcut: '⌘O', onClick: openFile },
+ *         { label: 'Save', shortcut: '⌘S', onClick: saveFile, separator: true },
+ *         { label: 'Quit', onClick: quit },
+ *       ],
  *     },
  *     {
- *       label: 'Home',
- *       type: 'link',
- *       href: '/',
+ *       label: 'Edit',
+ *       type: 'dropdown',
+ *       // JSX form — still supported
+ *       items: <MenuItem label="Undo" shortcut="⌘Z" onClick={undo} />,
  *     },
+ *     { label: 'Home', type: 'link', href: '/' },
  *   ]}
- *   rightContent={[
- *     <Clock key="clock" />,
- *     <div key="divider" className={styles.divider} />,
- *     <SystemIndicator key="indicator" />,
- *   ]}
+ *   rightContent={[<Clock key="clock" />]}
  * />
  * ```
  */
 export const MenuBar = forwardRef<HTMLDivElement, MenuBarProps>(
-	({
-		menus,
-		openMenuIndex,
-		onMenuOpen,
-		onMenuClose,
-		className = '',
-		dropdownClassName = '',
-		leftContent,
-		rightContent,
-	}, ref) => {
+	(
+		{
+			menus,
+			openMenuIndex,
+			defaultOpenMenuIndex,
+			onMenuOpen,
+			onMenuClose,
+			className = '',
+			dropdownClassName = '',
+			leftContent,
+			rightContent,
+		},
+		ref
+	) => {
 		const [menuBarElement, setMenuBarElement] = useState<HTMLDivElement | null>(null);
 		const [focusedIndex, setFocusedIndex] = useState<number>(-1);
-		const [internalOpenIndex, setInternalOpenIndex] = useState<number | undefined>(undefined);
+		const [internalOpenIndex, setInternalOpenIndex] = useState<number | undefined>(
+			defaultOpenMenuIndex
+		);
+
+		// One id per MenuBar instance; each trigger derives a stable id from it
+		// so its dropdown can point at it with aria-labelledby.
+		const baseId = useId();
+		const triggerId = (index: number) => `${baseId}-menu-${index}`;
+
+		// Trigger elements, so keyboard navigation can move real DOM focus
+		// rather than only tracking an index.
+		const triggerRefs = useRef<(HTMLElement | null)[]>([]);
 
 		const isControlled = openMenuIndex !== undefined;
 		const activeOpenIndex = isControlled ? openMenuIndex : internalOpenIndex;
 
-		const handleMenuOpenInternal = (index: number) => {
-			if (!isControlled) {
-				setInternalOpenIndex(index);
-			}
-			onMenuOpen?.(index);
-		};
+		const handleMenuOpenInternal = useCallback(
+			(index: number) => {
+				if (!isControlled) {
+					setInternalOpenIndex(index);
+				}
+				onMenuOpen?.(index);
+			},
+			[isControlled, onMenuOpen]
+		);
 
-		const handleMenuCloseInternal = () => {
+		const handleMenuCloseInternal = useCallback(() => {
 			if (!isControlled) {
 				setInternalOpenIndex(undefined);
 			}
 			onMenuClose?.();
-		};
+		}, [isControlled, onMenuClose]);
 
-		// Handle click outside to close menu
+		// Close when a click lands outside the menu bar.
+		//
+		// This listens for `click`, not `mousedown`. On mousedown the menu
+		// closed before the pointer was released, so any dropdown content
+		// rendered into a portal — a nested menu, a picker — unmounted before
+		// its own click handler could run, and choosing such an item did
+		// nothing at all. By `click` the item's handler has already fired.
 		useEffect(() => {
 			if (activeOpenIndex === undefined || !menuBarElement) return;
 
 			const handleClickOutside = (event: MouseEvent) => {
-				if (menuBarElement && !menuBarElement.contains(event.target as Node)) {
+				if (!menuBarElement.contains(event.target as Node)) {
 					handleMenuCloseInternal();
 				}
 			};
 
-			document.addEventListener('mousedown', handleClickOutside);
-			return () => document.removeEventListener('mousedown', handleClickOutside);
-		}, [activeOpenIndex, onMenuClose, menuBarElement, isControlled]);
+			document.addEventListener('click', handleClickOutside);
+			return () => document.removeEventListener('click', handleClickOutside);
+		}, [activeOpenIndex, menuBarElement, handleMenuCloseInternal]);
 
-		// Handle Escape key to close menu
+		// Escape closes the open menu and returns focus to its trigger.
 		useEffect(() => {
 			if (activeOpenIndex === undefined) return;
 
 			const handleEscape = (event: KeyboardEvent) => {
-				if (event.key === 'Escape') {
-					event.preventDefault();
-					handleMenuCloseInternal();
-				}
+				if (event.key !== 'Escape') return;
+				event.preventDefault();
+				const openIndex = activeOpenIndex;
+				handleMenuCloseInternal();
+				triggerRefs.current[openIndex]?.focus();
 			};
 
 			document.addEventListener('keydown', handleEscape);
 			return () => document.removeEventListener('keydown', handleEscape);
-		}, [activeOpenIndex, onMenuClose, isControlled]);
+		}, [activeOpenIndex, handleMenuCloseInternal]);
 
-		// Handle keyboard navigation
+		/** Moves focus to a trigger, skipping disabled menus. */
+		const focusTrigger = useCallback(
+			(startIndex: number, step: 1 | -1) => {
+				const count = menus.length;
+				if (count === 0) return;
+
+				for (let offset = 0; offset < count; offset += 1) {
+					const index = (((startIndex + step * offset) % count) + count) % count;
+					if (menus[index]?.disabled) continue;
+					setFocusedIndex(index);
+					triggerRefs.current[index]?.focus();
+					// If a menu was already open, opening the newly focused one
+					// matches how a menu bar behaves once it is "active".
+					if (activeOpenIndex !== undefined && menus[index]?.type !== 'link') {
+						handleMenuOpenInternal(index);
+					}
+					return;
+				}
+			},
+			[menus, activeOpenIndex, handleMenuOpenInternal]
+		);
+
+		// Keyboard navigation, per the WAI-ARIA menubar pattern.
 		const handleKeyDown = useCallback(
 			(event: React.KeyboardEvent) => {
+				const current = focusedIndex >= 0 ? focusedIndex : (activeOpenIndex ?? 0);
+
 				switch (event.key) {
 					case 'ArrowLeft':
 						event.preventDefault();
-						if (activeOpenIndex !== undefined) {
-							// Move to previous menu
-							const prevIndex = activeOpenIndex > 0 ? activeOpenIndex - 1 : menus.length - 1;
-							if (!menus[prevIndex]?.disabled) {
-								handleMenuOpenInternal(prevIndex);
-							}
-						} else if (focusedIndex > 0) {
-							setFocusedIndex(focusedIndex - 1);
-						}
+						focusTrigger(current - 1, -1);
 						break;
 
 					case 'ArrowRight':
 						event.preventDefault();
-						if (activeOpenIndex !== undefined) {
-							// Move to next menu
-							const nextIndex = activeOpenIndex < menus.length - 1 ? activeOpenIndex + 1 : 0;
-							if (!menus[nextIndex]?.disabled) {
-								handleMenuOpenInternal(nextIndex);
-							}
-						} else if (focusedIndex < menus.length - 1) {
-							setFocusedIndex(focusedIndex + 1);
-						}
+						focusTrigger(current + 1, 1);
 						break;
 
-					case 'ArrowDown':
+					case 'Home':
 						event.preventDefault();
-						if (activeOpenIndex === undefined && focusedIndex >= 0) {
-							// Open the focused menu (only if it's a dropdown)
-							const menu = menus[focusedIndex];
-							if (!menu?.disabled && menu?.type !== 'link') {
-								handleMenuOpenInternal(focusedIndex);
-							}
+						focusTrigger(0, 1);
+						break;
+
+					case 'End':
+						event.preventDefault();
+						focusTrigger(menus.length - 1, -1);
+						break;
+
+					case 'ArrowDown': {
+						event.preventDefault();
+						const menu = menus[current];
+						if (menu && !menu.disabled && menu.type !== 'link') {
+							handleMenuOpenInternal(current);
 						}
 						break;
+					}
 
 					case 'Enter':
-					case ' ':
+					case ' ': {
 						event.preventDefault();
-						if (activeOpenIndex === undefined && focusedIndex >= 0) {
-							const menu = menus[focusedIndex];
-							if (!menu?.disabled) {
-								if (menu.type === 'link') {
-									// Trigger click handler for link-type menu
-									menu.onClick?.();
-								} else {
-									// Open the focused dropdown menu
-									handleMenuOpenInternal(focusedIndex);
-								}
-							}
+						const menu = menus[current];
+						if (!menu || menu.disabled) break;
+						if (menu.type === 'link') {
+							menu.onClick?.();
+						} else if (activeOpenIndex === current) {
+							handleMenuCloseInternal();
+						} else {
+							handleMenuOpenInternal(current);
 						}
 						break;
+					}
 				}
 			},
-			[activeOpenIndex, focusedIndex, menus, onMenuOpen, onMenuClose, isControlled]
+			[
+				activeOpenIndex,
+				focusedIndex,
+				menus,
+				focusTrigger,
+				handleMenuOpenInternal,
+				handleMenuCloseInternal,
+			]
 		);
 
 		// Handle menu button click
@@ -282,7 +400,6 @@ export const MenuBar = forwardRef<HTMLDivElement, MenuBarProps>(
 
 		// Class names
 		const menuBarClassNames = [styles.menuBar, className].filter(Boolean).join(' ');
-
 		const dropdownClassNames = [styles.dropdown, dropdownClassName].filter(Boolean).join(' ');
 
 		// Callback ref to handle both internal state and forwarded ref
@@ -298,21 +415,22 @@ export const MenuBar = forwardRef<HTMLDivElement, MenuBarProps>(
 			[ref]
 		);
 
+		// Roving tabindex: exactly one trigger is in the tab order at a time,
+		// and the arrow keys move between them. Without this, every menu was a
+		// separate tab stop, which is not how a menu bar is meant to behave.
+		const rovingIndex = focusedIndex >= 0 ? focusedIndex : (activeOpenIndex ?? 0);
+
 		return (
 			<div ref={handleRef} className={menuBarClassNames} role="menubar" onKeyDown={handleKeyDown}>
 				{/* Left content (logo) */}
-				{leftContent && (
-					<div className={styles.leftContent}>
-						{leftContent}
-					</div>
-				)}
+				{leftContent && <div className={styles.leftContent}>{leftContent}</div>}
 
 				{/* Menu items */}
 				<div className={styles.menusContainer}>
 					{menus.map((menu, index) => {
 						const isOpen = activeOpenIndex === index;
-						const isFocused = focusedIndex === index;
 						const isDropdown = menu.type !== 'link';
+						const id = triggerId(index);
 
 						const menuButtonClassNames = [
 							styles.menuButton,
@@ -321,6 +439,12 @@ export const MenuBar = forwardRef<HTMLDivElement, MenuBarProps>(
 						]
 							.filter(Boolean)
 							.join(' ');
+
+						// The label used to be an <h3>, which put a heading into the
+						// document outline for every menu — so a page with a menu bar
+						// announced "File, heading level 3" and polluted screen-reader
+						// heading navigation. It is a span now, styled to match.
+						const label = <span className={styles.menuLabel}>{menu.label}</span>;
 
 						// For link-type menus, render as anchor if href is provided.
 						// sanitizeUrl strips javascript:/data:/vbscript: schemes before the
@@ -331,8 +455,14 @@ export const MenuBar = forwardRef<HTMLDivElement, MenuBarProps>(
 							return (
 								<div key={index} className={styles.menuContainer}>
 									<a
+										id={id}
+										ref={(node) => {
+											triggerRefs.current[index] = node;
+										}}
 										href={safeHref}
 										className={menuButtonClassNames}
+										role="menuitem"
+										tabIndex={index === rovingIndex ? 0 : -1}
 										onClick={(e) => {
 											if (menu.onClick) {
 												e.preventDefault();
@@ -340,12 +470,9 @@ export const MenuBar = forwardRef<HTMLDivElement, MenuBarProps>(
 											}
 										}}
 										onFocus={() => setFocusedIndex(index)}
-										onBlur={() => setFocusedIndex(-1)}
 										aria-disabled={menu.disabled}
 									>
-										<h3>
-											{menu.label}
-										</h3>
+										{label}
 									</a>
 								</div>
 							);
@@ -355,24 +482,32 @@ export const MenuBar = forwardRef<HTMLDivElement, MenuBarProps>(
 						return (
 							<div key={index} className={styles.menuContainer}>
 								<button
+									id={id}
+									ref={(node) => {
+										triggerRefs.current[index] = node;
+									}}
 									type="button"
 									className={menuButtonClassNames}
+									role="menuitem"
+									tabIndex={index === rovingIndex ? 0 : -1}
 									onClick={() => handleMenuClick(index)}
 									onFocus={() => setFocusedIndex(index)}
-									onBlur={() => setFocusedIndex(-1)}
 									disabled={menu.disabled}
-									aria-haspopup={isDropdown ? 'true' : undefined}
-									aria-expanded={isOpen}
+									aria-haspopup={isDropdown ? 'menu' : undefined}
+									aria-expanded={isDropdown ? isOpen : undefined}
 									aria-disabled={menu.disabled}
 								>
-									<h3>
-										{menu.label}
-									</h3>
+									{label}
 								</button>
 
 								{isOpen && isDropdown && menu.items && (
-									<div className={dropdownClassNames} role="menu">
-										{menu.items}
+									// aria-labelledby ties the dropdown back to the trigger
+									// that opened it, so assistive tech announces "File menu"
+									// rather than an anonymous menu.
+									<div className={dropdownClassNames} role="menu" aria-labelledby={id}>
+										{isMenuItemDataArray(menu.items)
+											? renderMenuItemData(menu.items)
+											: (menu.items as React.ReactNode)}
 									</div>
 								)}
 							</div>
@@ -385,10 +520,9 @@ export const MenuBar = forwardRef<HTMLDivElement, MenuBarProps>(
 					<div className={styles.rightContent}>
 						{Array.isArray(rightContent)
 							? rightContent.map((item, index) => (
-								<React.Fragment key={index}>{item}</React.Fragment>
-							))
-							: rightContent
-						}
+									<React.Fragment key={index}>{item}</React.Fragment>
+								))
+							: rightContent}
 					</div>
 				)}
 			</div>

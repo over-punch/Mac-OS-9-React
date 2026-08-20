@@ -1,5 +1,5 @@
 import * as React$1 from 'react';
-import React__default, { ButtonHTMLAttributes, AnchorHTMLAttributes, SVGAttributes, InputHTMLAttributes, SelectHTMLAttributes, ReactElement } from 'react';
+import React__default, { AnchorHTMLAttributes, ButtonHTMLAttributes, SVGAttributes, InputHTMLAttributes, SelectHTMLAttributes } from 'react';
 
 interface BaseButtonProps {
     /**
@@ -45,19 +45,51 @@ interface BaseButtonProps {
      */
     rightIcon?: React__default.ReactNode;
     /**
-     * If true, only displays icon (children used as aria-label)
+     * If true, only displays the icon.
+     *
+     * An icon-only button has no visible text, so it needs an accessible name.
+     * Supply `aria-label`. If `children` happens to be a plain string it is
+     * used as a fallback, but any other node type — an `<svg>`, a component,
+     * a fragment — cannot produce a name, and in development the component
+     * logs an error rather than shipping an unlabelled control.
      */
     iconOnly?: boolean;
     /**
-     * Override aria-label
+     * Render the child element instead of a `<button>`, merging Button's
+     * className and props into it.
+     *
+     * This is the integration point for router link components — Next.js
+     * `<Link>`, React Router `<Link>`, TanStack Router, and so on — which
+     * need to own the element they render.
+     *
+     * Expects exactly one React element child.
+     *
+     * @default false
+     *
+     * @example
+     * ```tsx
+     * import Link from 'next/link';
+     *
+     * <Button asChild variant="primary">
+     *   <Link href="/dashboard">Go to Dashboard</Link>
+     * </Button>
+     * ```
+     */
+    asChild?: boolean;
+    /**
+     * Override aria-label.
+     * @deprecated Use the standard `aria-label` attribute instead. This alias
+     * remains for backwards compatibility; `aria-label` wins if both are set.
      */
     ariaLabel?: string;
     /**
-     * ID of element that describes this button
+     * ID of element that describes this button.
+     * @deprecated Use the standard `aria-describedby` attribute instead.
      */
     ariaDescribedBy?: string;
     /**
-     * For toggle buttons - indicates pressed state
+     * For toggle buttons - indicates pressed state.
+     * @deprecated Use the standard `aria-pressed` attribute instead.
      */
     ariaPressed?: boolean;
     /**
@@ -69,7 +101,7 @@ interface BaseButtonProps {
      */
     children: React__default.ReactNode;
 }
-interface ButtonAsButton extends BaseButtonProps, Omit<ButtonHTMLAttributes<HTMLButtonElement>, keyof BaseButtonProps | 'aria-label' | 'aria-describedby' | 'aria-pressed'> {
+interface ButtonAsButton extends BaseButtonProps, Omit<ButtonHTMLAttributes<HTMLButtonElement>, keyof BaseButtonProps> {
     /**
      * Render as button element
      * @default 'button'
@@ -96,7 +128,7 @@ interface ButtonAsButton extends BaseButtonProps, Omit<ButtonHTMLAttributes<HTML
      */
     formTarget?: string;
 }
-interface ButtonAsLink extends BaseButtonProps, Omit<AnchorHTMLAttributes<HTMLAnchorElement>, keyof BaseButtonProps | 'aria-label' | 'aria-describedby' | 'aria-pressed'> {
+interface ButtonAsLink extends BaseButtonProps, Omit<AnchorHTMLAttributes<HTMLAnchorElement>, keyof BaseButtonProps> {
     /**
      * Render as anchor element
      */
@@ -121,40 +153,24 @@ interface ButtonAsLink extends BaseButtonProps, Omit<AnchorHTMLAttributes<HTMLAn
 }
 type ButtonProps = ButtonAsButton | ButtonAsLink;
 /**
- * Mac OS 9 style Button component
+ * Call signature for Button.
  *
- * Polymorphic component that can render as button or link with consistent styling.
- *
- * Features:
- * - Classic 3-layer bevel effect (highlight, shadow, drop shadow)
- * - Polymorphic - renders as <button> or <a> based on `as` prop
- * - Loading states with optional Mac OS 9 watch cursor
- * - Icon support (left, right, or icon-only)
- * - Full accessibility with ARIA support
- * - Form integration props
- * - Auto-security for external links
- *
- * @example
- * ```tsx
- * // Button
- * <Button onClick={handleClick}>Click Me</Button>
- * <Button variant="primary" size="lg">Primary Action</Button>
- * <Button loading loadingText="Saving...">Save</Button>
- *
- * // Link styled as button
- * <Button as="a" href="/dashboard">Go to Dashboard</Button>
- * <Button as="a" href="https://example.com" target="_blank">
- *   External Link
- * </Button>
- *
- * // With icons
- * <Button leftIcon={<FolderIcon />}>Open</Button>
- * <Button iconOnly aria-label="Close">
- *   <CloseIcon />
- * </Button>
- * ```
+ * `forwardRef` can only be given one ref type, so a polymorphic component
+ * declared with it ends up with `HTMLButtonElement | HTMLAnchorElement` and
+ * every consumer has to cast their ref. Overloading the call signature lets
+ * the `as` prop pick the ref type instead, so `useRef<HTMLAnchorElement>`
+ * type-checks against `<Button as="a">` with no cast.
  */
-declare const Button: React__default.ForwardRefExoticComponent<ButtonProps & React__default.RefAttributes<HTMLButtonElement | HTMLAnchorElement>>;
+interface ButtonComponent {
+    (props: ButtonAsLink & {
+        ref?: React__default.Ref<HTMLAnchorElement>;
+    }): React__default.ReactElement | null;
+    (props: ButtonAsButton & {
+        ref?: React__default.Ref<HTMLButtonElement>;
+    }): React__default.ReactElement | null;
+    displayName?: string;
+}
+declare const Button: ButtonComponent;
 
 interface IconProps extends SVGAttributes<SVGElement> {
     /**
@@ -780,9 +796,15 @@ interface TabPanelProps {
 declare const TabPanel: React__default.FC<TabPanelProps>;
 interface TabsProps {
     /**
-     * Tab panels as children
+     * Tab panels as children.
+     *
+     * Typed as ReactNode rather than `ReactElement<TabPanelProps>[]`: the
+     * stricter type rejected every ordinary way of building a tab list —
+     * `{condition && <TabPanel …/>}`, a `<>…</>` wrapper, `null` from a map —
+     * even though the runtime handled all of them. Non-element children are
+     * filtered out at render time.
      */
-    children: ReactElement<TabPanelProps> | ReactElement<TabPanelProps>[];
+    children: React__default.ReactNode;
     /**
      * Index of the default active tab (uncontrolled)
      * @default 0
@@ -820,8 +842,14 @@ interface TabsProps {
     panelClassName?: string;
     /**
      * ARIA label for the tab list
+     * @default 'Tabs'
      */
     ariaLabel?: string;
+    /**
+     * ID of an element that labels the tab list. Takes precedence over
+     * `ariaLabel`.
+     */
+    ariaLabelledBy?: string;
 }
 /**
  * Mac OS 9 style Tabs component
@@ -855,15 +883,20 @@ interface TabsProps {
  * </Tabs>
  * ```
  */
-declare const Tabs: React__default.FC<TabsProps>;
+declare const Tabs: React__default.ForwardRefExoticComponent<TabsProps & React__default.RefAttributes<HTMLDivElement>>;
 
 /**
- * Generic classes object for targeting sub-elements within components
- * Components extend this with specific element keys
+ * Generic classes object for targeting sub-elements within components.
+ * Components extend this with specific element keys.
+ *
+ * There is deliberately no `[key: string]: string | undefined` index
+ * signature. With one, every component-specific classes type — WindowClasses,
+ * ListViewClasses — silently accepted any key at all, so a typo like
+ * `titlebar` for `titleBar` type-checked and then did nothing at runtime.
+ * Component types satisfy this constraint structurally without it.
  */
 interface ComponentClasses {
     root?: string;
-    [key: string]: string | undefined;
 }
 /**
  * Base component props that all components should extend
@@ -896,13 +929,22 @@ interface RenderState {
     isDisabled?: boolean;
 }
 /**
- * Common variant types for Mac OS 9 components
+ * Common variant types for Mac OS 9 components.
+ *
+ * This mirrors what the components actually accept. It previously read
+ * `'default' | 'primary' | 'secondary'` while Button and IconButton
+ * implemented `'default' | 'primary' | 'danger'` — so the exported type
+ * named a variant no component had and omitted one every component did.
  */
-type Variant = 'default' | 'primary' | 'secondary';
+type Variant = 'default' | 'primary' | 'danger';
 /**
- * Common size types
+ * Common size types.
+ *
+ * Abbreviated to match the components. The exported type previously read
+ * `'small' | 'medium' | 'large'` while every component's `size` prop took
+ * `'sm' | 'md' | 'lg'`, making the shared type unusable with any of them.
  */
-type Size = 'small' | 'medium' | 'large';
+type Size = 'sm' | 'md' | 'lg';
 /**
  * Common state types
  */
@@ -1265,6 +1307,32 @@ interface DialogProps extends Omit<WindowProps, 'active'> {
  */
 declare const Dialog: React__default.ForwardRefExoticComponent<DialogProps & React__default.RefAttributes<HTMLDivElement>>;
 
+/**
+ * A dropdown entry described as data rather than JSX.
+ *
+ * `Menu.items` accepts either React nodes or an array of these. The data form
+ * exists because the JSX-only shape made menus impossible to serialise, diff,
+ * or drive from a CMS, an API response, or a config file — anything that
+ * wanted a menu had to construct React elements first.
+ */
+interface MenuItemData {
+    /** Item label text */
+    label: string;
+    /** Keyboard shortcut to display, e.g. "⌘S" */
+    shortcut?: string;
+    /** Whether the item is disabled */
+    disabled?: boolean;
+    /** Whether the item shows a checkmark */
+    checked?: boolean;
+    /** Whether a separator line follows this item */
+    separator?: boolean;
+    /** Icon rendered before the label */
+    icon?: React__default.ReactNode;
+    /** Invoked when the item is chosen */
+    onClick?: () => void;
+    /** Nested submenu entries */
+    submenu?: readonly MenuItemData[];
+}
 interface Menu {
     /**
      * Menu label (displayed in the menu bar)
@@ -1276,10 +1344,14 @@ interface Menu {
      */
     type?: 'dropdown' | 'link';
     /**
-     * Menu items (content of the dropdown)
+     * Menu items (content of the dropdown).
+     *
+     * Either React nodes — typically `<MenuItem>` elements — or an array of
+     * {@link MenuItemData}, which MenuBar renders for you.
+     *
      * Required when type is 'dropdown'
      */
-    items?: React__default.ReactNode;
+    items?: React__default.ReactNode | readonly MenuItemData[];
     /**
      * Link href (for link-type menus)
      * Used when type is 'link'
@@ -1298,13 +1370,25 @@ interface Menu {
 }
 interface MenuBarProps {
     /**
-     * Array of menus to display
+     * Array of menus to display. Never mutated by MenuBar.
      */
-    menus: Menu[];
+    menus: readonly Menu[];
     /**
-     * Index of the currently open menu (controlled)
+     * Index of the currently open menu (controlled).
+     *
+     * Pair with `onMenuOpen` / `onMenuClose`. For the uncontrolled equivalent
+     * use `defaultOpenMenuIndex`.
      */
     openMenuIndex?: number;
+    /**
+     * Index of the menu open on first render (uncontrolled).
+     *
+     * Every controllable prop in the library follows the same `X` /
+     * `defaultX` pairing — `activeTab` / `defaultActiveTab` on Tabs,
+     * `position` / `defaultPosition` on Window. MenuBar had only the
+     * controlled half.
+     */
+    defaultOpenMenuIndex?: number;
     /**
      * Callback when a menu is opened
      */
@@ -1343,10 +1427,10 @@ interface MenuBarProps {
  * - Link-type menu items for navigation
  * - Logo/icon support on the left
  * - Status area on the right (clock, system indicators, etc.)
- * - Keyboard navigation (Left/Right for menus, Up/Down for items)
+ * - Full WAI-ARIA menubar semantics with a roving tabindex
+ * - Keyboard navigation (Left/Right for menus, Down to open, Escape to close)
  * - Click outside to close
- * - Escape key to close
- * - Controlled state (consumers manage open/closed)
+ * - Controlled or uncontrolled open state
  * - Disabled menu support
  *
  * @example
@@ -1362,24 +1446,22 @@ interface MenuBarProps {
  *     {
  *       label: 'File',
  *       type: 'dropdown',
- *       items: (
- *         <>
- *           <MenuItem label="Open..." shortcut="⌘O" onClick={() => {}} />
- *           <MenuItem label="Save" shortcut="⌘S" onClick={() => {}} />
- *         </>
- *       ),
+ *       // Data form — no JSX required
+ *       items: [
+ *         { label: 'Open…', shortcut: '⌘O', onClick: openFile },
+ *         { label: 'Save', shortcut: '⌘S', onClick: saveFile, separator: true },
+ *         { label: 'Quit', onClick: quit },
+ *       ],
  *     },
  *     {
- *       label: 'Home',
- *       type: 'link',
- *       href: '/',
+ *       label: 'Edit',
+ *       type: 'dropdown',
+ *       // JSX form — still supported
+ *       items: <MenuItem label="Undo" shortcut="⌘Z" onClick={undo} />,
  *     },
+ *     { label: 'Home', type: 'link', href: '/' },
  *   ]}
- *   rightContent={[
- *     <Clock key="clock" />,
- *     <div key="divider" className={styles.divider} />,
- *     <SystemIndicator key="indicator" />,
- *   ]}
+ *   rightContent={[<Clock key="clock" />]}
  * />
  * ```
  */
@@ -1391,9 +1473,22 @@ interface MenuItemProps {
      */
     label: string;
     /**
-     * Optional keyboard shortcut to display (e.g., "⌘S", "Ctrl+O")
+     * Optional keyboard shortcut to display (e.g., "⌘S", "Ctrl+O").
+     *
+     * The displayed form is also exposed to assistive tech via
+     * `aria-keyshortcuts`, translated into the format that attribute requires
+     * (`⌘S` becomes `Meta+S`). Pass {@link MenuItemProps.keyShortcut} if the
+     * automatic translation is wrong for your notation.
      */
     shortcut?: string;
+    /**
+     * Explicit `aria-keyshortcuts` value, overriding the value derived from
+     * `shortcut`. Use the format from the ARIA specification — modifiers
+     * `Alt`, `Control`, `Meta`, `Shift`, joined to the key with `+`.
+     *
+     * @example "Meta+Shift+S"
+     */
+    keyShortcut?: string;
     /**
      * Whether the menu item is disabled
      * @default false
@@ -1506,18 +1601,46 @@ interface MenuDropdownProps {
      */
     dropdownClassName?: string;
     /**
-     * Alignment of the dropdown menu
+     * Preferred alignment of the dropdown menu.
+     *
+     * This is a preference, not a guarantee: if the menu would overflow the
+     * viewport it is nudged back into view. Set `avoidCollisions` to `false`
+     * to keep the alignment exactly as specified.
+     *
      * @default 'left'
      */
     align?: 'left' | 'right';
+    /**
+     * Whether to reposition the dropdown when it would render outside the
+     * viewport — shifted horizontally, and flipped above the trigger when
+     * there is no room below.
+     *
+     * @default true
+     */
+    avoidCollisions?: boolean;
 }
 /**
  * Mac OS 9 style MenuDropdown component
  *
  * A standalone dropdown menu that shares the styling of the MenuBar.
- * Useful for placing menus in the status area (rightContent) or other parts of the app.
+ * Useful for placing menus in the status area (rightContent) or other parts
+ * of the app.
+ *
+ * @example
+ * ```tsx
+ * <MenuDropdown
+ *   label="Options"
+ *   align="right"
+ *   items={
+ *     <>
+ *       <MenuItem label="Preferences…" onClick={openPrefs} />
+ *       <MenuItem label="Sign out" onClick={signOut} />
+ *     </>
+ *   }
+ * />
+ * ```
  */
-declare const MenuDropdown: React__default.FC<MenuDropdownProps>;
+declare const MenuDropdown: React__default.ForwardRefExoticComponent<MenuDropdownProps & React__default.RefAttributes<HTMLDivElement>>;
 
 interface ScrollbarProps {
     /**
@@ -1603,19 +1726,36 @@ interface ListColumn {
      */
     sortable?: boolean;
 }
+/**
+ * A row in a ListView.
+ *
+ * The index signature is `unknown`, not `any`. `any` disabled type checking
+ * on every property read from a row — `item.nmae` compiled, and so did
+ * `item.size.toFixed(2)` on a string. Parameterise `ListView` with your own
+ * row type to get real types back:
+ *
+ * ```tsx
+ * interface FileRow extends ListItem {
+ *   name: string;
+ *   size: number;
+ * }
+ *
+ * <ListView<FileRow> items={files} columns={columns} />
+ * ```
+ */
 interface ListItem {
     /**
      * Unique item ID
      */
     id: string;
     /**
-     * Item data - keys should match column keys
-     */
-    [key: string]: any;
-    /**
      * Optional icon to display
      */
     icon?: React__default.ReactNode;
+    /**
+     * Item data - keys should match column keys
+     */
+    [key: string]: unknown;
 }
 /**
  * Classes for targeting ListView sub-elements
@@ -1633,6 +1773,10 @@ interface ListViewClasses {
     row?: string;
     /** Individual cell */
     cell?: string;
+    /** Empty-state container */
+    empty?: string;
+    /** Loading-state container */
+    loading?: string;
 }
 /**
  * Row render prop state
@@ -1695,19 +1839,22 @@ interface HeaderCellDefaultProps {
     'data-sorted'?: boolean;
     'data-sort-direction'?: 'asc' | 'desc';
 }
-interface ListViewProps {
+interface ListViewProps<TItem extends ListItem = ListItem> {
     /**
-     * Column definitions
+     * Column definitions.
+     *
+     * Declared `readonly` because ListView never mutates it — this lets you
+     * pass an `as const` array or a frozen array without a cast.
      */
-    columns: ListColumn[];
+    columns: readonly ListColumn[];
     /**
-     * List items
+     * List items. Never mutated by ListView.
      */
-    items: ListItem[];
+    items: readonly TItem[];
     /**
-     * Selected item IDs
+     * Selected item IDs. Never mutated by ListView.
      */
-    selectedIds?: string[];
+    selectedIds?: readonly string[];
     /**
      * Callback when selection changes
      */
@@ -1715,15 +1862,15 @@ interface ListViewProps {
     /**
      * Callback when item is double-clicked
      */
-    onItemOpen?: (item: ListItem) => void;
+    onItemOpen?: (item: TItem) => void;
     /**
      * Callback when mouse enters an item (row-level)
      */
-    onItemMouseEnter?: (item: ListItem) => void;
+    onItemMouseEnter?: (item: TItem) => void;
     /**
      * Callback when mouse leaves an item (row-level)
      */
-    onItemMouseLeave?: (item: ListItem) => void;
+    onItemMouseLeave?: (item: TItem) => void;
     /**
      * Callback when column is clicked for sorting
      */
@@ -1741,13 +1888,34 @@ interface ListViewProps {
      */
     classes?: ListViewClasses;
     /**
+     * Content shown in place of the rows when `items` is empty and the list
+     * is not loading. Without this the component renders an empty box, which
+     * reads as a broken list rather than an empty one.
+     *
+     * @default 'No items'
+     */
+    emptyState?: React__default.ReactNode;
+    /**
+     * Whether the list is waiting on data. While true, `loadingState` is
+     * shown instead of the rows and the body is marked `aria-busy`.
+     *
+     * @default false
+     */
+    loading?: boolean;
+    /**
+     * Content shown in place of the rows while `loading` is true.
+     *
+     * @default 'Loading…'
+     */
+    loadingState?: React__default.ReactNode;
+    /**
      * Override row rendering
      * @param item - The list item
      * @param state - Row state (selected, hovered, index)
      * @param defaultProps - Props to spread on custom element for accessibility
      * @returns Custom row element (fully replaces default)
      */
-    renderRow?: (item: ListItem, state: RowRenderState, defaultProps: RowDefaultProps) => React__default.ReactNode;
+    renderRow?: (item: TItem, state: RowRenderState, defaultProps: RowDefaultProps) => React__default.ReactNode;
     /**
      * Override cell rendering
      * @param value - Cell value (item[columnKey])
@@ -1756,7 +1924,7 @@ interface ListViewProps {
      * @param state - Cell state (hovered, selected row, indices)
      * @returns Custom cell content (fully replaces default)
      */
-    renderCell?: (value: any, item: ListItem, column: ListColumn, state: CellRenderState) => React__default.ReactNode;
+    renderCell?: (value: unknown, item: TItem, column: ListColumn, state: CellRenderState) => React__default.ReactNode;
     /**
      * Override header cell rendering
      * @param column - Column definition
@@ -1768,41 +1936,24 @@ interface ListViewProps {
     /**
      * Callback when a cell is clicked
      */
-    onCellClick?: (item: ListItem, column: ListColumn, event: React__default.MouseEvent) => void;
+    onCellClick?: (item: TItem, column: ListColumn, event: React__default.MouseEvent) => void;
     /**
      * Callback when mouse enters a cell
      */
-    onCellMouseEnter?: (item: ListItem, column: ListColumn) => void;
+    onCellMouseEnter?: (item: TItem, column: ListColumn) => void;
     /**
      * Callback when mouse leaves a cell
      */
-    onCellMouseLeave?: (item: ListItem, column: ListColumn) => void;
+    onCellMouseLeave?: (item: TItem, column: ListColumn) => void;
 }
 /**
- * Mac OS 9 style ListView component
- *
- * Multi-column list with sortable headers and row selection.
- * Similar to Finder list view.
- *
- * @example
- * ```tsx
- * <ListView
- *   columns={[
- *     { key: 'name', label: 'Name' },
- *     { key: 'modified', label: 'Date Modified' },
- *     { key: 'size', label: 'Size' }
- *   ]}
- *   items={[
- *     { id: '1', name: 'Document.txt', modified: 'Today', size: '2 KB' },
- *     { id: '2', name: 'Images', modified: 'Yesterday', size: '--' }
- *   ]}
- *   selectedIds={['1']}
- *   onSelectionChange={(ids) => console.log('Selected:', ids)}
- *   onItemMouseEnter={(item) => console.log('Hovering:', item.name)}
- * />
- * ```
+ * `forwardRef` erases generics, so the forwarded component is re-cast to a
+ * signature that keeps `TItem`. This is what lets `<ListView<FileRow> …>`
+ * infer the row type in `renderCell`, `onItemOpen` and friends.
  */
-declare const ListView: React__default.ForwardRefExoticComponent<ListViewProps & React__default.RefAttributes<HTMLDivElement>>;
+declare const ListView: <TItem extends ListItem = ListItem>(props: ListViewProps<TItem> & {
+    ref?: React__default.Ref<HTMLDivElement>;
+}) => React__default.ReactElement | null;
 
 /**
  * Classes for targeting FolderList sub-elements
@@ -1827,65 +1978,25 @@ interface FolderListClasses {
     /** ListView cell */
     cell?: string;
 }
-interface FolderListProps extends Omit<WindowProps, 'children' | 'classes'> {
+/**
+ * The ListView props FolderList passes straight through.
+ *
+ * Derived from ListViewProps rather than re-declared. The previous version
+ * hand-copied a dozen of these declarations, so every ListView signature
+ * change had to be mirrored here by hand or the two would drift apart —
+ * and `columns`, `draggable`, `position` and friends were duplicated from
+ * WindowProps as well, which already supplies them.
+ *
+ * `columns` is re-declared below because FolderList gives it a default;
+ * `className`, `classes` and `height` are owned by FolderList itself.
+ */
+type ForwardedListViewProps<TItem extends ListItem> = Omit<ListViewProps<TItem>, 'columns' | 'className' | 'classes' | 'height'>;
+interface FolderListProps<TItem extends ListItem = ListItem> extends Omit<WindowProps, 'children' | 'classes'>, ForwardedListViewProps<TItem> {
     /**
      * Column definitions for the list
      * @default [{ key: 'name', label: 'Name' }, { key: 'modified', label: 'Date Modified' }, { key: 'size', label: 'Size' }]
      */
-    columns?: ListColumn[];
-    /**
-     * Whether the folder list window can be dragged by its title bar
-     * Window starts in normal flow and becomes absolutely positioned when dragged
-     * @default false
-     */
-    draggable?: boolean;
-    /**
-     * Initial position for draggable folder lists (uncontrolled)
-     * Only used when draggable is true
-     */
-    defaultPosition?: WindowPosition;
-    /**
-     * Controlled position for draggable folder lists
-     * Only used when draggable is true
-     */
-    position?: WindowPosition;
-    /**
-     * Callback when folder list position changes (during drag)
-     * Only called when draggable is true
-     */
-    onPositionChange?: (position: WindowPosition) => void;
-    /**
-     * Items to display in the list
-     */
-    items: ListItem[];
-    /**
-     * Selected item IDs
-     */
-    selectedIds?: string[];
-    /**
-     * Callback when selection changes
-     */
-    onSelectionChange?: (selectedIds: string[]) => void;
-    /**
-     * Callback when item is double-clicked (opened)
-     */
-    onItemOpen?: (item: ListItem) => void;
-    /**
-     * Callback when mouse enters an item (row-level)
-     */
-    onItemMouseEnter?: (item: ListItem) => void;
-    /**
-     * Callback when mouse leaves an item (row-level)
-     */
-    onItemMouseLeave?: (item: ListItem) => void;
-    /**
-     * Callback when column header is clicked for sorting
-     */
-    onSort?: (columnKey: string, direction: 'asc' | 'desc') => void;
-    /**
-     * Callback when mouse enters the folder list window
-     */
-    onMouseEnter?: (event: React__default.MouseEvent<HTMLDivElement>) => void;
+    columns?: readonly ListColumn[];
     /**
      * Height of the list view area
      * @default 400
@@ -1895,74 +2006,14 @@ interface FolderListProps extends Omit<WindowProps, 'children' | 'classes'> {
      * Custom classes for targeting sub-elements
      */
     classes?: FolderListClasses;
-    /**
-     * Override row rendering
-     * @param item - The list item
-     * @param state - Row state (selected, hovered, index)
-     * @param defaultProps - Props to spread on custom element for accessibility
-     * @returns Custom row element (fully replaces default)
-     */
-    renderRow?: (item: ListItem, state: RowRenderState, defaultProps: RowDefaultProps) => React__default.ReactNode;
-    /**
-     * Override cell rendering
-     * @param value - Cell value (item[columnKey])
-     * @param item - Full item object
-     * @param column - Column definition
-     * @param state - Cell state (hovered, selected row, indices)
-     * @returns Custom cell content (fully replaces default)
-     */
-    renderCell?: (value: any, item: ListItem, column: ListColumn, state: CellRenderState) => React__default.ReactNode;
-    /**
-     * Override header cell rendering
-     * @param column - Column definition
-     * @param state - Header state (sorted, direction)
-     * @param defaultProps - Props to spread on custom element
-     * @returns Custom header cell element (fully replaces default)
-     */
-    renderHeaderCell?: (column: ListColumn, state: HeaderCellRenderState, defaultProps: HeaderCellDefaultProps) => React__default.ReactNode;
-    /**
-     * Callback when a cell is clicked
-     */
-    onCellClick?: (item: ListItem, column: ListColumn, event: React__default.MouseEvent) => void;
-    /**
-     * Callback when mouse enters a cell
-     */
-    onCellMouseEnter?: (item: ListItem, column: ListColumn) => void;
-    /**
-     * Callback when mouse leaves a cell
-     */
-    onCellMouseLeave?: (item: ListItem, column: ListColumn) => void;
 }
 /**
- * Mac OS 9 style FolderList component
- *
- * Window with integrated ListView for browsing files and folders.
- * Similar to Finder list view in Mac OS 9.
- *
- * @example
- * ```tsx
- * // Basic folder list
- * <FolderList
- *   title="My Documents"
- *   items={[
- *     { id: '1', name: 'Document.txt', modified: 'Today', size: '2 KB', icon: <FileIcon /> },
- *     { id: '2', name: 'Images', modified: 'Yesterday', size: '--', icon: <FolderIcon /> }
- *   ]}
- *   selectedIds={['1']}
- *   onSelectionChange={(ids) => console.log('Selected:', ids)}
- *   onItemOpen={(item) => console.log('Open:', item.name)}
- * />
- *
- * // Draggable folder list
- * <FolderList
- *   title="My Documents"
- *   items={items}
- *   draggable
- *   defaultPosition={{ x: 100, y: 100 }}
- * />
- * ```
+ * `forwardRef` erases generics, so the forwarded component is re-cast to a
+ * signature that keeps `TItem` — matching how ListView is exported.
  */
-declare const FolderList: React__default.ForwardRefExoticComponent<FolderListProps & React__default.RefAttributes<HTMLDivElement>>;
+declare const FolderList: <TItem extends ListItem = ListItem>(props: FolderListProps<TItem> & {
+    ref?: React__default.Ref<HTMLDivElement>;
+}) => React__default.ReactElement | null;
 
 /**
  * Color tokens based on Mac OS 9 grayscale palette
@@ -2358,4 +2409,4 @@ declare const mergeClasses: (...classes: (string | undefined | false | null)[]) 
 declare const createClassBuilder: (baseClass: string) => (...additionalClasses: (string | undefined | false | null)[]) => string;
 
 export { Button, Checkbox, Dialog, DividerIcon, FolderList, Icon, IconButton, IconLibrary, ListView, MenuBar, MenuDropdown, MenuItem, Radio, RadioGroup, Scrollbar, Select, TabPanel, Tabs, TextField, Window, borders, colors, createClassBuilder, mergeClasses, shadows, spacing, tokens, transitions, typography, zIndex };
-export type { BaseComponentProps, ButtonProps, ButtonRef, CellRenderState, CheckboxProps, ComponentClasses, DialogProps, DivRef, FolderListClasses, FolderListProps, HeaderCellDefaultProps, HeaderCellRenderState, IconButtonProps, IconLibraryProps, IconName, IconProps, InputRef, ListColumn, ListItem, ListViewClasses, ListViewProps, Menu, MenuBarProps, MenuDropdownProps, MenuItemProps, RadioGroupProps, RadioProps, RenderState, RowDefaultProps, RowRenderState, ScrollbarProps, SelectOption, SelectProps, SelectRef, Size, State, TabPanelProps, TabsProps, TextAreaRef, TextFieldProps, Variant, WindowClasses, WindowPosition, WindowProps };
+export type { BaseComponentProps, ButtonProps, ButtonRef, CellRenderState, CheckboxProps, ComponentClasses, DialogProps, DivRef, FolderListClasses, FolderListProps, HeaderCellDefaultProps, HeaderCellRenderState, IconButtonProps, IconLibraryProps, IconName, IconProps, InputRef, ListColumn, ListItem, ListViewClasses, ListViewProps, Menu, MenuBarProps, MenuDropdownProps, MenuItemData, MenuItemProps, RadioGroupProps, RadioProps, RenderState, RowDefaultProps, RowRenderState, ScrollbarProps, SelectOption, SelectProps, SelectRef, Size, State, TabPanelProps, TabsProps, TextAreaRef, TextFieldProps, Variant, WindowClasses, WindowPosition, WindowProps };

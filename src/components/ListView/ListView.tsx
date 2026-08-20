@@ -6,7 +6,7 @@
 // so per-file directives were both inconsistent (4 of 16 components) and
 // silently dropped at bundle time.
 
-import React, { forwardRef, useState, useCallback } from 'react';
+import React, { forwardRef, useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { mergeClasses } from '../../utils/classNames';
 import styles from './ListView.module.css';
 
@@ -34,6 +34,23 @@ export interface ListColumn {
 	sortable?: boolean;
 }
 
+/**
+ * A row in a ListView.
+ *
+ * The index signature is `unknown`, not `any`. `any` disabled type checking
+ * on every property read from a row — `item.nmae` compiled, and so did
+ * `item.size.toFixed(2)` on a string. Parameterise `ListView` with your own
+ * row type to get real types back:
+ *
+ * ```tsx
+ * interface FileRow extends ListItem {
+ *   name: string;
+ *   size: number;
+ * }
+ *
+ * <ListView<FileRow> items={files} columns={columns} />
+ * ```
+ */
 export interface ListItem {
 	/**
 	 * Unique item ID
@@ -41,14 +58,14 @@ export interface ListItem {
 	id: string;
 
 	/**
-	 * Item data - keys should match column keys
-	 */
-	[key: string]: any;
-
-	/**
 	 * Optional icon to display
 	 */
 	icon?: React.ReactNode;
+
+	/**
+	 * Item data - keys should match column keys
+	 */
+	[key: string]: unknown;
 }
 
 /**
@@ -67,6 +84,10 @@ export interface ListViewClasses {
 	row?: string;
 	/** Individual cell */
 	cell?: string;
+	/** Empty-state container */
+	empty?: string;
+	/** Loading-state container */
+	loading?: string;
 }
 
 /**
@@ -135,21 +156,24 @@ export interface HeaderCellDefaultProps {
 	'data-sort-direction'?: 'asc' | 'desc';
 }
 
-export interface ListViewProps {
+export interface ListViewProps<TItem extends ListItem = ListItem> {
 	/**
-	 * Column definitions
+	 * Column definitions.
+	 *
+	 * Declared `readonly` because ListView never mutates it — this lets you
+	 * pass an `as const` array or a frozen array without a cast.
 	 */
-	columns: ListColumn[];
+	columns: readonly ListColumn[];
 
 	/**
-	 * List items
+	 * List items. Never mutated by ListView.
 	 */
-	items: ListItem[];
+	items: readonly TItem[];
 
 	/**
-	 * Selected item IDs
+	 * Selected item IDs. Never mutated by ListView.
 	 */
-	selectedIds?: string[];
+	selectedIds?: readonly string[];
 
 	/**
 	 * Callback when selection changes
@@ -159,17 +183,17 @@ export interface ListViewProps {
 	/**
 	 * Callback when item is double-clicked
 	 */
-	onItemOpen?: (item: ListItem) => void;
+	onItemOpen?: (item: TItem) => void;
 
 	/**
 	 * Callback when mouse enters an item (row-level)
 	 */
-	onItemMouseEnter?: (item: ListItem) => void;
+	onItemMouseEnter?: (item: TItem) => void;
 
 	/**
 	 * Callback when mouse leaves an item (row-level)
 	 */
-	onItemMouseLeave?: (item: ListItem) => void;
+	onItemMouseLeave?: (item: TItem) => void;
 
 	/**
 	 * Callback when column is clicked for sorting
@@ -192,6 +216,30 @@ export interface ListViewProps {
 	classes?: ListViewClasses;
 
 	/**
+	 * Content shown in place of the rows when `items` is empty and the list
+	 * is not loading. Without this the component renders an empty box, which
+	 * reads as a broken list rather than an empty one.
+	 *
+	 * @default 'No items'
+	 */
+	emptyState?: React.ReactNode;
+
+	/**
+	 * Whether the list is waiting on data. While true, `loadingState` is
+	 * shown instead of the rows and the body is marked `aria-busy`.
+	 *
+	 * @default false
+	 */
+	loading?: boolean;
+
+	/**
+	 * Content shown in place of the rows while `loading` is true.
+	 *
+	 * @default 'Loading…'
+	 */
+	loadingState?: React.ReactNode;
+
+	/**
 	 * Override row rendering
 	 * @param item - The list item
 	 * @param state - Row state (selected, hovered, index)
@@ -199,7 +247,7 @@ export interface ListViewProps {
 	 * @returns Custom row element (fully replaces default)
 	 */
 	renderRow?: (
-		item: ListItem,
+		item: TItem,
 		state: RowRenderState,
 		defaultProps: RowDefaultProps
 	) => React.ReactNode;
@@ -213,8 +261,8 @@ export interface ListViewProps {
 	 * @returns Custom cell content (fully replaces default)
 	 */
 	renderCell?: (
-		value: any,
-		item: ListItem,
+		value: unknown,
+		item: TItem,
 		column: ListColumn,
 		state: CellRenderState
 	) => React.ReactNode;
@@ -235,35 +283,151 @@ export interface ListViewProps {
 	/**
 	 * Callback when a cell is clicked
 	 */
-	onCellClick?: (
-		item: ListItem,
-		column: ListColumn,
-		event: React.MouseEvent
-	) => void;
+	onCellClick?: (item: TItem, column: ListColumn, event: React.MouseEvent) => void;
 
 	/**
 	 * Callback when mouse enters a cell
 	 */
-	onCellMouseEnter?: (
-		item: ListItem,
-		column: ListColumn
-	) => void;
+	onCellMouseEnter?: (item: TItem, column: ListColumn) => void;
 
 	/**
 	 * Callback when mouse leaves a cell
 	 */
-	onCellMouseLeave?: (
-		item: ListItem,
-		column: ListColumn
-	) => void;
+	onCellMouseLeave?: (item: TItem, column: ListColumn) => void;
 }
 
 /**
+ * Coerces an arbitrary cell value into something React can render.
+ *
+ * Rows are typed with an `unknown` index signature, so a value read out of
+ * one is not automatically a ReactNode.
+ */
+function renderValue(value: unknown): React.ReactNode {
+	if (value === null || value === undefined || typeof value === 'boolean') return null;
+	if (typeof value === 'string' || typeof value === 'number') return value;
+	if (React.isValidElement(value)) return value;
+	return String(value);
+}
+
+/**
+ * A single ListView row.
+ *
+ * Extracted and memoised because hover state lives in the parent: without
+ * this, moving the pointer across a 500-row list re-rendered all 500 rows on
+ * every row boundary. Now only the row being left and the row being entered
+ * re-render. Every callback prop below is referentially stable for the life
+ * of the ListView, which is what makes the memo effective.
+ */
+interface ListViewRowProps<TItem extends ListItem> {
+	item: TItem;
+	columns: readonly ListColumn[];
+	columnStyles: readonly React.CSSProperties[];
+	rowIndex: number;
+	isSelected: boolean;
+	isHovered: boolean;
+	hoveredColumnKey: string | null;
+	classes?: ListViewClasses;
+	onRowClick: (item: ListItem, event: React.MouseEvent) => void;
+	onRowDoubleClick: (item: ListItem) => void;
+	onRowEnter: (item: ListItem) => void;
+	onRowLeave: (item: ListItem) => void;
+	onCellEnter: (item: ListItem, column: ListColumn) => void;
+	onCellLeave: (item: ListItem, column: ListColumn) => void;
+	onCellClickInternal: (item: ListItem, column: ListColumn, event: React.MouseEvent) => void;
+	renderRow?: ListViewProps<TItem>['renderRow'];
+	renderCell?: ListViewProps<TItem>['renderCell'];
+}
+
+function ListViewRowInner<TItem extends ListItem>({
+	item,
+	columns,
+	columnStyles,
+	rowIndex,
+	isSelected,
+	isHovered,
+	hoveredColumnKey,
+	classes,
+	onRowClick,
+	onRowDoubleClick,
+	onRowEnter,
+	onRowLeave,
+	onCellEnter,
+	onCellLeave,
+	onCellClickInternal,
+	renderRow,
+	renderCell,
+}: ListViewRowProps<TItem>) {
+	const rowDefaultProps: RowDefaultProps = {
+		key: item.id,
+		className: mergeClasses(styles.row, isSelected && styles.selected, classes?.row),
+		onClick: (event) => onRowClick(item, event),
+		onDoubleClick: () => onRowDoubleClick(item),
+		onMouseEnter: () => onRowEnter(item),
+		onMouseLeave: () => onRowLeave(item),
+		'data-selected': isSelected,
+		'data-index': rowIndex,
+		'data-item-id': item.id,
+	};
+
+	if (renderRow) {
+		const rowState: RowRenderState = { isSelected, isHovered, index: rowIndex };
+		return <>{renderRow(item, rowState, rowDefaultProps)}</>;
+	}
+
+	// `key` is passed to the element explicitly rather than arriving through
+	// the spread: React reads `key` off the JSX element, not off the props
+	// object, so spreading it silently produced keyless children.
+	const { key: _key, ...rowElementProps } = rowDefaultProps;
+
+	return (
+		<div {...rowElementProps}>
+			{columns.map((column, columnIndex) => {
+				const value = item[column.key];
+				const isCellHovered = isHovered && hoveredColumnKey === column.key;
+
+				const cellState: CellRenderState = {
+					isHovered: isCellHovered,
+					isRowSelected: isSelected,
+					columnIndex,
+					rowIndex,
+				};
+
+				return (
+					<div
+						key={column.key}
+						className={mergeClasses(styles.cell, classes?.cell)}
+						style={columnStyles[columnIndex]}
+						data-column={column.key}
+						data-hovered={isCellHovered}
+						onClick={(event) => onCellClickInternal(item, column, event)}
+						onMouseEnter={() => onCellEnter(item, column)}
+						onMouseLeave={() => onCellLeave(item, column)}
+					>
+						{renderCell ? (
+							renderCell(value, item, column, cellState)
+						) : (
+							<>
+								{columnIndex === 0 && item.icon ? (
+									<span className={styles.icon}>{item.icon}</span>
+								) : null}
+								{renderValue(value)}
+							</>
+						)}
+					</div>
+				);
+			})}
+		</div>
+	);
+}
+
+const ListViewRow = React.memo(ListViewRowInner) as typeof ListViewRowInner;
+
+/**
  * Mac OS 9 style ListView component
- * 
+ *
  * Multi-column list with sortable headers and row selection.
  * Similar to Finder list view.
- * 
+ *
  * @example
  * ```tsx
  * <ListView
@@ -280,298 +444,304 @@ export interface ListViewProps {
  *   onSelectionChange={(ids) => console.log('Selected:', ids)}
  *   onItemMouseEnter={(item) => console.log('Hovering:', item.name)}
  * />
+ *
+ * // Typed rows
+ * interface FileRow extends ListItem {
+ *   name: string;
+ *   size: number;
+ * }
+ * <ListView<FileRow> items={files} columns={columns} />
  * ```
  */
-export const ListView = forwardRef<HTMLDivElement, ListViewProps>(
-	(
-		{
-			columns,
+function ListViewInner<TItem extends ListItem = ListItem>(
+	{
+		columns,
+		items,
+		selectedIds = [],
+		onSelectionChange,
+		onItemOpen,
+		onItemMouseEnter,
+		onItemMouseLeave,
+		onSort,
+		className = '',
+		height = 'auto',
+		classes,
+		emptyState = 'No items',
+		loading = false,
+		loadingState = 'Loading…',
+		renderRow,
+		renderCell,
+		renderHeaderCell,
+		onCellClick,
+		onCellMouseEnter,
+		onCellMouseLeave,
+	}: ListViewProps<TItem>,
+	ref: React.ForwardedRef<HTMLDivElement>
+) {
+	const [sortColumn, setSortColumn] = useState<string | null>(null);
+	const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+	const [hoveredRow, setHoveredRow] = useState<string | null>(null);
+	const [hoveredColumnKey, setHoveredColumnKey] = useState<string | null>(null);
+
+	// Membership tests run once per row per render. `selectedIds.includes()`
+	// inside the row map made selection checking O(rows x selected), which on
+	// a large list with a large selection is quadratic.
+	const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
+
+	// Anchor for Shift range selection, plus the selection as it stood before
+	// the current Shift sequence began. Shift+click extends that base
+	// selection with the anchor..target range instead of discarding
+	// everything the user had already picked.
+	const anchorIdRef = useRef<string | null>(null);
+	const baseSelectionRef = useRef<readonly string[]>([]);
+
+	// Latest props, read from inside stable callbacks. Without this the row
+	// handlers would change identity whenever the selection or item list
+	// changed, defeating the row memoisation entirely.
+	const latestRef = useRef({
+		items,
+		selectedIds,
+		selectedSet,
+		onSelectionChange,
+		onItemOpen,
+		onItemMouseEnter,
+		onItemMouseLeave,
+		onCellClick,
+		onCellMouseEnter,
+		onCellMouseLeave,
+	});
+	useEffect(() => {
+		latestRef.current = {
 			items,
-			selectedIds = [],
+			selectedIds,
+			selectedSet,
 			onSelectionChange,
 			onItemOpen,
 			onItemMouseEnter,
 			onItemMouseLeave,
-			onSort,
-			className = '',
-			height = 'auto',
-			classes,
-			renderRow,
-			renderCell,
-			renderHeaderCell,
 			onCellClick,
 			onCellMouseEnter,
 			onCellMouseLeave,
+		};
+	});
+
+	// Class names
+	const classNames = mergeClasses(styles.listView, className, classes?.root);
+
+	// One style object per column, reused by every row. Previously each cell
+	// allocated a fresh `{ width }` object on every render, which also meant
+	// no row could ever be memoised on prop identity.
+	const columnStyles = useMemo(
+		() =>
+			columns.map((column) => ({
+				width: typeof column.width === 'number' ? `${column.width}px` : column.width,
+			})),
+		[columns]
+	);
+
+	// Handle column header click
+	const handleColumnClick = useCallback(
+		(columnKey: string, sortable: boolean = true) => {
+			if (!sortable || !onSort) return;
+
+			const newDirection = sortColumn === columnKey && sortDirection === 'asc' ? 'desc' : 'asc';
+			setSortColumn(columnKey);
+			setSortDirection(newDirection);
+			onSort(columnKey, newDirection);
 		},
-		ref
-	) => {
-		const [sortColumn, setSortColumn] = useState<string | null>(null);
-		const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
-		const [hoveredRow, setHoveredRow] = useState<string | null>(null);
-		const [hoveredCell, setHoveredCell] = useState<{
-			rowId: string;
-			columnKey: string;
-		} | null>(null);
+		[sortColumn, sortDirection, onSort]
+	);
 
-		// Class names
-		const classNames = mergeClasses(styles.listView, className, classes?.root);
+	const handleRowClick = useCallback((item: ListItem, event: React.MouseEvent) => {
+		const {
+			items: liveItems,
+			selectedIds: liveSelected,
+			selectedSet: liveSelectedSet,
+			onSelectionChange: liveOnChange,
+		} = latestRef.current;
+		if (!liveOnChange) return;
 
-		// Handle column header click
-		const handleColumnClick = useCallback(
-			(columnKey: string, sortable: boolean = true) => {
-				if (!sortable || !onSort) return;
+		const itemId = item.id;
 
-				const newDirection =
-					sortColumn === columnKey && sortDirection === 'asc' ? 'desc' : 'asc';
-				setSortColumn(columnKey);
-				setSortDirection(newDirection);
-				onSort(columnKey, newDirection);
-			},
-			[sortColumn, sortDirection, onSort]
-		);
-
-		// Handle row click
-		const handleRowClick = useCallback(
-			(itemId: string, event: React.MouseEvent) => {
-				if (!onSelectionChange) return;
-
-				if (event.metaKey || event.ctrlKey) {
-					// Multi-select with Cmd/Ctrl
-					if (selectedIds.includes(itemId)) {
-						onSelectionChange(selectedIds.filter((id) => id !== itemId));
-					} else {
-						onSelectionChange([...selectedIds, itemId]);
-					}
-				} else if (event.shiftKey && selectedIds.length > 0) {
-					// Range select with Shift
-					const lastSelectedId = selectedIds[selectedIds.length - 1];
-					const lastIndex = items.findIndex((item) => item.id === lastSelectedId);
-					const currentIndex = items.findIndex((item) => item.id === itemId);
-
-					const start = Math.min(lastIndex, currentIndex);
-					const end = Math.max(lastIndex, currentIndex);
-					const rangeIds = items.slice(start, end + 1).map((item) => item.id);
-
-					onSelectionChange(rangeIds);
-				} else {
-					// Single select
-					onSelectionChange([itemId]);
-				}
-			},
-			[selectedIds, items, onSelectionChange]
-		);
-
-		// Handle row double-click
-		const handleRowDoubleClick = useCallback(
-			(item: ListItem) => {
-				if (onItemOpen) {
-					onItemOpen(item);
-				}
-			},
-			[onItemOpen]
-		);
-
-		// Handle row mouse enter
-		const handleRowMouseEnter = useCallback(
-			(item: ListItem) => {
-				if (onItemMouseEnter) {
-					onItemMouseEnter(item);
-				}
-			},
-			[onItemMouseEnter]
-		);
-
-		// Container style
-		const containerStyle: React.CSSProperties = {};
-		if (height !== 'auto') {
-			containerStyle.height = typeof height === 'number' ? `${height}px` : height;
+		if (event.metaKey || event.ctrlKey) {
+			// Toggle one item, and make it the anchor for a later Shift+click.
+			anchorIdRef.current = itemId;
+			baseSelectionRef.current = liveSelectedSet.has(itemId)
+				? liveSelected.filter((id) => id !== itemId)
+				: [...liveSelected, itemId];
+			liveOnChange([...baseSelectionRef.current]);
+			return;
 		}
 
-		return (
-			<div ref={ref} className={classNames} style={containerStyle}>
-				{/* Column headers */}
-				<div className={mergeClasses(styles.header, classes?.header)}>
-					{columns.map((column) => {
-						const isSorted = sortColumn === column.key;
-						const headerState: HeaderCellRenderState = {
-							isSorted,
-							sortDirection: isSorted ? sortDirection : undefined,
-						};
+		if (event.shiftKey && (anchorIdRef.current || liveSelected.length > 0)) {
+			const anchorId = anchorIdRef.current ?? liveSelected[liveSelected.length - 1];
+			const anchorIndex = liveItems.findIndex((candidate) => candidate.id === anchorId);
+			const currentIndex = liveItems.findIndex((candidate) => candidate.id === itemId);
 
-						const headerDefaultProps: HeaderCellDefaultProps = {
-							key: column.key,
-							className: mergeClasses(
-								styles.headerCell,
-								column.sortable !== false && styles.sortable,
-								classes?.headerCell
-							),
-							style: {
-								width:
-									typeof column.width === 'number'
-										? `${column.width}px`
-										: column.width,
-							},
-							onClick: () => handleColumnClick(column.key, column.sortable),
-							'data-column': column.key,
-							'data-sortable': column.sortable !== false,
-							...(isSorted && {
-								'data-sorted': true,
-								'data-sort-direction': sortDirection,
-							}),
-						};
+			if (anchorIndex === -1 || currentIndex === -1) {
+				liveOnChange([itemId]);
+				return;
+			}
 
-						// Use custom render or default
-						if (renderHeaderCell) {
-							return renderHeaderCell(column, headerState, headerDefaultProps);
-						}
+			const start = Math.min(anchorIndex, currentIndex);
+			const end = Math.max(anchorIndex, currentIndex);
+			const rangeIds = liveItems.slice(start, end + 1).map((candidate) => candidate.id);
 
-						// Default header cell rendering
-						return (
-							<div {...headerDefaultProps}>
-								{column.label}
-								{isSorted && (
-									<span className={styles.sortIndicator}>
-										{sortDirection === 'asc' ? '▲' : '▼'}
-									</span>
-								)}
-							</div>
-						);
-					})}
-				</div>
+			// Extend rather than replace: whatever was selected before this
+			// Shift sequence stays selected.
+			liveOnChange([...new Set([...baseSelectionRef.current, ...rangeIds])]);
+			return;
+		}
 
-				{/* List items */}
-				<div className={mergeClasses(styles.body, classes?.body)}>
-					{items.map((item, rowIndex) => {
-						const isSelected = selectedIds.includes(item.id);
-						const isHovered = hoveredRow === item.id;
+		// Single select — this click becomes the anchor and the new base.
+		anchorIdRef.current = itemId;
+		baseSelectionRef.current = [itemId];
+		liveOnChange([itemId]);
+	}, []);
 
-						const rowState: RowRenderState = {
-							isSelected,
-							isHovered,
-							index: rowIndex,
-						};
+	const handleRowDoubleClick = useCallback((item: ListItem) => {
+		latestRef.current.onItemOpen?.(item as TItem);
+	}, []);
 
-						const rowDefaultProps: RowDefaultProps = {
-							key: item.id,
-							className: mergeClasses(
-								styles.row,
-								isSelected && styles.selected,
-								classes?.row
-							),
-							onClick: (e) => handleRowClick(item.id, e),
-							onDoubleClick: () => handleRowDoubleClick(item),
-							onMouseEnter: () => {
-								setHoveredRow(item.id);
-								onItemMouseEnter?.(item);
-							},
-							onMouseLeave: () => {
-								setHoveredRow(null);
-								setHoveredCell(null);
-								onItemMouseLeave?.(item);
-							},
-							'data-selected': isSelected,
-							'data-index': rowIndex,
-							'data-item-id': item.id,
-						};
+	const handleRowEnter = useCallback((item: ListItem) => {
+		setHoveredRow(item.id);
+		latestRef.current.onItemMouseEnter?.(item as TItem);
+	}, []);
 
-						// Use custom row render or default
-						if (renderRow) {
-							return renderRow(item, rowState, rowDefaultProps);
-						}
+	const handleRowLeave = useCallback((item: ListItem) => {
+		setHoveredRow(null);
+		setHoveredColumnKey(null);
+		latestRef.current.onItemMouseLeave?.(item as TItem);
+	}, []);
 
-						// Default row rendering
-						return (
-							<div {...rowDefaultProps}>
-								{columns.map((column, columnIndex) => {
-									const value = item[column.key];
-									const isCellHovered = 
-										hoveredCell?.rowId === item.id && 
-										hoveredCell?.columnKey === column.key;
+	const handleCellEnter = useCallback((item: ListItem, column: ListColumn) => {
+		setHoveredColumnKey(column.key);
+		latestRef.current.onCellMouseEnter?.(item as TItem, column);
+	}, []);
 
-									const cellState: CellRenderState = {
-										isHovered: isCellHovered,
-										isRowSelected: isSelected,
-										columnIndex,
-										rowIndex,
-									};
+	const handleCellLeave = useCallback((item: ListItem, column: ListColumn) => {
+		setHoveredColumnKey(null);
+		latestRef.current.onCellMouseLeave?.(item as TItem, column);
+	}, []);
 
-									// Cell event handlers
-									const handleCellClick = (e: React.MouseEvent) => {
-										if (onCellClick) {
-											onCellClick(item, column, e);
-										}
-									};
+	const handleCellClickInternal = useCallback(
+		(item: ListItem, column: ListColumn, event: React.MouseEvent) => {
+			latestRef.current.onCellClick?.(item as TItem, column, event);
+		},
+		[]
+	);
 
-									const handleCellMouseEnter = () => {
-										setHoveredCell({ rowId: item.id, columnKey: column.key });
-										if (onCellMouseEnter) {
-											onCellMouseEnter(item, column);
-										}
-									};
-
-									const handleCellMouseLeave = () => {
-										setHoveredCell(null);
-										if (onCellMouseLeave) {
-											onCellMouseLeave(item, column);
-										}
-									};
-
-									// Use custom cell render or default
-									if (renderCell) {
-										return (
-											<div
-												key={column.key}
-												className={mergeClasses(styles.cell, classes?.cell)}
-												style={{
-													width:
-														typeof column.width === 'number'
-															? `${column.width}px`
-															: column.width,
-												}}
-												data-column={column.key}
-												data-hovered={isCellHovered}
-												onClick={handleCellClick}
-												onMouseEnter={handleCellMouseEnter}
-												onMouseLeave={handleCellMouseLeave}
-											>
-												{renderCell(value, item, column, cellState)}
-											</div>
-										);
-									}
-
-									// Default cell rendering
-									return (
-										<div
-											key={column.key}
-											className={mergeClasses(styles.cell, classes?.cell)}
-											style={{
-												width:
-													typeof column.width === 'number'
-														? `${column.width}px`
-														: column.width,
-											}}
-											data-column={column.key}
-											data-hovered={isCellHovered}
-											onClick={handleCellClick}
-											onMouseEnter={handleCellMouseEnter}
-											onMouseLeave={handleCellMouseLeave}
-										>
-											{columnIndex === 0 && item.icon && (
-												<span className={styles.icon}>{item.icon}</span>
-											)}
-											{value}
-										</div>
-									);
-								})}
-							</div>
-						);
-					})}
-				</div>
-			</div>
-		);
+	// Container style
+	const containerStyle: React.CSSProperties = {};
+	if (height !== 'auto') {
+		containerStyle.height = typeof height === 'number' ? `${height}px` : height;
 	}
-);
 
-ListView.displayName = 'ListView';
+	const renderBody = () => {
+		if (loading) {
+			return (
+				<div className={mergeClasses(styles.placeholder, classes?.loading)}>{loadingState}</div>
+			);
+		}
+
+		if (items.length === 0) {
+			return <div className={mergeClasses(styles.placeholder, classes?.empty)}>{emptyState}</div>;
+		}
+
+		return items.map((item, rowIndex) => (
+			<ListViewRow
+				key={item.id}
+				item={item}
+				columns={columns}
+				columnStyles={columnStyles}
+				rowIndex={rowIndex}
+				isSelected={selectedSet.has(item.id)}
+				isHovered={hoveredRow === item.id}
+				hoveredColumnKey={hoveredRow === item.id ? hoveredColumnKey : null}
+				classes={classes}
+				onRowClick={handleRowClick}
+				onRowDoubleClick={handleRowDoubleClick}
+				onRowEnter={handleRowEnter}
+				onRowLeave={handleRowLeave}
+				onCellEnter={handleCellEnter}
+				onCellLeave={handleCellLeave}
+				onCellClickInternal={handleCellClickInternal}
+				renderRow={renderRow}
+				renderCell={renderCell}
+			/>
+		));
+	};
+
+	return (
+		<div ref={ref} className={classNames} style={containerStyle}>
+			{/* Column headers */}
+			<div className={mergeClasses(styles.header, classes?.header)}>
+				{columns.map((column, columnIndex) => {
+					const isSorted = sortColumn === column.key;
+					const headerState: HeaderCellRenderState = {
+						isSorted,
+						sortDirection: isSorted ? sortDirection : undefined,
+					};
+
+					const headerDefaultProps: HeaderCellDefaultProps = {
+						key: column.key,
+						className: mergeClasses(
+							styles.headerCell,
+							column.sortable !== false && styles.sortable,
+							classes?.headerCell
+						),
+						style: columnStyles[columnIndex],
+						onClick: () => handleColumnClick(column.key, column.sortable),
+						'data-column': column.key,
+						'data-sortable': column.sortable !== false,
+						...(isSorted && {
+							'data-sorted': true,
+							'data-sort-direction': sortDirection,
+						}),
+					};
+
+					// Custom render owns the element, so it also owns the key.
+					if (renderHeaderCell) {
+						return (
+							<React.Fragment key={column.key}>
+								{renderHeaderCell(column, headerState, headerDefaultProps)}
+							</React.Fragment>
+						);
+					}
+
+					// `key` comes off the props object and onto the element itself.
+					const { key: _key, ...headerElementProps } = headerDefaultProps;
+
+					return (
+						<div key={column.key} {...headerElementProps}>
+							{column.label}
+							{isSorted && (
+								<span className={styles.sortIndicator}>
+									{sortDirection === 'asc' ? '▲' : '▼'}
+								</span>
+							)}
+						</div>
+					);
+				})}
+			</div>
+
+			{/* List items */}
+			<div className={mergeClasses(styles.body, classes?.body)} aria-busy={loading || undefined}>
+				{renderBody()}
+			</div>
+		</div>
+	);
+}
+
+/**
+ * `forwardRef` erases generics, so the forwarded component is re-cast to a
+ * signature that keeps `TItem`. This is what lets `<ListView<FileRow> …>`
+ * infer the row type in `renderCell`, `onItemOpen` and friends.
+ */
+export const ListView = forwardRef(ListViewInner) as <TItem extends ListItem = ListItem>(
+	props: ListViewProps<TItem> & { ref?: React.Ref<HTMLDivElement> }
+) => React.ReactElement | null;
+
+(ListView as { displayName?: string }).displayName = 'ListView';
 
 export default ListView;

@@ -1,12 +1,17 @@
 // Common types used across the Mac OS 9 UI library
 
 /**
- * Generic classes object for targeting sub-elements within components
- * Components extend this with specific element keys
+ * Generic classes object for targeting sub-elements within components.
+ * Components extend this with specific element keys.
+ *
+ * There is deliberately no `[key: string]: string | undefined` index
+ * signature. With one, every component-specific classes type — WindowClasses,
+ * ListViewClasses — silently accepted any key at all, so a typo like
+ * `titlebar` for `titleBar` type-checked and then did nothing at runtime.
+ * Component types satisfy this constraint structurally without it.
  */
 export interface ComponentClasses {
 	root?: string;
-	[key: string]: string | undefined;
 }
 
 /**
@@ -42,14 +47,23 @@ export interface RenderState {
 }
 
 /**
- * Common variant types for Mac OS 9 components
+ * Common variant types for Mac OS 9 components.
+ *
+ * This mirrors what the components actually accept. It previously read
+ * `'default' | 'primary' | 'secondary'` while Button and IconButton
+ * implemented `'default' | 'primary' | 'danger'` — so the exported type
+ * named a variant no component had and omitted one every component did.
  */
-export type Variant = 'default' | 'primary' | 'secondary';
+export type Variant = 'default' | 'primary' | 'danger';
 
 /**
- * Common size types
+ * Common size types.
+ *
+ * Abbreviated to match the components. The exported type previously read
+ * `'small' | 'medium' | 'large'` while every component's `size` prop took
+ * `'sm' | 'md' | 'lg'`, making the shared type unusable with any of them.
  */
-export type Size = 'small' | 'medium' | 'large';
+export type Size = 'sm' | 'md' | 'lg';
 
 /**
  * Common state types

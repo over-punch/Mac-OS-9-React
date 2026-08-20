@@ -11,9 +11,23 @@ export interface MenuItemProps {
 	label: string;
 
 	/**
-	 * Optional keyboard shortcut to display (e.g., "⌘S", "Ctrl+O")
+	 * Optional keyboard shortcut to display (e.g., "⌘S", "Ctrl+O").
+	 *
+	 * The displayed form is also exposed to assistive tech via
+	 * `aria-keyshortcuts`, translated into the format that attribute requires
+	 * (`⌘S` becomes `Meta+S`). Pass {@link MenuItemProps.keyShortcut} if the
+	 * automatic translation is wrong for your notation.
 	 */
 	shortcut?: string;
+
+	/**
+	 * Explicit `aria-keyshortcuts` value, overriding the value derived from
+	 * `shortcut`. Use the format from the ARIA specification — modifiers
+	 * `Alt`, `Control`, `Meta`, `Shift`, joined to the key with `+`.
+	 *
+	 * @example "Meta+Shift+S"
+	 */
+	keyShortcut?: string;
 
 	/**
 	 * Whether the menu item is disabled
@@ -77,6 +91,43 @@ export interface MenuItemProps {
 }
 
 /**
+ * Modifier glyphs and words, mapped to the modifier names that
+ * `aria-keyshortcuts` accepts.
+ */
+const SHORTCUT_MODIFIERS: ReadonlyArray<readonly [RegExp, string]> = [
+	[/⌘|cmd|command/gi, 'Meta'],
+	[/⌥|opt|option/gi, 'Alt'],
+	[/⇧|shift/gi, 'Shift'],
+	[/⌃|ctrl|control/gi, 'Control'],
+];
+
+/**
+ * Converts a displayed shortcut into an `aria-keyshortcuts` value.
+ *
+ * A menu item that shows "⌘S" communicates nothing to a screen reader: the
+ * glyph is not announced as a key combination and there is no attribute
+ * carrying the binding. This produces "Meta+S" for that attribute while the
+ * visible text stays as designed.
+ */
+function toAriaKeyShortcuts(shortcut: string | undefined): string | undefined {
+	if (!shortcut) return undefined;
+
+	let result = shortcut.trim();
+	for (const [pattern, name] of SHORTCUT_MODIFIERS) {
+		result = result.replace(pattern, `${name}+`);
+	}
+
+	// Collapse the separators that the source notation may or may not have
+	// used, then drop any trailing one.
+	result = result
+		.replace(/\s*\+\s*/g, '+')
+		.replace(/\++/g, '+')
+		.replace(/\+$/, '');
+
+	return result.length > 0 ? result : undefined;
+}
+
+/**
  * Mac OS 9 style MenuItem component
  * 
  * Individual menu item for use within MenuBar or dropdown menus.
@@ -118,6 +169,7 @@ export const MenuItem = forwardRef<HTMLButtonElement, MenuItemProps>(
 		{
 			label,
 			shortcut,
+			keyShortcut,
 			disabled = false,
 			selected = false,
 			separator = false,
@@ -207,9 +259,13 @@ export const MenuItem = forwardRef<HTMLButtonElement, MenuItemProps>(
 					onFocus={onFocus}
 					onBlur={onBlur}
 					disabled={disabled}
-					role="menuitem"
+					// aria-checked is only valid on menuitemcheckbox /
+					// menuitemradio, never on a plain menuitem, so the role
+					// follows the presence of a checked state.
+					role={checked ? 'menuitemcheckbox' : 'menuitem'}
 					aria-disabled={disabled}
 					aria-checked={checked ? 'true' : undefined}
+					aria-keyshortcuts={keyShortcut ?? toAriaKeyShortcuts(shortcut)}
 					aria-haspopup={effectiveHasSubmenu ? 'menu' : undefined}
 					aria-expanded={effectiveHasSubmenu ? isSubmenuOpen : undefined}
 				>
@@ -223,10 +279,18 @@ export const MenuItem = forwardRef<HTMLButtonElement, MenuItemProps>(
 					<span className={styles.label}>{label}</span>
 
 					{/* Shortcut */}
-					{shortcut && <span className={styles.shortcut}>{shortcut}</span>}
+					{shortcut && (
+						<span className={styles.shortcut} aria-hidden="true">
+							{shortcut}
+						</span>
+					)}
 
 					{/* Submenu indicator */}
-					{effectiveHasSubmenu && <span className={styles.submenuArrow}>▶</span>}
+					{effectiveHasSubmenu && (
+						<span className={styles.submenuArrow} aria-hidden="true">
+							▶
+						</span>
+					)}
 				</button>
 
 				{/* Submenu */}

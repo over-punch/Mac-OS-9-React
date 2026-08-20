@@ -1,6 +1,6 @@
 "use client";
 import { jsx, jsxs, Fragment } from 'react/jsx-runtime';
-import React, { forwardRef, useId, useState, useCallback, useRef, Children, isValidElement, useEffect, useLayoutEffect } from 'react';
+import React, { forwardRef, Children, isValidElement, cloneElement, useId, useState, useCallback, useRef, useMemo, useEffect, useLayoutEffect } from 'react';
 
 // URL sanitization helpers for any component that renders consumer-supplied hrefs.
 // Defends against `javascript:`, `data:`, `vbscript:` and other unsafe schemes
@@ -74,10 +74,11 @@ var styles$e = {"button":"Button-module_button","button--sm":"Button-module_butt
  *
  * Features:
  * - Classic 3-layer bevel effect (highlight, shadow, drop shadow)
- * - Polymorphic - renders as <button> or <a> based on `as` prop
+ * - Polymorphic - renders as `<button>` or `<a>` based on the `as` prop, or
+ *   defers to a router link via `asChild`
  * - Loading states with optional Mac OS 9 watch cursor
  * - Icon support (left, right, or icon-only)
- * - Full accessibility with ARIA support
+ * - Standard `aria-*` attributes pass straight through
  * - Form integration props
  * - Auto-security for external links
  *
@@ -94,6 +95,11 @@ var styles$e = {"button":"Button-module_button","button--sm":"Button-module_butt
  *   External Link
  * </Button>
  *
+ * // Router link
+ * <Button asChild>
+ *   <Link href="/dashboard">Go to Dashboard</Link>
+ * </Button>
+ *
  * // With icons
  * <Button leftIcon={<FolderIcon />}>Open</Button>
  * <Button iconOnly aria-label="Close">
@@ -101,8 +107,24 @@ var styles$e = {"button":"Button-module_button","button--sm":"Button-module_butt
  * </Button>
  * ```
  */
-const Button = forwardRef((props, ref) => {
-    const { variant = 'default', size = 'md', disabled = false, fullWidth = false, loading = false, loadingText, useCursorLoading = false, leftIcon, rightIcon, iconOnly = false, ariaLabel, ariaDescribedBy, ariaPressed, className = '', children, ...restProps } = props;
+const ButtonImpl = forwardRef((props, ref) => {
+    const { variant = 'default', size = 'md', disabled = false, fullWidth = false, loading = false, loadingText, useCursorLoading = false, leftIcon, rightIcon, iconOnly = false, asChild = false, ariaLabel, ariaDescribedBy, ariaPressed, className = '', children, ...restProps } = props;
+    // Standard aria-* attributes win over the deprecated camelCase aliases.
+    const { 'aria-label': ariaLabelAttr, 'aria-describedby': ariaDescribedByAttr, 'aria-pressed': ariaPressedAttr, ...domProps } = restProps;
+    const resolvedAriaLabel = ariaLabelAttr ?? ariaLabel;
+    const resolvedAriaDescribedBy = ariaDescribedByAttr ?? ariaDescribedBy;
+    const resolvedAriaPressed = ariaPressedAttr ?? ariaPressed;
+    // An icon-only button with no resolvable accessible name is a control a
+    // screen reader announces as just "button". Fail loudly in development
+    // instead of shipping it silently.
+    const iconOnlyFallbackLabel = typeof children === 'string' ? children : undefined;
+    if (process.env.NODE_ENV !== 'production' &&
+        iconOnly &&
+        !resolvedAriaLabel &&
+        !iconOnlyFallbackLabel) {
+        console.error('Button: `iconOnly` was set but no accessible name could be determined. ' +
+            'Pass `aria-label`, because non-string children cannot supply one.');
+    }
     // Determine if rendering as link
     const isLink = props.as === 'a';
     // Build class names
@@ -120,40 +142,22 @@ const Button = forwardRef((props, ref) => {
     ]
         .filter(Boolean)
         .join(' ');
-    // Prepare ARIA attributes
-    const ariaAttributes = {
-        'aria-label': iconOnly ? (ariaLabel || (typeof children === 'string' ? children : undefined)) : ariaLabel,
-        'aria-describedby': ariaDescribedBy,
-        'aria-pressed': ariaPressed,
-        'aria-disabled': disabled || loading,
-        'aria-busy': loading,
+    // Shared ARIA. These are spread AFTER the caller's remaining props so a
+    // stray `aria-disabled`/`aria-busy` in the rest props can't contradict the
+    // component's own `disabled`/`loading` state.
+    //
+    // aria-disabled is applied on every branch, not just the anchor. The
+    // `<button>` element also gets a native `disabled`, which is what actually
+    // blocks interaction; aria-disabled alongside it keeps the exposed state
+    // identical no matter which element Button ends up rendering, which is the
+    // consistency the other form components are aligned to.
+    const sharedAria = {
+        'aria-label': iconOnly ? (resolvedAriaLabel ?? iconOnlyFallbackLabel) : resolvedAriaLabel,
+        'aria-describedby': resolvedAriaDescribedBy,
+        'aria-pressed': resolvedAriaPressed,
+        'aria-disabled': disabled || loading || undefined,
+        'aria-busy': loading || undefined,
     };
-    // Handle link-specific props
-    if (isLink) {
-        const { href, target, rel, download, ...linkProps } = restProps;
-        // Block javascript:/data:/vbscript: hrefs before they reach the DOM.
-        // sanitizeUrl returns undefined for unsafe schemes; an anchor with no
-        // href is non-functional but still visible, which is the desired
-        // fail-closed behavior for untrusted input.
-        const safeHref = sanitizeUrl(href);
-        // Auto-add security rel for external links
-        let finalRel = rel;
-        if (target === '_blank' && !rel) {
-            finalRel = 'noopener noreferrer';
-        }
-        // Links can't be truly disabled, so prevent default
-        const handleClick = (e) => {
-            if (disabled || loading) {
-                e.preventDefault();
-                return;
-            }
-            linkProps.onClick?.(e);
-        };
-        return (jsx("a", { ref: ref, href: disabled || loading ? undefined : safeHref, target: target, rel: finalRel, download: download, className: classNames, ...ariaAttributes, ...linkProps, onClick: handleClick, children: renderButtonContent() }));
-    }
-    // Handle button-specific props
-    const { type = 'button', form, formAction, formMethod, formNoValidate, formTarget, ...buttonProps } = restProps;
-    return (jsx("button", { ref: ref, type: type, disabled: disabled || loading, form: form, formAction: formAction, formMethod: formMethod, formNoValidate: formNoValidate, formTarget: formTarget, className: classNames, ...ariaAttributes, ...buttonProps, children: renderButtonContent() }));
     // Render button content with icons and loading state
     function renderButtonContent() {
         // Show loading state
@@ -167,8 +171,63 @@ const Button = forwardRef((props, ref) => {
         // Button with icons
         return (jsxs(Fragment, { children: [leftIcon && (jsx("span", { className: styles$e['button__icon-left'], "aria-hidden": "true", children: leftIcon })), jsx("span", { className: styles$e['button__text'], children: children }), rightIcon && (jsx("span", { className: styles$e['button__icon-right'], "aria-hidden": "true", children: rightIcon }))] }));
     }
+    // --- asChild: hand rendering to the caller's element -------------------
+    //
+    // The child owns the element and its own href/navigation; Button only
+    // contributes styling, ARIA, and the disabled/loading behaviour.
+    if (asChild) {
+        const child = Children.only(children);
+        if (!isValidElement(child)) {
+            if (process.env.NODE_ENV !== 'production') {
+                console.error('Button: `asChild` expects a single React element child.');
+            }
+            return null;
+        }
+        const childProps = child.props;
+        return cloneElement(child, {
+            ...domProps,
+            ...sharedAria,
+            ref,
+            className: [classNames, childProps.className].filter(Boolean).join(' '),
+            onClick: (event) => {
+                if (disabled || loading) {
+                    event.preventDefault();
+                    return;
+                }
+                childProps.onClick?.(event);
+            },
+        });
+    }
+    // --- Anchor ------------------------------------------------------------
+    if (isLink) {
+        const { href, target, rel, download, onClick, ...linkProps } = domProps;
+        // Block javascript:/data:/vbscript: hrefs before they reach the DOM.
+        // sanitizeUrl returns undefined for unsafe schemes; an anchor with no
+        // href is non-functional but still visible, which is the desired
+        // fail-closed behavior for untrusted input.
+        const safeHref = sanitizeUrl(href);
+        // Auto-add security rel for external links
+        let finalRel = rel;
+        if (target === '_blank' && !rel) {
+            finalRel = 'noopener noreferrer';
+        }
+        // Anchors have no native disabled state, so aria-disabled carries the
+        // meaning and the click handler enforces it.
+        const handleClick = (event) => {
+            if (disabled || loading) {
+                event.preventDefault();
+                return;
+            }
+            onClick?.(event);
+        };
+        return (jsx("a", { ...linkProps, ref: ref, href: disabled || loading ? undefined : safeHref, target: target, rel: finalRel, download: download, className: classNames, onClick: handleClick, ...sharedAria, children: renderButtonContent() }));
+    }
+    // --- Button ------------------------------------------------------------
+    const { type = 'button', form, formAction, formMethod, formNoValidate, formTarget, ...buttonProps } = domProps;
+    return (jsx("button", { ...buttonProps, ref: ref, type: type, disabled: disabled || loading, form: form, formAction: formAction, formMethod: formMethod, formNoValidate: formNoValidate, formTarget: formTarget, className: classNames, ...sharedAria, children: renderButtonContent() }));
 });
-Button.displayName = 'Button';
+ButtonImpl.displayName = 'Button';
+const Button = ButtonImpl;
 
 var styles$d = {"icon":"Icon-module_icon","icon--xs":"Icon-module_icon--xs","icon--sm":"Icon-module_icon--sm","icon--md":"Icon-module_icon--md","icon--lg":"Icon-module_icon--lg","icon--xl":"Icon-module_icon--xl"};
 
@@ -340,7 +399,9 @@ const Checkbox = forwardRef(({ checked, defaultChecked, indeterminate = false, d
         }
     }, [indeterminate, combinedRef]);
     // Generate ID if not provided (for label association)
-    const checkboxId = id || React.useId();
+    // useId must be called unconditionally — see the note in TextField.
+    const generatedId = React.useId();
+    const checkboxId = id ?? generatedId;
     // Build class names
     const wrapperClassNames = [
         styles$b.wrapper,
@@ -564,7 +625,11 @@ var styles$9 = {"wrapper":"TextField-module_wrapper","wrapper--full-width":"Text
  */
 const TextField = forwardRef(({ label, labelPosition = 'top', size = 'md', fullWidth = false, error = false, errorMessage, helperText, leftIcon, rightIcon, ariaLabel, ariaDescribedBy, className = '', wrapperClassName = '', type = 'text', id, disabled, ...props }, ref) => {
     // Generate ID if not provided (for label association)
-    const inputId = id || React.useId();
+    // useId must be called unconditionally. Writing `id || React.useId()`
+    // short-circuits the hook away whenever `id` is supplied, so the hook
+    // order changes if `id` ever goes from defined to undefined.
+    const generatedId = React.useId();
+    const inputId = id ?? generatedId;
     // Generate helper/error text ID for aria-describedby
     const helperId = `${inputId}-helper`;
     const errorId = `${inputId}-error`;
@@ -656,7 +721,9 @@ var styles$8 = {"wrapper":"Select-module_wrapper","wrapper--full-width":"Select-
  */
 const Select = forwardRef(({ label, labelPosition = 'top', size = 'md', fullWidth = false, error = false, errorMessage, helperText, options, placeholder, ariaLabel, ariaDescribedBy, className = '', wrapperClassName = '', id, disabled, children, ...props }, ref) => {
     // Generate ID if not provided (for label association)
-    const selectId = id || React.useId();
+    // useId must be called unconditionally — see the note in TextField.
+    const generatedId = React.useId();
+    const selectId = id ?? generatedId;
     // Generate helper/error text ID for aria-describedby
     const helperId = `${selectId}-helper`;
     const errorId = `${selectId}-error`;
@@ -748,13 +815,22 @@ TabPanel.displayName = 'TabPanel';
  * </Tabs>
  * ```
  */
-const Tabs = ({ children, defaultActiveTab = 0, activeTab: controlledActiveTab, onChange, size = 'md', fullWidth = false, className = '', tabListClassName = '', panelClassName = '', ariaLabel = 'Tabs', }) => {
+const Tabs = forwardRef(function Tabs({ children, defaultActiveTab = 0, activeTab: controlledActiveTab, onChange, size = 'md', fullWidth = false, className = '', tabListClassName = '', panelClassName = '', ariaLabel = 'Tabs', ariaLabelledBy, }, ref) {
     // Controlled vs uncontrolled state
     const [uncontrolledActiveTab, setUncontrolledActiveTab] = useState(defaultActiveTab);
     const isControlled = controlledActiveTab !== undefined;
     const activeTabIndex = isControlled ? controlledActiveTab : uncontrolledActiveTab;
-    // Extract tab information from children
-    const tabs = Children.toArray(children).filter((child) => isValidElement(child));
+    // Unique per Tabs instance. The ids used to be `tab-0` / `panel-0`, which
+    // collided the moment a page rendered two Tabs — duplicate DOM ids, and
+    // aria-controls on the second set pointing at the first set's panels.
+    const baseId = useId();
+    // Extract tab information from children.
+    //
+    // Memoised on `children`: this array was rebuilt on every render and fed
+    // into the dependency list of handleTabChange and handleKeyDown, so both
+    // callbacks were recreated every render and every tab button's props
+    // churned along with them.
+    const tabs = useMemo(() => Children.toArray(children).filter((child) => isValidElement(child)), [children]);
     // Handle tab change
     const handleTabChange = useCallback((index) => {
         const tab = tabs[index];
@@ -767,7 +843,7 @@ const Tabs = ({ children, defaultActiveTab = 0, activeTab: controlledActiveTab, 
     }, [tabs, isControlled, onChange]);
     // Keyboard navigation
     const handleKeyDown = useCallback((event, currentIndex) => {
-        let newIndex = currentIndex;
+        let newIndex;
         switch (event.key) {
             case 'ArrowLeft':
             case 'ArrowUp':
@@ -833,7 +909,7 @@ const Tabs = ({ children, defaultActiveTab = 0, activeTab: controlledActiveTab, 
     ]
         .filter(Boolean)
         .join(' ');
-    return (jsxs("div", { className: containerClassNames, children: [jsx("div", { role: "tablist", "aria-label": ariaLabel, className: tabListClassNames, children: tabs.map((tab, index) => {
+    return (jsxs("div", { ref: ref, className: containerClassNames, children: [jsx("div", { role: "tablist", "aria-label": ariaLabelledBy ? undefined : ariaLabel, "aria-labelledby": ariaLabelledBy, className: tabListClassNames, children: tabs.map((tab, index) => {
                     const isActive = index === activeTabIndex;
                     const isDisabled = tab.props.disabled;
                     const tabClassNames = [
@@ -845,12 +921,18 @@ const Tabs = ({ children, defaultActiveTab = 0, activeTab: controlledActiveTab, 
                     ]
                         .filter(Boolean)
                         .join(' ');
-                    return (jsxs("button", { role: "tab", type: "button", "aria-selected": isActive, "aria-controls": `panel-${index}`, id: `tab-${index}`, tabIndex: isActive ? 0 : -1, disabled: isDisabled, className: tabClassNames, onClick: () => handleTabChange(index), onKeyDown: (e) => handleKeyDown(e, index), children: [tab.props.icon && jsx("span", { className: styles$7.tabIcon, children: tab.props.icon }), tab.props.label] }, index));
+                    return (jsxs("button", { role: "tab", type: "button", "aria-selected": isActive, "aria-controls": `${baseId}-panel-${index}`, id: `${baseId}-tab-${index}`, tabIndex: isActive ? 0 : -1, disabled: isDisabled, className: tabClassNames, onClick: () => handleTabChange(index), onKeyDown: (e) => handleKeyDown(e, index), children: [tab.props.icon && jsx("span", { className: styles$7.tabIcon, children: tab.props.icon }), tab.props.label] }, index));
                 }) }), tabs.map((tab, index) => {
                 const isActive = index === activeTabIndex;
-                return (jsx("div", { role: "tabpanel", id: `panel-${index}`, "aria-labelledby": `tab-${index}`, hidden: !isActive, className: panelContainerClassNames, children: isActive && tab.props.children }, index));
+                return (jsx("div", { role: "tabpanel", id: `${baseId}-panel-${index}`, "aria-labelledby": `${baseId}-tab-${index}`, hidden: !isActive, 
+                    // A tab panel must be reachable from the tab list. When the
+                    // panel holds nothing focusable — static text, an image —
+                    // Tab from the selected tab skipped straight past the
+                    // content, so the panel was unreachable by keyboard and
+                    // unreadable in a screen reader's focus mode.
+                    tabIndex: isActive ? 0 : undefined, className: panelContainerClassNames, children: isActive && tab.props.children }, index));
             })] }));
-};
+});
 Tabs.displayName = 'Tabs';
 
 // Utility for merging CSS class names
@@ -1583,226 +1665,41 @@ const Dialog = forwardRef(({ open = false, onClose, closeOnBackdropClick = true,
 });
 Dialog.displayName = 'Dialog';
 
-var styles$4 = {"menuBar":"MenuBar-module_menuBar","leftContent":"MenuBar-module_leftContent","menusContainer":"MenuBar-module_menusContainer","menuContainer":"MenuBar-module_menuContainer","rightContent":"MenuBar-module_rightContent","menuButton":"MenuBar-module_menuButton","menuButton--disabled":"MenuBar-module_menuButton--disabled","menuButton--open":"MenuBar-module_menuButton--open","dropdown":"MenuBar-module_dropdown","dropdown--right":"MenuBar-module_dropdown--right"};
+var styles$4 = {"menuItem":"MenuItem-module_menuItem","menuItem--disabled":"MenuItem-module_menuItem--disabled","menuItem--selected":"MenuItem-module_menuItem--selected","menuItem--separator":"MenuItem-module_menuItem--separator","checkmark":"MenuItem-module_checkmark","icon":"MenuItem-module_icon","label":"MenuItem-module_label","shortcut":"MenuItem-module_shortcut","submenuArrow":"MenuItem-module_submenuArrow","submenu":"MenuItem-module_submenu","separatorLine":"MenuItem-module_separatorLine"};
 
 /**
- * Mac OS 9 style MenuBar component
- *
- * Horizontal menu bar with dropdown menus, logo support, and status area.
- *
- * Features:
- * - Classic Mac OS 9 menu bar styling
- * - Horizontal menu layout
- * - Dropdown menus on click
- * - Link-type menu items for navigation
- * - Logo/icon support on the left
- * - Status area on the right (clock, system indicators, etc.)
- * - Keyboard navigation (Left/Right for menus, Up/Down for items)
- * - Click outside to close
- * - Escape key to close
- * - Controlled state (consumers manage open/closed)
- * - Disabled menu support
- *
- * @example
- * ```tsx
- * const [openMenu, setOpenMenu] = useState<number | undefined>();
- *
- * <MenuBar
- *   leftContent={<img src="/logo.png" alt="Logo" width={16} height={16} />}
- *   openMenuIndex={openMenu}
- *   onMenuOpen={setOpenMenu}
- *   onMenuClose={() => setOpenMenu(undefined)}
- *   menus={[
- *     {
- *       label: 'File',
- *       type: 'dropdown',
- *       items: (
- *         <>
- *           <MenuItem label="Open..." shortcut="⌘O" onClick={() => {}} />
- *           <MenuItem label="Save" shortcut="⌘S" onClick={() => {}} />
- *         </>
- *       ),
- *     },
- *     {
- *       label: 'Home',
- *       type: 'link',
- *       href: '/',
- *     },
- *   ]}
- *   rightContent={[
- *     <Clock key="clock" />,
- *     <div key="divider" className={styles.divider} />,
- *     <SystemIndicator key="indicator" />,
- *   ]}
- * />
- * ```
+ * Modifier glyphs and words, mapped to the modifier names that
+ * `aria-keyshortcuts` accepts.
  */
-const MenuBar = forwardRef(({ menus, openMenuIndex, onMenuOpen, onMenuClose, className = '', dropdownClassName = '', leftContent, rightContent, }, ref) => {
-    const [menuBarElement, setMenuBarElement] = useState(null);
-    const [focusedIndex, setFocusedIndex] = useState(-1);
-    const [internalOpenIndex, setInternalOpenIndex] = useState(undefined);
-    const isControlled = openMenuIndex !== undefined;
-    const activeOpenIndex = isControlled ? openMenuIndex : internalOpenIndex;
-    const handleMenuOpenInternal = (index) => {
-        if (!isControlled) {
-            setInternalOpenIndex(index);
-        }
-        onMenuOpen?.(index);
-    };
-    const handleMenuCloseInternal = () => {
-        if (!isControlled) {
-            setInternalOpenIndex(undefined);
-        }
-        onMenuClose?.();
-    };
-    // Handle click outside to close menu
-    useEffect(() => {
-        if (activeOpenIndex === undefined || !menuBarElement)
-            return;
-        const handleClickOutside = (event) => {
-            if (menuBarElement && !menuBarElement.contains(event.target)) {
-                handleMenuCloseInternal();
-            }
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, [activeOpenIndex, onMenuClose, menuBarElement, isControlled]);
-    // Handle Escape key to close menu
-    useEffect(() => {
-        if (activeOpenIndex === undefined)
-            return;
-        const handleEscape = (event) => {
-            if (event.key === 'Escape') {
-                event.preventDefault();
-                handleMenuCloseInternal();
-            }
-        };
-        document.addEventListener('keydown', handleEscape);
-        return () => document.removeEventListener('keydown', handleEscape);
-    }, [activeOpenIndex, onMenuClose, isControlled]);
-    // Handle keyboard navigation
-    const handleKeyDown = useCallback((event) => {
-        switch (event.key) {
-            case 'ArrowLeft':
-                event.preventDefault();
-                if (activeOpenIndex !== undefined) {
-                    // Move to previous menu
-                    const prevIndex = activeOpenIndex > 0 ? activeOpenIndex - 1 : menus.length - 1;
-                    if (!menus[prevIndex]?.disabled) {
-                        handleMenuOpenInternal(prevIndex);
-                    }
-                }
-                else if (focusedIndex > 0) {
-                    setFocusedIndex(focusedIndex - 1);
-                }
-                break;
-            case 'ArrowRight':
-                event.preventDefault();
-                if (activeOpenIndex !== undefined) {
-                    // Move to next menu
-                    const nextIndex = activeOpenIndex < menus.length - 1 ? activeOpenIndex + 1 : 0;
-                    if (!menus[nextIndex]?.disabled) {
-                        handleMenuOpenInternal(nextIndex);
-                    }
-                }
-                else if (focusedIndex < menus.length - 1) {
-                    setFocusedIndex(focusedIndex + 1);
-                }
-                break;
-            case 'ArrowDown':
-                event.preventDefault();
-                if (activeOpenIndex === undefined && focusedIndex >= 0) {
-                    // Open the focused menu (only if it's a dropdown)
-                    const menu = menus[focusedIndex];
-                    if (!menu?.disabled && menu?.type !== 'link') {
-                        handleMenuOpenInternal(focusedIndex);
-                    }
-                }
-                break;
-            case 'Enter':
-            case ' ':
-                event.preventDefault();
-                if (activeOpenIndex === undefined && focusedIndex >= 0) {
-                    const menu = menus[focusedIndex];
-                    if (!menu?.disabled) {
-                        if (menu.type === 'link') {
-                            // Trigger click handler for link-type menu
-                            menu.onClick?.();
-                        }
-                        else {
-                            // Open the focused dropdown menu
-                            handleMenuOpenInternal(focusedIndex);
-                        }
-                    }
-                }
-                break;
-        }
-    }, [activeOpenIndex, focusedIndex, menus, onMenuOpen, onMenuClose, isControlled]);
-    // Handle menu button click
-    const handleMenuClick = (index) => {
-        const menu = menus[index];
-        if (menu?.disabled)
-            return;
-        if (menu.type === 'link') {
-            // For link-type menus, trigger the onClick handler
-            menu.onClick?.();
-            return;
-        }
-        if (activeOpenIndex === index) {
-            // Clicking the same menu closes it
-            handleMenuCloseInternal();
-        }
-        else {
-            // Open the clicked menu
-            handleMenuOpenInternal(index);
-        }
-    };
-    // Class names
-    const menuBarClassNames = [styles$4.menuBar, className].filter(Boolean).join(' ');
-    const dropdownClassNames = [styles$4.dropdown, dropdownClassName].filter(Boolean).join(' ');
-    // Callback ref to handle both internal state and forwarded ref
-    const handleRef = useCallback((node) => {
-        setMenuBarElement(node);
-        if (typeof ref === 'function') {
-            ref(node);
-        }
-        else if (ref) {
-            ref.current = node;
-        }
-    }, [ref]);
-    return (jsxs("div", { ref: handleRef, className: menuBarClassNames, role: "menubar", onKeyDown: handleKeyDown, children: [leftContent && (jsx("div", { className: styles$4.leftContent, children: leftContent })), jsx("div", { className: styles$4.menusContainer, children: menus.map((menu, index) => {
-                    const isOpen = activeOpenIndex === index;
-                    const isDropdown = menu.type !== 'link';
-                    const menuButtonClassNames = [
-                        styles$4.menuButton,
-                        isOpen ? styles$4['menuButton--open'] : '',
-                        menu.disabled ? styles$4['menuButton--disabled'] : '',
-                    ]
-                        .filter(Boolean)
-                        .join(' ');
-                    // For link-type menus, render as anchor if href is provided.
-                    // sanitizeUrl strips javascript:/data:/vbscript: schemes before the
-                    // href reaches the DOM, preventing stored-XSS when consumers wire
-                    // menus from CMS or user-supplied data.
-                    if (menu.type === 'link' && menu.href) {
-                        const safeHref = sanitizeUrl(menu.href);
-                        return (jsx("div", { className: styles$4.menuContainer, children: jsx("a", { href: safeHref, className: menuButtonClassNames, onClick: (e) => {
-                                    if (menu.onClick) {
-                                        e.preventDefault();
-                                        menu.onClick();
-                                    }
-                                }, onFocus: () => setFocusedIndex(index), onBlur: () => setFocusedIndex(-1), "aria-disabled": menu.disabled, children: jsx("h3", { children: menu.label }) }) }, index));
-                    }
-                    // Standard dropdown menu or link without href
-                    return (jsxs("div", { className: styles$4.menuContainer, children: [jsx("button", { type: "button", className: menuButtonClassNames, onClick: () => handleMenuClick(index), onFocus: () => setFocusedIndex(index), onBlur: () => setFocusedIndex(-1), disabled: menu.disabled, "aria-haspopup": isDropdown ? 'true' : undefined, "aria-expanded": isOpen, "aria-disabled": menu.disabled, children: jsx("h3", { children: menu.label }) }), isOpen && isDropdown && menu.items && (jsx("div", { className: dropdownClassNames, role: "menu", children: menu.items }))] }, index));
-                }) }), rightContent && (jsx("div", { className: styles$4.rightContent, children: Array.isArray(rightContent)
-                    ? rightContent.map((item, index) => (jsx(React.Fragment, { children: item }, index)))
-                    : rightContent }))] }));
-});
-MenuBar.displayName = 'MenuBar';
-
-var styles$3 = {"menuItem":"MenuItem-module_menuItem","menuItem--disabled":"MenuItem-module_menuItem--disabled","menuItem--selected":"MenuItem-module_menuItem--selected","menuItem--separator":"MenuItem-module_menuItem--separator","checkmark":"MenuItem-module_checkmark","icon":"MenuItem-module_icon","label":"MenuItem-module_label","shortcut":"MenuItem-module_shortcut","submenuArrow":"MenuItem-module_submenuArrow","submenu":"MenuItem-module_submenu","separatorLine":"MenuItem-module_separatorLine"};
-
+const SHORTCUT_MODIFIERS = [
+    [/⌘|cmd|command/gi, 'Meta'],
+    [/⌥|opt|option/gi, 'Alt'],
+    [/⇧|shift/gi, 'Shift'],
+    [/⌃|ctrl|control/gi, 'Control'],
+];
+/**
+ * Converts a displayed shortcut into an `aria-keyshortcuts` value.
+ *
+ * A menu item that shows "⌘S" communicates nothing to a screen reader: the
+ * glyph is not announced as a key combination and there is no attribute
+ * carrying the binding. This produces "Meta+S" for that attribute while the
+ * visible text stays as designed.
+ */
+function toAriaKeyShortcuts(shortcut) {
+    if (!shortcut)
+        return undefined;
+    let result = shortcut.trim();
+    for (const [pattern, name] of SHORTCUT_MODIFIERS) {
+        result = result.replace(pattern, `${name}+`);
+    }
+    // Collapse the separators that the source notation may or may not have
+    // used, then drop any trailing one.
+    result = result
+        .replace(/\s*\+\s*/g, '+')
+        .replace(/\++/g, '+')
+        .replace(/\+$/, '');
+    return result.length > 0 ? result : undefined;
+}
 /**
  * Mac OS 9 style MenuItem component
  *
@@ -1840,7 +1737,7 @@ var styles$3 = {"menuItem":"MenuItem-module_menuItem","menuItem--disabled":"Menu
  * <MenuItem label="Recent Files" hasSubmenu />
  * ```
  */
-const MenuItem = forwardRef(({ label, shortcut, disabled = false, selected = false, separator = false, checked = false, icon, onClick, onFocus, onBlur, className = '', hasSubmenu = false, items, }, ref) => {
+const MenuItem = forwardRef(({ label, shortcut, keyShortcut, disabled = false, selected = false, separator = false, checked = false, icon, onClick, onFocus, onBlur, className = '', hasSubmenu = false, items, }, ref) => {
     const [isSubmenuOpen, setIsSubmenuOpen] = useState(false);
     const effectiveHasSubmenu = hasSubmenu || !!items;
     // Internal refs to the trigger button and submenu container, used by the
@@ -1857,10 +1754,10 @@ const MenuItem = forwardRef(({ label, shortcut, disabled = false, selected = fal
     }, [ref]);
     // Class names
     const menuItemClassNames = [
-        styles$3.menuItem,
-        selected ? styles$3['menuItem--selected'] : '',
-        disabled ? styles$3['menuItem--disabled'] : '',
-        separator ? styles$3['menuItem--separator'] : '',
+        styles$4.menuItem,
+        selected ? styles$4['menuItem--selected'] : '',
+        disabled ? styles$4['menuItem--disabled'] : '',
+        separator ? styles$4['menuItem--separator'] : '',
         className,
     ]
         .filter(Boolean)
@@ -1894,33 +1791,349 @@ const MenuItem = forwardRef(({ label, shortcut, disabled = false, selected = fal
             buttonRef.current?.focus();
         }
     };
-    return (jsxs("div", { className: styles$3.menuItemContainer, onMouseEnter: () => setIsSubmenuOpen(true), onMouseLeave: () => setIsSubmenuOpen(false), style: { position: 'relative', width: '100%' }, children: [jsxs("button", { ref: setButtonRef, type: "button", className: menuItemClassNames, onClick: handleClick, onKeyDown: handleKeyDown, onFocus: onFocus, onBlur: onBlur, disabled: disabled, role: "menuitem", "aria-disabled": disabled, "aria-checked": checked ? 'true' : undefined, "aria-haspopup": effectiveHasSubmenu ? 'menu' : undefined, "aria-expanded": effectiveHasSubmenu ? isSubmenuOpen : undefined, children: [jsx("span", { className: styles$3.checkmark, children: checked && '✓' }), icon && jsx("span", { className: styles$3.icon, children: icon }), jsx("span", { className: styles$3.label, children: label }), shortcut && jsx("span", { className: styles$3.shortcut, children: shortcut }), effectiveHasSubmenu && jsx("span", { className: styles$3.submenuArrow, children: "\u25B6" })] }), items && isSubmenuOpen && (jsx("div", { ref: submenuRef, className: styles$3.submenu, role: "menu", children: items })), separator && jsx("div", { className: styles$3.separatorLine, role: "separator" })] }));
+    return (jsxs("div", { className: styles$4.menuItemContainer, onMouseEnter: () => setIsSubmenuOpen(true), onMouseLeave: () => setIsSubmenuOpen(false), style: { position: 'relative', width: '100%' }, children: [jsxs("button", { ref: setButtonRef, type: "button", className: menuItemClassNames, onClick: handleClick, onKeyDown: handleKeyDown, onFocus: onFocus, onBlur: onBlur, disabled: disabled, 
+                // aria-checked is only valid on menuitemcheckbox /
+                // menuitemradio, never on a plain menuitem, so the role
+                // follows the presence of a checked state.
+                role: checked ? 'menuitemcheckbox' : 'menuitem', "aria-disabled": disabled, "aria-checked": checked ? 'true' : undefined, "aria-keyshortcuts": keyShortcut ?? toAriaKeyShortcuts(shortcut), "aria-haspopup": effectiveHasSubmenu ? 'menu' : undefined, "aria-expanded": effectiveHasSubmenu ? isSubmenuOpen : undefined, children: [jsx("span", { className: styles$4.checkmark, children: checked && '✓' }), icon && jsx("span", { className: styles$4.icon, children: icon }), jsx("span", { className: styles$4.label, children: label }), shortcut && (jsx("span", { className: styles$4.shortcut, "aria-hidden": "true", children: shortcut })), effectiveHasSubmenu && (jsx("span", { className: styles$4.submenuArrow, "aria-hidden": "true", children: "\u25B6" }))] }), items && isSubmenuOpen && (jsx("div", { ref: submenuRef, className: styles$4.submenu, role: "menu", children: items })), separator && jsx("div", { className: styles$4.separatorLine, role: "separator" })] }));
 });
 MenuItem.displayName = 'MenuItem';
 
+var styles$3 = {"menuBar":"MenuBar-module_menuBar","leftContent":"MenuBar-module_leftContent","menusContainer":"MenuBar-module_menusContainer","menuContainer":"MenuBar-module_menuContainer","rightContent":"MenuBar-module_rightContent","menuButton":"MenuBar-module_menuButton","menuLabel":"MenuBar-module_menuLabel","menuButton--disabled":"MenuBar-module_menuButton--disabled","menuButton--open":"MenuBar-module_menuButton--open","dropdown":"MenuBar-module_dropdown","dropdown--right":"MenuBar-module_dropdown--right"};
+
+/** Narrows `Menu.items` to the data form. */
+function isMenuItemDataArray(items) {
+    return Array.isArray(items) && (items.length === 0 || !React.isValidElement(items[0]));
+}
+/** Renders the data form of a menu into MenuItem elements. */
+function renderMenuItemData(items) {
+    return items.map((item, index) => (jsx(MenuItem, { label: item.label, shortcut: item.shortcut, disabled: item.disabled, checked: item.checked, separator: item.separator, icon: item.icon, onClick: item.onClick, items: item.submenu ? renderMenuItemData(item.submenu) : undefined }, `${item.label}-${index}`)));
+}
+/**
+ * Mac OS 9 style MenuBar component
+ *
+ * Horizontal menu bar with dropdown menus, logo support, and status area.
+ *
+ * Features:
+ * - Classic Mac OS 9 menu bar styling
+ * - Horizontal menu layout
+ * - Dropdown menus on click
+ * - Link-type menu items for navigation
+ * - Logo/icon support on the left
+ * - Status area on the right (clock, system indicators, etc.)
+ * - Full WAI-ARIA menubar semantics with a roving tabindex
+ * - Keyboard navigation (Left/Right for menus, Down to open, Escape to close)
+ * - Click outside to close
+ * - Controlled or uncontrolled open state
+ * - Disabled menu support
+ *
+ * @example
+ * ```tsx
+ * const [openMenu, setOpenMenu] = useState<number | undefined>();
+ *
+ * <MenuBar
+ *   leftContent={<img src="/logo.png" alt="Logo" width={16} height={16} />}
+ *   openMenuIndex={openMenu}
+ *   onMenuOpen={setOpenMenu}
+ *   onMenuClose={() => setOpenMenu(undefined)}
+ *   menus={[
+ *     {
+ *       label: 'File',
+ *       type: 'dropdown',
+ *       // Data form — no JSX required
+ *       items: [
+ *         { label: 'Open…', shortcut: '⌘O', onClick: openFile },
+ *         { label: 'Save', shortcut: '⌘S', onClick: saveFile, separator: true },
+ *         { label: 'Quit', onClick: quit },
+ *       ],
+ *     },
+ *     {
+ *       label: 'Edit',
+ *       type: 'dropdown',
+ *       // JSX form — still supported
+ *       items: <MenuItem label="Undo" shortcut="⌘Z" onClick={undo} />,
+ *     },
+ *     { label: 'Home', type: 'link', href: '/' },
+ *   ]}
+ *   rightContent={[<Clock key="clock" />]}
+ * />
+ * ```
+ */
+const MenuBar = forwardRef(({ menus, openMenuIndex, defaultOpenMenuIndex, onMenuOpen, onMenuClose, className = '', dropdownClassName = '', leftContent, rightContent, }, ref) => {
+    const [menuBarElement, setMenuBarElement] = useState(null);
+    const [focusedIndex, setFocusedIndex] = useState(-1);
+    const [internalOpenIndex, setInternalOpenIndex] = useState(defaultOpenMenuIndex);
+    // One id per MenuBar instance; each trigger derives a stable id from it
+    // so its dropdown can point at it with aria-labelledby.
+    const baseId = useId();
+    const triggerId = (index) => `${baseId}-menu-${index}`;
+    // Trigger elements, so keyboard navigation can move real DOM focus
+    // rather than only tracking an index.
+    const triggerRefs = useRef([]);
+    const isControlled = openMenuIndex !== undefined;
+    const activeOpenIndex = isControlled ? openMenuIndex : internalOpenIndex;
+    const handleMenuOpenInternal = useCallback((index) => {
+        if (!isControlled) {
+            setInternalOpenIndex(index);
+        }
+        onMenuOpen?.(index);
+    }, [isControlled, onMenuOpen]);
+    const handleMenuCloseInternal = useCallback(() => {
+        if (!isControlled) {
+            setInternalOpenIndex(undefined);
+        }
+        onMenuClose?.();
+    }, [isControlled, onMenuClose]);
+    // Close when a click lands outside the menu bar.
+    //
+    // This listens for `click`, not `mousedown`. On mousedown the menu
+    // closed before the pointer was released, so any dropdown content
+    // rendered into a portal — a nested menu, a picker — unmounted before
+    // its own click handler could run, and choosing such an item did
+    // nothing at all. By `click` the item's handler has already fired.
+    useEffect(() => {
+        if (activeOpenIndex === undefined || !menuBarElement)
+            return;
+        const handleClickOutside = (event) => {
+            if (!menuBarElement.contains(event.target)) {
+                handleMenuCloseInternal();
+            }
+        };
+        document.addEventListener('click', handleClickOutside);
+        return () => document.removeEventListener('click', handleClickOutside);
+    }, [activeOpenIndex, menuBarElement, handleMenuCloseInternal]);
+    // Escape closes the open menu and returns focus to its trigger.
+    useEffect(() => {
+        if (activeOpenIndex === undefined)
+            return;
+        const handleEscape = (event) => {
+            if (event.key !== 'Escape')
+                return;
+            event.preventDefault();
+            const openIndex = activeOpenIndex;
+            handleMenuCloseInternal();
+            triggerRefs.current[openIndex]?.focus();
+        };
+        document.addEventListener('keydown', handleEscape);
+        return () => document.removeEventListener('keydown', handleEscape);
+    }, [activeOpenIndex, handleMenuCloseInternal]);
+    /** Moves focus to a trigger, skipping disabled menus. */
+    const focusTrigger = useCallback((startIndex, step) => {
+        const count = menus.length;
+        if (count === 0)
+            return;
+        for (let offset = 0; offset < count; offset += 1) {
+            const index = (((startIndex + step * offset) % count) + count) % count;
+            if (menus[index]?.disabled)
+                continue;
+            setFocusedIndex(index);
+            triggerRefs.current[index]?.focus();
+            // If a menu was already open, opening the newly focused one
+            // matches how a menu bar behaves once it is "active".
+            if (activeOpenIndex !== undefined && menus[index]?.type !== 'link') {
+                handleMenuOpenInternal(index);
+            }
+            return;
+        }
+    }, [menus, activeOpenIndex, handleMenuOpenInternal]);
+    // Keyboard navigation, per the WAI-ARIA menubar pattern.
+    const handleKeyDown = useCallback((event) => {
+        const current = focusedIndex >= 0 ? focusedIndex : (activeOpenIndex ?? 0);
+        switch (event.key) {
+            case 'ArrowLeft':
+                event.preventDefault();
+                focusTrigger(current - 1, -1);
+                break;
+            case 'ArrowRight':
+                event.preventDefault();
+                focusTrigger(current + 1, 1);
+                break;
+            case 'Home':
+                event.preventDefault();
+                focusTrigger(0, 1);
+                break;
+            case 'End':
+                event.preventDefault();
+                focusTrigger(menus.length - 1, -1);
+                break;
+            case 'ArrowDown': {
+                event.preventDefault();
+                const menu = menus[current];
+                if (menu && !menu.disabled && menu.type !== 'link') {
+                    handleMenuOpenInternal(current);
+                }
+                break;
+            }
+            case 'Enter':
+            case ' ': {
+                event.preventDefault();
+                const menu = menus[current];
+                if (!menu || menu.disabled)
+                    break;
+                if (menu.type === 'link') {
+                    menu.onClick?.();
+                }
+                else if (activeOpenIndex === current) {
+                    handleMenuCloseInternal();
+                }
+                else {
+                    handleMenuOpenInternal(current);
+                }
+                break;
+            }
+        }
+    }, [
+        activeOpenIndex,
+        focusedIndex,
+        menus,
+        focusTrigger,
+        handleMenuOpenInternal,
+        handleMenuCloseInternal,
+    ]);
+    // Handle menu button click
+    const handleMenuClick = (index) => {
+        const menu = menus[index];
+        if (menu?.disabled)
+            return;
+        if (menu.type === 'link') {
+            // For link-type menus, trigger the onClick handler
+            menu.onClick?.();
+            return;
+        }
+        if (activeOpenIndex === index) {
+            // Clicking the same menu closes it
+            handleMenuCloseInternal();
+        }
+        else {
+            // Open the clicked menu
+            handleMenuOpenInternal(index);
+        }
+    };
+    // Class names
+    const menuBarClassNames = [styles$3.menuBar, className].filter(Boolean).join(' ');
+    const dropdownClassNames = [styles$3.dropdown, dropdownClassName].filter(Boolean).join(' ');
+    // Callback ref to handle both internal state and forwarded ref
+    const handleRef = useCallback((node) => {
+        setMenuBarElement(node);
+        if (typeof ref === 'function') {
+            ref(node);
+        }
+        else if (ref) {
+            ref.current = node;
+        }
+    }, [ref]);
+    // Roving tabindex: exactly one trigger is in the tab order at a time,
+    // and the arrow keys move between them. Without this, every menu was a
+    // separate tab stop, which is not how a menu bar is meant to behave.
+    const rovingIndex = focusedIndex >= 0 ? focusedIndex : (activeOpenIndex ?? 0);
+    return (jsxs("div", { ref: handleRef, className: menuBarClassNames, role: "menubar", onKeyDown: handleKeyDown, children: [leftContent && jsx("div", { className: styles$3.leftContent, children: leftContent }), jsx("div", { className: styles$3.menusContainer, children: menus.map((menu, index) => {
+                    const isOpen = activeOpenIndex === index;
+                    const isDropdown = menu.type !== 'link';
+                    const id = triggerId(index);
+                    const menuButtonClassNames = [
+                        styles$3.menuButton,
+                        isOpen ? styles$3['menuButton--open'] : '',
+                        menu.disabled ? styles$3['menuButton--disabled'] : '',
+                    ]
+                        .filter(Boolean)
+                        .join(' ');
+                    // The label used to be an <h3>, which put a heading into the
+                    // document outline for every menu — so a page with a menu bar
+                    // announced "File, heading level 3" and polluted screen-reader
+                    // heading navigation. It is a span now, styled to match.
+                    const label = jsx("span", { className: styles$3.menuLabel, children: menu.label });
+                    // For link-type menus, render as anchor if href is provided.
+                    // sanitizeUrl strips javascript:/data:/vbscript: schemes before the
+                    // href reaches the DOM, preventing stored-XSS when consumers wire
+                    // menus from CMS or user-supplied data.
+                    if (menu.type === 'link' && menu.href) {
+                        const safeHref = sanitizeUrl(menu.href);
+                        return (jsx("div", { className: styles$3.menuContainer, children: jsx("a", { id: id, ref: (node) => {
+                                    triggerRefs.current[index] = node;
+                                }, href: safeHref, className: menuButtonClassNames, role: "menuitem", tabIndex: index === rovingIndex ? 0 : -1, onClick: (e) => {
+                                    if (menu.onClick) {
+                                        e.preventDefault();
+                                        menu.onClick();
+                                    }
+                                }, onFocus: () => setFocusedIndex(index), "aria-disabled": menu.disabled, children: label }) }, index));
+                    }
+                    // Standard dropdown menu or link without href
+                    return (jsxs("div", { className: styles$3.menuContainer, children: [jsx("button", { id: id, ref: (node) => {
+                                    triggerRefs.current[index] = node;
+                                }, type: "button", className: menuButtonClassNames, role: "menuitem", tabIndex: index === rovingIndex ? 0 : -1, onClick: () => handleMenuClick(index), onFocus: () => setFocusedIndex(index), disabled: menu.disabled, "aria-haspopup": isDropdown ? 'menu' : undefined, "aria-expanded": isDropdown ? isOpen : undefined, "aria-disabled": menu.disabled, children: label }), isOpen && isDropdown && menu.items && (
+                            // aria-labelledby ties the dropdown back to the trigger
+                            // that opened it, so assistive tech announces "File menu"
+                            // rather than an anonymous menu.
+                            jsx("div", { className: dropdownClassNames, role: "menu", "aria-labelledby": id, children: isMenuItemDataArray(menu.items)
+                                    ? renderMenuItemData(menu.items)
+                                    : menu.items }))] }, index));
+                }) }), rightContent && (jsx("div", { className: styles$3.rightContent, children: Array.isArray(rightContent)
+                    ? rightContent.map((item, index) => (jsx(React.Fragment, { children: item }, index)))
+                    : rightContent }))] }));
+});
+MenuBar.displayName = 'MenuBar';
+
+/** Gap left between the dropdown and the viewport edge when repositioning. */
+const VIEWPORT_MARGIN = 4;
 /**
  * Mac OS 9 style MenuDropdown component
  *
  * A standalone dropdown menu that shares the styling of the MenuBar.
- * Useful for placing menus in the status area (rightContent) or other parts of the app.
+ * Useful for placing menus in the status area (rightContent) or other parts
+ * of the app.
+ *
+ * @example
+ * ```tsx
+ * <MenuDropdown
+ *   label="Options"
+ *   align="right"
+ *   items={
+ *     <>
+ *       <MenuItem label="Preferences…" onClick={openPrefs} />
+ *       <MenuItem label="Sign out" onClick={signOut} />
+ *     </>
+ *   }
+ * />
+ * ```
  */
-const MenuDropdown = ({ label, items, disabled = false, className = '', dropdownClassName = '', align = 'left', }) => {
+const MenuDropdown = forwardRef(({ label, items, disabled = false, className = '', dropdownClassName = '', align = 'left', avoidCollisions = true, }, ref) => {
     const [isOpen, setIsOpen] = useState(false);
+    const [collisionOffset, setCollisionOffset] = useState(null);
     const containerRef = useRef(null);
-    // Handle click outside to close menu
-    useEffect(() => {
+    const dropdownRef = useRef(null);
+    const triggerId = useId();
+    // Fan the internal ref out to the forwarded one so the consumer still
+    // gets the node while collision detection keeps its own handle.
+    const setContainerRef = useCallback((node) => {
+        containerRef.current = node;
+        if (typeof ref === 'function') {
+            ref(node);
+        }
+        else if (ref) {
+            ref.current = node;
+        }
+    }, [ref]);
+    // Close when a click lands outside.
+    //
+    // Listens for `click` rather than `mousedown` so that dropdown content
+    // rendered into a portal still receives its own click before the menu
+    // unmounts. See the matching note in MenuBar.
+    React.useEffect(() => {
         if (!isOpen)
             return;
         const handleClickOutside = (event) => {
-            if (containerRef.current && !containerRef.current.contains(event.target)) {
-                setIsOpen(false);
-            }
+            const container = containerRef.current;
+            const dropdown = dropdownRef.current;
+            const target = event.target;
+            if (container?.contains(target) || dropdown?.contains(target))
+                return;
+            setIsOpen(false);
         };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
+        document.addEventListener('click', handleClickOutside);
+        return () => document.removeEventListener('click', handleClickOutside);
     }, [isOpen]);
     // Handle Escape key to close menu
-    useEffect(() => {
+    React.useEffect(() => {
         if (!isOpen)
             return;
         const handleEscape = (event) => {
@@ -1932,27 +2145,64 @@ const MenuDropdown = ({ label, items, disabled = false, className = '', dropdown
         document.addEventListener('keydown', handleEscape);
         return () => document.removeEventListener('keydown', handleEscape);
     }, [isOpen]);
+    // Keep the dropdown inside the viewport.
+    //
+    // Without this, a menu near the right edge of the window — which is
+    // exactly where a status-area menu lives — rendered partly or entirely
+    // off-screen with no way to reach its items. Measured before paint so
+    // the corrected position is the first one the user sees.
+    useLayoutEffect(() => {
+        if (!isOpen || !avoidCollisions) {
+            setCollisionOffset(null);
+            return;
+        }
+        const dropdown = dropdownRef.current;
+        if (!dropdown)
+            return;
+        // Measure in the un-nudged position.
+        const rect = dropdown.getBoundingClientRect();
+        let x = 0;
+        let y = 0;
+        const overflowRight = rect.right - (window.innerWidth - VIEWPORT_MARGIN);
+        if (overflowRight > 0)
+            x -= overflowRight;
+        const overflowLeft = VIEWPORT_MARGIN - (rect.left + x);
+        if (overflowLeft > 0)
+            x += overflowLeft;
+        // No room below: flip above the trigger.
+        const overflowBottom = rect.bottom - (window.innerHeight - VIEWPORT_MARGIN);
+        if (overflowBottom > 0) {
+            const trigger = containerRef.current?.getBoundingClientRect();
+            const spaceAbove = trigger ? trigger.top : 0;
+            y = rect.height + (trigger?.height ?? 0) <= spaceAbove ? -(rect.height + (trigger?.height ?? 0)) : -overflowBottom;
+        }
+        setCollisionOffset(x === 0 && y === 0 ? null : { x, y });
+    }, [isOpen, avoidCollisions, items]);
     const handleToggle = () => {
         if (!disabled) {
-            setIsOpen(!isOpen);
+            setIsOpen((open) => !open);
         }
     };
-    const menuContainerClassNames = [
-        styles$4.menuContainer,
-        className
-    ].filter(Boolean).join(' ');
+    const menuContainerClassNames = [styles$3.menuContainer, className].filter(Boolean).join(' ');
     const menuButtonClassNames = [
-        styles$4.menuButton,
-        isOpen ? styles$4['menuButton--open'] : '',
-        disabled ? styles$4['menuButton--disabled'] : '',
-    ].filter(Boolean).join(' ');
+        styles$3.menuButton,
+        isOpen ? styles$3['menuButton--open'] : '',
+        disabled ? styles$3['menuButton--disabled'] : '',
+    ]
+        .filter(Boolean)
+        .join(' ');
     const dropdownClassNames = [
-        styles$4.dropdown,
-        align === 'right' ? styles$4['dropdown--right'] : '',
-        dropdownClassName
-    ].filter(Boolean).join(' ');
-    return (jsxs("div", { ref: containerRef, className: menuContainerClassNames, children: [jsx("button", { type: "button", className: menuButtonClassNames, onClick: handleToggle, disabled: disabled, "aria-haspopup": "true", "aria-expanded": isOpen, "aria-disabled": disabled, children: typeof label === 'string' ? jsx("h3", { children: label }) : label }), isOpen && (jsx("div", { className: dropdownClassNames, role: "menu", onClick: () => setIsOpen(false), children: items }))] }));
-};
+        styles$3.dropdown,
+        align === 'right' ? styles$3['dropdown--right'] : '',
+        dropdownClassName,
+    ]
+        .filter(Boolean)
+        .join(' ');
+    return (jsxs("div", { ref: setContainerRef, className: menuContainerClassNames, children: [jsx("button", { id: triggerId, type: "button", className: menuButtonClassNames, onClick: handleToggle, disabled: disabled, "aria-haspopup": "menu", "aria-expanded": isOpen, "aria-disabled": disabled, children: typeof label === 'string' ? jsx("span", { className: styles$3.menuLabel, children: label }) : label }), isOpen && (jsx("div", { ref: dropdownRef, className: dropdownClassNames, role: "menu", "aria-labelledby": triggerId, style: collisionOffset
+                    ? { transform: `translate(${collisionOffset.x}px, ${collisionOffset.y}px)` }
+                    : undefined, onClick: () => setIsOpen(false), children: items }))] }));
+});
+MenuDropdown.displayName = 'MenuDropdown';
 
 var styles$2 = {"scrollbar":"Scrollbar-module_scrollbar","scrollbar--vertical":"Scrollbar-module_scrollbar--vertical","scrollbar--horizontal":"Scrollbar-module_scrollbar--horizontal","scrollbar--disabled":"Scrollbar-module_scrollbar--disabled","arrow":"Scrollbar-module_arrow","arrowIcon":"Scrollbar-module_arrowIcon","arrow--start":"Scrollbar-module_arrow--start","arrow--end":"Scrollbar-module_arrow--end","track":"Scrollbar-module_track","thumb":"Scrollbar-module_thumb"};
 
@@ -2104,8 +2354,56 @@ const Scrollbar = forwardRef(({ orientation = 'vertical', value = 0, viewportRat
 });
 Scrollbar.displayName = 'Scrollbar';
 
-var styles$1 = {"listView":"ListView-module_listView","header":"ListView-module_header","headerCell":"ListView-module_headerCell","sortable":"ListView-module_sortable","sortIndicator":"ListView-module_sortIndicator","body":"ListView-module_body","row":"ListView-module_row","selected":"ListView-module_selected","cell":"ListView-module_cell","icon":"ListView-module_icon"};
+var styles$1 = {"listView":"ListView-module_listView","header":"ListView-module_header","headerCell":"ListView-module_headerCell","sortable":"ListView-module_sortable","sortIndicator":"ListView-module_sortIndicator","body":"ListView-module_body","row":"ListView-module_row","selected":"ListView-module_selected","cell":"ListView-module_cell","icon":"ListView-module_icon","placeholder":"ListView-module_placeholder"};
 
+/**
+ * Coerces an arbitrary cell value into something React can render.
+ *
+ * Rows are typed with an `unknown` index signature, so a value read out of
+ * one is not automatically a ReactNode.
+ */
+function renderValue(value) {
+    if (value === null || value === undefined || typeof value === 'boolean')
+        return null;
+    if (typeof value === 'string' || typeof value === 'number')
+        return value;
+    if (React.isValidElement(value))
+        return value;
+    return String(value);
+}
+function ListViewRowInner({ item, columns, columnStyles, rowIndex, isSelected, isHovered, hoveredColumnKey, classes, onRowClick, onRowDoubleClick, onRowEnter, onRowLeave, onCellEnter, onCellLeave, onCellClickInternal, renderRow, renderCell, }) {
+    const rowDefaultProps = {
+        key: item.id,
+        className: mergeClasses(styles$1.row, isSelected && styles$1.selected, classes?.row),
+        onClick: (event) => onRowClick(item, event),
+        onDoubleClick: () => onRowDoubleClick(item),
+        onMouseEnter: () => onRowEnter(item),
+        onMouseLeave: () => onRowLeave(item),
+        'data-selected': isSelected,
+        'data-index': rowIndex,
+        'data-item-id': item.id,
+    };
+    if (renderRow) {
+        const rowState = { isSelected, isHovered, index: rowIndex };
+        return jsx(Fragment, { children: renderRow(item, rowState, rowDefaultProps) });
+    }
+    // `key` is passed to the element explicitly rather than arriving through
+    // the spread: React reads `key` off the JSX element, not off the props
+    // object, so spreading it silently produced keyless children.
+    const { key: _key, ...rowElementProps } = rowDefaultProps;
+    return (jsx("div", { ...rowElementProps, children: columns.map((column, columnIndex) => {
+            const value = item[column.key];
+            const isCellHovered = isHovered && hoveredColumnKey === column.key;
+            const cellState = {
+                isHovered: isCellHovered,
+                isRowSelected: isSelected,
+                columnIndex,
+                rowIndex,
+            };
+            return (jsx("div", { className: mergeClasses(styles$1.cell, classes?.cell), style: columnStyles[columnIndex], "data-column": column.key, "data-hovered": isCellHovered, onClick: (event) => onCellClickInternal(item, column, event), onMouseEnter: () => onCellEnter(item, column), onMouseLeave: () => onCellLeave(item, column), children: renderCell ? (renderCell(value, item, column, cellState)) : (jsxs(Fragment, { children: [columnIndex === 0 && item.icon ? (jsx("span", { className: styles$1.icon, children: item.icon })) : null, renderValue(value)] })) }, column.key));
+        }) }));
+}
+const ListViewRow = React.memo(ListViewRowInner);
 /**
  * Mac OS 9 style ListView component
  *
@@ -2128,15 +2426,67 @@ var styles$1 = {"listView":"ListView-module_listView","header":"ListView-module_
  *   onSelectionChange={(ids) => console.log('Selected:', ids)}
  *   onItemMouseEnter={(item) => console.log('Hovering:', item.name)}
  * />
+ *
+ * // Typed rows
+ * interface FileRow extends ListItem {
+ *   name: string;
+ *   size: number;
+ * }
+ * <ListView<FileRow> items={files} columns={columns} />
  * ```
  */
-const ListView = forwardRef(({ columns, items, selectedIds = [], onSelectionChange, onItemOpen, onItemMouseEnter, onItemMouseLeave, onSort, className = '', height = 'auto', classes, renderRow, renderCell, renderHeaderCell, onCellClick, onCellMouseEnter, onCellMouseLeave, }, ref) => {
+function ListViewInner({ columns, items, selectedIds = [], onSelectionChange, onItemOpen, onItemMouseEnter, onItemMouseLeave, onSort, className = '', height = 'auto', classes, emptyState = 'No items', loading = false, loadingState = 'Loading…', renderRow, renderCell, renderHeaderCell, onCellClick, onCellMouseEnter, onCellMouseLeave, }, ref) {
     const [sortColumn, setSortColumn] = useState(null);
     const [sortDirection, setSortDirection] = useState('asc');
     const [hoveredRow, setHoveredRow] = useState(null);
-    const [hoveredCell, setHoveredCell] = useState(null);
+    const [hoveredColumnKey, setHoveredColumnKey] = useState(null);
+    // Membership tests run once per row per render. `selectedIds.includes()`
+    // inside the row map made selection checking O(rows x selected), which on
+    // a large list with a large selection is quadratic.
+    const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
+    // Anchor for Shift range selection, plus the selection as it stood before
+    // the current Shift sequence began. Shift+click extends that base
+    // selection with the anchor..target range instead of discarding
+    // everything the user had already picked.
+    const anchorIdRef = useRef(null);
+    const baseSelectionRef = useRef([]);
+    // Latest props, read from inside stable callbacks. Without this the row
+    // handlers would change identity whenever the selection or item list
+    // changed, defeating the row memoisation entirely.
+    const latestRef = useRef({
+        items,
+        selectedIds,
+        selectedSet,
+        onSelectionChange,
+        onItemOpen,
+        onItemMouseEnter,
+        onItemMouseLeave,
+        onCellClick,
+        onCellMouseEnter,
+        onCellMouseLeave,
+    });
+    useEffect(() => {
+        latestRef.current = {
+            items,
+            selectedIds,
+            selectedSet,
+            onSelectionChange,
+            onItemOpen,
+            onItemMouseEnter,
+            onItemMouseLeave,
+            onCellClick,
+            onCellMouseEnter,
+            onCellMouseLeave,
+        };
+    });
     // Class names
     const classNames = mergeClasses(styles$1.listView, className, classes?.root);
+    // One style object per column, reused by every row. Previously each cell
+    // allocated a fresh `{ width }` object on every render, which also meant
+    // no row could ever be memoised on prop identity.
+    const columnStyles = useMemo(() => columns.map((column) => ({
+        width: typeof column.width === 'number' ? `${column.width}px` : column.width,
+    })), [columns]);
     // Handle column header click
     const handleColumnClick = useCallback((columnKey, sortable = true) => {
         if (!sortable || !onSort)
@@ -2146,52 +2496,79 @@ const ListView = forwardRef(({ columns, items, selectedIds = [], onSelectionChan
         setSortDirection(newDirection);
         onSort(columnKey, newDirection);
     }, [sortColumn, sortDirection, onSort]);
-    // Handle row click
-    const handleRowClick = useCallback((itemId, event) => {
-        if (!onSelectionChange)
+    const handleRowClick = useCallback((item, event) => {
+        const { items: liveItems, selectedIds: liveSelected, selectedSet: liveSelectedSet, onSelectionChange: liveOnChange, } = latestRef.current;
+        if (!liveOnChange)
             return;
+        const itemId = item.id;
         if (event.metaKey || event.ctrlKey) {
-            // Multi-select with Cmd/Ctrl
-            if (selectedIds.includes(itemId)) {
-                onSelectionChange(selectedIds.filter((id) => id !== itemId));
+            // Toggle one item, and make it the anchor for a later Shift+click.
+            anchorIdRef.current = itemId;
+            baseSelectionRef.current = liveSelectedSet.has(itemId)
+                ? liveSelected.filter((id) => id !== itemId)
+                : [...liveSelected, itemId];
+            liveOnChange([...baseSelectionRef.current]);
+            return;
+        }
+        if (event.shiftKey && (anchorIdRef.current || liveSelected.length > 0)) {
+            const anchorId = anchorIdRef.current ?? liveSelected[liveSelected.length - 1];
+            const anchorIndex = liveItems.findIndex((candidate) => candidate.id === anchorId);
+            const currentIndex = liveItems.findIndex((candidate) => candidate.id === itemId);
+            if (anchorIndex === -1 || currentIndex === -1) {
+                liveOnChange([itemId]);
+                return;
             }
-            else {
-                onSelectionChange([...selectedIds, itemId]);
-            }
+            const start = Math.min(anchorIndex, currentIndex);
+            const end = Math.max(anchorIndex, currentIndex);
+            const rangeIds = liveItems.slice(start, end + 1).map((candidate) => candidate.id);
+            // Extend rather than replace: whatever was selected before this
+            // Shift sequence stays selected.
+            liveOnChange([...new Set([...baseSelectionRef.current, ...rangeIds])]);
+            return;
         }
-        else if (event.shiftKey && selectedIds.length > 0) {
-            // Range select with Shift
-            const lastSelectedId = selectedIds[selectedIds.length - 1];
-            const lastIndex = items.findIndex((item) => item.id === lastSelectedId);
-            const currentIndex = items.findIndex((item) => item.id === itemId);
-            const start = Math.min(lastIndex, currentIndex);
-            const end = Math.max(lastIndex, currentIndex);
-            const rangeIds = items.slice(start, end + 1).map((item) => item.id);
-            onSelectionChange(rangeIds);
-        }
-        else {
-            // Single select
-            onSelectionChange([itemId]);
-        }
-    }, [selectedIds, items, onSelectionChange]);
-    // Handle row double-click
+        // Single select — this click becomes the anchor and the new base.
+        anchorIdRef.current = itemId;
+        baseSelectionRef.current = [itemId];
+        liveOnChange([itemId]);
+    }, []);
     const handleRowDoubleClick = useCallback((item) => {
-        if (onItemOpen) {
-            onItemOpen(item);
-        }
-    }, [onItemOpen]);
-    // Handle row mouse enter
-    useCallback((item) => {
-        if (onItemMouseEnter) {
-            onItemMouseEnter(item);
-        }
-    }, [onItemMouseEnter]);
+        latestRef.current.onItemOpen?.(item);
+    }, []);
+    const handleRowEnter = useCallback((item) => {
+        setHoveredRow(item.id);
+        latestRef.current.onItemMouseEnter?.(item);
+    }, []);
+    const handleRowLeave = useCallback((item) => {
+        setHoveredRow(null);
+        setHoveredColumnKey(null);
+        latestRef.current.onItemMouseLeave?.(item);
+    }, []);
+    const handleCellEnter = useCallback((item, column) => {
+        setHoveredColumnKey(column.key);
+        latestRef.current.onCellMouseEnter?.(item, column);
+    }, []);
+    const handleCellLeave = useCallback((item, column) => {
+        setHoveredColumnKey(null);
+        latestRef.current.onCellMouseLeave?.(item, column);
+    }, []);
+    const handleCellClickInternal = useCallback((item, column, event) => {
+        latestRef.current.onCellClick?.(item, column, event);
+    }, []);
     // Container style
     const containerStyle = {};
     if (height !== 'auto') {
         containerStyle.height = typeof height === 'number' ? `${height}px` : height;
     }
-    return (jsxs("div", { ref: ref, className: classNames, style: containerStyle, children: [jsx("div", { className: mergeClasses(styles$1.header, classes?.header), children: columns.map((column) => {
+    const renderBody = () => {
+        if (loading) {
+            return (jsx("div", { className: mergeClasses(styles$1.placeholder, classes?.loading), children: loadingState }));
+        }
+        if (items.length === 0) {
+            return jsx("div", { className: mergeClasses(styles$1.placeholder, classes?.empty), children: emptyState });
+        }
+        return items.map((item, rowIndex) => (jsx(ListViewRow, { item: item, columns: columns, columnStyles: columnStyles, rowIndex: rowIndex, isSelected: selectedSet.has(item.id), isHovered: hoveredRow === item.id, hoveredColumnKey: hoveredRow === item.id ? hoveredColumnKey : null, classes: classes, onRowClick: handleRowClick, onRowDoubleClick: handleRowDoubleClick, onRowEnter: handleRowEnter, onRowLeave: handleRowLeave, onCellEnter: handleCellEnter, onCellLeave: handleCellLeave, onCellClickInternal: handleCellClickInternal, renderRow: renderRow, renderCell: renderCell }, item.id)));
+    };
+    return (jsxs("div", { ref: ref, className: classNames, style: containerStyle, children: [jsx("div", { className: mergeClasses(styles$1.header, classes?.header), children: columns.map((column, columnIndex) => {
                     const isSorted = sortColumn === column.key;
                     const headerState = {
                         isSorted,
@@ -2200,11 +2577,7 @@ const ListView = forwardRef(({ columns, items, selectedIds = [], onSelectionChan
                     const headerDefaultProps = {
                         key: column.key,
                         className: mergeClasses(styles$1.headerCell, column.sortable !== false && styles$1.sortable, classes?.headerCell),
-                        style: {
-                            width: typeof column.width === 'number'
-                                ? `${column.width}px`
-                                : column.width,
-                        },
+                        style: columnStyles[columnIndex],
                         onClick: () => handleColumnClick(column.key, column.sortable),
                         'data-column': column.key,
                         'data-sortable': column.sortable !== false,
@@ -2213,92 +2586,35 @@ const ListView = forwardRef(({ columns, items, selectedIds = [], onSelectionChan
                             'data-sort-direction': sortDirection,
                         }),
                     };
-                    // Use custom render or default
+                    // Custom render owns the element, so it also owns the key.
                     if (renderHeaderCell) {
-                        return renderHeaderCell(column, headerState, headerDefaultProps);
+                        return (jsx(React.Fragment, { children: renderHeaderCell(column, headerState, headerDefaultProps) }, column.key));
                     }
-                    // Default header cell rendering
-                    return (jsxs("div", { ...headerDefaultProps, children: [column.label, isSorted && (jsx("span", { className: styles$1.sortIndicator, children: sortDirection === 'asc' ? '▲' : '▼' }))] }));
-                }) }), jsx("div", { className: mergeClasses(styles$1.body, classes?.body), children: items.map((item, rowIndex) => {
-                    const isSelected = selectedIds.includes(item.id);
-                    const isHovered = hoveredRow === item.id;
-                    const rowState = {
-                        isSelected,
-                        isHovered,
-                        index: rowIndex,
-                    };
-                    const rowDefaultProps = {
-                        key: item.id,
-                        className: mergeClasses(styles$1.row, isSelected && styles$1.selected, classes?.row),
-                        onClick: (e) => handleRowClick(item.id, e),
-                        onDoubleClick: () => handleRowDoubleClick(item),
-                        onMouseEnter: () => {
-                            setHoveredRow(item.id);
-                            onItemMouseEnter?.(item);
-                        },
-                        onMouseLeave: () => {
-                            setHoveredRow(null);
-                            setHoveredCell(null);
-                            onItemMouseLeave?.(item);
-                        },
-                        'data-selected': isSelected,
-                        'data-index': rowIndex,
-                        'data-item-id': item.id,
-                    };
-                    // Use custom row render or default
-                    if (renderRow) {
-                        return renderRow(item, rowState, rowDefaultProps);
-                    }
-                    // Default row rendering
-                    return (jsx("div", { ...rowDefaultProps, children: columns.map((column, columnIndex) => {
-                            const value = item[column.key];
-                            const isCellHovered = hoveredCell?.rowId === item.id &&
-                                hoveredCell?.columnKey === column.key;
-                            const cellState = {
-                                isHovered: isCellHovered,
-                                isRowSelected: isSelected,
-                                columnIndex,
-                                rowIndex,
-                            };
-                            // Cell event handlers
-                            const handleCellClick = (e) => {
-                                if (onCellClick) {
-                                    onCellClick(item, column, e);
-                                }
-                            };
-                            const handleCellMouseEnter = () => {
-                                setHoveredCell({ rowId: item.id, columnKey: column.key });
-                                if (onCellMouseEnter) {
-                                    onCellMouseEnter(item, column);
-                                }
-                            };
-                            const handleCellMouseLeave = () => {
-                                setHoveredCell(null);
-                                if (onCellMouseLeave) {
-                                    onCellMouseLeave(item, column);
-                                }
-                            };
-                            // Use custom cell render or default
-                            if (renderCell) {
-                                return (jsx("div", { className: mergeClasses(styles$1.cell, classes?.cell), style: {
-                                        width: typeof column.width === 'number'
-                                            ? `${column.width}px`
-                                            : column.width,
-                                    }, "data-column": column.key, "data-hovered": isCellHovered, onClick: handleCellClick, onMouseEnter: handleCellMouseEnter, onMouseLeave: handleCellMouseLeave, children: renderCell(value, item, column, cellState) }, column.key));
-                            }
-                            // Default cell rendering
-                            return (jsxs("div", { className: mergeClasses(styles$1.cell, classes?.cell), style: {
-                                    width: typeof column.width === 'number'
-                                        ? `${column.width}px`
-                                        : column.width,
-                                }, "data-column": column.key, "data-hovered": isCellHovered, onClick: handleCellClick, onMouseEnter: handleCellMouseEnter, onMouseLeave: handleCellMouseLeave, children: [columnIndex === 0 && item.icon && (jsx("span", { className: styles$1.icon, children: item.icon })), value] }, column.key));
-                        }) }));
-                }) })] }));
-});
+                    // `key` comes off the props object and onto the element itself.
+                    const { key: _key, ...headerElementProps } = headerDefaultProps;
+                    return (jsxs("div", { ...headerElementProps, children: [column.label, isSorted && (jsx("span", { className: styles$1.sortIndicator, children: sortDirection === 'asc' ? '▲' : '▼' }))] }, column.key));
+                }) }), jsx("div", { className: mergeClasses(styles$1.body, classes?.body), "aria-busy": loading || undefined, children: renderBody() })] }));
+}
+/**
+ * `forwardRef` erases generics, so the forwarded component is re-cast to a
+ * signature that keeps `TItem`. This is what lets `<ListView<FileRow> …>`
+ * infer the row type in `renderCell`, `onItemOpen` and friends.
+ */
+const ListView = forwardRef(ListViewInner);
 ListView.displayName = 'ListView';
 
 var styles = {"folderListContent":"FolderList-module_folderListContent","listView":"FolderList-module_listView"};
 
+/**
+ * Default Finder-style columns. Declared at module scope so the default keeps
+ * a stable identity between renders — an inline literal would allocate a new
+ * array every render and invalidate ListView's memoised column styles.
+ */
+const DEFAULT_COLUMNS = [
+    { key: 'name', label: 'Name', width: '40%' },
+    { key: 'modified', label: 'Date Modified', width: '30%' },
+    { key: 'size', label: 'Size', width: '30%' },
+];
 /**
  * Mac OS 9 style FolderList component
  *
@@ -2328,23 +2644,26 @@ var styles = {"folderListContent":"FolderList-module_folderListContent","listVie
  * />
  * ```
  */
-const FolderList = forwardRef(({ columns = [
-    { key: 'name', label: 'Name', width: '40%' },
-    { key: 'modified', label: 'Date Modified', width: '30%' },
-    { key: 'size', label: 'Size', width: '30%' },
-], items, selectedIds, onSelectionChange, onItemOpen, onItemMouseEnter, onItemMouseLeave, onSort, onMouseEnter, listHeight = 400, classes, renderRow, renderCell, renderHeaderCell, onCellClick, onCellMouseEnter, onCellMouseLeave, ...windowProps }, ref) => {
+function FolderListInner({ columns = DEFAULT_COLUMNS, items, selectedIds, onSelectionChange, onItemOpen, onItemMouseEnter, onItemMouseLeave, onSort, onMouseEnter, listHeight = 400, classes, emptyState, loading, loadingState, renderRow, renderCell, renderHeaderCell, onCellClick, onCellMouseEnter, onCellMouseLeave, ...windowProps }, ref) {
     // Build ListView classes from FolderList classes
-    const listViewClasses = classes ? {
-        root: classes.listView,
-        header: classes.header,
-        headerCell: classes.headerCell,
-        body: classes.body,
-        row: classes.row,
-        cell: classes.cell,
-    } : undefined;
+    const listViewClasses = classes
+        ? {
+            root: classes.listView,
+            header: classes.header,
+            headerCell: classes.headerCell,
+            body: classes.body,
+            row: classes.row,
+            cell: classes.cell,
+        }
+        : undefined;
     // Window content with ListView
-    return (jsx(Window, { ref: ref, contentClassName: styles.folderListContent, onMouseEnter: onMouseEnter, className: classes?.root, ...windowProps, children: jsx(ListView, { columns: columns, items: items, selectedIds: selectedIds, onSelectionChange: onSelectionChange, onItemOpen: onItemOpen, onItemMouseEnter: onItemMouseEnter, onItemMouseLeave: onItemMouseLeave, onSort: onSort, height: listHeight, className: styles.listView, classes: listViewClasses, renderRow: renderRow, renderCell: renderCell, renderHeaderCell: renderHeaderCell, onCellClick: onCellClick, onCellMouseEnter: onCellMouseEnter, onCellMouseLeave: onCellMouseLeave }) }));
-});
+    return (jsx(Window, { ref: ref, contentClassName: styles.folderListContent, onMouseEnter: onMouseEnter, className: classes?.root, ...windowProps, children: jsx(ListView, { columns: columns, items: items, selectedIds: selectedIds, onSelectionChange: onSelectionChange, onItemOpen: onItemOpen, onItemMouseEnter: onItemMouseEnter, onItemMouseLeave: onItemMouseLeave, onSort: onSort, height: listHeight, className: styles.listView, classes: listViewClasses, emptyState: emptyState, loading: loading, loadingState: loadingState, renderRow: renderRow, renderCell: renderCell, renderHeaderCell: renderHeaderCell, onCellClick: onCellClick, onCellMouseEnter: onCellMouseEnter, onCellMouseLeave: onCellMouseLeave }) }));
+}
+/**
+ * `forwardRef` erases generics, so the forwarded component is re-cast to a
+ * signature that keeps `TItem` — matching how ListView is exported.
+ */
+const FolderList = forwardRef(FolderListInner);
 FolderList.displayName = 'FolderList';
 
 // Mac OS 9 Design Tokens
