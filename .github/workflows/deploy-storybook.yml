@@ -1,4 +1,4 @@
-name: Deploy Storybook to GitHub Pages
+name: Deploy site and Storybook to GitHub Pages
 
 on:
   push:
@@ -25,14 +25,29 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
           cache: 'npm'
 
       - name: Install dependencies
         run: npm ci
 
+      - name: Build landing site
+        run: npm run site:build
+        env:
+          SITE_BASE: /Mac-OS-9-React/
+
       - name: Build Storybook
         run: npm run build:storybook
+
+      # The landing page is served at the root and Storybook moves under
+      # /storybook/, so the Pages URL in package.json now resolves to the
+      # site rather than dropping visitors straight into a component browser.
+      - name: Assemble Pages bundle
+        run: |
+          mkdir -p _site
+          cp -r site-dist/* _site/
+          mkdir -p _site/storybook
+          cp -r storybook-static/* _site/storybook/
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
@@ -40,7 +55,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './storybook-static'
+          path: './_site'
 
   deploy:
     environment:

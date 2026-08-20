@@ -3512,10 +3512,19 @@ function renderValue(value) {
         return value;
     return String(value);
 }
-function ListViewRowInner({ item, columns, columnStyles, rowIndex, isSelected, isHovered, hoveredColumnKey, classes, onRowClick, onRowDoubleClick, onRowEnter, onRowLeave, onCellEnter, onCellLeave, onCellClickInternal, renderRow, renderCell, }) {
+function ListViewRowInner({ item, columns, columnStyles, rowIndex, isSelected, isHovered, isFocusable, rowId, hoveredColumnKey, classes, onRowKeyDown, onRowClick, onRowDoubleClick, onRowEnter, onRowLeave, onCellEnter, onCellLeave, onCellClickInternal, renderRow, renderCell, }) {
     const rowDefaultProps = {
         key: item.id,
+        id: rowId,
         className: mergeClasses(styles$1.row, isSelected && styles$1.selected, classes?.row),
+        // Rows are listbox options: focusable one at a time via a roving
+        // tabindex, so the list is a single tab stop that the arrow keys move
+        // within. Before this they were plain divs with onClick, which made
+        // selecting and opening an item impossible without a pointer.
+        role: 'option',
+        'aria-selected': isSelected,
+        tabIndex: isFocusable ? 0 : -1,
+        onKeyDown: (event) => onRowKeyDown(item, rowIndex, event),
         onClick: (event) => onRowClick(item, event),
         onDoubleClick: () => onRowDoubleClick(item),
         onMouseEnter: () => onRowEnter(item),
@@ -3576,11 +3585,17 @@ const ListViewRow = React.memo(ListViewRowInner);
  * <ListView<FileRow> items={files} columns={columns} />
  * ```
  */
-function ListViewInner({ columns, items, selectedIds = [], onSelectionChange, onItemOpen, onItemMouseEnter, onItemMouseLeave, onSort, className = '', height = 'auto', classes, emptyState = 'No items', loading = false, loadingState = 'Loading…', renderRow, renderCell, renderHeaderCell, onCellClick, onCellMouseEnter, onCellMouseLeave, }, ref) {
+function ListViewInner({ columns, items, selectedIds = [], onSelectionChange, onItemOpen, onItemMouseEnter, onItemMouseLeave, onSort, className = '', height = 'auto', classes, ariaLabel = 'List', ariaLabelledBy, emptyState = 'No items', loading = false, loadingState = 'Loading…', renderRow, renderCell, renderHeaderCell, onCellClick, onCellMouseEnter, onCellMouseLeave, }, ref) {
     const [sortColumn, setSortColumn] = React.useState(null);
     const [sortDirection, setSortDirection] = React.useState('asc');
     const [hoveredRow, setHoveredRow] = React.useState(null);
     const [hoveredColumnKey, setHoveredColumnKey] = React.useState(null);
+    // Index of the row holding the list's single tab stop. Kept in state so the
+    // roving tabindex follows the user's focus.
+    const [focusedIndex, setFocusedIndex] = React.useState(0);
+    // Ids are per-instance so two ListViews on a page can't collide.
+    const baseId = React.useId();
+    const bodyRef = React.useRef(null);
     // Membership tests run once per row per render. `selectedIds.includes()`
     // inside the row map made selection checking O(rows x selected), which on
     // a large list with a large selection is quadratic.
@@ -3695,11 +3710,82 @@ function ListViewInner({ columns, items, selectedIds = [], onSelectionChange, on
     const handleCellClickInternal = React.useCallback((item, column, event) => {
         latestRef.current.onCellClick?.(item, column, event);
     }, []);
+    /** Moves the roving tab stop to `index` and puts DOM focus on that row. */
+    const focusRow = React.useCallback((index) => {
+        const clamped = Math.max(0, Math.min(items.length - 1, index));
+        setFocusedIndex(clamped);
+        const target = bodyRef.current?.querySelector(`[data-index="${clamped}"]`);
+        target?.focus();
+    }, [items.length]);
+    /**
+     * Keyboard equivalents for everything the pointer can do (WCAG 2.1.1).
+     *
+     * Arrow keys move between rows, Home/End jump to the ends, Space and Enter
+     * select, Enter also opens, and holding Shift while arrowing extends the
+     * selection the same way Shift-click does.
+     */
+    const handleRowKeyDown = React.useCallback((item, index, event) => {
+        const { items: liveItems, onSelectionChange: liveOnChange, onItemOpen: liveOnOpen } = latestRef.current;
+        const move = (nextIndex) => {
+            event.preventDefault();
+            const clamped = Math.max(0, Math.min(liveItems.length - 1, nextIndex));
+            focusRow(clamped);
+            const target = liveItems[clamped];
+            if (!target)
+                return;
+            if (event.shiftKey) {
+                // Extend from the anchor, exactly as Shift-click does.
+                const anchorId = anchorIdRef.current ?? target.id;
+                const anchorIndex = liveItems.findIndex((candidate) => candidate.id === anchorId);
+                const start = Math.min(anchorIndex === -1 ? clamped : anchorIndex, clamped);
+                const end = Math.max(anchorIndex === -1 ? clamped : anchorIndex, clamped);
+                const rangeIds = liveItems.slice(start, end + 1).map((candidate) => candidate.id);
+                liveOnChange?.([...new Set([...baseSelectionRef.current, ...rangeIds])]);
+                return;
+            }
+            // Plain arrow movement selects the row it lands on, which is how
+            // Finder behaves and keeps selection and focus in step.
+            anchorIdRef.current = target.id;
+            baseSelectionRef.current = [target.id];
+            liveOnChange?.([target.id]);
+        };
+        switch (event.key) {
+            case 'ArrowDown':
+                move(index + 1);
+                break;
+            case 'ArrowUp':
+                move(index - 1);
+                break;
+            case 'Home':
+                move(0);
+                break;
+            case 'End':
+                move(liveItems.length - 1);
+                break;
+            case ' ':
+                event.preventDefault();
+                anchorIdRef.current = item.id;
+                baseSelectionRef.current = [item.id];
+                liveOnChange?.([item.id]);
+                break;
+            case 'Enter':
+                event.preventDefault();
+                liveOnChange?.([item.id]);
+                liveOnOpen?.(item);
+                break;
+        }
+    }, [focusRow]);
+    // Keep the tab stop in range when the list shrinks.
+    React.useEffect(() => {
+        setFocusedIndex((current) => Math.max(0, Math.min(items.length - 1, current)));
+    }, [items.length]);
     // Container style
     const containerStyle = {};
     if (height !== 'auto') {
         containerStyle.height = typeof height === 'number' ? `${height}px` : height;
     }
+    // Whether the body is currently rendering rows rather than a placeholder.
+    const hasRows = !loading && items.length > 0;
     const renderBody = () => {
         if (loading) {
             return (jsxRuntime.jsx("div", { className: mergeClasses(styles$1.placeholder, classes?.loading), children: loadingState }));
@@ -3707,7 +3793,7 @@ function ListViewInner({ columns, items, selectedIds = [], onSelectionChange, on
         if (items.length === 0) {
             return jsxRuntime.jsx("div", { className: mergeClasses(styles$1.placeholder, classes?.empty), children: emptyState });
         }
-        return items.map((item, rowIndex) => (jsxRuntime.jsx(ListViewRow, { item: item, columns: columns, columnStyles: columnStyles, rowIndex: rowIndex, isSelected: selectedSet.has(item.id), isHovered: hoveredRow === item.id, hoveredColumnKey: hoveredRow === item.id ? hoveredColumnKey : null, classes: classes, onRowClick: handleRowClick, onRowDoubleClick: handleRowDoubleClick, onRowEnter: handleRowEnter, onRowLeave: handleRowLeave, onCellEnter: handleCellEnter, onCellLeave: handleCellLeave, onCellClickInternal: handleCellClickInternal, renderRow: renderRow, renderCell: renderCell }, item.id)));
+        return items.map((item, rowIndex) => (jsxRuntime.jsx(ListViewRow, { item: item, columns: columns, columnStyles: columnStyles, rowIndex: rowIndex, isSelected: selectedSet.has(item.id), isHovered: hoveredRow === item.id, isFocusable: rowIndex === focusedIndex, rowId: `${baseId}-row-${rowIndex}`, hoveredColumnKey: hoveredRow === item.id ? hoveredColumnKey : null, classes: classes, onRowKeyDown: handleRowKeyDown, onRowClick: handleRowClick, onRowDoubleClick: handleRowDoubleClick, onRowEnter: handleRowEnter, onRowLeave: handleRowLeave, onCellEnter: handleCellEnter, onCellLeave: handleCellLeave, onCellClickInternal: handleCellClickInternal, renderRow: renderRow, renderCell: renderCell }, item.id)));
     };
     return (jsxRuntime.jsxs("div", { ref: ref, className: classNames, style: containerStyle, children: [jsxRuntime.jsx("div", { className: mergeClasses(styles$1.header, classes?.header), children: columns.map((column, columnIndex) => {
                     const isSorted = sortColumn === column.key;
@@ -3715,13 +3801,27 @@ function ListViewInner({ columns, items, selectedIds = [], onSelectionChange, on
                         isSorted,
                         sortDirection: isSorted ? sortDirection : undefined,
                     };
+                    const sortable = column.sortable !== false;
                     const headerDefaultProps = {
                         key: column.key,
-                        className: mergeClasses(styles$1.headerCell, column.sortable !== false && styles$1.sortable, classes?.headerCell),
+                        className: mergeClasses(styles$1.headerCell, sortable && styles$1.sortable, classes?.headerCell),
                         style: columnStyles[columnIndex] ?? {},
                         onClick: () => handleColumnClick(column.key, column.sortable),
+                        // A sortable header is a control, so it must be reachable and
+                        // operable from the keyboard and expose its sort state.
+                        role: sortable ? 'button' : undefined,
+                        tabIndex: sortable ? 0 : undefined,
+                        'aria-sort': isSorted ? (sortDirection === 'asc' ? 'ascending' : 'descending') : undefined,
+                        onKeyDown: sortable
+                            ? (event) => {
+                                if (event.key !== 'Enter' && event.key !== ' ')
+                                    return;
+                                event.preventDefault();
+                                handleColumnClick(column.key, column.sortable);
+                            }
+                            : undefined,
                         'data-column': column.key,
-                        'data-sortable': column.sortable !== false,
+                        'data-sortable': sortable,
                         ...(isSorted && {
                             'data-sorted': true,
                             'data-sort-direction': sortDirection,
@@ -3734,7 +3834,15 @@ function ListViewInner({ columns, items, selectedIds = [], onSelectionChange, on
                     // `key` comes off the props object and onto the element itself.
                     const { key: _key, ...headerElementProps } = headerDefaultProps;
                     return (jsxRuntime.jsxs("div", { ...headerElementProps, children: [column.label, isSorted && (jsxRuntime.jsx("span", { className: styles$1.sortIndicator, children: sortDirection === 'asc' ? '▲' : '▼' }))] }, column.key));
-                }) }), jsxRuntime.jsx("div", { className: mergeClasses(styles$1.body, classes?.body), "aria-busy": loading || undefined, children: renderBody() })] }));
+                }) }), jsxRuntime.jsx("div", { ref: bodyRef, className: mergeClasses(styles$1.body, classes?.body), 
+                // A multi-selectable listbox: rows are its options. This also gives
+                // the scroll container keyboard access, which a plain scrollable
+                // <div> of non-focusable rows does not have.
+                //
+                // The role is dropped while the list is empty or loading: a
+                // listbox is required to contain options, and applying it to a
+                // box holding only a placeholder is invalid ARIA.
+                role: hasRows ? 'listbox' : undefined, "aria-multiselectable": hasRows ? true : undefined, "aria-label": hasRows && !ariaLabelledBy ? ariaLabel : undefined, "aria-labelledby": hasRows ? ariaLabelledBy : undefined, "aria-busy": loading || undefined, children: renderBody() })] }));
 }
 /**
  * `forwardRef` erases generics, so the forwarded component is re-cast to a

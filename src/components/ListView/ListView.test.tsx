@@ -277,6 +277,115 @@ describe('ListView', () => {
 		expect(screen.getByText('42')).toBeInTheDocument();
 	});
 
+	describe('keyboard (WCAG 2.1.1)', () => {
+		it('exposes rows as listbox options', () => {
+			render(<ListView columns={columns} items={items} ariaLabel="Files" />);
+
+			const listbox = screen.getByRole('listbox', { name: 'Files' });
+			expect(listbox).toHaveAttribute('aria-multiselectable', 'true');
+			expect(screen.getAllByRole('option')).toHaveLength(4);
+		});
+
+		it('drops the listbox role while empty, since it would have no options', () => {
+			render(<ListView columns={columns} items={[]} />);
+			expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+		});
+
+		it('keeps a single tab stop across the rows', () => {
+			render(<ListView columns={columns} items={items} />);
+			const tabbable = screen
+				.getAllByRole('option')
+				.filter((row) => row.getAttribute('tabindex') === '0');
+			expect(tabbable).toHaveLength(1);
+		});
+
+		it('moves and selects with the arrow keys', () => {
+			const onChange = vi.fn();
+			render(<ControlledList onChange={onChange} />);
+
+			const rows = screen.getAllByRole('option');
+			rows[0].focus();
+			fireEvent.keyDown(rows[0], { key: 'ArrowDown' });
+
+			expect(onChange).toHaveBeenLastCalledWith(['b']);
+			expect(screen.getAllByRole('option')[1]).toHaveFocus();
+		});
+
+		it('jumps to the ends with Home and End', () => {
+			const onChange = vi.fn();
+			render(<ControlledList onChange={onChange} />);
+
+			const rows = screen.getAllByRole('option');
+			rows[0].focus();
+
+			fireEvent.keyDown(rows[0], { key: 'End' });
+			expect(onChange).toHaveBeenLastCalledWith(['d']);
+
+			fireEvent.keyDown(screen.getAllByRole('option')[3], { key: 'Home' });
+			expect(onChange).toHaveBeenLastCalledWith(['a']);
+		});
+
+		it('extends the selection with Shift and an arrow key', () => {
+			const onChange = vi.fn();
+			render(<ControlledList onChange={onChange} />);
+
+			const rows = screen.getAllByRole('option');
+			fireEvent.click(screen.getByText('Alpha'));
+			fireEvent.keyDown(rows[0], { key: 'ArrowDown', shiftKey: true });
+
+			expect(onChange).toHaveBeenLastCalledWith(['a', 'b']);
+		});
+
+		it('opens an item with Enter', () => {
+			const onItemOpen = vi.fn();
+			render(<ListView columns={columns} items={items} onItemOpen={onItemOpen} />);
+
+			fireEvent.keyDown(screen.getAllByRole('option')[2], { key: 'Enter' });
+
+			expect(onItemOpen).toHaveBeenCalledWith(expect.objectContaining({ id: 'c' }));
+		});
+
+		it('selects with Space without opening', () => {
+			const onItemOpen = vi.fn();
+			const onSelectionChange = vi.fn();
+			render(
+				<ListView
+					columns={columns}
+					items={items}
+					onItemOpen={onItemOpen}
+					onSelectionChange={onSelectionChange}
+				/>
+			);
+
+			fireEvent.keyDown(screen.getAllByRole('option')[1], { key: ' ' });
+
+			expect(onSelectionChange).toHaveBeenCalledWith(['b']);
+			expect(onItemOpen).not.toHaveBeenCalled();
+		});
+
+		it('makes sortable headers operable and announces sort state', () => {
+			const onSort = vi.fn();
+			render(<ListView columns={columns} items={items} onSort={onSort} />);
+
+			const header = screen.getByRole('button', { name: /Name/ });
+			expect(header).toHaveAttribute('tabindex', '0');
+
+			fireEvent.keyDown(header, { key: 'Enter' });
+			expect(onSort).toHaveBeenCalledWith('name', 'asc');
+			expect(screen.getByRole('button', { name: /Name/ })).toHaveAttribute('aria-sort', 'ascending');
+		});
+
+		it('does not make an unsortable header a control', () => {
+			render(
+				<ListView
+					columns={[{ key: 'name', label: 'Name', sortable: false }]}
+					items={items}
+				/>
+			);
+			expect(screen.queryByRole('button', { name: /Name/ })).not.toBeInTheDocument();
+		});
+	});
+
 	it('has no automatically detectable accessibility violations', async () => {
 		const { container } = render(<ListView columns={columns} items={items} selectedIds={['a']} />);
 		expect(await checkA11y(container)).toHaveNoViolations();

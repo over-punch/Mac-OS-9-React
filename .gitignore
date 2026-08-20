@@ -55,3 +55,7 @@ yarn.lock
 /the-designers-foundry/node_modules
 /the-designers-foundry/package-lock.json
 /the-designers-foundry/package.json
+
+# Landing site build output
+site-dist
+_site

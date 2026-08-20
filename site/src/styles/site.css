@@ -1,0 +1,690 @@
+/**
+ * Landing site styles.
+ *
+ * Everything reads from the library's own design tokens, so the page and the
+ * components can never drift apart. The machine chassis is CSS rather than an
+ * image: the zoom scales it well past 6x, where any bitmap would fall apart.
+ */
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+html {
+	background: #16181c;
+	scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	html {
+		scroll-behavior: auto;
+	}
+}
+
+body {
+	margin: 0;
+	font-family: var(--font-system);
+	font-size: var(--font-size-md);
+	line-height: var(--line-height-normal);
+	color: var(--color-text);
+	background: #16181c;
+	-webkit-text-size-adjust: 100%;
+}
+
+a {
+	color: inherit;
+}
+
+.skipLink {
+	position: absolute;
+	left: -9999px;
+	top: 0;
+	z-index: 999;
+	padding: var(--spacing-2) var(--spacing-3);
+	background: var(--color-surface);
+	color: var(--color-text);
+	border: var(--border-width-medium) solid var(--color-border);
+}
+
+.skipLink:focus {
+	left: var(--spacing-2);
+	top: var(--spacing-2);
+}
+
+/* ==========================================================================
+ * Scroll-driven zoom
+ * ========================================================================== */
+
+.zoomTrack {
+	/* The scrollable runway. Longer track = slower, more controllable zoom. */
+	height: 320vh;
+	position: relative;
+}
+
+.zoomStage {
+	position: sticky;
+	top: 0;
+	height: 100vh;
+	overflow: hidden;
+
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: clamp(12px, 2.4vh, 28px);
+
+	background:
+		radial-gradient(120% 90% at 50% 40%, #2b2f38 0%, #16181c 62%, #0d0e11 100%);
+
+	/* Set by ZoomStage on every frame. */
+	--zoom-progress: 0;
+	--zoom-scale: 1;
+}
+
+/* Hero copy retreats as the zoom starts, so it never collides with the
+ * growing machine. It is aria-hidden to nothing — it stays in the DOM and
+ * readable to assistive tech, only visually faded. */
+.zoomCopy {
+	max-width: min(760px, 88vw);
+	text-align: center;
+	color: #f2f3f5;
+	opacity: calc(1 - var(--zoom-progress) * 3);
+	transform: translateY(calc(var(--zoom-progress) * -40px));
+	transition: opacity 80ms linear;
+	pointer-events: none;
+	z-index: 2;
+}
+
+.kicker {
+	margin: 0 0 var(--spacing-2);
+	font-family: var(--font-mono);
+	font-size: clamp(11px, 1.4vw, 13px);
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: #8f9bb3;
+}
+
+.heroTitle {
+	margin: 0;
+	font-family: var(--font-display);
+	font-weight: var(--font-weight-bold);
+	font-size: clamp(26px, 4.6vw, 58px);
+	line-height: 1.08;
+	letter-spacing: -0.01em;
+	color: #ffffff;
+}
+
+.heroSub {
+	margin: 0 0 var(--spacing-2);
+	font-size: clamp(13px, 1.7vw, 17px);
+	line-height: 1.5;
+	color: #b9c2d2;
+}
+
+.scrollHint {
+	margin: 0;
+	font-family: var(--font-mono);
+	font-size: 11px;
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	color: #6f7a8d;
+}
+
+.scrollHint::after {
+	content: ' ↓';
+	display: inline-block;
+	animation: nudge 1.8s ease-in-out infinite;
+}
+
+@keyframes nudge {
+	0%,
+	100% {
+		transform: translateY(0);
+	}
+	50% {
+		transform: translateY(3px);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.scrollHint::after {
+		animation: none;
+	}
+}
+
+.zoomMachine {
+	/* transform and transform-origin are written by ZoomStage on each frame:
+	 * it scales about the screen's own centre and slides that centre to the
+	 * middle of the viewport, so the screen lands exactly edge-to-edge. */
+	will-change: transform;
+	z-index: 1;
+}
+
+/* ==========================================================================
+ * The machine
+ * ========================================================================== */
+
+.machine {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	/* Sized off the viewport so the whole computer is visible in the hero on
+	 * any screen, with the screen itself in a 4:3 CRT ratio. */
+	--screen-w: min(52vw, 56vh, 660px);
+	--screen-h: calc(var(--screen-w) * 0.75);
+	--case-pad: calc(var(--screen-w) * 0.055);
+}
+
+.machine__case {
+	position: relative;
+	padding: var(--case-pad);
+	padding-bottom: calc(var(--case-pad) * 0.5);
+	border-radius: calc(var(--screen-w) * 0.035);
+
+	/* Platinum plastic */
+	background:
+		linear-gradient(
+			168deg,
+			#efefe9 0%,
+			#e2e2da 26%,
+			#d4d4cb 62%,
+			#c3c3b9 100%
+		);
+	box-shadow:
+		inset 0 2px 0 rgba(255, 255, 255, 0.85),
+		inset 2px 0 0 rgba(255, 255, 255, 0.5),
+		inset -2px 0 0 rgba(0, 0, 0, 0.12),
+		inset 0 -2px 0 rgba(0, 0, 0, 0.16),
+		0 40px 90px rgba(0, 0, 0, 0.55),
+		0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.machine__bezel {
+	padding: calc(var(--screen-w) * 0.022);
+	border-radius: calc(var(--screen-w) * 0.02);
+	background: linear-gradient(160deg, #b9b9b0 0%, #cfcfc6 40%, #a9a9a0 100%);
+	box-shadow:
+		inset 0 2px 6px rgba(0, 0, 0, 0.45),
+		inset 0 -1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.machine__screen {
+	position: relative;
+	width: var(--screen-w);
+	height: var(--screen-h);
+	overflow: hidden;
+	border-radius: calc(var(--screen-w) * 0.012);
+	background: #08131a;
+	box-shadow: inset 0 0 calc(var(--screen-w) * 0.06) rgba(0, 0, 0, 0.8);
+}
+
+.machine__screenInner {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	flex-direction: column;
+	background: var(--desktop-bg);
+
+	/* Makes the screen a query container, so everything inside can be sized
+	 * in cqw and stay proportional at any machine size. */
+	container-type: size;
+	container-name: screen;
+}
+
+.machine__scanlines {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	background: repeating-linear-gradient(
+		to bottom,
+		rgba(0, 0, 0, 0.16) 0px,
+		rgba(0, 0, 0, 0.16) 1px,
+		transparent 1px,
+		transparent 3px
+	);
+	/* Fades out as the zoom proceeds — scanlines at 6x would be fat stripes. */
+	opacity: calc(0.55 - var(--zoom-progress, 0) * 0.55);
+	mix-blend-mode: multiply;
+}
+
+.machine__glare {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	background: linear-gradient(
+		145deg,
+		rgba(255, 255, 255, 0.16) 0%,
+		rgba(255, 255, 255, 0.05) 26%,
+		transparent 52%
+	);
+	opacity: calc(1 - var(--zoom-progress, 0));
+}
+
+.machine__chin {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--spacing-3);
+	padding: calc(var(--screen-w) * 0.022) calc(var(--screen-w) * 0.01) 0;
+}
+
+.machine__badge {
+	display: flex;
+	align-items: center;
+	gap: calc(var(--screen-w) * 0.01);
+}
+
+.machine__logo {
+	width: calc(var(--screen-w) * 0.022);
+	height: calc(var(--screen-w) * 0.022);
+	border-radius: 50%;
+	background: linear-gradient(140deg, #8d8d84, #6d6d64);
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.machine__badgeText {
+	font-family: var(--font-display);
+	font-size: calc(var(--screen-w) * 0.019);
+	font-weight: var(--font-weight-bold);
+	letter-spacing: 0.04em;
+	color: #7e7e74;
+	text-shadow: 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.machine__vents {
+	display: flex;
+	gap: calc(var(--screen-w) * 0.006);
+	flex: 1 1 auto;
+	justify-content: center;
+	max-width: 40%;
+}
+
+.machine__vents span {
+	flex: 1 1 auto;
+	height: calc(var(--screen-w) * 0.005);
+	max-width: calc(var(--screen-w) * 0.05);
+	border-radius: 2px;
+	background: rgba(0, 0, 0, 0.18);
+	box-shadow: 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.machine__power {
+	width: calc(var(--screen-w) * 0.012);
+	height: calc(var(--screen-w) * 0.012);
+	border-radius: 50%;
+	background: #6fd48a;
+	box-shadow:
+		0 0 calc(var(--screen-w) * 0.014) rgba(111, 212, 138, 0.9),
+		inset 0 -1px 0 rgba(0, 0, 0, 0.3);
+}
+
+.machine__neck {
+	width: calc(var(--screen-w) * 0.2);
+	height: calc(var(--screen-w) * 0.045);
+	background: linear-gradient(180deg, #dcdcd3 0%, #bfbfb5 100%);
+	box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.14);
+}
+
+.machine__foot {
+	width: calc(var(--screen-w) * 0.44);
+	height: calc(var(--screen-w) * 0.028);
+	border-radius: 0 0 calc(var(--screen-w) * 0.02) calc(var(--screen-w) * 0.02);
+	background: linear-gradient(180deg, #d2d2c9 0%, #aeaea4 100%);
+	box-shadow: 0 18px 40px rgba(0, 0, 0, 0.5);
+}
+
+/* ==========================================================================
+ * Desktop
+ * ========================================================================== */
+
+:root {
+	/* The classic teal-grey desktop, as a token so both the screen preview
+	 * and the full desktop section stay identical. */
+	--desktop-bg: #6d8b96;
+	--desktop-pattern: rgba(255, 255, 255, 0.05);
+}
+
+.desktop {
+	background-color: var(--desktop-bg);
+	background-image:
+		linear-gradient(45deg, var(--desktop-pattern) 25%, transparent 25%),
+		linear-gradient(-45deg, var(--desktop-pattern) 25%, transparent 25%);
+	background-size: 4px 4px;
+}
+
+.screenPreview {
+	/* Flat, deliberately: the desktop's 4px pattern is magnified along with
+	 * everything else during the zoom, and at 8x it reads as large triangles
+	 * rather than texture. A flat fill matches the desktop section's base
+	 * colour exactly, so the handoff at the end of the zoom is invisible. */
+	background-color: var(--desktop-bg);
+}
+
+.screenPreview {
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+	height: 100%;
+
+	/* Retarget the library's own tokens against the screen's width, so the
+	 * mock scales as one piece rather than the text staying at page size
+	 * while the machine shrinks. This is the component token layer being
+	 * used exactly as a consumer would use it. */
+	--font-size-xs: 1.5cqw;
+	--font-size-sm: 1.7cqw;
+	--font-size-md: 2cqw;
+	--font-size-lg: 2.2cqw;
+	--spacing-1: 0.55cqw;
+	--spacing-2: 1.1cqw;
+	--spacing-3: 1.7cqw;
+	--spacing-4: 2.2cqw;
+}
+
+.screenPreview__surface {
+	flex: 1 1 auto;
+	padding: 6%;
+}
+
+.screenPreview__surface {
+	position: relative;
+}
+
+.screenPreview__window {
+	width: 66%;
+	background: var(--color-gray-300);
+	border: var(--border-width-thin) solid var(--color-border);
+	box-shadow: var(--shadow-float);
+}
+
+.screenPreview__titleBar {
+	display: flex;
+	align-items: center;
+	gap: 0.9cqw;
+	padding: 0.5cqw 0.8cqw;
+	background: var(--window-titlebar-bg);
+	border-bottom: var(--border-width-thin) solid var(--color-border);
+}
+
+.screenPreview__close {
+	width: 1.3cqw;
+	height: 1.3cqw;
+	background: var(--color-gray-200);
+	border: var(--border-width-thin) solid var(--color-border);
+}
+
+.screenPreview__title {
+	font-family: var(--font-system);
+	font-size: 1.6cqw;
+	font-weight: var(--font-weight-bold);
+	color: var(--color-text);
+}
+
+.screenPreview__body {
+	display: flex;
+	flex-direction: column;
+	gap: 1cqw;
+	padding: 1.7cqw;
+}
+
+.screenPreview__line {
+	display: block;
+	height: 0.85cqw;
+	background: var(--color-gray-500);
+}
+
+.screenPreview__line--head {
+	height: 1.5cqw;
+	width: 58%;
+	background: var(--color-gray-600);
+}
+
+.screenPreview__line--short {
+	width: 42%;
+}
+
+.screenPreview__buttons {
+	display: flex;
+	gap: 0.9cqw;
+	margin-top: 0.7cqw;
+}
+
+.screenPreview__button {
+	width: 7cqw;
+	height: 2.1cqw;
+	background: var(--color-surface);
+	border: var(--border-width-thin) solid var(--color-border);
+	box-shadow: var(--shadow-drop);
+}
+
+.screenPreview__icons {
+	position: absolute;
+	top: 0;
+	right: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 1.7cqw;
+}
+
+.screenPreview__icon {
+	width: 3.4cqw;
+	height: 2.7cqw;
+	background: var(--color-gray-200);
+	border: var(--border-width-thin) solid var(--color-border);
+	box-shadow: var(--shadow-drop);
+}
+
+.desktop {
+	position: relative;
+	min-height: 100vh;
+	display: flex;
+	flex-direction: column;
+}
+
+.desktopMenuBar {
+	position: sticky;
+	top: 0;
+	z-index: 60;
+}
+
+.desktopMenuBar--compact {
+	position: static;
+}
+
+.desktopMenuBar__logo {
+	display: inline-flex;
+	align-items: center;
+}
+
+.desktopMenuBar__status {
+	font-family: var(--font-mono);
+	font-size: var(--font-size-xs);
+	color: var(--color-text);
+}
+
+.desktop__surface {
+	position: relative;
+	flex: 1 1 auto;
+	padding: clamp(16px, 3vw, 44px);
+	/* Room down the right for the desktop icons, so windows never run under
+	 * them the way they would on a real desktop. */
+	padding-right: clamp(16px, 3vw, 44px);
+}
+
+@media (min-width: 901px) {
+	.desktop__surface {
+		padding-right: 116px;
+	}
+}
+
+.desktop__windows {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+	gap: clamp(18px, 2.6vw, 34px);
+	align-items: start;
+	max-width: 1240px;
+	margin: 0 auto;
+}
+
+.deskWindow {
+	/* Windows are absolutely positioned only once dragged; until then they
+	 * sit in the grid. */
+	width: 100%;
+}
+
+.deskWindow--about {
+	grid-column: 1 / -1;
+}
+
+@media (min-width: 900px) {
+	.deskWindow--about {
+		grid-column: span 2;
+	}
+}
+
+.desktopIcons {
+	position: absolute;
+	top: clamp(16px, 3vw, 44px);
+	right: clamp(16px, 3vw, 44px);
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-4);
+	z-index: 1;
+}
+
+.desktopIcon {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--spacing-1);
+	width: 76px;
+	text-decoration: none;
+	color: #ffffff;
+	font-size: var(--font-size-xs);
+	text-align: center;
+	text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+
+.desktopIcon:focus-visible {
+	outline: var(--border-width-medium) dotted #ffffff;
+	outline-offset: 3px;
+}
+
+.desktopIcon span {
+	padding: 1px 4px;
+	background: rgba(0, 0, 0, 0.28);
+}
+
+@media (max-width: 900px) {
+	.desktopIcons {
+		position: static;
+		flex-direction: row;
+		justify-content: center;
+		margin-bottom: var(--spacing-4);
+	}
+}
+
+/* ---------- Window content ---------- */
+
+.pane {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-3);
+	padding: var(--spacing-4);
+}
+
+.pane--flush {
+	padding: 0;
+}
+
+.pane__title {
+	margin: 0;
+	font-family: var(--font-display);
+	font-size: clamp(19px, 2.4vw, 27px);
+	line-height: 1.15;
+	font-weight: var(--font-weight-bold);
+}
+
+.pane__lead {
+	margin: 0;
+	max-width: 62ch;
+	font-size: var(--font-size-lg);
+	line-height: 1.55;
+}
+
+.pane__note {
+	margin: 0;
+	font-size: var(--font-size-sm);
+	color: var(--color-gray-600);
+}
+
+.pane p {
+	margin: 0;
+	line-height: 1.55;
+}
+
+.pane code {
+	font-family: var(--font-mono);
+	font-size: 0.92em;
+	padding: 1px 4px;
+	background: var(--color-surface-inset);
+	border: var(--border-width-thin) solid var(--color-gray-400);
+}
+
+.pane__actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--spacing-2);
+}
+
+.installRow {
+	display: flex;
+	align-items: flex-end;
+	gap: var(--spacing-2);
+	flex-wrap: wrap;
+}
+
+.installRow > *:first-child {
+	flex: 1 1 260px;
+	min-width: 0;
+}
+
+.installRow__field {
+	font-family: var(--font-mono);
+}
+
+.installRow button {
+	flex: 0 0 auto;
+}
+
+.iconGrid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(38px, 1fr));
+	gap: var(--spacing-1);
+}
+
+.iconGrid__cell {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	aspect-ratio: 1;
+	background: var(--color-surface-inset);
+	border: var(--border-width-thin) solid var(--color-gray-400);
+}
+
+.desktop__footer {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: space-between;
+	gap: var(--spacing-2);
+	padding: var(--spacing-4) clamp(16px, 3vw, 44px);
+	font-size: var(--font-size-xs);
+	color: #ffffff;
+	background: rgba(0, 0, 0, 0.22);
+	text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.desktop__footer a {
+	color: #ffffff;
+}

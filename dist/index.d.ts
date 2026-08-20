@@ -2011,7 +2011,14 @@ interface RowRenderState {
  */
 interface RowDefaultProps {
     key: string;
+    id: string;
     className: string;
+    /** Listbox option semantics — spread these to keep the row accessible. */
+    role: 'option';
+    'aria-selected': boolean;
+    /** Roving tabindex: 0 on the active row, -1 on the rest. */
+    tabIndex: number;
+    onKeyDown: (e: React__default.KeyboardEvent) => void;
     onClick: (e: React__default.MouseEvent) => void;
     onDoubleClick: () => void;
     onMouseEnter: () => void;
@@ -2050,6 +2057,11 @@ interface HeaderCellDefaultProps {
     className: string;
     style: React__default.CSSProperties;
     onClick: () => void;
+    /** Present on sortable columns, which behave as buttons. */
+    role?: 'button';
+    tabIndex?: number;
+    'aria-sort'?: 'ascending' | 'descending';
+    onKeyDown?: (event: React__default.KeyboardEvent) => void;
     'data-column': string;
     'data-sortable': boolean;
     'data-sorted'?: boolean;
@@ -2103,6 +2115,21 @@ interface ListViewProps<TItem extends ListItem = ListItem> {
      * Custom classes for targeting sub-elements
      */
     classes?: ListViewClasses;
+    /**
+     * Accessible name for the list.
+     *
+     * The rows form a listbox, and a listbox needs a name for a screen reader
+     * to announce what is being chosen from. Supply this, or `ariaLabelledBy`
+     * pointing at a visible heading.
+     *
+     * @default 'List'
+     */
+    ariaLabel?: string;
+    /**
+     * ID of a visible element naming the list. Takes precedence over
+     * `ariaLabel`.
+     */
+    ariaLabelledBy?: string;
     /**
      * Content shown in place of the rows when `items` is empty and the list
      * is not loading. Without this the component renders an empty box, which

@@ -6,7 +6,7 @@
 // so per-file directives were both inconsistent (4 of 16 components) and
 // silently dropped at bundle time.
 
-import React, { forwardRef, useState, useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { forwardRef, useState, useCallback, useEffect, useId, useMemo, useRef } from 'react';
 import { mergeClasses } from '../../utils/classNames';
 import styles from './ListView.module.css';
 
@@ -108,7 +108,14 @@ export interface RowRenderState {
  */
 export interface RowDefaultProps {
 	key: string;
+	id: string;
 	className: string;
+	/** Listbox option semantics — spread these to keep the row accessible. */
+	role: 'option';
+	'aria-selected': boolean;
+	/** Roving tabindex: 0 on the active row, -1 on the rest. */
+	tabIndex: number;
+	onKeyDown: (e: React.KeyboardEvent) => void;
 	onClick: (e: React.MouseEvent) => void;
 	onDoubleClick: () => void;
 	onMouseEnter: () => void;
@@ -150,6 +157,11 @@ export interface HeaderCellDefaultProps {
 	className: string;
 	style: React.CSSProperties;
 	onClick: () => void;
+	/** Present on sortable columns, which behave as buttons. */
+	role?: 'button';
+	tabIndex?: number;
+	'aria-sort'?: 'ascending' | 'descending';
+	onKeyDown?: (event: React.KeyboardEvent) => void;
 	'data-column': string;
 	'data-sortable': boolean;
 	'data-sorted'?: boolean;
@@ -214,6 +226,23 @@ export interface ListViewProps<TItem extends ListItem = ListItem> {
 	 * Custom classes for targeting sub-elements
 	 */
 	classes?: ListViewClasses;
+
+	/**
+	 * Accessible name for the list.
+	 *
+	 * The rows form a listbox, and a listbox needs a name for a screen reader
+	 * to announce what is being chosen from. Supply this, or `ariaLabelledBy`
+	 * pointing at a visible heading.
+	 *
+	 * @default 'List'
+	 */
+	ariaLabel?: string;
+
+	/**
+	 * ID of a visible element naming the list. Takes precedence over
+	 * `ariaLabel`.
+	 */
+	ariaLabelledBy?: string;
 
 	/**
 	 * Content shown in place of the rows when `items` is empty and the list
@@ -325,8 +354,12 @@ interface ListViewRowProps<TItem extends ListItem> {
 	rowIndex: number;
 	isSelected: boolean;
 	isHovered: boolean;
+	/** Whether this row holds the single tab stop for the list. */
+	isFocusable: boolean;
+	rowId: string;
 	hoveredColumnKey: string | null;
 	classes?: ListViewClasses;
+	onRowKeyDown: (item: ListItem, index: number, event: React.KeyboardEvent) => void;
 	onRowClick: (item: ListItem, event: React.MouseEvent) => void;
 	onRowDoubleClick: (item: ListItem) => void;
 	onRowEnter: (item: ListItem) => void;
@@ -345,8 +378,11 @@ function ListViewRowInner<TItem extends ListItem>({
 	rowIndex,
 	isSelected,
 	isHovered,
+	isFocusable,
+	rowId,
 	hoveredColumnKey,
 	classes,
+	onRowKeyDown,
 	onRowClick,
 	onRowDoubleClick,
 	onRowEnter,
@@ -359,7 +395,16 @@ function ListViewRowInner<TItem extends ListItem>({
 }: ListViewRowProps<TItem>) {
 	const rowDefaultProps: RowDefaultProps = {
 		key: item.id,
+		id: rowId,
 		className: mergeClasses(styles.row, isSelected && styles.selected, classes?.row),
+		// Rows are listbox options: focusable one at a time via a roving
+		// tabindex, so the list is a single tab stop that the arrow keys move
+		// within. Before this they were plain divs with onClick, which made
+		// selecting and opening an item impossible without a pointer.
+		role: 'option',
+		'aria-selected': isSelected,
+		tabIndex: isFocusable ? 0 : -1,
+		onKeyDown: (event) => onRowKeyDown(item, rowIndex, event),
 		onClick: (event) => onRowClick(item, event),
 		onDoubleClick: () => onRowDoubleClick(item),
 		onMouseEnter: () => onRowEnter(item),
@@ -466,6 +511,8 @@ function ListViewInner<TItem extends ListItem = ListItem>(
 		className = '',
 		height = 'auto',
 		classes,
+		ariaLabel = 'List',
+		ariaLabelledBy,
 		emptyState = 'No items',
 		loading = false,
 		loadingState = 'Loading…',
@@ -482,6 +529,14 @@ function ListViewInner<TItem extends ListItem = ListItem>(
 	const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 	const [hoveredRow, setHoveredRow] = useState<string | null>(null);
 	const [hoveredColumnKey, setHoveredColumnKey] = useState<string | null>(null);
+
+	// Index of the row holding the list's single tab stop. Kept in state so the
+	// roving tabindex follows the user's focus.
+	const [focusedIndex, setFocusedIndex] = useState(0);
+
+	// Ids are per-instance so two ListViews on a page can't collide.
+	const baseId = useId();
+	const bodyRef = useRef<HTMLDivElement>(null);
 
 	// Membership tests run once per row per render. `selectedIds.includes()`
 	// inside the row map made selection checking O(rows x selected), which on
@@ -631,11 +686,101 @@ function ListViewInner<TItem extends ListItem = ListItem>(
 		[]
 	);
 
+	/** Moves the roving tab stop to `index` and puts DOM focus on that row. */
+	const focusRow = useCallback(
+		(index: number) => {
+			const clamped = Math.max(0, Math.min(items.length - 1, index));
+			setFocusedIndex(clamped);
+			const target = bodyRef.current?.querySelector<HTMLElement>(
+				`[data-index="${clamped}"]`
+			);
+			target?.focus();
+		},
+		[items.length]
+	);
+
+	/**
+	 * Keyboard equivalents for everything the pointer can do (WCAG 2.1.1).
+	 *
+	 * Arrow keys move between rows, Home/End jump to the ends, Space and Enter
+	 * select, Enter also opens, and holding Shift while arrowing extends the
+	 * selection the same way Shift-click does.
+	 */
+	const handleRowKeyDown = useCallback(
+		(item: ListItem, index: number, event: React.KeyboardEvent) => {
+			const { items: liveItems, onSelectionChange: liveOnChange, onItemOpen: liveOnOpen } =
+				latestRef.current;
+
+			const move = (nextIndex: number) => {
+				event.preventDefault();
+				const clamped = Math.max(0, Math.min(liveItems.length - 1, nextIndex));
+				focusRow(clamped);
+
+				const target = liveItems[clamped];
+				if (!target) return;
+
+				if (event.shiftKey) {
+					// Extend from the anchor, exactly as Shift-click does.
+					const anchorId = anchorIdRef.current ?? target.id;
+					const anchorIndex = liveItems.findIndex((candidate) => candidate.id === anchorId);
+					const start = Math.min(anchorIndex === -1 ? clamped : anchorIndex, clamped);
+					const end = Math.max(anchorIndex === -1 ? clamped : anchorIndex, clamped);
+					const rangeIds = liveItems.slice(start, end + 1).map((candidate) => candidate.id);
+					liveOnChange?.([...new Set([...baseSelectionRef.current, ...rangeIds])]);
+					return;
+				}
+
+				// Plain arrow movement selects the row it lands on, which is how
+				// Finder behaves and keeps selection and focus in step.
+				anchorIdRef.current = target.id;
+				baseSelectionRef.current = [target.id];
+				liveOnChange?.([target.id]);
+			};
+
+			switch (event.key) {
+				case 'ArrowDown':
+					move(index + 1);
+					break;
+				case 'ArrowUp':
+					move(index - 1);
+					break;
+				case 'Home':
+					move(0);
+					break;
+				case 'End':
+					move(liveItems.length - 1);
+					break;
+				case ' ':
+					event.preventDefault();
+					anchorIdRef.current = item.id;
+					baseSelectionRef.current = [item.id];
+					liveOnChange?.([item.id]);
+					break;
+				case 'Enter':
+					event.preventDefault();
+					liveOnChange?.([item.id]);
+					liveOnOpen?.(item as TItem);
+					break;
+				default:
+					break;
+			}
+		},
+		[focusRow]
+	);
+
+	// Keep the tab stop in range when the list shrinks.
+	useEffect(() => {
+		setFocusedIndex((current) => Math.max(0, Math.min(items.length - 1, current)));
+	}, [items.length]);
+
 	// Container style
 	const containerStyle: React.CSSProperties = {};
 	if (height !== 'auto') {
 		containerStyle.height = typeof height === 'number' ? `${height}px` : height;
 	}
+
+	// Whether the body is currently rendering rows rather than a placeholder.
+	const hasRows = !loading && items.length > 0;
 
 	const renderBody = () => {
 		if (loading) {
@@ -657,8 +802,11 @@ function ListViewInner<TItem extends ListItem = ListItem>(
 				rowIndex={rowIndex}
 				isSelected={selectedSet.has(item.id)}
 				isHovered={hoveredRow === item.id}
+				isFocusable={rowIndex === focusedIndex}
+				rowId={`${baseId}-row-${rowIndex}`}
 				hoveredColumnKey={hoveredRow === item.id ? hoveredColumnKey : null}
 				classes={classes}
+				onRowKeyDown={handleRowKeyDown}
 				onRowClick={handleRowClick}
 				onRowDoubleClick={handleRowDoubleClick}
 				onRowEnter={handleRowEnter}
@@ -683,17 +831,30 @@ function ListViewInner<TItem extends ListItem = ListItem>(
 						sortDirection: isSorted ? sortDirection : undefined,
 					};
 
+					const sortable = column.sortable !== false;
 					const headerDefaultProps: HeaderCellDefaultProps = {
 						key: column.key,
 						className: mergeClasses(
 							styles.headerCell,
-							column.sortable !== false && styles.sortable,
+							sortable && styles.sortable,
 							classes?.headerCell
 						),
 						style: columnStyles[columnIndex] ?? {},
 						onClick: () => handleColumnClick(column.key, column.sortable),
+						// A sortable header is a control, so it must be reachable and
+						// operable from the keyboard and expose its sort state.
+						role: sortable ? 'button' : undefined,
+						tabIndex: sortable ? 0 : undefined,
+						'aria-sort': isSorted ? (sortDirection === 'asc' ? 'ascending' : 'descending') : undefined,
+						onKeyDown: sortable
+							? (event: React.KeyboardEvent) => {
+									if (event.key !== 'Enter' && event.key !== ' ') return;
+									event.preventDefault();
+									handleColumnClick(column.key, column.sortable);
+								}
+							: undefined,
 						'data-column': column.key,
-						'data-sortable': column.sortable !== false,
+						'data-sortable': sortable,
 						...(isSorted && {
 							'data-sorted': true,
 							'data-sort-direction': sortDirection,
@@ -724,7 +885,22 @@ function ListViewInner<TItem extends ListItem = ListItem>(
 			</div>
 
 			{/* List items */}
-			<div className={mergeClasses(styles.body, classes?.body)} aria-busy={loading || undefined}>
+			<div
+				ref={bodyRef}
+				className={mergeClasses(styles.body, classes?.body)}
+				// A multi-selectable listbox: rows are its options. This also gives
+				// the scroll container keyboard access, which a plain scrollable
+				// <div> of non-focusable rows does not have.
+				//
+				// The role is dropped while the list is empty or loading: a
+				// listbox is required to contain options, and applying it to a
+				// box holding only a placeholder is invalid ARIA.
+				role={hasRows ? 'listbox' : undefined}
+				aria-multiselectable={hasRows ? true : undefined}
+				aria-label={hasRows && !ariaLabelledBy ? ariaLabel : undefined}
+				aria-labelledby={hasRows ? ariaLabelledBy : undefined}
+				aria-busy={loading || undefined}
+			>
 				{renderBody()}
 			</div>
 		</div>
