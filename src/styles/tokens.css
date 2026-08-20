@@ -286,7 +286,7 @@
 	--button-border: var(--color-border);
 
 	/* Window */
-	--window-bg: var(--color-surface);
+	--window-bg: var(--color-gray-300);
 	--window-border: var(--color-border);
 	--window-titlebar-bg: var(--color-gray-450);
 	--window-titlebar-text: var(--color-text);
@@ -296,23 +296,24 @@
 	--window-titlebar-pattern-shade: var(--color-gray-475);
 
 	/* Menus */
-	--menu-bg: var(--color-surface);
+	--menu-bg: var(--color-gray-100);
 	--menu-text: var(--color-text);
 	--menu-highlight-bg: var(--color-highlight);
 	--menu-highlight-text: var(--color-highlight-text);
 
 	/* List views */
-	--listview-bg: var(--color-surface-inset);
-	--listview-header-bg: var(--color-surface);
-	--listview-row-selected-bg: var(--color-highlight);
-	--listview-row-selected-text: var(--color-highlight-text);
+	--listview-bg: var(--color-surface);
+	--listview-header-bg: var(--color-gray-400);
+	--listview-row-hover-bg: var(--color-gray-300);
+	--listview-row-selected-bg: var(--color-gray-400);
+	--listview-row-selected-text: var(--color-text);
 
 	/* Form fields */
-	--field-bg: var(--color-surface-inset);
+	--field-bg: var(--color-surface);
 	--field-text: var(--color-text);
 	--field-border: var(--color-border);
 
 	/* Scrollbar */
-	--scrollbar-track-bg: var(--color-surface-inset);
-	--scrollbar-thumb-bg: var(--color-surface);
+	--scrollbar-track-bg: var(--color-gray-200);
+	--scrollbar-thumb-bg: var(--color-gray-300);
 }

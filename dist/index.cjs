@@ -1155,6 +1155,21 @@ const iconRegistry = {
 function getIcon(name) {
     return iconRegistry[name];
 }
+/**
+ * Check if an icon exists in the registry
+ * @param name - The icon name to check
+ * @returns True if the icon exists
+ */
+function hasIcon(name) {
+    return name in iconRegistry;
+}
+/**
+ * Get all available icon names
+ * @returns Array of all icon names
+ */
+function getAllIconNames() {
+    return Object.keys(iconRegistry);
+}
 
 /**
  * IconLibrary component for Mac OS 9 UI
@@ -1292,7 +1307,7 @@ const Checkbox = React.forwardRef(({ checked, defaultChecked, indeterminate = fa
 });
 Checkbox.displayName = 'Checkbox';
 
-var styles$a = {"wrapper":"Radio-module_wrapper","wrapper--disabled":"Radio-module_wrapper--disabled","wrapper--error":"Radio-module_wrapper--error","wrapper--label-left":"Radio-module_wrapper--label-left","wrapper--label-right":"Radio-module_wrapper--label-right","radio":"Radio-module_radio","radio--sm":"Radio-module_radio--sm","radio--md":"Radio-module_radio--md","radio--lg":"Radio-module_radio--lg","radio--error":"Radio-module_radio--error","label":"Radio-module_label","label--sm":"Radio-module_label--sm","label--md":"Radio-module_label--md","label--lg":"Radio-module_label--lg","wrapper--sm":"Radio-module_wrapper--sm","wrapper--md":"Radio-module_wrapper--md","wrapper--lg":"Radio-module_wrapper--lg"};
+var styles$a = {"wrapper":"Radio-module_wrapper","wrapper--disabled":"Radio-module_wrapper--disabled","wrapper--error":"Radio-module_wrapper--error","wrapper--label-left":"Radio-module_wrapper--label-left","wrapper--label-right":"Radio-module_wrapper--label-right","radio":"Radio-module_radio","radio--sm":"Radio-module_radio--sm","radio--md":"Radio-module_radio--md","radio--lg":"Radio-module_radio--lg","radio--error":"Radio-module_radio--error","label":"Radio-module_label","label--sm":"Radio-module_label--sm","label--md":"Radio-module_label--md","label--lg":"Radio-module_label--lg","wrapper--sm":"Radio-module_wrapper--sm","wrapper--md":"Radio-module_wrapper--md","wrapper--lg":"Radio-module_wrapper--lg","radioGroup":"Radio-module_radioGroup","radioGroup--vertical":"Radio-module_radioGroup--vertical","radioGroup--horizontal":"Radio-module_radioGroup--horizontal"};
 
 const RadioGroupContext = React.createContext(null);
 /**
@@ -1418,7 +1433,7 @@ const RadioGroup = React.forwardRef(({ name, value, defaultValue, onChange, disa
         disabled,
         onChange: (nextValue) => handleChildChange(nextValue),
     };
-    return (jsxRuntime.jsx("div", { ref: setGroupRef, role: "radiogroup", "aria-label": ariaLabel, "aria-labelledby": ariaLabelledBy, "aria-orientation": orientation, "aria-disabled": disabled || undefined, onKeyDown: handleKeyDown, className: className, children: jsxRuntime.jsx(RadioGroupContext.Provider, { value: contextValue, children: children }) }));
+    return (jsxRuntime.jsx("div", { ref: setGroupRef, role: "radiogroup", "aria-label": ariaLabel, "aria-labelledby": ariaLabelledBy, "aria-orientation": orientation, "aria-disabled": disabled || undefined, onKeyDown: handleKeyDown, className: mergeClasses(styles$a.radioGroup, styles$a[`radioGroup--${orientation}`], className), children: jsxRuntime.jsx(RadioGroupContext.Provider, { value: contextValue, children: children }) }));
 });
 RadioGroup.displayName = 'RadioGroup';
 
@@ -4223,6 +4238,11 @@ exports.WindowManagerProvider = WindowManagerProvider;
 exports.borders = borders;
 exports.colors = colors;
 exports.createClassBuilder = createClassBuilder;
+exports.createPixelIcon = createPixelIcon;
+exports.getAllIconNames = getAllIconNames;
+exports.getIcon = getIcon;
+exports.hasIcon = hasIcon;
+exports.iconRegistry = iconRegistry;
 exports.mergeClasses = mergeClasses;
 exports.shadows = shadows;
 exports.spacing = spacing;

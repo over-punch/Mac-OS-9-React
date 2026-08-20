@@ -372,15 +372,15 @@ describe('ListView', () => {
 
 			fireEvent.keyDown(header, { key: 'Enter' });
 			expect(onSort).toHaveBeenCalledWith('name', 'asc');
-			expect(screen.getByRole('button', { name: /Name/ })).toHaveAttribute('aria-sort', 'ascending');
+			expect(screen.getByRole('button', { name: /Name/ })).toHaveAttribute(
+				'aria-sort',
+				'ascending'
+			);
 		});
 
 		it('does not make an unsortable header a control', () => {
 			render(
-				<ListView
-					columns={[{ key: 'name', label: 'Name', sortable: false }]}
-					items={items}
-				/>
+				<ListView columns={[{ key: 'name', label: 'Name', sortable: false }]} items={items} />
 			);
 			expect(screen.queryByRole('button', { name: /Name/ })).not.toBeInTheDocument();
 		});

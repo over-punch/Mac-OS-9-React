@@ -2,16 +2,40 @@
 
 A pixel-perfect Mac OS 9 UI component library for React and TypeScript. Bring authentic retro Mac OS 9 styling to your web applications with accessible, well-typed components.
 
+[![npm](https://img.shields.io/npm/v/@liiift-studio/mac-os9-ui.svg)](https://www.npmjs.com/package/@liiift-studio/mac-os9-ui)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![React 18 | 19](https://img.shields.io/badge/React-18%20%7C%2019-149eca.svg)](#compatibility-and-footprint)
+[![No runtime dependencies](https://img.shields.io/badge/runtime%20deps-0-brightgreen.svg)](#compatibility-and-footprint)
+
+**[Live site](https://liiift-studio.github.io/Mac-OS-9-React/)** · **[Storybook](https://liiift-studio.github.io/Mac-OS-9-React/storybook/)** · **[npm](https://www.npmjs.com/package/@liiift-studio/mac-os9-ui)** · **[Changelog](./CHANGELOG.md)**
+
+[![The Mac OS 9 UI landing site: a beige CRT monitor on a dark background, its screen showing a Mac OS 9 desktop with a menu bar and a window](https://raw.githubusercontent.com/Liiift-Studio/Mac-OS-9-React/main/assets/hero.png?v=1)](https://liiift-studio.github.io/Mac-OS-9-React/)
+
+```bash
+npm install @liiift-studio/mac-os9-ui
+```
+
+```tsx
+import '@liiift-studio/mac-os9-ui/styles';
+import { Window, Button } from '@liiift-studio/mac-os9-ui';
+
+<Window title="My Application">
+	<Button variant="primary">Click Me</Button>
+</Window>;
+```
 
 ## Features
 
 - 🎨 **Pixel-Perfect Design** - Faithful recreation of Mac OS 9 UI elements based on the original design system
 - 📦 **TypeScript First** - Full TypeScript support with complete type definitions
-- ♿ **Accessible** - WCAG 2.1 AA compliant components with proper ARIA attributes
+- ⌨️ **Really Keyboard Operable** - windows move and resize with the arrow keys, menus use a roving tabindex, lists are navigable listboxes. See [Accessibility](#accessibility) for exactly what is and isn't verified
 - 🎭 **Dual Module Support** - ESM and CommonJS builds included
-- 📖 **Storybook Docs** - Interactive component documentation and examples
-- 🧪 **Fully Tested** - Comprehensive test coverage with Vitest
+- 🪶 **No runtime dependencies** - React and React DOM are the only peers
+- 🎚️ **Themeable** - every value is a CSS custom property, in three tiers
+- 📖 **Storybook Docs** - [browse every component](https://liiift-studio.github.io/Mac-OS-9-React/storybook/), interactively
+- 🧪 **Tested** - 220 tests, including an axe accessibility sweep over every exported component
+
+![A Mac OS 9 menu bar with the File menu open showing New Folder, Open, Print and a checked Get Info item, beside a Macintosh HD window containing a sortable file list](https://raw.githubusercontent.com/Liiift-Studio/Mac-OS-9-React/main/assets/window.png?v=1)
 
 ## Installation
 
@@ -19,12 +43,45 @@ A pixel-perfect Mac OS 9 UI component library for React and TypeScript. Bring au
 npm install @liiift-studio/mac-os9-ui
 ```
 
+## Compatibility and footprint
+
+| | |
+|---|---|
+| **React** | 18 or 19 (`react` and `react-dom` are peer dependencies) |
+| **Runtime dependencies** | None |
+| **Module formats** | ESM (`dist/index.js`) and CommonJS (`dist/index.cjs`) |
+| **Bundle** | 186 KB ESM, 46 KB gzipped |
+| **Stylesheet** | 100 KB, 17 KB gzipped |
+| **Fonts** | 148 KB (12 files: Pixel Operator, woff2 + woff) |
+| **Published tarball** | 269 KB |
+| **Types** | Bundled `.d.ts` and `.d.cts` |
+
+### Server components and `'use client'`
+
+Every component in this library is interactive, so the published bundle carries
+a `"use client"` banner at the top. In a Next.js App Router project you can
+import it from a server component without adding a directive yourself — the
+boundary is already declared inside the package.
+
+The stylesheet is a side-effect import and belongs in your root layout:
+
+```tsx
+// app/layout.tsx — a server component
+import '@liiift-studio/mac-os9-ui/styles';
+```
+
+### Tree-shaking
+
+`sideEffects` is scoped to CSS only, so an ESM bundler can drop the components
+you don't import. There are no deep subpath entry points — everything comes
+from the package root.
+
 ## Quick Start
 
 Import the styles once in your application's entry point, then use the components:
 
 ```tsx
-// In your app's main file (e.g., main.tsx, _app.tsx, index.tsx)
+// In your app's main file (e.g., main.tsx, _app.tsx, app/layout.tsx)
 import '@liiift-studio/mac-os9-ui/styles';
 import { Button, Window } from '@liiift-studio/mac-os9-ui';
 
@@ -41,36 +98,61 @@ function App() {
 
 ## Components
 
+![A Preferences window with tabs, a text field, a dropdown and checkboxes, beside windows showing button variants, sizes, icon and loading states, and a radio group](https://raw.githubusercontent.com/Liiift-Studio/Mac-OS-9-React/main/assets/components.png?v=1)
+
 ### Form Controls
-- **Button** - Classic Mac OS 9 buttons with variants (primary, default, cancel)
-- **Checkbox** - Mac OS 9 style checkboxes
-- **Radio** - Radio button groups
-- **TextField** - Text input fields
-- **Select** - Dropdown select menus
+- **Button** - Classic Mac OS 9 buttons. Variants `default` / `primary` / `danger`, sizes `sm` / `md` / `lg`, `loading`, `leftIcon` / `rightIcon`, `iconOnly`, and polymorphism via `as="a"` or [`asChild`](#router-links-with-aschild)
+- **IconButton** - Icon button with an optional label in any of four positions
+- **Checkbox** - Mac OS 9 style checkboxes, including an indeterminate state
+- **Radio** / **RadioGroup** - Radio buttons; the group adds `role="radiogroup"` and arrow-key navigation
+- **TextField** - Single-line or `multiline` text input, with helper text and a live-region error slot
+- **Select** - A real `role="listbox"` popup with type-ahead, option groups, and a hidden input so native form submission still works
 
 ### Layout & Chrome
-- **Window** - Classic Mac OS 9 window container
-- **MenuBar** - Application menu bar with dropdown menus
-- **Tabs** - Tabbed navigation component
-- **Dialog** - Modal dialog windows
+- **Window** - Classic Mac OS 9 window container. Optionally `draggable` and `resizable`, by pointer or arrow keys
+- **WindowManagerProvider** - z-order and focus coordination for several windows at once
+- **MenuBar** / **MenuItem** / **MenuDropdown** - Application menu bar with dropdowns, submenus and keyboard shortcuts
+- **Tabs** / **TabPanel** - Tabbed navigation, generic over the tab id
+- **Dialog** - Modal dialog, portalled to the body, with a focus trap
 
 ### Lists & Navigation
-- **ListView** - List view with Mac OS 9 styling
-- **FolderList** - Hierarchical folder/file list view
+- **ListView** - Multi-column list with sortable headers and selection, generic over the row type
+- **FolderList** - A Window with a ListView inside it, for file browsing
 - **Scrollbar** - Custom Mac OS 9 styled scrollbars
 
-### Utilities
-- **Icon** - System icons (folder, document, trash, etc.)
-- **IconButton** - Icon-only button variant
+### Content
+- **Icon** - Wrapper giving any SVG consistent sizing
+- **IconLibrary** - 38 bundled icons, addressed by name
+- **createPixelIcon** - Build your own icons from a character map, in the same style
+
+### Utilities and hooks
+- **mergeClasses** / **createClassBuilder** - Class name helpers
+- **useOutsideClick** - Dismiss on interaction outside a set of elements
+- **useMenuPosition** - Keep a dropdown inside the viewport
+- **tokens** - Every design token, readable from JavaScript
+
+![Thirty-eight pixel-art icons on a Mac OS 9 desktop background, each labelled with its registry name: close, trash, search, folder, document, disk, arrows, alerts, media controls and more](https://raw.githubusercontent.com/Liiift-Studio/Mac-OS-9-React/main/assets/icons.png?v=1)
+
+```tsx
+import { IconLibrary, getAllIconNames } from '@liiift-studio/mac-os9-ui';
+
+<IconLibrary icon="folder" size="lg" />;
+<IconLibrary icon="trash" label="Move to Trash" />;
+```
+
+`IconName` is derived from the registry, so an unknown name is a compile error.
 
 ## Usage Examples
 
 ### Creating a Window with Menu Bar
 
 `MenuBar` accepts a `menus` array describing each top-level entry. Each menu's
-`items` is JSX (typically a fragment of `MenuItem` components), not data — this
-keeps the dropdown content fully customizable. MenuBar is controlled: the parent
-owns `openMenuIndex` and reacts to `onMenuOpen` / `onMenuClose`.
+`items` can be **either** React nodes (typically a fragment of `MenuItem`
+components) **or** an array of `MenuItemData`, which MenuBar renders for you —
+useful when the menu comes from a config file or an API rather than JSX.
+
+MenuBar works controlled (`openMenuIndex` + `onMenuOpen` / `onMenuClose`) or
+uncontrolled (`defaultOpenMenuIndex`).
 
 ```tsx
 import { useState } from 'react';
@@ -91,8 +173,9 @@ function MyApp() {
 						items: (
 							<>
 								<MenuItem label="New" shortcut="⌘N" onClick={() => console.log('New')} />
-								<MenuItem label="Open..." shortcut="⌘O" onClick={() => console.log('Open')} />
-								<MenuItem label="" separator />
+								{/* `separator` draws a divider AFTER this item — it is not a
+								    standalone divider element. */}
+								<MenuItem label="Open..." shortcut="⌘O" separator onClick={() => console.log('Open')} />
 								<MenuItem label="Quit" shortcut="⌘Q" onClick={() => console.log('Quit')} />
 							</>
 						),
@@ -115,6 +198,23 @@ function MyApp() {
 }
 ```
 
+The same menu as data:
+
+```tsx
+<MenuBar
+	menus={[
+		{
+			label: 'File',
+			items: [
+				{ label: 'New', shortcut: '⌘N', onClick: onNew },
+				{ label: 'Open…', shortcut: '⌘O', onClick: onOpen, separator: true },
+				{ label: 'Recent', submenu: [{ label: 'report.txt', onClick: onRecent }] },
+			],
+		},
+	]}
+/>
+```
+
 ### Using Form Controls
 
 ```tsx
@@ -133,24 +233,29 @@ function MyForm() {
 				value={text}
 				onChange={(e) => setText(e.target.value)}
 			/>
-			
+
+			<TextField label="Notes" multiline rows={4} />
+
 			<Checkbox
 				label="I agree to the terms"
 				checked={checked}
 				onChange={(e) => setChecked(e.target.checked)}
 			/>
-			
+
+			{/* Select reports through `onValueChange`, which receives the value
+			    itself rather than a DOM event — it is a listbox, not a native
+			    <select>. */}
 			<Select
 				label="Choose an option"
 				value={selected}
-				onChange={(e) => setSelected(e.target.value)}
+				onValueChange={setSelected}
 				options={[
 					{ value: 'option1', label: 'Option 1' },
 					{ value: 'option2', label: 'Option 2' },
 					{ value: 'option3', label: 'Option 3' },
 				]}
 			/>
-			
+
 			<Button variant="primary" onClick={() => console.log('Submit')}>
 				Submit
 			</Button>
@@ -160,6 +265,11 @@ function MyForm() {
 ```
 
 ### Creating a Dialog
+
+`Dialog` portals to `document.body`, traps focus, closes on Escape, restores
+focus to whatever opened it, and locks page scroll without the layout shifting.
+
+![A Mac OS 9 alert reading Save changes? with the message Do you want to save the changes you made to Read Me, and Don't Save, Cancel and Save buttons](https://raw.githubusercontent.com/Liiift-Studio/Mac-OS-9-React/main/assets/dialog.png?v=1)
 
 ```tsx
 import { Dialog, Button } from '@liiift-studio/mac-os9-ui';
@@ -171,13 +281,14 @@ function MyComponent() {
 	return (
 		<>
 			<Button onClick={() => setOpen(true)}>Open Dialog</Button>
-			
+
 			<Dialog
 				open={open}
 				onClose={() => setOpen(false)}
 				title="Confirm Action"
+				ariaDescribedBy="confirm-copy"
 			>
-				<p>Are you sure you want to proceed?</p>
+				<p id="confirm-copy">Are you sure you want to proceed?</p>
 				<div style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
 					<Button variant="primary" onClick={() => setOpen(false)}>
 						OK
@@ -190,6 +301,41 @@ function MyComponent() {
 }
 ```
 
+Use `role="alertdialog"` for destructive confirmations, and `container={null}`
+to render inline instead of portalling.
+
+### Router links with `asChild`
+
+`Button` renders a `<button>` by default and an `<a>` with `as="a"`. When a
+router wants to own the element — Next.js `<Link>`, React Router, TanStack
+Router — use `asChild`, and Button contributes only its styling, ARIA and
+disabled behaviour:
+
+```tsx
+import Link from 'next/link';
+import { Button } from '@liiift-studio/mac-os9-ui';
+
+<Button asChild variant="primary">
+	<Link href="/dashboard">Go to Dashboard</Link>
+</Button>;
+```
+
+### Several windows at once
+
+Wrap them in a `WindowManagerProvider` and clicking a window brings it forward:
+
+```tsx
+import { WindowManagerProvider, Window } from '@liiift-studio/mac-os9-ui';
+
+<WindowManagerProvider>
+	<Window id="finder" title="Finder" draggable>…</Window>
+	<Window id="notes" title="Notes" draggable>…</Window>
+</WindowManagerProvider>;
+```
+
+Outside a provider, `Window` falls back to its own `zIndex`, `active` and
+`onActivate` props.
+
 ## Styling
 
 ### Basic Setup
@@ -197,17 +343,67 @@ function MyComponent() {
 Import the component styles **once** in your application's entry point:
 
 ```tsx
-// In your app's main file (e.g., main.tsx, _app.tsx, index.tsx)
+// In your app's main file (e.g., main.tsx, _app.tsx, app/layout.tsx)
 import '@liiift-studio/mac-os9-ui/styles';
 ```
 
 This provides:
 - CSS custom properties (design tokens/variables)
-- Font declarations (Pixel font family)
+- Font declarations (the bundled Pixel family)
 - Component styles
 - Utility classes
 
 This needs to be done only once at the root of your application. All components will then have the correct Mac OS 9 styles applied.
+
+### Entry points
+
+| Import | What you get |
+|---|---|
+| `@liiift-studio/mac-os9-ui/styles` | Everything: tokens, `@font-face`, component styles, utilities |
+| `@liiift-studio/mac-os9-ui/tokens` | Design tokens only — no `@font-face`, no font downloads |
+| `@liiift-studio/mac-os9-ui/base` | Optional global `html` / `body` / box-sizing styles |
+| `@liiift-studio/mac-os9-ui/webfonts` | Opt-in Google Fonts for IBM Plex and EB Garamond |
+| `@liiift-studio/mac-os9-ui/fonts/*` | The raw font files |
+
+### Theming
+
+Every value the components draw with is a CSS custom property, organised in
+three tiers. Override whichever tier matches how far you want the change to
+reach — there is no theme provider component to install, because there doesn't
+need to be one.
+
+1. **Primitives** — `--color-gray-500`, `--spacing-2`, `--font-size-md`
+2. **Semantics** — `--color-text`, `--color-surface`, `--color-highlight`
+3. **Per-component** — `--button-bg`, `--window-titlebar-bg`, `--menu-highlight-bg`, `--listview-row-selected-bg`, `--field-bg`, `--scrollbar-thumb-bg`
+
+Each tier defaults to the one above it, so retargeting a semantic moves
+everything downstream, while a component hook moves exactly one component.
+
+![Two identical Finder windows side by side. The left is the default grey Mac OS 9 palette; the right is tinted lilac, with a purple title bar and border, produced by overriding six custom properties](https://raw.githubusercontent.com/Liiift-Studio/Mac-OS-9-React/main/assets/theming.png?v=1)
+
+The window on the right is the same markup as the one on the left. The entire
+difference is six declarations:
+
+```css
+.lilac {
+	--color-surface: #ecdff5;
+	--color-surface-inset: #fdf9ff;
+	--color-border: #3b1f52;
+	--window-titlebar-bg: #cdb4e3;
+	--color-highlight: #6c2bd9;
+	--color-highlight-text: #ffffff;
+}
+```
+
+Scope an override to `:root`, a wrapper element, a media query, or a
+`[data-theme]` attribute — whatever suits your app. The full token list, with
+the naming convention and the override recipe, is at the top of
+[`src/styles/tokens.css`](./src/styles/tokens.css). Tokens are also readable
+from JavaScript:
+
+```ts
+import { tokens, colors, spacing } from '@liiift-studio/mac-os9-ui';
+```
 
 ### Optional Global Styles
 
@@ -230,6 +426,62 @@ The optional base styles include:
 
 All components use CSS Modules internally, so styles are scoped and won't conflict with your application's CSS. The theme variables and component styles are extracted to separate CSS files for optimal caching and performance.
 
+### Content Security Policy
+
+The stylesheet inlines one small `data:image/svg+xml` URI (the Select
+disclosure arrow) and loads fonts from the package. Under a strict CSP:
+
+```
+img-src   'self' data:;
+font-src  'self';
+```
+
+If you also import `/webfonts`, add the Google Fonts origins:
+
+```
+style-src 'self' https://fonts.googleapis.com;
+font-src  'self' https://fonts.gstatic.com;
+```
+
+## Accessibility
+
+The components target WCAG 2.1 AA. Being specific about what that means here,
+because "compliant" on its own is not a checkable claim:
+
+**What is verified automatically.** Every exported component is rendered in a
+realistic configuration and scanned against the `wcag2a`, `wcag2aa`, `wcag21a`
+and `wcag21aa` axe-core rule sets on every test run — 28 configurations in
+[`src/test/a11y.test.tsx`](./src/test/a11y.test.tsx), all clean. Dialog,
+Window, Tabs, MenuBar, ListView, TextField and Button additionally have
+keyboard and focus test suites.
+
+**What that does not cover.** Automated rules reach roughly a third of the WCAG
+criteria. This library has not had a manual audit or screen-reader testing.
+Treat the axe sweep as a floor, not a certificate.
+
+**Colour contrast is not verified.** The rule is disabled in the automated run,
+because jsdom resolves no CSS custom properties and every result would be
+meaningless. The Mac OS 9 palette is low-contrast by design — grey-on-grey
+chrome is the aesthetic. **Validate contrast against your own requirements**,
+and retarget the [tokens](#theming) if you need more.
+
+**What you get.** Dialog traps focus, restores it, stacks, and locks scroll
+without layout shift. Window drags and resizes with the arrow keys
+(`keyboardStep`, Shift for 10×). MenuBar is a single tab stop with a roving
+tabindex, Home/End, and disabled-menu skipping. Tabs implements the full
+tablist pattern with per-instance ids. ListView rows are listbox options with
+arrow-key navigation, Shift-extend, Enter to open, and `aria-sort` on sortable
+headers. Select is a real listbox with type-ahead and `aria-activedescendant`.
+MenuItem exposes `aria-keyshortcuts`. Component CSS honours
+`prefers-contrast: high`, `prefers-reduced-motion` and `:focus-visible`.
+
+**Props you must supply.** Some components cannot generate their own
+accessible name: `aria-label` on an `iconOnly` Button and on IconButton,
+`ariaLabel` on Tabs, Scrollbar, RadioGroup and ListView, `ariaDescribedBy` on
+Dialog. Development builds log an error when Button can't resolve a name.
+
+Accessibility bugs are worth reporting — [open an issue](https://github.com/Liiift-Studio/Mac-OS-9-React/issues).
+
 ## TypeScript Support
 
 All components are written in TypeScript and include full type definitions. Import types as needed:
@@ -238,11 +490,61 @@ All components are written in TypeScript and include full type definitions. Impo
 import type { ButtonProps, WindowProps } from '@liiift-studio/mac-os9-ui';
 ```
 
+Several components are generic, so your own types survive into the callbacks:
+
+```tsx
+interface FileRow extends ListItem {
+	name: string;
+	size: number;
+}
+
+<ListView<FileRow> items={files} columns={columns} onItemOpen={(row) => row.size} />;
+
+<Tabs<'general' | 'advanced'> onChange={(index, value) => value}>…</Tabs>;
+```
+
 ## Browser Support
 
 - Chrome/Edge (latest)
 - Firefox (latest)
 - Safari (latest)
+
+## Versioning
+
+This package is pre-1.0 (currently `0.3.x`). Minor versions may contain
+breaking changes; they are listed in the [changelog](./CHANGELOG.md).
+
+### Migrating to the next release
+
+`Select` no longer renders a native `<select>`. It is a button plus a
+`role="listbox"` popup, so the whole control can be themed — previously the
+open option list was drawn by the operating system, which broke the library's
+premise on the one surface people look at most.
+
+The visual and keyboard behaviour is a superset of what a native select does
+(arrow keys, Home/End, type-ahead, Escape), and a hidden input keeps native
+form submission and `FormData` working. Two API changes:
+
+```diff
+- <Select value={v} onChange={(e) => setV(e.target.value)} options={options} />
++ <Select value={v} onValueChange={setV} options={options} />
+```
+
+`onValueChange` receives the value directly and is generic, so a literal union
+survives. Option groups move from `<optgroup>` to a `group` field on each
+option.
+
+### Migrating to 0.3.0
+
+`0.3.0` moved the global `html` / `body` / box-sizing rules out of the main
+stylesheet, so importing `/styles` no longer restyles your whole page. If you
+relied on that — a Mac OS 9 body background, the responsive `<html>` font
+scaling — add the opt-in import:
+
+```tsx
+import '@liiift-studio/mac-os9-ui/styles';
+import '@liiift-studio/mac-os9-ui/base'; // restores the previous global styles
+```
 
 ## Development
 
@@ -253,15 +555,28 @@ npm install
 # Run Storybook for development
 npm run dev
 
+# Run the landing site
+npm run site:dev
+
 # Build the library
 npm run build
 
 # Run tests
 npm test
 
+# Run tests with coverage
+npm test -- --coverage
+
 # Run linting
 npm run lint
+
+# Regenerate the README images
+npm run capture
 ```
+
+Every image in this README is produced by `npm run capture`, which builds the
+site and screenshots the scenes in [`site/src/capture.tsx`](./site/src/capture.tsx)
+with Playwright. They are never captured by hand.
 
 ## Attribution
 
@@ -270,6 +585,14 @@ This component library is based on the **Mac OS 9 UI Kit** created by [Michael F
 Original Figma design: [Mac OS 9 UI Kit](https://www.figma.com/design/vy2T5MCXFz7QWf4Ba86eqN/Mac-OS-9--UI-Kit--Community-)
 
 Design licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
+
+### Fonts
+
+The bundled **Pixel Operator** family by Jayvee Enaguas is released under
+[CC0 1.0](./src/fonts/Pixel/LICENSE.txt), a public domain dedication, and is
+redistributed inside this package. IBM Plex and EB Garamond are referenced by
+the optional `/webfonts` entry point and are not bundled. See
+[`src/fonts/README.md`](./src/fonts/README.md).
 
 ## License
 
@@ -281,6 +604,8 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## Links
 
+- [Live site](https://liiift-studio.github.io/Mac-OS-9-React/)
+- [Storybook](https://liiift-studio.github.io/Mac-OS-9-React/storybook/)
 - [GitHub Repository](https://github.com/Liiift-Studio/Mac-OS-9-React)
 - [Report Issues](https://github.com/Liiift-Studio/Mac-OS-9-React/issues)
 - [Changelog](./CHANGELOG.md)

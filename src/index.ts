@@ -10,9 +10,18 @@ export { Button, type ButtonProps } from './components/Button';
 export {
 	Icon,
 	IconLibrary,
+	createPixelIcon,
+	iconRegistry,
+	getIcon,
+	hasIcon,
+	getAllIconNames,
 	type IconProps,
 	type IconLibraryProps,
 	type IconName,
+	type IconComponent,
+	type IconCategory,
+	type PixelMap,
+	type PixelIconProps,
 } from './components/Icon';
 export { IconButton, type IconButtonProps } from './components/IconButton';
 export { Checkbox, type CheckboxProps } from './components/Checkbox';
@@ -61,7 +70,11 @@ export * from './tokens';
 
 // Export hooks
 export { useOutsideClick, type UseOutsideClickOptions } from './hooks/useOutsideClick';
-export { useMenuPosition, type MenuPosition, type UseMenuPositionOptions } from './hooks/useMenuPosition';
+export {
+	useMenuPosition,
+	type MenuPosition,
+	type UseMenuPositionOptions,
+} from './hooks/useMenuPosition';
 
 // Export utilities
 export { mergeClasses, createClassBuilder } from './utils/classNames';

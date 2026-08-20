@@ -95,8 +95,7 @@ export function ZoomStage({ above, below, children }: ZoomStageProps) {
 			// Scale at which the screen covers the viewport in both axes, with a
 			// little overscan so no seam shows at the edges.
 			const target =
-				Math.max(window.innerWidth / natural.width, window.innerHeight / natural.height) *
-				OVERSCAN;
+				Math.max(window.innerWidth / natural.width, window.innerHeight / natural.height) * OVERSCAN;
 			const scale = 1 + eased * (target - 1);
 
 			// Scaling is about the screen's own centre, so that point stays put.

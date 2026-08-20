@@ -11,7 +11,7 @@
 	
 	/* Mac OS 9 menu bar appearance */
 	
-	background-color: var(--color-gray-100); /* Light gray like Mac OS 9 */
+	background-color: var(--menu-bg); /* Light gray like Mac OS 9 */
 	border-bottom: var(--border-width-thin) solid var(--color-black);
 	background: linear-gradient(180deg,
 			var(--color-gray-200) 0%,
@@ -103,7 +103,7 @@
 	font-size: var(--font-size-md);
 	font-weight: var(--font-weight-bold);
 	line-height: var(--line-height-snug);
-	color: var(--color-text);
+	color: var(--menu-text);
 	height: 100%;
 	display: flex;
 	align-items: center;
@@ -148,7 +148,7 @@
 .menuButton:hover:not(.menuButton--disabled) {
 	/* Hover state - blue highlight like Mac OS 9 */
 	background-color: var(--menu-highlight-bg);
-	color: var(--color-white);
+	color: var(--menu-highlight-text);
 }
 
 .menuButton:focus-visible {
@@ -160,7 +160,7 @@
 .menuButton--open {
 	/* Open state - highlighted */
 	background-color: var(--menu-highlight-bg);
-	color: var(--color-white);
+	color: var(--menu-highlight-text);
 }
 
 .menuButton--disabled {

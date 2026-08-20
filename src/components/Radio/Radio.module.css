@@ -215,3 +215,24 @@
 		transition: none;
 	}
 }
+/* ========================================
+ * Radio Group
+ * ======================================== */
+
+.radioGroup {
+	/* The group declared aria-orientation but applied no layout, so its
+	 * radios ran together inline with no spacing and `orientation` had no
+	 * visible effect at all. */
+	display: flex;
+	gap: var(--spacing-2) var(--spacing-4);
+}
+
+.radioGroup--vertical {
+	flex-direction: column;
+}
+
+.radioGroup--horizontal {
+	flex-direction: row;
+	flex-wrap: wrap;
+	align-items: center;
+}

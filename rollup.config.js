@@ -94,6 +94,9 @@ export default [
 					'**/*.test.tsx',
 					'**/*.test.ts',
 					'**/*.stories.tsx',
+					// Compile-only checks, never part of the package.
+					'**/__readme_check__/**',
+					'src/test/**',
 					'node_modules',
 					'dist',
 				],

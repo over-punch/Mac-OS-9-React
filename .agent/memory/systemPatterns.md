@@ -97,13 +97,17 @@ box-shadow:
 
 ## Key Technical Decisions
 
-### 1. Build System: tsup
-**Decision**: Use tsup over Rollup or other bundlers
-**Rationale**: 
-- Zero-config ESM/CJS output
-- Built-in TypeScript declaration generation
-- Fast builds via esbuild
-- Simpler than Rollup for library use case
+### 1. Build System: Rollup
+**Decision**: Rollup, with `rollup-plugin-postcss` for CSS Modules
+
+**Rationale**: the library ships CSS Modules alongside its JS, and the CSS
+needs to be extracted to a single stylesheet with the font URLs rewritten to
+their published paths. Rollup's plugin ecosystem handles that directly.
+
+**Note**: this section previously described `tsup`. The project moved to
+Rollup when CSS Modules were introduced and never switched back; `tsup`
+lingered in `devDependencies` and in this document until it was removed
+(issue #73).
 
 ### 2. Styling: CSS Modules + Custom Properties
 **Decision**: CSS Modules rather than CSS-in-JS
@@ -150,13 +154,21 @@ Advanced users can customize rendering:
 />
 ```
 
-### Context for Theme Overrides
-Optional context provider for theming:
-```typescript
-<MacOS9ThemeProvider theme={customTheme}>
-  <App />
-</MacOS9ThemeProvider>
+### Theme Overrides
+Theming is done with CSS custom properties, not a provider. There is no
+`MacOS9ThemeProvider` — this section previously described one, which did not
+exist and was never built. Tokens are declared in three tiers (primitives,
+semantics, per-component hooks) in `src/styles/tokens.css`, and an override is
+scoped wherever you want it to reach:
+
+```css
+:root { --color-highlight: #6c2bd9; }
+[data-theme='night'] { --color-surface: #333333; --color-text: #eeeeee; }
+.one-window { --window-titlebar-bg: #cdb4e3; }
 ```
+
+The one context provider the library does ship is `WindowManagerProvider`,
+which coordinates z-order across several `Window`s — not theming.
 
 ## Accessibility Patterns
 

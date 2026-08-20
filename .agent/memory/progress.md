@@ -65,7 +65,7 @@ See `.agent/memory/deep-review.md` for the session log.
 - ⚠️ README MenuBar example uses outdated API and will not compile (see issue #19)
 - ⚠️ README claims WCAG 2.1 AA compliance but no audit has run (see issue #81)
 - ⚠️ Drag/resize, IconLibrary, FolderList not documented in README (see issue #80)
-- ⚠️ `.agent/memory/techContext.md` still documents `tsup` as the bundler but the build is rollup-only (see issue #73)
+- ✅ Build documentation now matches reality: Rollup throughout, `tsup` removed from devDependencies and config (#73)
 
 ## Roadmap
 

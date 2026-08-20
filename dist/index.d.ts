@@ -211,6 +211,26 @@ interface IconProps extends SVGAttributes<SVGElement> {
 declare const Icon: React__default.ForwardRefExoticComponent<IconProps & React__default.RefAttributes<SVGSVGElement>>;
 
 /**
+ * One row of an icon per string, one character per pixel.
+ *
+ * Recognised characters:
+ *
+ * - `#` — the icon's own colour (`currentColor`, so it inherits text colour)
+ * - `o` — highlight, the light edge of a Mac OS 9 bevel
+ * - `x` — shade, the dark edge of a bevel
+ * - `.` or a space — transparent
+ */
+type PixelMap = readonly string[];
+/**
+ * Builds an icon component from a pixel map.
+ *
+ * @param displayName - React display name, e.g. `FolderIcon`
+ * @param label - Default accessible name
+ * @param map - The pixel map, one string per row
+ * @param gridSize - Width/height of the square pixel grid
+ */
+declare function createPixelIcon(displayName: string, label: string, map: PixelMap, gridSize?: number): React__default.FC<PixelIconProps>;
+/**
  * Props accepted by every generated pixel icon.
  *
  * Pass `label={null}` for a purely decorative icon that sits next to its own
@@ -271,6 +291,23 @@ declare const iconRegistry: {
  * Auto-generated from the icon registry
  */
 type IconName = keyof typeof iconRegistry;
+/**
+ * Get icon component by name
+ * @param name - The icon name from the registry
+ * @returns The icon component
+ */
+declare function getIcon(name: IconName): React$1.FC<PixelIconProps>;
+/**
+ * Check if an icon exists in the registry
+ * @param name - The icon name to check
+ * @returns True if the icon exists
+ */
+declare function hasIcon(name: string): name is IconName;
+/**
+ * Get all available icon names
+ * @returns Array of all icon names
+ */
+declare function getAllIconNames(): IconName[];
 
 interface IconLibraryProps extends Omit<PixelIconProps, 'label'> {
     /**
@@ -303,6 +340,21 @@ interface IconLibraryProps extends Omit<PixelIconProps, 'label'> {
  * ```
  */
 declare const IconLibrary: React__default.FC<IconLibraryProps>;
+
+/**
+ * Icon component type.
+ *
+ * Every icon accepts the presentational props of the base Icon — `size`,
+ * `className`, `label`, and any SVG attribute. It was previously declared as
+ * a bare `React.FC`, which said icons took no props at all and made
+ * forwarding `size` through IconLibrary a type error.
+ */
+type IconComponent = React__default.FC<PixelIconProps>;
+/**
+ * Icon category types
+ * Used to organize icons into logical groups
+ */
+type IconCategory = 'actions' | 'files' | 'navigation' | 'media' | 'status' | 'ui';
 
 /** Close cross. */
 declare const CloseIcon: React$1.FC<PixelIconProps>;
@@ -2700,5 +2752,5 @@ declare const mergeClasses: (...classes: ClassValue[]) => string;
  */
 declare const createClassBuilder: (baseClass: string) => (...additionalClasses: ClassValue[]) => string;
 
-export { AlertIcon, ApplicationIcon, ArrowDownIcon, ArrowLeftIcon, ArrowRightIcon, ArrowUpIcon, Button, CalendarIcon, CheckIcon, Checkbox, ChevronDownIcon, ChevronRightIcon, CloseIcon, CopyIcon, Dialog, DiskIcon, DividerIcon, DocumentIcon, DownloadIcon, ErrorIcon, FolderIcon, FolderList, FolderOpenIcon, GrabberIcon, HardDriveIcon, HomeIcon, Icon, IconButton, IconLibrary, ImageIcon, InfoIcon, LinkIcon, ListView, LockIcon, MailIcon, MenuBar, MenuDropdown, MenuItem, MusicIcon, PauseIcon, PlayIcon, PrintIcon, QuestionIcon, Radio, RadioGroup, ResizeHandleIcon, Scrollbar, SearchIcon, Select, StopIcon, TabPanel, Tabs, TextField, TrashIcon, UserIcon, VolumeIcon, VolumeMuteIcon, Window, WindowManagerProvider, borders, colors, createClassBuilder, mergeClasses, shadows, spacing, tokens, transitions, typography, useMenuPosition, useOutsideClick, useWindowManager, zIndex };
-export type { BaseComponentProps, ButtonProps, ButtonRef, CellRenderState, CheckboxProps, ComponentClasses, DialogProps, DivRef, FocusableElement, FolderListClasses, FolderListProps, HeaderCellDefaultProps, HeaderCellRenderState, IconButtonProps, IconLibraryProps, IconName, IconProps, InputRef, ListColumn, ListItem, ListViewClasses, ListViewProps, Menu, MenuBarProps, MenuDropdownProps, MenuItemData, MenuItemProps, MenuPosition, RadioGroupProps, RadioProps, RenderState, RowDefaultProps, RowRenderState, ScrollbarProps, SelectOption, SelectProps, SelectRef, Size, State, TabPanelProps, TabsProps, TextAreaRef, TextFieldProps, UseMenuPositionOptions, UseOutsideClickOptions, Variant, WindowClasses, WindowManagerContextValue, WindowManagerProviderProps, WindowPosition, WindowProps };
+export { AlertIcon, ApplicationIcon, ArrowDownIcon, ArrowLeftIcon, ArrowRightIcon, ArrowUpIcon, Button, CalendarIcon, CheckIcon, Checkbox, ChevronDownIcon, ChevronRightIcon, CloseIcon, CopyIcon, Dialog, DiskIcon, DividerIcon, DocumentIcon, DownloadIcon, ErrorIcon, FolderIcon, FolderList, FolderOpenIcon, GrabberIcon, HardDriveIcon, HomeIcon, Icon, IconButton, IconLibrary, ImageIcon, InfoIcon, LinkIcon, ListView, LockIcon, MailIcon, MenuBar, MenuDropdown, MenuItem, MusicIcon, PauseIcon, PlayIcon, PrintIcon, QuestionIcon, Radio, RadioGroup, ResizeHandleIcon, Scrollbar, SearchIcon, Select, StopIcon, TabPanel, Tabs, TextField, TrashIcon, UserIcon, VolumeIcon, VolumeMuteIcon, Window, WindowManagerProvider, borders, colors, createClassBuilder, createPixelIcon, getAllIconNames, getIcon, hasIcon, iconRegistry, mergeClasses, shadows, spacing, tokens, transitions, typography, useMenuPosition, useOutsideClick, useWindowManager, zIndex };
+export type { BaseComponentProps, ButtonProps, ButtonRef, CellRenderState, CheckboxProps, ComponentClasses, DialogProps, DivRef, FocusableElement, FolderListClasses, FolderListProps, HeaderCellDefaultProps, HeaderCellRenderState, IconButtonProps, IconCategory, IconComponent, IconLibraryProps, IconName, IconProps, InputRef, ListColumn, ListItem, ListViewClasses, ListViewProps, Menu, MenuBarProps, MenuDropdownProps, MenuItemData, MenuItemProps, MenuPosition, PixelIconProps, PixelMap, RadioGroupProps, RadioProps, RenderState, RowDefaultProps, RowRenderState, ScrollbarProps, SelectOption, SelectProps, SelectRef, Size, State, TabPanelProps, TabsProps, TextAreaRef, TextFieldProps, UseMenuPositionOptions, UseOutsideClickOptions, Variant, WindowClasses, WindowManagerContextValue, WindowManagerProviderProps, WindowPosition, WindowProps };

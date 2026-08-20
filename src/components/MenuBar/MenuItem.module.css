@@ -42,7 +42,7 @@
 .menuItem:hover:not(.menuItem--disabled) {
 	/* Hover state - blue highlight like Mac OS 9 */
 	background-color: var(--menu-highlight-bg);
-	color: var(--color-white);
+	color: var(--menu-highlight-text);
 }
 
 .menuItem:focus-visible {
@@ -54,7 +54,7 @@
 .menuItem--selected {
 	/* Selected/active state */
 	background-color: var(--menu-highlight-bg);
-	color: var(--color-white);
+	color: var(--menu-highlight-text);
 }
 
 .menuItem--disabled {

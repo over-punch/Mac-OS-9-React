@@ -8,7 +8,7 @@
 	/* Base styling */
 	display: flex;
 	flex-direction: column;
-	background: var(--color-surface);
+	background: var(--listview-bg);
 	border: var(--border-width-thin) solid var(--color-border);
 	
 	/* Mac OS 9 inset appearance */
@@ -35,7 +35,7 @@
 	flex-shrink: 0;
 	
 	/* Styling */
-	background: var(--color-gray-400);
+	background: var(--listview-header-bg);
 	border-bottom: var(--border-width-thin) solid var(--color-border);
 	box-shadow: var(--shadow-raised);
 	
@@ -113,12 +113,12 @@
 }
 
 .row:hover {
-	background: var(--color-gray-300);
+	background: var(--listview-row-hover-bg);
 }
 
 .row.selected {
-	background: var(--color-gray-400);
-	color: var(--color-text);
+	background: var(--listview-row-selected-bg);
+	color: var(--listview-row-selected-text);
 }
 
 .row.selected:hover {

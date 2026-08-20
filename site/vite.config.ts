@@ -24,5 +24,14 @@ export default defineConfig({
 	build: {
 		outDir: fileURLToPath(new URL('../site-dist', import.meta.url)),
 		emptyOutDir: true,
+		rollupOptions: {
+			input: {
+				// The landing page, plus the README capture harness. Building the
+				// harness with the site keeps the images reproducible from the
+				// same component source the site uses.
+				index: fileURLToPath(new URL('./index.html', import.meta.url)),
+				capture: fileURLToPath(new URL('./capture.html', import.meta.url)),
+			},
+		},
 	},
 });

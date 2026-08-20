@@ -9,8 +9,8 @@
 	flex-direction: column;
 	
 	/* Mac OS 9 window appearance */
-	background-color: var(--color-gray-300); /* #DDDDDD - authentic window background */
-	border: var(--border-width-thin) solid var(--color-black);
+	background-color: var(--window-bg);
+	border: var(--border-width-thin) solid var(--window-border);
 	
 	/* Authentic Mac OS 9 drop shadow: sharp 2px offset, no blur */
 	filter: drop-shadow(var(--shadow-float));
@@ -277,7 +277,7 @@
 	font-size: var(--font-size-md);
 	font-weight: var(--font-weight-bold);
 	line-height: var(--line-height-snug);
-	color: var(--color-text);
+	color: var(--window-titlebar-text);
 	
 	/* Absolute positioning for true centering regardless of controls */
 	

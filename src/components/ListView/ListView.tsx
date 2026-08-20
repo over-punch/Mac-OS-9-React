@@ -691,9 +691,7 @@ function ListViewInner<TItem extends ListItem = ListItem>(
 		(index: number) => {
 			const clamped = Math.max(0, Math.min(items.length - 1, index));
 			setFocusedIndex(clamped);
-			const target = bodyRef.current?.querySelector<HTMLElement>(
-				`[data-index="${clamped}"]`
-			);
+			const target = bodyRef.current?.querySelector<HTMLElement>(`[data-index="${clamped}"]`);
 			target?.focus();
 		},
 		[items.length]
@@ -708,8 +706,11 @@ function ListViewInner<TItem extends ListItem = ListItem>(
 	 */
 	const handleRowKeyDown = useCallback(
 		(item: ListItem, index: number, event: React.KeyboardEvent) => {
-			const { items: liveItems, onSelectionChange: liveOnChange, onItemOpen: liveOnOpen } =
-				latestRef.current;
+			const {
+				items: liveItems,
+				onSelectionChange: liveOnChange,
+				onItemOpen: liveOnOpen,
+			} = latestRef.current;
 
 			const move = (nextIndex: number) => {
 				event.preventDefault();
@@ -845,7 +846,11 @@ function ListViewInner<TItem extends ListItem = ListItem>(
 						// operable from the keyboard and expose its sort state.
 						role: sortable ? 'button' : undefined,
 						tabIndex: sortable ? 0 : undefined,
-						'aria-sort': isSorted ? (sortDirection === 'asc' ? 'ascending' : 'descending') : undefined,
+						'aria-sort': isSorted
+							? sortDirection === 'asc'
+								? 'ascending'
+								: 'descending'
+							: undefined,
 						onKeyDown: sortable
 							? (event: React.KeyboardEvent) => {
 									if (event.key !== 'Enter' && event.key !== ' ') return;

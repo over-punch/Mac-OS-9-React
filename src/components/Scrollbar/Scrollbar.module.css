@@ -72,7 +72,7 @@
 
 /* Arrow states */
 .arrow:hover:not(:disabled) {
-	background: var(--color-gray-300);
+	background: var(--scrollbar-thumb-bg);
 }
 
 .arrow:active:not(:disabled) {
@@ -124,7 +124,7 @@
 
 .track {
 	/* Base styling */
-	background: var(--color-gray-200);
+	background: var(--scrollbar-track-bg);
 	
 	/* Layout */
 	flex: 1 1 auto;

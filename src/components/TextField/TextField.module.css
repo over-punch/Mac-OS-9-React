@@ -44,7 +44,7 @@
 .label {
 	font-family: var(--font-system);
 	font-weight: var(--font-weight-normal);
-	color: var(--color-text);
+	color: var(--field-text);
 	user-select: none;
 }
 
@@ -92,8 +92,8 @@
 	color: var(--color-text);
 	
 	/* Mac OS 9 text field appearance - inset */
-	background-color: var(--color-surface);
-	border: var(--border-width-thin) solid var(--color-border);
+	background-color: var(--field-bg);
+	border: var(--border-width-thin) solid var(--field-border);
 	border-radius: var(--border-radius-none);
 	box-shadow: var(--shadow-inset);
 	

@@ -17,11 +17,11 @@
 	transition: none; /* Mac OS 9 had no transitions */
 
 	/* Mac OS 9 button appearance */
-	background-color: var(--color-surface);
-	border: var(--border-width-thin) solid var(--color-border);
+	background-color: var(--button-bg);
+	border: var(--border-width-thin) solid var(--button-border);
 	border-radius: var(--border-radius-none);
 	box-shadow: var(--shadow-bevel);
-	color: var(--color-text);
+	color: var(--button-text);
 
 	/* Pixelated corners - authentic Mac OS 9 chamfered effect */
 	clip-path: polygon(

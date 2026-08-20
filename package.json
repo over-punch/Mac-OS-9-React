@@ -41,6 +41,7 @@
 		"site:dev": "vite --config site/vite.config.ts",
 		"site:build": "vite build --config site/vite.config.ts",
 		"site:preview": "vite preview --config site/vite.config.ts",
+		"capture": "npm run site:build && node scripts/capture.mjs",
 		"build": "npm run clean && rollup -c",
 		"build:storybook": "storybook build",
 		"test": "vitest run",

@@ -17,7 +17,7 @@ Building an NPM-publishable React + TypeScript UI component library that faithfu
 ## Technical Stack
 - **Framework**: React 18+
 - **Language**: TypeScript (strict mode)
-- **Build Tool**: tsup (ESM/CJS + declarations)
+- **Build Tool**: Rollup (ESM/CJS + bundled declarations)
 - **Testing**: Vitest + Testing Library
 - **Documentation**: Storybook (React + Vite)
 - **Versioning**: Changesets

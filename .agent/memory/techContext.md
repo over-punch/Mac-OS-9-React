@@ -21,10 +21,10 @@
 
 ### Build & Development Tools
 
-#### tsup 8.3+
+#### Rollup 8.3+
 - **Purpose**: Library bundling
 - **Output**: ESM + CJS with TypeScript declarations
-- **Configuration**: `tsup.config.ts`
+- **Configuration**: `Rollup.config.ts`
 - **Features**:
   - esbuild-powered for speed
   - Automatic code splitting
@@ -225,7 +225,9 @@ No IE11 support (uses modern JS features).
 ## CSS Architecture
 
 ### Naming Convention
-- **CSS Variables**: `--mac-os9-{category}-{property}`
+- **CSS Variables**: `--{category}-{name}` / `--{category}-{name}-{modifier}`, e.g.
+  `--color-gray-500`, `--font-size-md`, `--window-titlebar-bg`. There is no
+  `--mac-os9-` prefix; the docs claimed one that no token has ever used.
   - Example: `--mac-os9-color-gray-500`
 - **CSS Classes**: `mac-os9-{component}-{modifier}`
   - Example: `mac-os9-button-primary`

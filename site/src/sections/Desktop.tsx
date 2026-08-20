@@ -16,7 +16,14 @@ import { Select } from '@lib/components/Select';
 import { TextField } from '@lib/components/TextField';
 import { IconLibrary } from '@lib/components/Icon';
 import { getAllIconNames } from '@lib/components/Icon/registry';
-import { DesktopMenuBar, DesktopIcons, REPO, STORYBOOK, PACKAGE, copy } from '../components/DesktopChrome';
+import {
+	DesktopMenuBar,
+	DesktopIcons,
+	REPO,
+	STORYBOOK,
+	PACKAGE,
+	copy,
+} from '../components/DesktopChrome';
 
 interface ComponentRow extends ListItem {
 	name: string;
@@ -82,10 +89,9 @@ export function Desktop() {
 							<div className="pane" id="start">
 								<h2 className="pane__title">Mac OS 9, as React components.</h2>
 								<p className="pane__lead">
-									Sixteen components that render the Mac OS 9 interface — windows you can drag
-									and resize, menus that behave like menus, list views, and the full set of form
-									controls. Typed, keyboard-operable, and built from design tokens you can
-									retarget.
+									Sixteen components that render the Mac OS 9 interface — windows you can drag and
+									resize, menus that behave like menus, list views, and the full set of form
+									controls. Typed, keyboard-operable, and built from design tokens you can retarget.
 								</p>
 
 								<div className="installRow">
@@ -156,17 +162,17 @@ export function Desktop() {
 										<p>
 											Every value is a CSS custom property in three tiers — primitives, semantic
 											roles, then per-component hooks like <code>--window-titlebar-bg</code> and{' '}
-											<code>--menu-highlight-bg</code>. Override one component without touching
-											the palette.
+											<code>--menu-highlight-bg</code>. Override one component without touching the
+											palette.
 										</p>
 									</TabPanel>
 									<TabPanel label="Accessibility" id="a11y">
 										<p>
-											Every exported component is rendered and scanned against the axe-core WCAG
-											2.1 A and AA rule sets on each run, alongside keyboard and focus suites for
-											the interactive ones. Automated rules cover roughly a third of WCAG, so
-											that is a floor and not a certificate — the README says exactly what is and
-											isn&rsquo;t verified.
+											Every exported component is rendered and scanned against the axe-core WCAG 2.1
+											A and AA rule sets on each run, alongside keyboard and focus suites for the
+											interactive ones. Automated rules cover roughly a third of WCAG, so that is a
+											floor and not a certificate — the README says exactly what is and isn&rsquo;t
+											verified.
 										</p>
 									</TabPanel>
 								</Tabs>
@@ -246,7 +252,11 @@ export function Desktop() {
 			<footer className="desktop__footer">
 				<span>
 					MIT licensed. Design after the{' '}
-					<a href="https://swallowmygraphicdesign.com/project/macostalgia" target="_blank" rel="noreferrer noopener">
+					<a
+						href="https://swallowmygraphicdesign.com/project/macostalgia"
+						target="_blank"
+						rel="noreferrer noopener"
+					>
 						Mac OS 9 UI Kit
 					</a>{' '}
 					by Michael Feeney, CC BY 4.0.

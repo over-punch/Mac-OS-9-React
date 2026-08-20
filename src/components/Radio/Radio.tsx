@@ -391,7 +391,7 @@ export const RadioGroup = forwardRef<HTMLDivElement, RadioGroupProps>(
 				aria-orientation={orientation}
 				aria-disabled={disabled || undefined}
 				onKeyDown={handleKeyDown}
-				className={className}
+				className={mergeClasses(styles.radioGroup, styles[`radioGroup--${orientation}`], className)}
 			>
 				<RadioGroupContext.Provider value={contextValue}>{children}</RadioGroupContext.Provider>
 			</div>

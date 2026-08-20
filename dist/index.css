@@ -371,7 +371,7 @@
 	--button-border: var(--color-border);
 
 	/* Window */
-	--window-bg: var(--color-surface);
+	--window-bg: var(--color-gray-300);
 	--window-border: var(--color-border);
 	--window-titlebar-bg: var(--color-gray-450);
 	--window-titlebar-text: var(--color-text);
@@ -381,25 +381,26 @@
 	--window-titlebar-pattern-shade: var(--color-gray-475);
 
 	/* Menus */
-	--menu-bg: var(--color-surface);
+	--menu-bg: var(--color-gray-100);
 	--menu-text: var(--color-text);
 	--menu-highlight-bg: var(--color-highlight);
 	--menu-highlight-text: var(--color-highlight-text);
 
 	/* List views */
-	--listview-bg: var(--color-surface-inset);
-	--listview-header-bg: var(--color-surface);
-	--listview-row-selected-bg: var(--color-highlight);
-	--listview-row-selected-text: var(--color-highlight-text);
+	--listview-bg: var(--color-surface);
+	--listview-header-bg: var(--color-gray-400);
+	--listview-row-hover-bg: var(--color-gray-300);
+	--listview-row-selected-bg: var(--color-gray-400);
+	--listview-row-selected-text: var(--color-text);
 
 	/* Form fields */
-	--field-bg: var(--color-surface-inset);
+	--field-bg: var(--color-surface);
 	--field-text: var(--color-text);
 	--field-border: var(--color-border);
 
 	/* Scrollbar */
-	--scrollbar-track-bg: var(--color-surface-inset);
-	--scrollbar-thumb-bg: var(--color-surface);
+	--scrollbar-track-bg: var(--color-gray-200);
+	--scrollbar-thumb-bg: var(--color-gray-300);
 }
 
 /* ========================================
@@ -482,11 +483,11 @@
 	transition: none; /* Mac OS 9 had no transitions */
 
 	/* Mac OS 9 button appearance */
-	background-color: var(--color-surface);
-	border: var(--border-width-thin) solid var(--color-border);
+	background-color: var(--button-bg);
+	border: var(--border-width-thin) solid var(--button-border);
 	border-radius: var(--border-radius-none);
 	box-shadow: var(--shadow-bevel);
-	color: var(--color-text);
+	color: var(--button-text);
 
 	/* Pixelated corners - authentic Mac OS 9 chamfered effect */
 	clip-path: polygon(
@@ -1669,6 +1670,28 @@
 		transition: none;
 	}
 }
+/* ========================================
+ * Radio Group
+ * ======================================== */
+
+.Radio-module_radioGroup {
+	/* The group declared aria-orientation but applied no layout, so its
+	 * radios ran together inline with no spacing and `orientation` had no
+	 * visible effect at all. */
+	display: flex;
+	gap: var(--spacing-2) var(--spacing-4);
+}
+
+.Radio-module_radioGroup--vertical {
+	flex-direction: column;
+}
+
+.Radio-module_radioGroup--horizontal {
+	flex-direction: row;
+	flex-wrap: wrap;
+	align-items: center;
+}
+
 /* TextField Component Styles - Mac OS 9 */
 
 .TextField-module_wrapper {
@@ -1715,7 +1738,7 @@
 .TextField-module_label {
 	font-family: var(--font-system);
 	font-weight: var(--font-weight-normal);
-	color: var(--color-text);
+	color: var(--field-text);
 	user-select: none;
 }
 
@@ -1763,8 +1786,8 @@
 	color: var(--color-text);
 	
 	/* Mac OS 9 text field appearance - inset */
-	background-color: var(--color-surface);
-	border: var(--border-width-thin) solid var(--color-border);
+	background-color: var(--field-bg);
+	border: var(--border-width-thin) solid var(--field-border);
 	border-radius: var(--border-radius-none);
 	box-shadow: var(--shadow-inset);
 	
@@ -2017,7 +2040,7 @@ textarea.TextField-module_input {
 .Select-module_label {
 	font-family: var(--font-system);
 	font-weight: var(--font-weight-normal);
-	color: var(--color-text);
+	color: var(--field-text);
 	user-select: none;
 }
 
@@ -2051,8 +2074,8 @@ textarea.TextField-module_input {
 	color: var(--color-text);
 	
 	/* Mac OS 9 popup menu appearance - raised bevel with dropdown arrow */
-	background-color: var(--color-surface);
-	border: var(--border-width-thin) solid var(--color-border);
+	background-color: var(--field-bg);
+	border: var(--border-width-thin) solid var(--field-border);
 	border-radius: var(--border-radius-none);
 	box-shadow: var(--shadow-bevel);
 	
@@ -3047,8 +3070,8 @@ textarea.TextField-module_input {
 	flex-direction: column;
 	
 	/* Mac OS 9 window appearance */
-	background-color: var(--color-gray-300); /* #DDDDDD - authentic window background */
-	border: var(--border-width-thin) solid var(--color-black);
+	background-color: var(--window-bg);
+	border: var(--border-width-thin) solid var(--window-border);
 	
 	/* Authentic Mac OS 9 drop shadow: sharp 2px offset, no blur */
 	filter: drop-shadow(var(--shadow-float));
@@ -3315,7 +3338,7 @@ textarea.TextField-module_input {
 	font-size: var(--font-size-md);
 	font-weight: var(--font-weight-bold);
 	line-height: var(--line-height-snug);
-	color: var(--color-text);
+	color: var(--window-titlebar-text);
 	
 	/* Absolute positioning for true centering regardless of controls */
 	
@@ -3531,7 +3554,7 @@ textarea.TextField-module_input {
 .MenuItem-module_menuItem:hover:not(.MenuItem-module_menuItem--disabled) {
 	/* Hover state - blue highlight like Mac OS 9 */
 	background-color: var(--menu-highlight-bg);
-	color: var(--color-white);
+	color: var(--menu-highlight-text);
 }
 
 .MenuItem-module_menuItem:focus-visible {
@@ -3543,7 +3566,7 @@ textarea.TextField-module_input {
 .MenuItem-module_menuItem--selected {
 	/* Selected/active state */
 	background-color: var(--menu-highlight-bg);
-	color: var(--color-white);
+	color: var(--menu-highlight-text);
 }
 
 .MenuItem-module_menuItem--disabled {
@@ -3700,7 +3723,7 @@ textarea.TextField-module_input {
 	
 	/* Mac OS 9 menu bar appearance */
 	
-	background-color: var(--color-gray-100); /* Light gray like Mac OS 9 */
+	background-color: var(--menu-bg); /* Light gray like Mac OS 9 */
 	border-bottom: var(--border-width-thin) solid var(--color-black);
 	background: linear-gradient(180deg,
 			var(--color-gray-200) 0%,
@@ -3792,7 +3815,7 @@ textarea.TextField-module_input {
 	font-size: var(--font-size-md);
 	font-weight: var(--font-weight-bold);
 	line-height: var(--line-height-snug);
-	color: var(--color-text);
+	color: var(--menu-text);
 	height: 100%;
 	display: flex;
 	align-items: center;
@@ -3837,7 +3860,7 @@ textarea.TextField-module_input {
 .MenuBar-module_menuButton:hover:not(.MenuBar-module_menuButton--disabled) {
 	/* Hover state - blue highlight like Mac OS 9 */
 	background-color: var(--menu-highlight-bg);
-	color: var(--color-white);
+	color: var(--menu-highlight-text);
 }
 
 .MenuBar-module_menuButton:focus-visible {
@@ -3849,7 +3872,7 @@ textarea.TextField-module_input {
 .MenuBar-module_menuButton--open {
 	/* Open state - highlighted */
 	background-color: var(--menu-highlight-bg);
-	color: var(--color-white);
+	color: var(--menu-highlight-text);
 }
 
 .MenuBar-module_menuButton--disabled {
@@ -4007,7 +4030,7 @@ textarea.TextField-module_input {
 
 /* Arrow states */
 .Scrollbar-module_arrow:hover:not(:disabled) {
-	background: var(--color-gray-300);
+	background: var(--scrollbar-thumb-bg);
 }
 
 .Scrollbar-module_arrow:active:not(:disabled) {
@@ -4059,7 +4082,7 @@ textarea.TextField-module_input {
 
 .Scrollbar-module_track {
 	/* Base styling */
-	background: var(--color-gray-200);
+	background: var(--scrollbar-track-bg);
 	
 	/* Layout */
 	flex: 1 1 auto;
@@ -4155,7 +4178,7 @@ textarea.TextField-module_input {
 	/* Base styling */
 	display: flex;
 	flex-direction: column;
-	background: var(--color-surface);
+	background: var(--listview-bg);
 	border: var(--border-width-thin) solid var(--color-border);
 	
 	/* Mac OS 9 inset appearance */
@@ -4182,7 +4205,7 @@ textarea.TextField-module_input {
 	flex-shrink: 0;
 	
 	/* Styling */
-	background: var(--color-gray-400);
+	background: var(--listview-header-bg);
 	border-bottom: var(--border-width-thin) solid var(--color-border);
 	box-shadow: var(--shadow-raised);
 	
@@ -4260,12 +4283,12 @@ textarea.TextField-module_input {
 }
 
 .ListView-module_row:hover {
-	background: var(--color-gray-300);
+	background: var(--listview-row-hover-bg);
 }
 
 .ListView-module_row.ListView-module_selected {
-	background: var(--color-gray-400);
-	color: var(--color-text);
+	background: var(--listview-row-selected-bg);
+	color: var(--listview-row-selected-text);
 }
 
 .ListView-module_row.ListView-module_selected:hover {

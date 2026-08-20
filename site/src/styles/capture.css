@@ -1,0 +1,164 @@
+/**
+ * Layout for the README capture scenes. Each `.scene` becomes one image.
+ * The page background is transparent so `omitBackground` keeps the area
+ * outside a scene's own fill clear.
+ */
+
+* {
+	box-sizing: border-box;
+}
+
+body {
+	margin: 0;
+	background: transparent;
+	font-family: var(--font-system);
+	color: var(--color-text);
+}
+
+#capture {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 40px;
+	padding: 40px;
+	width: max-content;
+}
+
+.scene {
+	padding: 34px;
+	background: #6d8b96;
+	background-image:
+		linear-gradient(45deg, rgba(255, 255, 255, 0.05) 25%, transparent 25%),
+		linear-gradient(-45deg, rgba(255, 255, 255, 0.05) 25%, transparent 25%);
+	background-size: 4px 4px;
+	width: max-content;
+	min-width: 520px;
+}
+
+.scene--wide {
+	min-width: 760px;
+}
+
+.grid {
+	display: flex;
+	gap: 24px;
+	align-items: flex-start;
+}
+
+.stack {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-3);
+	padding: var(--spacing-3);
+}
+
+.stack .stack {
+	padding: 0;
+}
+
+.row {
+	display: flex;
+	gap: var(--spacing-2);
+	align-items: center;
+	flex-wrap: wrap;
+}
+
+.row--end {
+	justify-content: flex-end;
+}
+
+.scene p {
+	margin: 0;
+	line-height: 1.5;
+	font-size: var(--font-size-md);
+}
+
+/* App frame: menu bar across the top with a window beneath it */
+.appFrame {
+	border: var(--border-width-thin) solid var(--color-border);
+	box-shadow: var(--shadow-float);
+}
+
+.appFrame__body {
+	/* Offset so the open File menu sits beside the window rather than on
+	 * top of its first column. */
+	padding: 26px 26px 26px 330px;
+	background-color: #6d8b96;
+	background-image:
+		linear-gradient(45deg, rgba(255, 255, 255, 0.05) 25%, transparent 25%),
+		linear-gradient(-45deg, rgba(255, 255, 255, 0.05) 25%, transparent 25%);
+	background-size: 4px 4px;
+	min-height: 300px;
+}
+
+.dialogFrame {
+	display: flex;
+	justify-content: center;
+	padding: 20px 0;
+}
+
+/* The captured Dialog renders inline (container={null}), so neutralise the
+ * fixed backdrop that would otherwise cover the whole capture page. */
+.dialogFrame > div {
+	position: static !important;
+	inset: auto !important;
+	background: transparent !important;
+	display: block !important;
+}
+
+.iconSheet {
+	display: grid;
+	grid-template-columns: repeat(8, 1fr);
+	gap: 10px;
+}
+
+.iconSheet__cell {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 5px;
+	padding: 10px 4px;
+	background: var(--color-surface-inset);
+	border: var(--border-width-thin) solid var(--color-gray-400);
+}
+
+.iconSheet__cell code {
+	font-family: var(--font-mono);
+	font-size: 9px;
+	color: var(--color-gray-600);
+	text-align: center;
+	word-break: break-all;
+}
+
+/* Theming comparison */
+.themeRow {
+	display: flex;
+	gap: 30px;
+	align-items: flex-start;
+}
+
+.themeCase {
+	margin: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.themeCase figcaption {
+	font-family: var(--font-mono);
+	font-size: 10px;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: #ffffff;
+	text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* The whole retheme: six custom properties, no component code touched. */
+.themeCase--alt {
+	--color-surface: #ecdff5;
+	--color-surface-inset: #fdf9ff;
+	--color-border: #3b1f52;
+	--window-titlebar-bg: #cdb4e3;
+	--color-highlight: #6c2bd9;
+	--color-highlight-text: #ffffff;
+}
