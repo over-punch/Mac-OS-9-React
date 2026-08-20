@@ -1,179 +1,81 @@
-# Mac OS 9 Fonts
+# Fonts
 
-This directory contains font files and Google Fonts imports for authentic Mac OS 9 typography.
+## What ships
 
-## Font Loading Strategy
-
-This library uses a hybrid approach:
-- **Google Fonts**: IBM Plex Sans, IBM Plex Mono, and EB Garamond (loaded via CSS `@import`)
-- **Local Font**: Chicago (ChicagoFLF.ttf - included in repository)
-- **Optional Local Font**: Charcoal (user-provided)
-
-## Directory Structure
+One family, self-hosted: **Pixel Operator**, exposed to CSS as `Pixel` and
+`PixelSmall`.
 
 ```
-src/fonts/
-├── chicago/           # Classic Mac OS menu bar font (INCLUDED)
-│   ├── ChicagoFLF.ttf
-│   └── LICENSE
-├── charcoal/          # Optional: Primary system UI font (user-provided)
-├── fonts.css          # Font imports and @font-face declarations
-└── README.md          # This file
+src/fonts/Pixel/
+├── LICENSE.txt              CC0 1.0 Universal (public domain dedication)
+├── Normal/  Pixel.woff2 · Pixel.woff · Pixel-Bold.woff2 · Pixel-Bold.woff
+├── Italic/  Pixel-Italic.* · Pixel-Bold-Italic.*
+└── Small/   Pixel-Small.* · Pixel-Bold-Small.*
 ```
 
-## Font Details
+| Font | Designer | License | Bundled |
+|------|----------|---------|---------|
+| Pixel Operator | Jayvee Enaguas (GGBotNet) | [CC0 1.0](./Pixel/LICENSE.txt) — public domain | Yes |
+| IBM Plex Sans / Mono | IBM | SIL OFL 1.1 | No — opt-in via `/webfonts` |
+| EB Garamond | Georg Duffner, Octavio Pardo | SIL OFL 1.1 | No — opt-in via `/webfonts` |
 
-### Chicago (Included) ✅
-**Directory**: `chicago/`
-- **File**: `ChicagoFLF.ttf` (included in repository)
-- **Source**: [Font Library - ChicagoFLF](https://fontlibrary.org/en/font/chicagoflf)
-- **License**: Public Domain (completely free to use)
-- **Usage**: Menu bar, classic Mac OS headers
-- **Status**: ✅ Ready to use
+Pixel Operator is dedicated to the public domain under CC0, so it can be
+redistributed inside this package with no attribution requirement. The licence
+text travels with the files anyway, in `Pixel/LICENSE.txt`.
 
-### IBM Plex Sans (Google Fonts) ✅
-- **Source**: Google Fonts (loaded via CSS `@import`)
-- **License**: SIL Open Font License (OFL) - free and open source
-- **Usage**: Body text, secondary UI elements
-- **Alternative to**: Geneva
-- **Status**: ✅ Automatically loaded
+The library's own components only ever use the bundled family. IBM Plex and
+EB Garamond are referenced by `--font-body`, `--font-title` and `--font-mono`
+for consumers who want them, and are loaded only if you opt in.
 
-### IBM Plex Mono (Google Fonts) ✅
-- **Source**: Google Fonts (loaded via CSS `@import`)
-- **License**: SIL Open Font License (OFL) - free and open source
-- **Usage**: Code, fixed-width text
-- **Alternative to**: Monaco
-- **Status**: ✅ Automatically loaded
+## Weights
 
-### EB Garamond (Google Fonts) ✅
-- **Source**: Google Fonts (loaded via CSS `@import`)
-- **License**: SIL Open Font License (OFL) - free and open source
-- **Usage**: Headlines, editorial content
-- **Alternative to**: Apple Garamond
-- **Status**: ✅ Automatically loaded
+Pixel Operator ships two real weights, 400 and 700, in both roman and italic.
+Every `--font-weight-*` token resolves to one of those, so the browser never
+synthesises a weight. See the note in `src/styles/tokens.css` for why
+`--font-weight-normal` is 700.
 
-### Charcoal (Optional - User Provided) ⚠️
-**Directory**: `charcoal/`
-- **Status**: NOT included in repository
-- **Usage**: Primary system UI font (menus, buttons, dialogs)
-- **How to add**:
-  1. Obtain a licensed copy of Charcoal font
-  2. Convert to web formats (WOFF2, WOFF, TTF recommended)
-  3. Place files in `src/fonts/charcoal/` directory
-  4. Update `src/fonts/fonts.css` to add appropriate `@font-face` declarations
+## How they load
 
-**Note**: Without Charcoal, the library will fall back to system fonts defined in `theme.css`.
+`@font-face` declarations live in `src/styles/fonts.css`, which `theme.css`
+imports. Consuming the default stylesheet gets them:
 
-## Usage
-
-### In Your Application
-
-Fonts are automatically loaded when you import the library styles:
-
-```tsx
-// Import the component library (includes fonts)
+```ts
 import '@liiift-studio/mac-os9-ui/styles';
-
-// Or import fonts separately if needed
-import '../fonts/fonts.css';
 ```
 
-### CSS Custom Properties
+`font-display: block` is deliberate — see the comment in `fonts.css`.
 
-Use these CSS variables defined in `theme.css`:
+### Opting out
 
-```css
-.my-element {
-	font-family: var(--font-system);  /* Charcoal (with fallbacks) */
-	font-family: var(--font-body);    /* IBM Plex Sans */
-	font-family: var(--font-chicago); /* Chicago */
-	font-family: var(--font-mono);    /* IBM Plex Mono */
-	font-family: var(--font-display); /* EB Garamond */
-}
+To supply your own faces and download nothing, import the tokens alone:
+
+```ts
+import '@liiift-studio/mac-os9-ui/tokens';
 ```
 
-### In Storybook
+Then point `--font-system` and `--font-pixel` at whatever you host.
 
-Fonts are automatically loaded via the Storybook preview configuration.
+### Opting in to the web fonts
 
-## Testing Font Loading
-
-To verify fonts are loading correctly:
-
-### Browser DevTools - Network Tab
-1. Open browser DevTools (F12)
-2. Go to **Network** tab
-3. Filter by "Font" or "CSS"
-4. Reload page
-5. Confirm you see:
-   - Google Fonts CSS file loading
-   - `ChicagoFLF.ttf` loading from local assets
-
-### Browser DevTools - Computed Styles
-1. Open browser DevTools (F12)
-2. Go to **Elements** tab
-3. Select an element with text
-4. Go to **Computed** tab
-5. Check `font-family` - should show:
-   - "IBM Plex Sans" for body text
-   - "Chicago" for menu bar elements
-   - "IBM Plex Mono" for code/monospace
-   - "EB Garamond" for display text
-
-### Browser DevTools - Console
-If fonts fail to load, check the Console tab for errors like:
-- CORS errors (Google Fonts should not have this)
-- 404 errors (missing font files)
-- Failed to decode font errors (corrupted files)
-
-## Fallback Behavior
-
-All font stacks include system fallbacks:
-
-```css
---font-system: 'Charcoal', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
---font-body: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
---font-chicago: 'Chicago', 'Chicago Classic', 'Charcoal CY', Charcoal, monospace;
---font-mono: 'IBM Plex Mono', Monaco, 'Courier New', monospace;
---font-display: 'EB Garamond', Garamond, Georgia, serif;
+```ts
+import '@liiift-studio/mac-os9-ui/styles';
+import '@liiift-studio/mac-os9-ui/webfonts';
 ```
 
-This ensures text remains readable even if fonts fail to load.
+This makes a request to `fonts.googleapis.com`. Under a strict CSP you will
+need:
 
-## License Summary
+```
+style-src  'self' https://fonts.googleapis.com;
+font-src   'self' https://fonts.gstatic.com;
+```
 
-| Font | License | Included | Cost |
-|------|---------|----------|------|
-| ChicagoFLF | Public Domain | ✅ Yes | Free |
-| IBM Plex Sans | SIL OFL | ✅ Via CDN | Free |
-| IBM Plex Mono | SIL OFL | ✅ Via CDN | Free |
-| EB Garamond | SIL OFL | ✅ Via CDN | Free |
-| Charcoal | Proprietary Apple | ❌ No | User-provided |
+Self-hosting those two families instead is recommended for production.
 
-## Troubleshooting
+## Raw files
 
-### Fonts appear as Times New Roman or monospace
-- **Cause**: Fonts not loading properly
-- **Solution**: Check browser Network tab for failed font loads
-- **Check**: Ensure `fonts.css` is imported in your application
+The font files are published, so you can reference them directly:
 
-### Google Fonts blocked by Content Security Policy
-- **Cause**: Strict CSP headers blocking external fonts
-- **Solution**: Add to CSP header:
-  ```
-  font-src 'self' https://fonts.gstatic.com;
-  style-src 'self' https://fonts.googleapis.com;
-  ```
-
-### ChicagoFLF.ttf 404 error
-- **Cause**: Font file not found or incorrect path
-- **Solution**: Verify `src/fonts/chicago/ChicagoFLF.ttf` exists
-- **Check**: Ensure build process includes font files in output
-
-### Performance concerns with Google Fonts
-- **Solution**: Consider downloading fonts and self-hosting
-- **Steps**:
-  1. Download fonts from Google Fonts
-  2. Place in respective directories (ibm-plex-sans, ibm-plex-mono, eb-garamond)
-  3. Replace `@import` in fonts.css with `@font-face` declarations
-  4. Update paths to local font files
+```
+@liiift-studio/mac-os9-ui/fonts/Pixel/Normal/Pixel.woff2
+```
