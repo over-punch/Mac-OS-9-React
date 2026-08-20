@@ -1,7 +1,7 @@
 // TextField component - Mac OS 9 style
 // Classic text input with label support and full accessibility
 
-import React, { forwardRef, InputHTMLAttributes } from 'react';
+import React, { forwardRef, InputHTMLAttributes, TextareaHTMLAttributes } from 'react';
 import styles from './TextField.module.css';
 
 export interface TextFieldProps
@@ -74,6 +74,46 @@ export interface TextFieldProps
 	 * Custom wrapper class name
 	 */
 	wrapperClassName?: string;
+
+	/**
+	 * Render a multi-line field (a `<textarea>`) instead of a single-line
+	 * `<input>`.
+	 *
+	 * Everything else — label, sizes, icons, error and helper text, the
+	 * Mac OS 9 inset bevel — behaves identically, so a comment box does not
+	 * have to be styled from scratch to sit next to the other fields.
+	 *
+	 * @default false
+	 */
+	multiline?: boolean;
+
+	/**
+	 * Visible rows when `multiline` is set.
+	 * @default 3
+	 */
+	rows?: number;
+
+	/**
+	 * How politely the error message is announced when it appears.
+	 *
+	 * The message is rendered in a live region so assistive tech announces
+	 * validation failures as they happen; previously it was a plain
+	 * paragraph, silently appearing for anyone not looking at that part of
+	 * the screen. Use `'off'` when your form announces errors centrally and
+	 * per-field announcements would double up.
+	 *
+	 * @default 'polite'
+	 */
+	errorLiveRegion?: 'polite' | 'assertive' | 'off';
+
+	/**
+	 * Extra props forwarded to the underlying `<textarea>` when `multiline`
+	 * is set — anything specific to textareas, such as `wrap`.
+	 */
+	textareaProps?: Omit<
+		TextareaHTMLAttributes<HTMLTextAreaElement>,
+		keyof InputHTMLAttributes<HTMLInputElement>
+	>;
 }
 
 /**
@@ -116,7 +156,7 @@ export interface TextFieldProps
  * />
  * ```
  */
-export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
+export const TextField = forwardRef<HTMLInputElement | HTMLTextAreaElement, TextFieldProps>(
 	(
 		{
 			label,
@@ -135,6 +175,10 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
 			type = 'text',
 			id,
 			disabled,
+			multiline = false,
+			rows = 3,
+			errorLiveRegion = 'polite',
+			textareaProps,
 			...props
 		},
 		ref
@@ -214,15 +258,28 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
 				</span>
 			)}
 
-			<input
-				ref={ref}
-				type={type}
-				id={inputId}
-				className={inputClassNames}
-				disabled={disabled}
-				{...ariaAttributes}
-				{...props}
-			/>
+			{multiline ? (
+				<textarea
+					ref={ref as React.Ref<HTMLTextAreaElement>}
+					id={inputId}
+					rows={rows}
+					className={inputClassNames}
+					disabled={disabled}
+					{...ariaAttributes}
+					{...(props as unknown as TextareaHTMLAttributes<HTMLTextAreaElement>)}
+					{...textareaProps}
+				/>
+			) : (
+				<input
+					ref={ref as React.Ref<HTMLInputElement>}
+					type={type}
+					id={inputId}
+					className={inputClassNames}
+					disabled={disabled}
+					{...ariaAttributes}
+					{...props}
+				/>
+			)}
 
 			{rightIcon && (
 				<span className={styles['input-icon-right']} aria-hidden="true">
@@ -243,11 +300,19 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
 			</p>
 		)}
 
-		{error && errorMessage && (
-			<p id={errorId} className={styles['error-message']}>
-				{errorMessage}
-			</p>
-		)}
+		{/* The live region is always mounted, not conditionally rendered.
+		    Assistive tech only announces changes to a region that already
+		    existed — inserting the region and its text at the same moment is
+		    frequently missed entirely. */}
+		<p
+			id={errorId}
+			className={styles['error-message']}
+			role={errorLiveRegion === 'off' ? undefined : 'status'}
+			aria-live={errorLiveRegion === 'off' ? undefined : errorLiveRegion}
+			hidden={!(error && errorMessage)}
+		>
+			{error && errorMessage ? errorMessage : null}
+		</p>
 			</div>
 		);
 	}

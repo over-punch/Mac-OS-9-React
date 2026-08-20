@@ -9,7 +9,7 @@ import {
 	LockIcon,
 	MailIcon,
 	CalendarIcon,
-} from '../Icon/icons';
+} from '../Icon/categories';
 import '../../styles/theme.css';
 
 const meta = {

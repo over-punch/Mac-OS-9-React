@@ -3,6 +3,7 @@
 
 var jsxRuntime = require('react/jsx-runtime');
 var React = require('react');
+var reactDom = require('react-dom');
 
 // URL sanitization helpers for any component that renders consumer-supplied hrefs.
 // Defends against `javascript:`, `data:`, `vbscript:` and other unsafe schemes
@@ -258,12 +259,804 @@ const Icon = React.forwardRef(({ size = 'md', children, label, className = '', .
 });
 Icon.displayName = 'Icon';
 
+/** Character → fill. Anything not listed here is left transparent. */
+const PIXEL_FILLS = {
+    '#': 'currentColor',
+    o: 'var(--color-gray-100)',
+    x: 'var(--color-gray-550)',
+};
+/**
+ * Expands a pixel map into `<rect>` elements.
+ *
+ * Horizontally adjacent pixels of the same colour are merged into a single
+ * wider rect. A 16×16 icon is 256 potential nodes; run-length merging
+ * typically cuts that by three quarters, which matters when a list view
+ * renders one icon per row.
+ */
+function pixelsToRects(map) {
+    const rects = [];
+    map.forEach((row, y) => {
+        let runStart = -1;
+        let runFill;
+        const flush = (endX) => {
+            if (runStart === -1 || !runFill)
+                return;
+            rects.push(jsxRuntime.jsx("rect", { x: runStart, y: y, width: endX - runStart, height: 1, fill: runFill }, `${runStart}-${y}`));
+            runStart = -1;
+            runFill = undefined;
+        };
+        for (let x = 0; x < row.length; x += 1) {
+            const fill = PIXEL_FILLS[row[x]];
+            if (fill !== runFill) {
+                flush(x);
+                if (fill) {
+                    runStart = x;
+                    runFill = fill;
+                }
+            }
+        }
+        flush(row.length);
+    });
+    return rects;
+}
+/**
+ * Builds an icon component from a pixel map.
+ *
+ * @param displayName - React display name, e.g. `FolderIcon`
+ * @param label - Default accessible name
+ * @param map - The pixel map, one string per row
+ * @param gridSize - Width/height of the square pixel grid
+ */
+function createPixelIcon(displayName, label, map, gridSize = 16) {
+    const rects = pixelsToRects(map);
+    const Component = ({ label: labelOverride, ...props }) => (jsxRuntime.jsx(Icon, { viewBox: `0 0 ${gridSize} ${gridSize}`, shapeRendering: "crispEdges", label: labelOverride === null ? undefined : (labelOverride ?? label), ...props, children: rects }));
+    Component.displayName = displayName;
+    return Component;
+}
+
+// Action-related icons - Mac OS 9 React UI
+// User-initiated actions and commands
+/** Close cross. */
+const CloseIcon = createPixelIcon('CloseIcon', 'Close', [
+    '................',
+    '................',
+    '..##........##..',
+    '..###......###..',
+    '...###....###...',
+    '....###..###....',
+    '.....######.....',
+    '......####......',
+    '......####......',
+    '.....######.....',
+    '....###..###....',
+    '...###....###...',
+    '..###......###..',
+    '..##........##..',
+    '................',
+    '................',
+]);
+/** Wastebasket. */
+const TrashIcon = createPixelIcon('TrashIcon', 'Trash', [
+    '................',
+    '......####......',
+    '.....#....#.....',
+    '..############..',
+    '................',
+    '..############..',
+    '..#..#..#..#.#..',
+    '..#..#..#..#.#..',
+    '..#..#..#..#.#..',
+    '..#..#..#..#.#..',
+    '..#..#..#..#.#..',
+    '..#..#..#..#.#..',
+    '...##########...',
+    '................',
+    '................',
+    '................',
+]);
+/** Magnifying glass. */
+const SearchIcon = createPixelIcon('SearchIcon', 'Search', [
+    '................',
+    '....######......',
+    '...#......#.....',
+    '..#........#....',
+    '.#..........#...',
+    '.#..........#...',
+    '.#..........#...',
+    '.#..........#...',
+    '..#........#....',
+    '...#......#.....',
+    '....######.#....',
+    '.........#.##...',
+    '............##..',
+    '.............##.',
+    '..............#.',
+    '................',
+]);
+/** Two stacked sheets. */
+const CopyIcon = createPixelIcon('CopyIcon', 'Copy', [
+    '................',
+    '..########......',
+    '..#......#......',
+    '..#......#......',
+    '..#..########...',
+    '..#..#......#...',
+    '..#..#......#...',
+    '..#..#......#...',
+    '..####......#...',
+    '.....#......#...',
+    '.....#......#...',
+    '.....#......#...',
+    '.....########...',
+    '................',
+    '................',
+    '................',
+]);
+/** Dot-matrix printer. */
+const PrintIcon = createPixelIcon('PrintIcon', 'Print', [
+    '................',
+    '....########....',
+    '....#......#....',
+    '....#......#....',
+    '....########....',
+    '..############..',
+    '.#............#.',
+    '.#..........#.#.',
+    '.#............#.',
+    '..############..',
+    '....########....',
+    '....#......#....',
+    '....#......#....',
+    '....########....',
+    '................',
+    '................',
+]);
+/** Downward arrow into a tray. */
+const DownloadIcon = createPixelIcon('DownloadIcon', 'Download', [
+    '................',
+    '.......##.......',
+    '.......##.......',
+    '.......##.......',
+    '.......##.......',
+    '.......##.......',
+    '..##.......##...',
+    '...##.....##....',
+    '....##...##.....',
+    '.....##.##......',
+    '......###.......',
+    '................',
+    '..############..',
+    '..#..........#..',
+    '..############..',
+    '................',
+]);
+/** Chain link. */
+const LinkIcon = createPixelIcon('LinkIcon', 'Link', [
+    '................',
+    '................',
+    '................',
+    '...####..####...',
+    '..##..#..#..##..',
+    '.##...#..#...##.',
+    '.#....####....#.',
+    '.#....####....#.',
+    '.##...#..#...##.',
+    '..##..#..#..##..',
+    '...####..####...',
+    '................',
+    '................',
+    '................',
+    '................',
+    '................',
+]);
+/** Sealed envelope. */
+const MailIcon = createPixelIcon('MailIcon', 'Mail', [
+    '................',
+    '................',
+    '..############..',
+    '..##........##..',
+    '..#.##....##.#..',
+    '..#...####...#..',
+    '..#....##....#..',
+    '..#..........#..',
+    '..#..........#..',
+    '..#..........#..',
+    '..#..........#..',
+    '..############..',
+    '................',
+    '................',
+    '................',
+    '................',
+]);
+
+// File and folder icons - Mac OS 9 React UI
+// Documents, folders, applications, and volumes
+/** Classic Mac OS folder with its tab. */
+const FolderIcon = createPixelIcon('FolderIcon', 'Folder', [
+    '................',
+    '................',
+    '..####..........',
+    '.#....#.........',
+    '#......#########',
+    '#..............#',
+    '#..............#',
+    '#..............#',
+    '#..............#',
+    '#..............#',
+    '#..............#',
+    '#..............#',
+    '#..............#',
+    '.##############.',
+    '................',
+    '................',
+]);
+/** Folder shown mid-open, used for the current location in a path. */
+const FolderOpenIcon = createPixelIcon('FolderOpenIcon', 'Open folder', [
+    '................',
+    '..####..........',
+    '.#....#.........',
+    '#......#########',
+    '#..............#',
+    '#..............#',
+    '#..###########..',
+    '#.#...........#.',
+    '#.#...........#.',
+    '.#.............#',
+    '.#.............#',
+    '.#.............#',
+    '..#############.',
+    '................',
+    '................',
+    '................',
+]);
+/** Plain document with a folded corner. */
+const DocumentIcon = createPixelIcon('DocumentIcon', 'Document', [
+    '................',
+    '..#########.....',
+    '..#.......##....',
+    '..#.......#.#...',
+    '..#.......####..',
+    '..#..........#..',
+    '..#..######..#..',
+    '..#..........#..',
+    '..#..######..#..',
+    '..#..........#..',
+    '..#..######..#..',
+    '..#..........#..',
+    '..#..........#..',
+    '..############..',
+    '................',
+    '................',
+]);
+/** Application diamond, the Mac OS 9 marker for an executable. */
+const ApplicationIcon = createPixelIcon('ApplicationIcon', 'Application', [
+    '................',
+    '.......##.......',
+    '......####......',
+    '.....######.....',
+    '....########....',
+    '...##########...',
+    '..############..',
+    '.##############.',
+    '..############..',
+    '...##########...',
+    '....########....',
+    '.....######.....',
+    '......####......',
+    '.......##.......',
+    '................',
+    '................',
+]);
+/** 3.5" floppy disk, the save icon of the era. */
+const DiskIcon = createPixelIcon('DiskIcon', 'Disk', [
+    '................',
+    '.##############.',
+    '.#....####....#.',
+    '.#....#..#....#.',
+    '.#....#..#....#.',
+    '.#....#..#....#.',
+    '.#....####....#.',
+    '.#............#.',
+    '.#............#.',
+    '.#..########..#.',
+    '.#..#......#..#.',
+    '.#..#......#..#.',
+    '.#..#......#..#.',
+    '.##############.',
+    '................',
+    '................',
+]);
+/** Hard disk volume, as it appears on the desktop. */
+const HardDriveIcon = createPixelIcon('HardDriveIcon', 'Hard disk', [
+    '................',
+    '................',
+    '................',
+    '..############..',
+    '.#oooooooooooo#.',
+    '.#oooooooooooo#.',
+    '.#oooooooooooo#.',
+    '.#############x.',
+    '.#..........#.x.',
+    '.#..#####...#.x.',
+    '.#..........#.x.',
+    '.############.x.',
+    '..xxxxxxxxxxxxx.',
+    '................',
+    '................',
+    '................',
+]);
+/** Picture document. */
+const ImageIcon = createPixelIcon('ImageIcon', 'Image', [
+    '................',
+    '.##############.',
+    '.#............#.',
+    '.#...##.......#.',
+    '.#..#..#......#.',
+    '.#..#..#......#.',
+    '.#...##.......#.',
+    '.#.........#..#.',
+    '.#........###.#.',
+    '.#...##..######.',
+    '.#..####..#####.',
+    '.#.######.######',
+    '.##############.',
+    '................',
+    '................',
+    '................',
+]);
+/** Music document. */
+const MusicIcon = createPixelIcon('MusicIcon', 'Music', [
+    '................',
+    '.......########.',
+    '.......########.',
+    '.......#......#.',
+    '.......#......#.',
+    '.......#......#.',
+    '.......#......#.',
+    '.......#......#.',
+    '.....###....###.',
+    '....#####..#####',
+    '....#####..#####',
+    '.....###....###.',
+    '................',
+    '................',
+    '................',
+    '................',
+]);
+
+// Navigation icons - Mac OS 9 React UI
+// Directional arrows and wayfinding
+/** Solid triangle pointing up. Matches the scrollbar arrows. */
+const ArrowUpIcon = createPixelIcon('ArrowUpIcon', 'Up', [
+    '................',
+    '................',
+    '................',
+    '.......##.......',
+    '......####......',
+    '.....######.....',
+    '....########....',
+    '...##########...',
+    '..############..',
+    '.##############.',
+    '................',
+    '................',
+    '................',
+    '................',
+    '................',
+    '................',
+]);
+/** Solid triangle pointing down. */
+const ArrowDownIcon = createPixelIcon('ArrowDownIcon', 'Down', [
+    '................',
+    '................',
+    '................',
+    '................',
+    '................',
+    '................',
+    '.##############.',
+    '..############..',
+    '...##########...',
+    '....########....',
+    '.....######.....',
+    '......####......',
+    '.......##.......',
+    '................',
+    '................',
+    '................',
+]);
+/** Solid triangle pointing left. */
+const ArrowLeftIcon = createPixelIcon('ArrowLeftIcon', 'Left', [
+    '................',
+    '.........#......',
+    '........##......',
+    '.......###......',
+    '......####......',
+    '.....#####......',
+    '....######......',
+    '...#######......',
+    '....######......',
+    '.....#####......',
+    '......####......',
+    '.......###......',
+    '........##......',
+    '.........#......',
+    '................',
+    '................',
+]);
+/** Solid triangle pointing right. */
+const ArrowRightIcon = createPixelIcon('ArrowRightIcon', 'Right', [
+    '................',
+    '......#.........',
+    '......##........',
+    '......###.......',
+    '......####......',
+    '......#####.....',
+    '......######....',
+    '......#######...',
+    '......######....',
+    '......#####.....',
+    '......####......',
+    '......###.......',
+    '......##........',
+    '......#.........',
+    '................',
+    '................',
+]);
+/** House, for a home or root destination. */
+const HomeIcon = createPixelIcon('HomeIcon', 'Home', [
+    '................',
+    '.......##.......',
+    '......####......',
+    '.....######.....',
+    '....########....',
+    '...##########...',
+    '..############..',
+    '.##############.',
+    '...##########...',
+    '...#........#...',
+    '...#..####..#...',
+    '...#..#..#..#...',
+    '...#..#..#..#...',
+    '...##########...',
+    '................',
+    '................',
+]);
+
+// Media icons - Mac OS 9 React UI
+// Playback transport and volume
+/** Play triangle. */
+const PlayIcon = createPixelIcon('PlayIcon', 'Play', [
+    '................',
+    '................',
+    '....#...........',
+    '....##..........',
+    '....###.........',
+    '....####........',
+    '....#####.......',
+    '....######......',
+    '....######......',
+    '....#####.......',
+    '....####........',
+    '....###.........',
+    '....##..........',
+    '....#...........',
+    '................',
+    '................',
+]);
+/** Pause bars. */
+const PauseIcon = createPixelIcon('PauseIcon', 'Pause', [
+    '................',
+    '................',
+    '...###....###...',
+    '...###....###...',
+    '...###....###...',
+    '...###....###...',
+    '...###....###...',
+    '...###....###...',
+    '...###....###...',
+    '...###....###...',
+    '...###....###...',
+    '...###....###...',
+    '...###....###...',
+    '................',
+    '................',
+    '................',
+]);
+/** Stop square. */
+const StopIcon = createPixelIcon('StopIcon', 'Stop', [
+    '................',
+    '................',
+    '...##########...',
+    '...##########...',
+    '...##########...',
+    '...##########...',
+    '...##########...',
+    '...##########...',
+    '...##########...',
+    '...##########...',
+    '...##########...',
+    '...##########...',
+    '................',
+    '................',
+    '................',
+    '................',
+]);
+/** Speaker with sound waves. */
+const VolumeIcon = createPixelIcon('VolumeIcon', 'Volume', [
+    '................',
+    '................',
+    '.......##.......',
+    '......###...#...',
+    '.....####.#..#..',
+    '..#######.#.#.#.',
+    '..#######.#.#.#.',
+    '..#######.#.#.#.',
+    '..#######.#.#.#.',
+    '.....####.#..#..',
+    '......###...#...',
+    '.......##.......',
+    '................',
+    '................',
+    '................',
+    '................',
+]);
+/** Speaker with mute cross. */
+const VolumeMuteIcon = createPixelIcon('VolumeMuteIcon', 'Muted', [
+    '................',
+    '................',
+    '.......##.......',
+    '......###.......',
+    '.....####.#...#.',
+    '..#######..#.#..',
+    '..#######...#...',
+    '..#######..#.#..',
+    '..#######.#...#.',
+    '.....####.......',
+    '......###.......',
+    '.......##.......',
+    '................',
+    '................',
+    '................',
+    '................',
+]);
+
+// Status icons - Mac OS 9 React UI
+// Alerts, confirmations, and system state
+/** Caution triangle, as used by Mac OS 9 caution alerts. */
+const AlertIcon = createPixelIcon('AlertIcon', 'Warning', [
+    '................',
+    '.......##.......',
+    '.......##.......',
+    '......####......',
+    '......#..#......',
+    '.....##..##.....',
+    '.....#.##.#.....',
+    '....##.##.##....',
+    '....#..##..#....',
+    '...##..##..##...',
+    '...#...##...#...',
+    '..##........##..',
+    '..#....##....#..',
+    '..############..',
+    '................',
+    '................',
+]);
+/** Note alert. */
+const InfoIcon = createPixelIcon('InfoIcon', 'Information', [
+    '................',
+    '.....######.....',
+    '...##......##...',
+    '..#....##....#..',
+    '..#....##....#..',
+    '.#............#.',
+    '.#....####....#.',
+    '.#......##....#.',
+    '.#......##....#.',
+    '.#......##....#.',
+    '..#....####..#..',
+    '..#..........#..',
+    '...##......##...',
+    '.....######.....',
+    '................',
+    '................',
+]);
+/** Stop alert. */
+const ErrorIcon = createPixelIcon('ErrorIcon', 'Error', [
+    '................',
+    '.....######.....',
+    '...##......##...',
+    '..#..#....#..#..',
+    '..#..##..##..#..',
+    '.#....####....#.',
+    '.#.....##.....#.',
+    '.#....####....#.',
+    '.#...##..##...#.',
+    '.#..##....##..#.',
+    '..#..........#..',
+    '..#..........#..',
+    '...##......##...',
+    '.....######.....',
+    '................',
+    '................',
+]);
+/** Checkmark, for menu items and confirmations. */
+const CheckIcon = createPixelIcon('CheckIcon', 'Checked', [
+    '................',
+    '................',
+    '.............##.',
+    '............##..',
+    '...........##...',
+    '..........##....',
+    '.##......##.....',
+    '..##....##......',
+    '...##..##.......',
+    '....####........',
+    '.....##.........',
+    '................',
+    '................',
+    '................',
+    '................',
+    '................',
+]);
+/** Question alert. */
+const QuestionIcon = createPixelIcon('QuestionIcon', 'Question', [
+    '................',
+    '.....######.....',
+    '...##......##...',
+    '..#...####...#..',
+    '..#..##..##..#..',
+    '.#........##..#.',
+    '.#.......##...#.',
+    '.#......##....#.',
+    '.#......##....#.',
+    '.#............#.',
+    '..#.....##...#..',
+    '..#.....##...#..',
+    '...##......##...',
+    '.....######.....',
+    '................',
+    '................',
+]);
+
 /**
  * Divider icon
  * Vertical divider for menu bars and toolbars
  * Note: Uses a 10x32 viewBox instead of standard 24x24
  */
-const DividerIcon = () => (jsxRuntime.jsxs(Icon, { label: "Divider", size: "sm", viewBox: "0 0 10 32", children: [jsxRuntime.jsxs("g", { clipPath: "url(#clip0_529_36832)", children: [jsxRuntime.jsx("path", { d: "M8 4H10V32H8V4Z", fill: "#999999" }), jsxRuntime.jsx("path", { d: "M8 0H10V4H8V0Z", fill: "#999999" }), jsxRuntime.jsx("path", { d: "M0 4H2V32H0V4Z", fill: "white" }), jsxRuntime.jsx("path", { d: "M0 0H2V4H0V0Z", fill: "white" }), jsxRuntime.jsx("path", { d: "M5 28H7V30H5V28Z", fill: "#BBBBBB" }), jsxRuntime.jsx("path", { d: "M5 21H7V23H5V21Z", fill: "#BBBBBB" }), jsxRuntime.jsx("path", { d: "M5 14H7V16H5V14Z", fill: "#BBBBBB" }), jsxRuntime.jsx("path", { d: "M5 7H7V9H5V7Z", fill: "#BBBBBB" }), jsxRuntime.jsx("path", { d: "M5 4H7V2H5V4Z", fill: "#BBBBBB" }), jsxRuntime.jsx("path", { d: "M5 30H7V32H5V30Z", fill: "white" }), jsxRuntime.jsx("path", { d: "M5 23H7V25H5V23Z", fill: "white" }), jsxRuntime.jsx("path", { d: "M5 16H7V18H5V16Z", fill: "white" }), jsxRuntime.jsx("path", { d: "M5 9H7V11H5V9Z", fill: "white" }), jsxRuntime.jsx("path", { d: "M5 2H7V0H5V2Z", fill: "white" }), jsxRuntime.jsx("path", { d: "M3 28H5V30H3V28Z", fill: "#999999" }), jsxRuntime.jsx("path", { d: "M3 21H5V23H3V21Z", fill: "#999999" }), jsxRuntime.jsx("path", { d: "M3 14H5V16H3V14Z", fill: "#999999" }), jsxRuntime.jsx("path", { d: "M3 7H5V9H3V7Z", fill: "#999999" }), jsxRuntime.jsx("path", { d: "M3 4H5V2H3V4Z", fill: "#999999" }), jsxRuntime.jsx("path", { d: "M3 30H5V32H3V30Z", fill: "#BBBBBB" }), jsxRuntime.jsx("path", { d: "M3 23H5V25H3V23Z", fill: "#BBBBBB" }), jsxRuntime.jsx("path", { d: "M3 16H5V18H3V16Z", fill: "#BBBBBB" }), jsxRuntime.jsx("path", { d: "M3 9H5V11H3V9Z", fill: "#BBBBBB" }), jsxRuntime.jsx("path", { d: "M3 2H5V0H3V2Z", fill: "#BBBBBB" })] }), jsxRuntime.jsx("defs", { children: jsxRuntime.jsx("clipPath", { id: "clip0_529_36832", children: jsxRuntime.jsx("rect", { width: "10", height: "32", fill: "white" }) }) })] }));
+const DividerIcon = ({ label = 'Divider', ...props }) => (jsxRuntime.jsxs(Icon, { label: label === null ? undefined : label, size: "sm", viewBox: "0 0 10 32", ...props, children: [jsxRuntime.jsxs("g", { clipPath: "url(#clip0_529_36832)", children: [jsxRuntime.jsx("path", { d: "M8 4H10V32H8V4Z", fill: "#999999" }), jsxRuntime.jsx("path", { d: "M8 0H10V4H8V0Z", fill: "#999999" }), jsxRuntime.jsx("path", { d: "M0 4H2V32H0V4Z", fill: "white" }), jsxRuntime.jsx("path", { d: "M0 0H2V4H0V0Z", fill: "white" }), jsxRuntime.jsx("path", { d: "M5 28H7V30H5V28Z", fill: "#BBBBBB" }), jsxRuntime.jsx("path", { d: "M5 21H7V23H5V21Z", fill: "#BBBBBB" }), jsxRuntime.jsx("path", { d: "M5 14H7V16H5V14Z", fill: "#BBBBBB" }), jsxRuntime.jsx("path", { d: "M5 7H7V9H5V7Z", fill: "#BBBBBB" }), jsxRuntime.jsx("path", { d: "M5 4H7V2H5V4Z", fill: "#BBBBBB" }), jsxRuntime.jsx("path", { d: "M5 30H7V32H5V30Z", fill: "white" }), jsxRuntime.jsx("path", { d: "M5 23H7V25H5V23Z", fill: "white" }), jsxRuntime.jsx("path", { d: "M5 16H7V18H5V16Z", fill: "white" }), jsxRuntime.jsx("path", { d: "M5 9H7V11H5V9Z", fill: "white" }), jsxRuntime.jsx("path", { d: "M5 2H7V0H5V2Z", fill: "white" }), jsxRuntime.jsx("path", { d: "M3 28H5V30H3V28Z", fill: "#999999" }), jsxRuntime.jsx("path", { d: "M3 21H5V23H3V21Z", fill: "#999999" }), jsxRuntime.jsx("path", { d: "M3 14H5V16H3V14Z", fill: "#999999" }), jsxRuntime.jsx("path", { d: "M3 7H5V9H3V7Z", fill: "#999999" }), jsxRuntime.jsx("path", { d: "M3 4H5V2H3V4Z", fill: "#999999" }), jsxRuntime.jsx("path", { d: "M3 30H5V32H3V30Z", fill: "#BBBBBB" }), jsxRuntime.jsx("path", { d: "M3 23H5V25H3V23Z", fill: "#BBBBBB" }), jsxRuntime.jsx("path", { d: "M3 16H5V18H3V16Z", fill: "#BBBBBB" }), jsxRuntime.jsx("path", { d: "M3 9H5V11H3V9Z", fill: "#BBBBBB" }), jsxRuntime.jsx("path", { d: "M3 2H5V0H3V2Z", fill: "#BBBBBB" })] }), jsxRuntime.jsx("defs", { children: jsxRuntime.jsx("clipPath", { id: "clip0_529_36832", children: jsxRuntime.jsx("rect", { width: "10", height: "32", fill: "white" }) }) })] }));
+/** Bevelled grow box, matching the Window resize handle. */
+const ResizeHandleIcon = createPixelIcon('ResizeHandleIcon', 'Resize', [
+    '................',
+    '................',
+    '................',
+    '................',
+    '............##..',
+    '............##..',
+    '................',
+    '........##..##..',
+    '........##..##..',
+    '................',
+    '....##..##..##..',
+    '....##..##..##..',
+    '................',
+    '................',
+    '................',
+    '................',
+]);
+/** Textured drag grip, for title bars and splitters. */
+const GrabberIcon = createPixelIcon('GrabberIcon', 'Drag handle', [
+    '................',
+    '................',
+    '..##..##..##..#.',
+    '..oo..oo..oo..o.',
+    '................',
+    '..##..##..##..#.',
+    '..oo..oo..oo..o.',
+    '................',
+    '..##..##..##..#.',
+    '..oo..oo..oo..o.',
+    '................',
+    '..##..##..##..#.',
+    '..oo..oo..oo..o.',
+    '................',
+    '................',
+    '................',
+]);
+/** Small disclosure triangle, pointing right (collapsed). */
+const ChevronRightIcon = createPixelIcon('ChevronRightIcon', 'Expand', [
+    '................',
+    '................',
+    '................',
+    '......#.........',
+    '......##........',
+    '......###.......',
+    '......####......',
+    '......#####.....',
+    '......####......',
+    '......###.......',
+    '......##........',
+    '......#.........',
+    '................',
+    '................',
+    '................',
+    '................',
+]);
+/** Small disclosure triangle, pointing down (expanded). */
+const ChevronDownIcon = createPixelIcon('ChevronDownIcon', 'Collapse', [
+    '................',
+    '................',
+    '................',
+    '................',
+    '................',
+    '...##########...',
+    '....########....',
+    '.....######.....',
+    '......####......',
+    '.......##.......',
+    '................',
+    '................',
+    '................',
+    '................',
+    '................',
+    '................',
+]);
+/** Head and shoulders. */
+const UserIcon = createPixelIcon('UserIcon', 'User', [
+    '................',
+    '................',
+    '......####......',
+    '.....##..##.....',
+    '.....#....#.....',
+    '.....##..##.....',
+    '......####......',
+    '................',
+    '....########....',
+    '...##......##...',
+    '..##........##..',
+    '..#..........#..',
+    '..#..........#..',
+    '..#..........#..',
+    '................',
+    '................',
+]);
+/** Closed padlock. */
+const LockIcon = createPixelIcon('LockIcon', 'Locked', [
+    '................',
+    '......####......',
+    '.....##..##.....',
+    '....##....##....',
+    '....#......#....',
+    '....#......#....',
+    '..############..',
+    '..#..........#..',
+    '..#....##....#..',
+    '..#....##....#..',
+    '..#...####...#..',
+    '..#....##....#..',
+    '..############..',
+    '................',
+    '................',
+    '................',
+]);
+/** Wall calendar. */
+const CalendarIcon = createPixelIcon('CalendarIcon', 'Calendar', [
+    '................',
+    '...##......##...',
+    '...##......##...',
+    '.##############.',
+    '.##############.',
+    '.#............#.',
+    '.#.##.##.##...#.',
+    '.#............#.',
+    '.#.##.##.##...#.',
+    '.#............#.',
+    '.#.##.##.##...#.',
+    '.#............#.',
+    '.##############.',
+    '................',
+    '................',
+    '................',
+]);
 
 // Icon Registry - Mac OS 9 React UI
 // Central registry of all available icons with type-safe names
@@ -272,13 +1065,56 @@ const DividerIcon = () => (jsxRuntime.jsxs(Icon, { label: "Divider", size: "sm",
  * Maps icon names to their components
  */
 const iconRegistry = {
+    // Actions
+    close: CloseIcon,
+    trash: TrashIcon,
+    search: SearchIcon,
+    copy: CopyIcon,
+    print: PrintIcon,
+    download: DownloadIcon,
+    link: LinkIcon,
+    mail: MailIcon,
+    // Files
+    folder: FolderIcon,
+    folderOpen: FolderOpenIcon,
+    document: DocumentIcon,
+    application: ApplicationIcon,
+    disk: DiskIcon,
+    hardDrive: HardDriveIcon,
+    image: ImageIcon,
+    music: MusicIcon,
+    // Navigation
+    arrowUp: ArrowUpIcon,
+    arrowDown: ArrowDownIcon,
+    arrowLeft: ArrowLeftIcon,
+    arrowRight: ArrowRightIcon,
+    home: HomeIcon,
+    // Media
+    play: PlayIcon,
+    pause: PauseIcon,
+    stop: StopIcon,
+    volume: VolumeIcon,
+    volumeMute: VolumeMuteIcon,
+    // Status
+    alert: AlertIcon,
+    info: InfoIcon,
+    error: ErrorIcon,
+    check: CheckIcon,
+    question: QuestionIcon,
     // UI
     divider: DividerIcon,
+    resizeHandle: ResizeHandleIcon,
+    grabber: GrabberIcon,
+    chevronRight: ChevronRightIcon,
+    chevronDown: ChevronDownIcon,
+    user: UserIcon,
+    lock: LockIcon,
+    calendar: CalendarIcon,
 };
 /**
  * Get icon component by name
  * @param name - The icon name from the registry
- * @returns The icon component or undefined if not found
+ * @returns The icon component
  */
 function getIcon(name) {
     return iconRegistry[name];
@@ -287,20 +1123,26 @@ function getIcon(name) {
 /**
  * IconLibrary component for Mac OS 9 UI
  *
- * Provides a convenient way to use icons by name rather than importing each one individually.
- * All icons are registered in the icon registry and can be accessed by their string names.
+ * Provides a convenient way to use icons by name rather than importing each
+ * one individually. All icons are registered in the icon registry and can be
+ * accessed by their string names; `IconName` is derived from the registry, so
+ * an unknown name is a compile error rather than a blank space.
+ *
+ * Use {@link getAllIconNames} to enumerate what is available.
  *
  * @example
  * ```tsx
- * <IconLibrary icon="save" size="md" />
  * <IconLibrary icon="folder" size="lg" />
- * <IconLibrary icon="arrow-right" size="sm" />
+ * <IconLibrary icon="arrowRight" size="sm" />
+ * <IconLibrary icon="trash" label="Move to Trash" />
  * ```
  */
 const IconLibrary = ({ icon, ...props }) => {
     const IconComponent = getIcon(icon);
     if (!IconComponent) {
-        console.warn(`Icon "${icon}" not found in registry`);
+        if (process.env.NODE_ENV !== 'production') {
+            console.warn(`IconLibrary: no icon named "${icon}" in the registry.`);
+        }
         return null;
     }
     // Render the icon component with any additional props
@@ -625,7 +1467,7 @@ var styles$9 = {"wrapper":"TextField-module_wrapper","wrapper--full-width":"Text
  * />
  * ```
  */
-const TextField = React.forwardRef(({ label, labelPosition = 'top', size = 'md', fullWidth = false, error = false, errorMessage, helperText, leftIcon, rightIcon, ariaLabel, ariaDescribedBy, className = '', wrapperClassName = '', type = 'text', id, disabled, ...props }, ref) => {
+const TextField = React.forwardRef(({ label, labelPosition = 'top', size = 'md', fullWidth = false, error = false, errorMessage, helperText, leftIcon, rightIcon, ariaLabel, ariaDescribedBy, className = '', wrapperClassName = '', type = 'text', id, disabled, multiline = false, rows = 3, errorLiveRegion = 'polite', textareaProps, ...props }, ref) => {
     // Generate ID if not provided (for label association)
     // useId must be called unconditionally. Writing `id || React.useId()`
     // short-circuits the hook away whenever `id` is supplied, so the hook
@@ -678,7 +1520,7 @@ const TextField = React.forwardRef(({ label, labelPosition = 'top', size = 'md',
         'aria-describedby': describedByIds || undefined,
         'aria-invalid': error,
     };
-    return (jsxRuntime.jsxs("div", { className: wrapperClassNames, children: [label && (labelPosition === 'top' || labelPosition === 'left') && (jsxRuntime.jsx("label", { htmlFor: inputId, className: labelClassNames, children: label })), jsxRuntime.jsxs("div", { className: inputWrapperClassNames, children: [leftIcon && (jsxRuntime.jsx("span", { className: styles$9['input-icon-left'], "aria-hidden": "true", children: leftIcon })), jsxRuntime.jsx("input", { ref: ref, type: type, id: inputId, className: inputClassNames, disabled: disabled, ...ariaAttributes, ...props }), rightIcon && (jsxRuntime.jsx("span", { className: styles$9['input-icon-right'], "aria-hidden": "true", children: rightIcon }))] }), label && labelPosition === 'right' && (jsxRuntime.jsx("label", { htmlFor: inputId, className: labelClassNames, children: label })), helperText && !error && (jsxRuntime.jsx("p", { id: helperId, className: styles$9['helper-text'], children: helperText })), error && errorMessage && (jsxRuntime.jsx("p", { id: errorId, className: styles$9['error-message'], children: errorMessage }))] }));
+    return (jsxRuntime.jsxs("div", { className: wrapperClassNames, children: [label && (labelPosition === 'top' || labelPosition === 'left') && (jsxRuntime.jsx("label", { htmlFor: inputId, className: labelClassNames, children: label })), jsxRuntime.jsxs("div", { className: inputWrapperClassNames, children: [leftIcon && (jsxRuntime.jsx("span", { className: styles$9['input-icon-left'], "aria-hidden": "true", children: leftIcon })), multiline ? (jsxRuntime.jsx("textarea", { ref: ref, id: inputId, rows: rows, className: inputClassNames, disabled: disabled, ...ariaAttributes, ...props, ...textareaProps })) : (jsxRuntime.jsx("input", { ref: ref, type: type, id: inputId, className: inputClassNames, disabled: disabled, ...ariaAttributes, ...props })), rightIcon && (jsxRuntime.jsx("span", { className: styles$9['input-icon-right'], "aria-hidden": "true", children: rightIcon }))] }), label && labelPosition === 'right' && (jsxRuntime.jsx("label", { htmlFor: inputId, className: labelClassNames, children: label })), helperText && !error && (jsxRuntime.jsx("p", { id: helperId, className: styles$9['helper-text'], children: helperText })), jsxRuntime.jsx("p", { id: errorId, className: styles$9['error-message'], role: errorLiveRegion === 'off' ? undefined : 'status', "aria-live": errorLiveRegion === 'off' ? undefined : errorLiveRegion, hidden: !(error && errorMessage), children: error && errorMessage ? errorMessage : null })] }));
 });
 TextField.displayName = 'TextField';
 
@@ -1025,7 +1867,7 @@ function readParentMetrics(element) {
  * - Classic Mac OS 9 window styling with beveled edges
  * - Optional title bar with window controls
  * - Active/inactive states
- * - Composable with custom TitleBar component
+ * - Composable with a custom title bar via the `titleBar` prop
  * - Flexible sizing
  * - Draggable windows (optional) — by pointer or keyboard
  * - Resizable windows (optional) — by pointer or keyboard
@@ -1044,8 +1886,9 @@ function readParentMetrics(element) {
  *   <p>Window content goes here</p>
  * </Window>
  *
- * // Window with custom title bar
- * <Window titleBar={<TitleBar title="Custom" />}>
+ * // Window with a custom title bar. `titleBar` replaces the default one
+ * // entirely, so it owns its own markup, styling, and drag affordance.
+ * <Window titleBar={<MyToolbar onClose={close} />}>
  *   <p>Content</p>
  * </Window>
  *
@@ -1417,7 +2260,7 @@ const Window = React.forwardRef(({ children, title, titleBar, active = true, wid
             return titleBar;
         }
         if (title) {
-            return (jsxRuntime.jsxs("div", { className: titleBarClassNames, "data-numControls": [onClose, onMinimize, onMaximize].filter(Boolean).length, onPointerDown: handleTitleBarPointerDown, onKeyDown: draggable ? handleTitleBarKeyDown : undefined, tabIndex: draggable ? 0 : undefined, "aria-label": draggable ? `Move ${title} window` : undefined, "aria-keyshortcuts": draggable ? 'ArrowUp ArrowDown ArrowLeft ArrowRight' : undefined, style: draggable ? { touchAction: 'none' } : undefined, children: [showControls && (jsxRuntime.jsxs("div", { className: mergeClasses(styles$6.controls, classes?.controls), children: [onClose && (jsxRuntime.jsx("button", { type: "button", className: mergeClasses(styles$6.controlButton, classes?.controlButton), onClick: onClose, "aria-label": "Close", title: "Close", children: jsxRuntime.jsx("div", { className: styles$6.closeBox }) })), onMinimize && (jsxRuntime.jsx("button", { type: "button", className: mergeClasses(styles$6.controlButton, classes?.controlButton), onClick: onMinimize, "aria-label": "Minimize", title: "Minimize", children: jsxRuntime.jsx("div", { className: styles$6.minimizeBox }) })), onMaximize && (jsxRuntime.jsx("button", { type: "button", className: mergeClasses(styles$6.controlButton, classes?.controlButton), onClick: onMaximize, "aria-label": "Maximize", title: "Maximize", children: jsxRuntime.jsx("div", { className: styles$6.maximizeBox }) }))] })), jsxRuntime.jsxs("div", { className: styles$6.titleCenter, children: [jsxRuntime.jsx(TitleBarPattern, {}), jsxRuntime.jsx("div", { className: mergeClasses(styles$6.titleText, classes?.titleText, 'bold'), children: title }), jsxRuntime.jsx(TitleBarPattern, {})] })] }));
+            return (jsxRuntime.jsxs("div", { className: titleBarClassNames, "data-num-controls": [onClose, onMinimize, onMaximize].filter(Boolean).length, onPointerDown: handleTitleBarPointerDown, onKeyDown: draggable ? handleTitleBarKeyDown : undefined, tabIndex: draggable ? 0 : undefined, "aria-label": draggable ? `Move ${title} window` : undefined, "aria-keyshortcuts": draggable ? 'ArrowUp ArrowDown ArrowLeft ArrowRight' : undefined, style: draggable ? { touchAction: 'none' } : undefined, children: [showControls && (jsxRuntime.jsxs("div", { className: mergeClasses(styles$6.controls, classes?.controls), children: [onClose && (jsxRuntime.jsx("button", { type: "button", className: mergeClasses(styles$6.controlButton, classes?.controlButton), onClick: onClose, "aria-label": "Close", title: "Close", children: jsxRuntime.jsx("div", { className: styles$6.closeBox }) })), onMinimize && (jsxRuntime.jsx("button", { type: "button", className: mergeClasses(styles$6.controlButton, classes?.controlButton), onClick: onMinimize, "aria-label": "Minimize", title: "Minimize", children: jsxRuntime.jsx("div", { className: styles$6.minimizeBox }) })), onMaximize && (jsxRuntime.jsx("button", { type: "button", className: mergeClasses(styles$6.controlButton, classes?.controlButton), onClick: onMaximize, "aria-label": "Maximize", title: "Maximize", children: jsxRuntime.jsx("div", { className: styles$6.maximizeBox }) }))] })), jsxRuntime.jsxs("div", { className: styles$6.titleCenter, children: [jsxRuntime.jsx(TitleBarPattern, {}), jsxRuntime.jsx("div", { className: mergeClasses(styles$6.titleText, classes?.titleText, 'bold'), children: title }), jsxRuntime.jsx(TitleBarPattern, {})] })] }));
         }
         return null;
     };
@@ -1438,23 +2281,37 @@ const dialogStack = [];
 // value the host app had set, and the last release restores it.
 let scrollLockCount = 0;
 let savedBodyOverflow = null;
+let savedBodyPaddingRight = null;
 function lockBodyScroll() {
     if (typeof document === 'undefined')
         return;
     scrollLockCount += 1;
-    if (scrollLockCount === 1) {
-        savedBodyOverflow = document.body.style.overflow;
-        document.body.style.overflow = 'hidden';
+    if (scrollLockCount !== 1)
+        return;
+    const body = document.body;
+    savedBodyOverflow = body.style.overflow;
+    savedBodyPaddingRight = body.style.paddingRight;
+    // Hiding overflow removes the scrollbar, and on platforms where the
+    // scrollbar takes up layout space the page underneath jumps sideways by
+    // its width the instant a dialog opens. Replacing that width with padding
+    // keeps the layout still.
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+    if (scrollbarWidth > 0) {
+        const currentPadding = parseFloat(window.getComputedStyle(body).paddingRight) || 0;
+        body.style.paddingRight = `${currentPadding + scrollbarWidth}px`;
     }
+    body.style.overflow = 'hidden';
 }
 function unlockBodyScroll() {
     if (typeof document === 'undefined')
         return;
     scrollLockCount = Math.max(0, scrollLockCount - 1);
-    if (scrollLockCount === 0) {
-        document.body.style.overflow = savedBodyOverflow ?? '';
-        savedBodyOverflow = null;
-    }
+    if (scrollLockCount !== 0)
+        return;
+    document.body.style.overflow = savedBodyOverflow ?? '';
+    document.body.style.paddingRight = savedBodyPaddingRight ?? '';
+    savedBodyOverflow = null;
+    savedBodyPaddingRight = null;
 }
 function isTopmost(el) {
     return el !== null && dialogStack[dialogStack.length - 1] === el;
@@ -1527,9 +2384,17 @@ function getFocusables(root) {
  * </Dialog>
  * ```
  */
-const Dialog = React.forwardRef(({ open = false, onClose, closeOnBackdropClick = true, closeOnEscape = true, backdropClassName = '', trapFocus = true, initialFocus, role = 'dialog', ariaLabel, ariaLabelledBy, ariaDescribedBy, children, ...windowProps }, ref) => {
+const Dialog = React.forwardRef(({ open = false, onClose, closeOnBackdropClick = true, closeOnEscape = true, backdropClassName = '', trapFocus = true, initialFocus, role = 'dialog', ariaLabel, ariaLabelledBy, ariaDescribedBy, container, children, ...windowProps }, ref) => {
     const dialogRef = React.useRef(null);
     const previousActiveElement = React.useRef(null);
+    // Resolved after mount: `document` does not exist during a server
+    // render, and touching it in the render body would break SSR.
+    const [portalTarget, setPortalTarget] = React.useState(null);
+    React.useEffect(() => {
+        if (container === null)
+            return;
+        setPortalTarget(container ?? document.body);
+    }, [container]);
     // Derive an accessible name. Prefer explicit ariaLabelledBy → ariaLabel
     // → the Window title if it happens to be a plain string.
     const titleProp = windowProps.title;
@@ -1563,7 +2428,10 @@ const Dialog = React.forwardRef(({ open = false, onClose, closeOnBackdropClick =
                 });
             }
         };
-    }, [open]);
+        // portalTarget is a dependency because the dialog element does not
+        // exist until the portal has a mount point — on the first render
+        // after `open` flips, dialogRef.current is still null.
+    }, [open, portalTarget]);
     // Initial focus. Runs before paint via useLayoutEffect so the user
     // never sees a flash of focus outside the dialog.
     React.useLayoutEffect(() => {
@@ -1598,7 +2466,7 @@ const Dialog = React.forwardRef(({ open = false, onClose, closeOnBackdropClick =
             }
         }
         target?.focus();
-    }, [open, initialFocus]);
+    }, [open, initialFocus, portalTarget]);
     // Escape: only the topmost dialog reacts so stacked dialogs close
     // one at a time. The bubble phase + stopPropagation also prevents
     // the host app's own Escape handlers from firing under the modal.
@@ -1663,7 +2531,14 @@ const Dialog = React.forwardRef(({ open = false, onClose, closeOnBackdropClick =
     if (!open)
         return null;
     const backdropClassNames = [styles$5.backdrop, backdropClassName].filter(Boolean).join(' ');
-    return (jsxRuntime.jsx("div", { className: backdropClassNames, onClick: handleBackdropClick, children: jsxRuntime.jsx("div", { className: styles$5.dialogContainer, ref: dialogRef, role: role, "aria-modal": "true", "aria-label": ariaLabelledBy ? undefined : resolvedAriaLabel, "aria-labelledby": ariaLabelledBy, "aria-describedby": ariaDescribedBy, children: jsxRuntime.jsx(Window, { ...windowProps, ref: ref, active: true, onClose: onClose, children: children }) }) }));
+    const dialogTree = (jsxRuntime.jsx("div", { className: backdropClassNames, onClick: handleBackdropClick, children: jsxRuntime.jsx("div", { className: styles$5.dialogContainer, ref: dialogRef, role: role, "aria-modal": "true", "aria-label": ariaLabelledBy ? undefined : resolvedAriaLabel, "aria-labelledby": ariaLabelledBy, "aria-describedby": ariaDescribedBy, children: jsxRuntime.jsx(Window, { ...windowProps, ref: ref, active: true, onClose: onClose, children: children }) }) }));
+    // `container === null` opts out of portalling entirely.
+    if (container === null)
+        return dialogTree;
+    // Before the mount effect resolves a target there is nothing to portal
+    // into; rendering null for that first pass keeps SSR output empty and
+    // matches what the client produces on hydration.
+    return portalTarget ? reactDom.createPortal(dialogTree, portalTarget) : null;
 });
 Dialog.displayName = 'Dialog';
 
@@ -2224,7 +3099,7 @@ var styles$2 = {"scrollbar":"Scrollbar-module_scrollbar","scrollbar--vertical":"
  * />
  * ```
  */
-const Scrollbar = React.forwardRef(({ orientation = 'vertical', value = 0, viewportRatio = 0.2, onChange, className = '', disabled = false, ariaLabel, controls, step = 0.1, }, ref) => {
+const Scrollbar = React.forwardRef(({ orientation = 'vertical', value = 0, viewportRatio, onChange, className = '', disabled = false, ariaLabel, controls, step = 0.1, }, ref) => {
     const trackRef = React.useRef(null);
     const [isDragging, setIsDragging] = React.useState(false);
     const [dragStartPos, setDragStartPos] = React.useState(0);
@@ -2240,7 +3115,15 @@ const Scrollbar = React.forwardRef(({ orientation = 'vertical', value = 0, viewp
             onChange(clamped);
     }, [disabled, onChange, value]);
     // Calculate thumb size based on viewport ratio
-    const thumbSize = Math.max(viewportRatio * 100, 10); // Minimum 10% size
+    // Omitting viewportRatio is a wiring mistake, not a styling choice, so
+    // say so in development and fall back to a full-length thumb — the
+    // honest rendering of "we do not know how long the content is".
+    if (process.env.NODE_ENV !== 'production' && viewportRatio === undefined) {
+        console.warn('Scrollbar: `viewportRatio` is required to size the thumb and the page step. ' +
+            'Pass clientHeight / scrollHeight (or the width equivalent) for the scrolled region.');
+    }
+    const effectiveViewportRatio = viewportRatio ?? 1;
+    const thumbSize = Math.max(effectiveViewportRatio * 100, 10); // Minimum 10% size
     // Calculate thumb position
     const maxThumbPos = 100 - thumbSize;
     const thumbPos = value * maxThumbPos;
@@ -2276,11 +3159,11 @@ const Scrollbar = React.forwardRef(({ orientation = 'vertical', value = 0, viewp
                 break;
             case 'PageUp':
                 event.preventDefault();
-                commitValue(value - viewportRatio);
+                commitValue(value - effectiveViewportRatio);
                 break;
             case 'PageDown':
                 event.preventDefault();
-                commitValue(value + viewportRatio);
+                commitValue(value + effectiveViewportRatio);
                 break;
             case 'Home':
                 event.preventDefault();
@@ -2291,7 +3174,7 @@ const Scrollbar = React.forwardRef(({ orientation = 'vertical', value = 0, viewp
                 commitValue(1);
                 break;
         }
-    }, [commitValue, disabled, isVertical, step, value, viewportRatio]);
+    }, [commitValue, disabled, isVertical, step, value, effectiveViewportRatio]);
     // Handle track clicks
     const handleTrackClick = React.useCallback((event) => {
         if (disabled || !onChange || !trackRef.current)
@@ -2914,25 +3797,63 @@ const tokens = {
     transitions,
 };
 
+exports.AlertIcon = AlertIcon;
+exports.ApplicationIcon = ApplicationIcon;
+exports.ArrowDownIcon = ArrowDownIcon;
+exports.ArrowLeftIcon = ArrowLeftIcon;
+exports.ArrowRightIcon = ArrowRightIcon;
+exports.ArrowUpIcon = ArrowUpIcon;
 exports.Button = Button;
+exports.CalendarIcon = CalendarIcon;
+exports.CheckIcon = CheckIcon;
 exports.Checkbox = Checkbox;
+exports.ChevronDownIcon = ChevronDownIcon;
+exports.ChevronRightIcon = ChevronRightIcon;
+exports.CloseIcon = CloseIcon;
+exports.CopyIcon = CopyIcon;
 exports.Dialog = Dialog;
+exports.DiskIcon = DiskIcon;
 exports.DividerIcon = DividerIcon;
+exports.DocumentIcon = DocumentIcon;
+exports.DownloadIcon = DownloadIcon;
+exports.ErrorIcon = ErrorIcon;
+exports.FolderIcon = FolderIcon;
 exports.FolderList = FolderList;
+exports.FolderOpenIcon = FolderOpenIcon;
+exports.GrabberIcon = GrabberIcon;
+exports.HardDriveIcon = HardDriveIcon;
+exports.HomeIcon = HomeIcon;
 exports.Icon = Icon;
 exports.IconButton = IconButton;
 exports.IconLibrary = IconLibrary;
+exports.ImageIcon = ImageIcon;
+exports.InfoIcon = InfoIcon;
+exports.LinkIcon = LinkIcon;
 exports.ListView = ListView;
+exports.LockIcon = LockIcon;
+exports.MailIcon = MailIcon;
 exports.MenuBar = MenuBar;
 exports.MenuDropdown = MenuDropdown;
 exports.MenuItem = MenuItem;
+exports.MusicIcon = MusicIcon;
+exports.PauseIcon = PauseIcon;
+exports.PlayIcon = PlayIcon;
+exports.PrintIcon = PrintIcon;
+exports.QuestionIcon = QuestionIcon;
 exports.Radio = Radio;
 exports.RadioGroup = RadioGroup;
+exports.ResizeHandleIcon = ResizeHandleIcon;
 exports.Scrollbar = Scrollbar;
+exports.SearchIcon = SearchIcon;
 exports.Select = Select;
+exports.StopIcon = StopIcon;
 exports.TabPanel = TabPanel;
 exports.Tabs = Tabs;
 exports.TextField = TextField;
+exports.TrashIcon = TrashIcon;
+exports.UserIcon = UserIcon;
+exports.VolumeIcon = VolumeIcon;
+exports.VolumeMuteIcon = VolumeMuteIcon;
 exports.Window = Window;
 exports.borders = borders;
 exports.colors = colors;

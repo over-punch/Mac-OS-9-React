@@ -279,3 +279,23 @@
 		transition: none;
 	}
 }
+/* ========================================
+ * Multiline
+ * ======================================== */
+
+textarea.input {
+	/* The multiline variant shares .input so the inset bevel, sizing and
+	 * error styling stay identical to the single-line field. These are the
+	 * only textarea-specific corrections. */
+	resize: vertical;
+	min-height: calc(var(--font-size-md) * 3);
+	line-height: var(--line-height-normal);
+	font-family: inherit;
+}
+
+/* Keep the hidden error paragraph out of the layout entirely. Without this,
+ * `hidden` is overridden by the display rule on .error-message and the empty
+ * paragraph still reserves space. */
+.error-message[hidden] {
+	display: none;
+}

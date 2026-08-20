@@ -73,15 +73,15 @@
 	position: relative;
 
 }
-.titleBar[data-numControls="3"] .titleCenter > :first-child{
+.titleBar[data-num-controls="3"] .titleCenter > :first-child{
 	width: calc(100% - (48px + var(--spacing-2)));
 	margin-left: calc(48px + var(--spacing-2));
 }
-.titleBar[data-numControls="2"] .titleCenter> :first-child {
+.titleBar[data-num-controls="2"] .titleCenter> :first-child {
 	width: calc(100% - (36px + var(--spacing-2)));
 	margin-left: calc(36px + var(--spacing-2));
 }
-.titleBar[data-numControls="1"] .titleCenter> :first-child {
+.titleBar[data-num-controls="1"] .titleCenter> :first-child {
 	width: calc(100% - (24px));
 	margin-left: calc(24px);
 	}

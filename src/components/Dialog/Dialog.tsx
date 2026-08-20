@@ -16,15 +16,26 @@
 //  - Focus restore on close checks isConnected before calling .focus(),
 //    so a detached trigger doesn't silently fail focus management
 
-import React, {
-	forwardRef,
-	useCallback,
-	useEffect,
-	useLayoutEffect,
-	useRef,
-} from 'react';
+import React, { forwardRef, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Window, type WindowProps } from '../Window/Window';
 import styles from './Dialog.module.css';
+
+/**
+ * Elements that can hold focus.
+ *
+ * `initialFocus` was typed `RefObject<HTMLElement>`, which accepts a ref to
+ * any element at all — a `<div>`, a `<span>` — including ones that cannot
+ * take focus, so the mistake only showed up at runtime as focus silently
+ * staying on the trigger.
+ */
+export type FocusableElement =
+	| HTMLAnchorElement
+	| HTMLButtonElement
+	| HTMLInputElement
+	| HTMLSelectElement
+	| HTMLTextAreaElement
+	| (HTMLElement & { tabIndex: number });
 
 // --- Module-level dialog coordination -------------------------------------
 
@@ -39,23 +50,39 @@ const dialogStack: HTMLElement[] = [];
 // value the host app had set, and the last release restores it.
 let scrollLockCount = 0;
 let savedBodyOverflow: string | null = null;
+let savedBodyPaddingRight: string | null = null;
 
 function lockBodyScroll(): void {
 	if (typeof document === 'undefined') return;
 	scrollLockCount += 1;
-	if (scrollLockCount === 1) {
-		savedBodyOverflow = document.body.style.overflow;
-		document.body.style.overflow = 'hidden';
+	if (scrollLockCount !== 1) return;
+
+	const body = document.body;
+	savedBodyOverflow = body.style.overflow;
+	savedBodyPaddingRight = body.style.paddingRight;
+
+	// Hiding overflow removes the scrollbar, and on platforms where the
+	// scrollbar takes up layout space the page underneath jumps sideways by
+	// its width the instant a dialog opens. Replacing that width with padding
+	// keeps the layout still.
+	const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+	if (scrollbarWidth > 0) {
+		const currentPadding = parseFloat(window.getComputedStyle(body).paddingRight) || 0;
+		body.style.paddingRight = `${currentPadding + scrollbarWidth}px`;
 	}
+
+	body.style.overflow = 'hidden';
 }
 
 function unlockBodyScroll(): void {
 	if (typeof document === 'undefined') return;
 	scrollLockCount = Math.max(0, scrollLockCount - 1);
-	if (scrollLockCount === 0) {
-		document.body.style.overflow = savedBodyOverflow ?? '';
-		savedBodyOverflow = null;
-	}
+	if (scrollLockCount !== 0) return;
+
+	document.body.style.overflow = savedBodyOverflow ?? '';
+	document.body.style.paddingRight = savedBodyPaddingRight ?? '';
+	savedBodyOverflow = null;
+	savedBodyPaddingRight = null;
 }
 
 function isTopmost(el: HTMLElement | null): boolean {
@@ -147,7 +174,7 @@ export interface DialogProps extends Omit<WindowProps, 'active'> {
 	 * `querySelector`. Treat it as a developer-supplied static selector —
 	 * never derive it from untrusted input.
 	 */
-	initialFocus?: string | React.RefObject<HTMLElement | null>;
+	initialFocus?: string | React.RefObject<FocusableElement | null>;
 
 	/**
 	 * ARIA role. Use `'alertdialog'` for destructive or error confirmations
@@ -173,6 +200,21 @@ export interface DialogProps extends Omit<WindowProps, 'active'> {
 	 * ID of a visible element that describes the dialog body.
 	 */
 	ariaDescribedBy?: string;
+
+	/**
+	 * Where the dialog is portalled to.
+	 *
+	 * Defaults to `document.body`. A modal rendered inline sits inside
+	 * whatever stacking contexts its ancestors created — a parent with
+	 * `transform`, `filter`, `opacity` below 1, or its own `z-index` traps
+	 * the backdrop underneath sibling content no matter how high the
+	 * dialog's own z-index is. Portalling to the body escapes all of them.
+	 *
+	 * Pass an element to portal somewhere else, or `null` to render inline
+	 * (useful inside a Storybook docs block, or when the host page already
+	 * provides a modal root).
+	 */
+	container?: HTMLElement | null;
 }
 
 /**
@@ -220,6 +262,7 @@ export const Dialog = forwardRef<HTMLDivElement, DialogProps>(
 			ariaLabel,
 			ariaLabelledBy,
 			ariaDescribedBy,
+			container,
 			children,
 			...windowProps
 		},
@@ -227,6 +270,14 @@ export const Dialog = forwardRef<HTMLDivElement, DialogProps>(
 	) => {
 		const dialogRef = useRef<HTMLDivElement>(null);
 		const previousActiveElement = useRef<HTMLElement | null>(null);
+
+		// Resolved after mount: `document` does not exist during a server
+		// render, and touching it in the render body would break SSR.
+		const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
+		useEffect(() => {
+			if (container === null) return;
+			setPortalTarget(container ?? document.body);
+		}, [container]);
 
 		// Derive an accessible name. Prefer explicit ariaLabelledBy → ariaLabel
 		// → the Window title if it happens to be a plain string.
@@ -261,7 +312,10 @@ export const Dialog = forwardRef<HTMLDivElement, DialogProps>(
 					});
 				}
 			};
-		}, [open]);
+			// portalTarget is a dependency because the dialog element does not
+			// exist until the portal has a mount point — on the first render
+			// after `open` flips, dialogRef.current is still null.
+		}, [open, portalTarget]);
 
 		// Initial focus. Runs before paint via useLayoutEffect so the user
 		// never sees a flash of focus outside the dialog.
@@ -295,7 +349,7 @@ export const Dialog = forwardRef<HTMLDivElement, DialogProps>(
 			}
 
 			target?.focus();
-		}, [open, initialFocus]);
+		}, [open, initialFocus, portalTarget]);
 
 		// Escape: only the topmost dialog reacts so stacked dialogs close
 		// one at a time. The bubble phase + stopPropagation also prevents
@@ -365,7 +419,7 @@ export const Dialog = forwardRef<HTMLDivElement, DialogProps>(
 
 		const backdropClassNames = [styles.backdrop, backdropClassName].filter(Boolean).join(' ');
 
-		return (
+		const dialogTree = (
 			<div className={backdropClassNames} onClick={handleBackdropClick}>
 				<div
 					className={styles.dialogContainer}
@@ -382,6 +436,14 @@ export const Dialog = forwardRef<HTMLDivElement, DialogProps>(
 				</div>
 			</div>
 		);
+
+		// `container === null` opts out of portalling entirely.
+		if (container === null) return dialogTree;
+
+		// Before the mount effect resolves a target there is nothing to portal
+		// into; rendering null for that first pass keeps SSR output empty and
+		// matches what the client produces on hydration.
+		return portalTarget ? createPortal(dialogTree, portalTarget) : null;
 	},
 );
 

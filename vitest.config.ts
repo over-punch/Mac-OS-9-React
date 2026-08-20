@@ -16,9 +16,21 @@ export default defineConfig({
 				'dist/',
 				'storybook-static/',
 				'**/*.stories.tsx',
+				'**/*.test.ts',
+				'**/*.test.tsx',
 				'**/*.config.ts',
+				'**/index.ts',
+				'src/test/**',
 				'vitest.setup.ts',
 			],
+			// Thresholds so coverage can't quietly regress. Raise these as
+			// coverage improves; they are a ratchet, not a target.
+			thresholds: {
+				statements: 70,
+				branches: 74,
+				functions: 55,
+				lines: 70,
+			},
 		},
 	},
 });

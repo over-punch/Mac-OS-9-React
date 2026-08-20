@@ -5,7 +5,7 @@ import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { Button } from './Button';
 import {
-	SaveIcon,
+	DiskIcon,
 	FolderIcon,
 	CloseIcon,
 	ArrowRightIcon,
@@ -14,7 +14,7 @@ import {
 	LinkIcon,
 	MailIcon,
 	TrashIcon,
-} from '../Icon/icons';
+} from '../Icon/categories';
 import '../../styles/theme.css';
 
 const meta = {
@@ -282,7 +282,7 @@ export const LoadingComparison: Story = {
 // ========================================
 
 export const WithLeftIcon: Story = {
-	render: () => <Button leftIcon={<SaveIcon />}>Save File</Button>,
+	render: () => <Button leftIcon={<DiskIcon />}>Save File</Button>,
 	parameters: {
 		docs: {
 			description: {
@@ -310,7 +310,7 @@ export const IconOnly: Story = {
 				<CloseIcon />
 			</Button>
 			<Button iconOnly ariaLabel="Save" variant="primary">
-				<SaveIcon />
+				<DiskIcon />
 			</Button>
 			<Button iconOnly ariaLabel="Delete" variant="danger">
 				<TrashIcon />
@@ -330,7 +330,7 @@ export const IconExamples: Story = {
 	render: () => (
 		<div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
 			<Button leftIcon={<FolderIcon />}>Open</Button>
-			<Button leftIcon={<SaveIcon />}>Save</Button>
+			<Button leftIcon={<DiskIcon />}>Save</Button>
 			<Button leftIcon={<DownloadIcon />}>Download</Button>
 			<Button leftIcon={<LinkIcon />} as="a" href="#">
 				Copy Link
@@ -487,7 +487,7 @@ export const Toolbar: Story = {
 				<FolderIcon />
 			</Button>
 			<Button size="sm" iconOnly ariaLabel="Save">
-				<SaveIcon />
+				<DiskIcon />
 			</Button>
 			<Button size="sm" iconOnly ariaLabel="Download">
 				<DownloadIcon />

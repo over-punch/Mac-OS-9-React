@@ -3,7 +3,7 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { Tabs, TabPanel } from './Tabs';
-import { FolderIcon, SaveIcon, PrintIcon } from '../Icon/icons';
+import { FolderIcon, DiskIcon, PrintIcon } from '../Icon/categories';
 import '../../styles/theme.css';
 
 const meta = {
@@ -73,7 +73,7 @@ export const WithIcons: Story = {
 				<h3 style={{ margin: '0 0 12px 0', fontSize: '13px' }}>Files</h3>
 				<p style={{ margin: 0, fontSize: '12px' }}>Manage your files and folders.</p>
 			</TabPanel>
-			<TabPanel label="Save" icon={<SaveIcon />}>
+			<TabPanel label="Save" icon={<DiskIcon />}>
 				<h3 style={{ margin: '0 0 12px 0', fontSize: '13px' }}>Save Options</h3>
 				<p style={{ margin: 0, fontSize: '12px' }}>Configure auto-save and backup settings.</p>
 			</TabPanel>

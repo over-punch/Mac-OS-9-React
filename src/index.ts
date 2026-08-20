@@ -15,8 +15,7 @@ export { TextField, type TextFieldProps } from './components/TextField';
 export { Select, type SelectProps, type SelectOption } from './components/Select';
 export { Tabs, TabPanel, type TabsProps, type TabPanelProps } from './components/Tabs';
 export { Window, type WindowProps, type WindowClasses } from './components/Window';
-export { Dialog, type DialogProps } from './components/Dialog';
-// export { TitleBar, type TitleBarProps } from './components/TitleBar'; // Hidden - needs visual refinement
+export { Dialog, type DialogProps, type FocusableElement } from './components/Dialog';
 export {
 	MenuBar,
 	MenuItem,

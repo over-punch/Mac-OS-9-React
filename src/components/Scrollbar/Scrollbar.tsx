@@ -22,9 +22,19 @@ export interface ScrollbarProps {
 	value?: number;
 
 	/**
-	 * Viewport size relative to content size (0-1)
-	 * Used to calculate thumb size AND the page-step size for
-	 * PageUp/PageDown keyboard navigation.
+	 * Viewport size relative to content size (0-1).
+	 *
+	 * This is the one number that makes a scrollbar meaningful: it sets the
+	 * thumb's proportion of the track and the PageUp/PageDown step. Compute
+	 * it as `clientHeight / scrollHeight` (or the width equivalent) for the
+	 * region being scrolled.
+	 *
+	 * There is deliberately no default. It previously defaulted to `0.2`, so
+	 * a scrollbar wired up without it rendered a confident, entirely
+	 * fictional thumb covering a fifth of the track — whatever the content's
+	 * real length — and looked correct while being wrong. Omitting it now
+	 * logs a development warning and falls back to a full-length thumb,
+	 * which reads as "nothing to scroll" rather than as a plausible lie.
 	 */
 	viewportRatio?: number;
 
@@ -85,7 +95,7 @@ export const Scrollbar = forwardRef<HTMLDivElement, ScrollbarProps>(
 		{
 			orientation = 'vertical',
 			value = 0,
-			viewportRatio = 0.2,
+			viewportRatio,
 			onChange,
 			className = '',
 			disabled = false,
@@ -114,7 +124,18 @@ export const Scrollbar = forwardRef<HTMLDivElement, ScrollbarProps>(
 		);
 
 		// Calculate thumb size based on viewport ratio
-		const thumbSize = Math.max(viewportRatio * 100, 10); // Minimum 10% size
+		// Omitting viewportRatio is a wiring mistake, not a styling choice, so
+		// say so in development and fall back to a full-length thumb — the
+		// honest rendering of "we do not know how long the content is".
+		if (process.env.NODE_ENV !== 'production' && viewportRatio === undefined) {
+			console.warn(
+				'Scrollbar: `viewportRatio` is required to size the thumb and the page step. ' +
+					'Pass clientHeight / scrollHeight (or the width equivalent) for the scrolled region.',
+			);
+		}
+		const effectiveViewportRatio = viewportRatio ?? 1;
+
+		const thumbSize = Math.max(effectiveViewportRatio * 100, 10); // Minimum 10% size
 
 		// Calculate thumb position
 		const maxThumbPos = 100 - thumbSize;
@@ -154,11 +175,11 @@ export const Scrollbar = forwardRef<HTMLDivElement, ScrollbarProps>(
 						break;
 					case 'PageUp':
 						event.preventDefault();
-						commitValue(value - viewportRatio);
+						commitValue(value - effectiveViewportRatio);
 						break;
 					case 'PageDown':
 						event.preventDefault();
-						commitValue(value + viewportRatio);
+						commitValue(value + effectiveViewportRatio);
 						break;
 					case 'Home':
 						event.preventDefault();
@@ -170,7 +191,7 @@ export const Scrollbar = forwardRef<HTMLDivElement, ScrollbarProps>(
 						break;
 				}
 			},
-			[commitValue, disabled, isVertical, step, value, viewportRatio]
+			[commitValue, disabled, isVertical, step, value, effectiveViewportRatio]
 		);
 
 		// Handle track clicks

@@ -1,5 +1,5 @@
 import * as React$1 from 'react';
-import React__default, { AnchorHTMLAttributes, ButtonHTMLAttributes, SVGAttributes, InputHTMLAttributes, SelectHTMLAttributes } from 'react';
+import React__default, { AnchorHTMLAttributes, ButtonHTMLAttributes, SVGAttributes, InputHTMLAttributes, TextareaHTMLAttributes, SelectHTMLAttributes } from 'react';
 
 interface BaseButtonProps {
     /**
@@ -211,11 +211,60 @@ interface IconProps extends SVGAttributes<SVGElement> {
 declare const Icon: React__default.ForwardRefExoticComponent<IconProps & React__default.RefAttributes<SVGSVGElement>>;
 
 /**
+ * Props accepted by every generated pixel icon.
+ *
+ * Pass `label={null}` for a purely decorative icon that sits next to its own
+ * text — repeating the name to a screen reader is noise.
+ */
+interface PixelIconProps extends Omit<React__default.ComponentProps<typeof Icon>, 'children' | 'label'> {
+    /** Accessible name. Defaults to the icon's own name; `null` hides it. */
+    label?: string | null;
+}
+
+/**
  * Central icon registry
  * Maps icon names to their components
  */
 declare const iconRegistry: {
-    readonly divider: React$1.FC<{}>;
+    readonly close: React$1.FC<PixelIconProps>;
+    readonly trash: React$1.FC<PixelIconProps>;
+    readonly search: React$1.FC<PixelIconProps>;
+    readonly copy: React$1.FC<PixelIconProps>;
+    readonly print: React$1.FC<PixelIconProps>;
+    readonly download: React$1.FC<PixelIconProps>;
+    readonly link: React$1.FC<PixelIconProps>;
+    readonly mail: React$1.FC<PixelIconProps>;
+    readonly folder: React$1.FC<PixelIconProps>;
+    readonly folderOpen: React$1.FC<PixelIconProps>;
+    readonly document: React$1.FC<PixelIconProps>;
+    readonly application: React$1.FC<PixelIconProps>;
+    readonly disk: React$1.FC<PixelIconProps>;
+    readonly hardDrive: React$1.FC<PixelIconProps>;
+    readonly image: React$1.FC<PixelIconProps>;
+    readonly music: React$1.FC<PixelIconProps>;
+    readonly arrowUp: React$1.FC<PixelIconProps>;
+    readonly arrowDown: React$1.FC<PixelIconProps>;
+    readonly arrowLeft: React$1.FC<PixelIconProps>;
+    readonly arrowRight: React$1.FC<PixelIconProps>;
+    readonly home: React$1.FC<PixelIconProps>;
+    readonly play: React$1.FC<PixelIconProps>;
+    readonly pause: React$1.FC<PixelIconProps>;
+    readonly stop: React$1.FC<PixelIconProps>;
+    readonly volume: React$1.FC<PixelIconProps>;
+    readonly volumeMute: React$1.FC<PixelIconProps>;
+    readonly alert: React$1.FC<PixelIconProps>;
+    readonly info: React$1.FC<PixelIconProps>;
+    readonly error: React$1.FC<PixelIconProps>;
+    readonly check: React$1.FC<PixelIconProps>;
+    readonly question: React$1.FC<PixelIconProps>;
+    readonly divider: React$1.FC<PixelIconProps>;
+    readonly resizeHandle: React$1.FC<PixelIconProps>;
+    readonly grabber: React$1.FC<PixelIconProps>;
+    readonly chevronRight: React$1.FC<PixelIconProps>;
+    readonly chevronDown: React$1.FC<PixelIconProps>;
+    readonly user: React$1.FC<PixelIconProps>;
+    readonly lock: React$1.FC<PixelIconProps>;
+    readonly calendar: React$1.FC<PixelIconProps>;
 };
 /**
  * Type-safe icon names
@@ -223,38 +272,125 @@ declare const iconRegistry: {
  */
 type IconName = keyof typeof iconRegistry;
 
-interface IconLibraryProps extends Omit<IconProps, 'children' | 'label'> {
+interface IconLibraryProps extends Omit<PixelIconProps, 'label'> {
     /**
      * Icon name from the registry
      */
     icon: IconName;
     /**
-     * Optional custom label for accessibility
-     * If not provided, uses the icon name
+     * Accessible name. Each icon carries a sensible default — `folder`
+     * announces as "Folder" — so this is only needed when the icon means
+     * something more specific in context. Pass `null` for a decorative icon
+     * that sits beside its own text label.
      */
-    label?: string;
+    label?: string | null;
 }
 /**
  * IconLibrary component for Mac OS 9 UI
  *
- * Provides a convenient way to use icons by name rather than importing each one individually.
- * All icons are registered in the icon registry and can be accessed by their string names.
+ * Provides a convenient way to use icons by name rather than importing each
+ * one individually. All icons are registered in the icon registry and can be
+ * accessed by their string names; `IconName` is derived from the registry, so
+ * an unknown name is a compile error rather than a blank space.
+ *
+ * Use {@link getAllIconNames} to enumerate what is available.
  *
  * @example
  * ```tsx
- * <IconLibrary icon="save" size="md" />
  * <IconLibrary icon="folder" size="lg" />
- * <IconLibrary icon="arrow-right" size="sm" />
+ * <IconLibrary icon="arrowRight" size="sm" />
+ * <IconLibrary icon="trash" label="Move to Trash" />
  * ```
  */
 declare const IconLibrary: React__default.FC<IconLibraryProps>;
+
+/** Close cross. */
+declare const CloseIcon: React$1.FC<PixelIconProps>;
+/** Wastebasket. */
+declare const TrashIcon: React$1.FC<PixelIconProps>;
+/** Magnifying glass. */
+declare const SearchIcon: React$1.FC<PixelIconProps>;
+/** Two stacked sheets. */
+declare const CopyIcon: React$1.FC<PixelIconProps>;
+/** Dot-matrix printer. */
+declare const PrintIcon: React$1.FC<PixelIconProps>;
+/** Downward arrow into a tray. */
+declare const DownloadIcon: React$1.FC<PixelIconProps>;
+/** Chain link. */
+declare const LinkIcon: React$1.FC<PixelIconProps>;
+/** Sealed envelope. */
+declare const MailIcon: React$1.FC<PixelIconProps>;
+
+/** Classic Mac OS folder with its tab. */
+declare const FolderIcon: React$1.FC<PixelIconProps>;
+/** Folder shown mid-open, used for the current location in a path. */
+declare const FolderOpenIcon: React$1.FC<PixelIconProps>;
+/** Plain document with a folded corner. */
+declare const DocumentIcon: React$1.FC<PixelIconProps>;
+/** Application diamond, the Mac OS 9 marker for an executable. */
+declare const ApplicationIcon: React$1.FC<PixelIconProps>;
+/** 3.5" floppy disk, the save icon of the era. */
+declare const DiskIcon: React$1.FC<PixelIconProps>;
+/** Hard disk volume, as it appears on the desktop. */
+declare const HardDriveIcon: React$1.FC<PixelIconProps>;
+/** Picture document. */
+declare const ImageIcon: React$1.FC<PixelIconProps>;
+/** Music document. */
+declare const MusicIcon: React$1.FC<PixelIconProps>;
+
+/** Solid triangle pointing up. Matches the scrollbar arrows. */
+declare const ArrowUpIcon: React$1.FC<PixelIconProps>;
+/** Solid triangle pointing down. */
+declare const ArrowDownIcon: React$1.FC<PixelIconProps>;
+/** Solid triangle pointing left. */
+declare const ArrowLeftIcon: React$1.FC<PixelIconProps>;
+/** Solid triangle pointing right. */
+declare const ArrowRightIcon: React$1.FC<PixelIconProps>;
+/** House, for a home or root destination. */
+declare const HomeIcon: React$1.FC<PixelIconProps>;
+
+/** Play triangle. */
+declare const PlayIcon: React$1.FC<PixelIconProps>;
+/** Pause bars. */
+declare const PauseIcon: React$1.FC<PixelIconProps>;
+/** Stop square. */
+declare const StopIcon: React$1.FC<PixelIconProps>;
+/** Speaker with sound waves. */
+declare const VolumeIcon: React$1.FC<PixelIconProps>;
+/** Speaker with mute cross. */
+declare const VolumeMuteIcon: React$1.FC<PixelIconProps>;
+
+/** Caution triangle, as used by Mac OS 9 caution alerts. */
+declare const AlertIcon: React$1.FC<PixelIconProps>;
+/** Note alert. */
+declare const InfoIcon: React$1.FC<PixelIconProps>;
+/** Stop alert. */
+declare const ErrorIcon: React$1.FC<PixelIconProps>;
+/** Checkmark, for menu items and confirmations. */
+declare const CheckIcon: React$1.FC<PixelIconProps>;
+/** Question alert. */
+declare const QuestionIcon: React$1.FC<PixelIconProps>;
 
 /**
  * Divider icon
  * Vertical divider for menu bars and toolbars
  * Note: Uses a 10x32 viewBox instead of standard 24x24
  */
-declare const DividerIcon: React__default.FC;
+declare const DividerIcon: React__default.FC<PixelIconProps>;
+/** Bevelled grow box, matching the Window resize handle. */
+declare const ResizeHandleIcon: React__default.FC<PixelIconProps>;
+/** Textured drag grip, for title bars and splitters. */
+declare const GrabberIcon: React__default.FC<PixelIconProps>;
+/** Small disclosure triangle, pointing right (collapsed). */
+declare const ChevronRightIcon: React__default.FC<PixelIconProps>;
+/** Small disclosure triangle, pointing down (expanded). */
+declare const ChevronDownIcon: React__default.FC<PixelIconProps>;
+/** Head and shoulders. */
+declare const UserIcon: React__default.FC<PixelIconProps>;
+/** Closed padlock. */
+declare const LockIcon: React__default.FC<PixelIconProps>;
+/** Wall calendar. */
+declare const CalendarIcon: React__default.FC<PixelIconProps>;
 
 interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
     /**
@@ -620,6 +756,39 @@ interface TextFieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'si
      * Custom wrapper class name
      */
     wrapperClassName?: string;
+    /**
+     * Render a multi-line field (a `<textarea>`) instead of a single-line
+     * `<input>`.
+     *
+     * Everything else — label, sizes, icons, error and helper text, the
+     * Mac OS 9 inset bevel — behaves identically, so a comment box does not
+     * have to be styled from scratch to sit next to the other fields.
+     *
+     * @default false
+     */
+    multiline?: boolean;
+    /**
+     * Visible rows when `multiline` is set.
+     * @default 3
+     */
+    rows?: number;
+    /**
+     * How politely the error message is announced when it appears.
+     *
+     * The message is rendered in a live region so assistive tech announces
+     * validation failures as they happen; previously it was a plain
+     * paragraph, silently appearing for anyone not looking at that part of
+     * the screen. Use `'off'` when your form announces errors centrally and
+     * per-field announcements would double up.
+     *
+     * @default 'polite'
+     */
+    errorLiveRegion?: 'polite' | 'assertive' | 'off';
+    /**
+     * Extra props forwarded to the underlying `<textarea>` when `multiline`
+     * is set — anything specific to textareas, such as `wrap`.
+     */
+    textareaProps?: Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, keyof InputHTMLAttributes<HTMLInputElement>>;
 }
 /**
  * Mac OS 9 style TextField component
@@ -661,7 +830,7 @@ interface TextFieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'si
  * />
  * ```
  */
-declare const TextField: React__default.ForwardRefExoticComponent<TextFieldProps & React__default.RefAttributes<HTMLInputElement>>;
+declare const TextField: React__default.ForwardRefExoticComponent<TextFieldProps & React__default.RefAttributes<HTMLInputElement | HTMLTextAreaElement>>;
 
 interface SelectOption {
     value: string | number;
@@ -1173,7 +1342,7 @@ interface WindowProps {
  * - Classic Mac OS 9 window styling with beveled edges
  * - Optional title bar with window controls
  * - Active/inactive states
- * - Composable with custom TitleBar component
+ * - Composable with a custom title bar via the `titleBar` prop
  * - Flexible sizing
  * - Draggable windows (optional) — by pointer or keyboard
  * - Resizable windows (optional) — by pointer or keyboard
@@ -1192,8 +1361,9 @@ interface WindowProps {
  *   <p>Window content goes here</p>
  * </Window>
  *
- * // Window with custom title bar
- * <Window titleBar={<TitleBar title="Custom" />}>
+ * // Window with a custom title bar. `titleBar` replaces the default one
+ * // entirely, so it owns its own markup, styling, and drag affordance.
+ * <Window titleBar={<MyToolbar onClose={close} />}>
  *   <p>Content</p>
  * </Window>
  *
@@ -1211,6 +1381,17 @@ interface WindowProps {
  */
 declare const Window: React__default.ForwardRefExoticComponent<WindowProps & React__default.RefAttributes<HTMLDivElement>>;
 
+/**
+ * Elements that can hold focus.
+ *
+ * `initialFocus` was typed `RefObject<HTMLElement>`, which accepts a ref to
+ * any element at all — a `<div>`, a `<span>` — including ones that cannot
+ * take focus, so the mistake only showed up at runtime as focus silently
+ * staying on the trigger.
+ */
+type FocusableElement = HTMLAnchorElement | HTMLButtonElement | HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | (HTMLElement & {
+    tabIndex: number;
+});
 interface DialogProps extends Omit<WindowProps, 'active'> {
     /**
      * Whether the dialog is open
@@ -1251,7 +1432,7 @@ interface DialogProps extends Omit<WindowProps, 'active'> {
      * `querySelector`. Treat it as a developer-supplied static selector —
      * never derive it from untrusted input.
      */
-    initialFocus?: string | React__default.RefObject<HTMLElement | null>;
+    initialFocus?: string | React__default.RefObject<FocusableElement | null>;
     /**
      * ARIA role. Use `'alertdialog'` for destructive or error confirmations
      * so assistive tech announces them more assertively.
@@ -1273,6 +1454,20 @@ interface DialogProps extends Omit<WindowProps, 'active'> {
      * ID of a visible element that describes the dialog body.
      */
     ariaDescribedBy?: string;
+    /**
+     * Where the dialog is portalled to.
+     *
+     * Defaults to `document.body`. A modal rendered inline sits inside
+     * whatever stacking contexts its ancestors created — a parent with
+     * `transform`, `filter`, `opacity` below 1, or its own `z-index` traps
+     * the backdrop underneath sibling content no matter how high the
+     * dialog's own z-index is. Portalling to the body escapes all of them.
+     *
+     * Pass an element to portal somewhere else, or `null` to render inline
+     * (useful inside a Storybook docs block, or when the host page already
+     * provides a modal root).
+     */
+    container?: HTMLElement | null;
 }
 /**
  * Mac OS 9 style Dialog component
@@ -1653,9 +1848,19 @@ interface ScrollbarProps {
      */
     value?: number;
     /**
-     * Viewport size relative to content size (0-1)
-     * Used to calculate thumb size AND the page-step size for
-     * PageUp/PageDown keyboard navigation.
+     * Viewport size relative to content size (0-1).
+     *
+     * This is the one number that makes a scrollbar meaningful: it sets the
+     * thumb's proportion of the track and the PageUp/PageDown step. Compute
+     * it as `clientHeight / scrollHeight` (or the width equivalent) for the
+     * region being scrolled.
+     *
+     * There is deliberately no default. It previously defaulted to `0.2`, so
+     * a scrollbar wired up without it rendered a confident, entirely
+     * fictional thumb covering a fifth of the track — whatever the content's
+     * real length — and looked correct while being wrong. Omitting it now
+     * logs a development warning and falls back to a full-length thumb,
+     * which reads as "nothing to scroll" rather than as a plausible lie.
      */
     viewportRatio?: number;
     /**
@@ -2408,5 +2613,5 @@ declare const mergeClasses: (...classes: (string | undefined | false | null)[]) 
  */
 declare const createClassBuilder: (baseClass: string) => (...additionalClasses: (string | undefined | false | null)[]) => string;
 
-export { Button, Checkbox, Dialog, DividerIcon, FolderList, Icon, IconButton, IconLibrary, ListView, MenuBar, MenuDropdown, MenuItem, Radio, RadioGroup, Scrollbar, Select, TabPanel, Tabs, TextField, Window, borders, colors, createClassBuilder, mergeClasses, shadows, spacing, tokens, transitions, typography, zIndex };
-export type { BaseComponentProps, ButtonProps, ButtonRef, CellRenderState, CheckboxProps, ComponentClasses, DialogProps, DivRef, FolderListClasses, FolderListProps, HeaderCellDefaultProps, HeaderCellRenderState, IconButtonProps, IconLibraryProps, IconName, IconProps, InputRef, ListColumn, ListItem, ListViewClasses, ListViewProps, Menu, MenuBarProps, MenuDropdownProps, MenuItemData, MenuItemProps, RadioGroupProps, RadioProps, RenderState, RowDefaultProps, RowRenderState, ScrollbarProps, SelectOption, SelectProps, SelectRef, Size, State, TabPanelProps, TabsProps, TextAreaRef, TextFieldProps, Variant, WindowClasses, WindowPosition, WindowProps };
+export { AlertIcon, ApplicationIcon, ArrowDownIcon, ArrowLeftIcon, ArrowRightIcon, ArrowUpIcon, Button, CalendarIcon, CheckIcon, Checkbox, ChevronDownIcon, ChevronRightIcon, CloseIcon, CopyIcon, Dialog, DiskIcon, DividerIcon, DocumentIcon, DownloadIcon, ErrorIcon, FolderIcon, FolderList, FolderOpenIcon, GrabberIcon, HardDriveIcon, HomeIcon, Icon, IconButton, IconLibrary, ImageIcon, InfoIcon, LinkIcon, ListView, LockIcon, MailIcon, MenuBar, MenuDropdown, MenuItem, MusicIcon, PauseIcon, PlayIcon, PrintIcon, QuestionIcon, Radio, RadioGroup, ResizeHandleIcon, Scrollbar, SearchIcon, Select, StopIcon, TabPanel, Tabs, TextField, TrashIcon, UserIcon, VolumeIcon, VolumeMuteIcon, Window, borders, colors, createClassBuilder, mergeClasses, shadows, spacing, tokens, transitions, typography, zIndex };
+export type { BaseComponentProps, ButtonProps, ButtonRef, CellRenderState, CheckboxProps, ComponentClasses, DialogProps, DivRef, FocusableElement, FolderListClasses, FolderListProps, HeaderCellDefaultProps, HeaderCellRenderState, IconButtonProps, IconLibraryProps, IconName, IconProps, InputRef, ListColumn, ListItem, ListViewClasses, ListViewProps, Menu, MenuBarProps, MenuDropdownProps, MenuItemData, MenuItemProps, RadioGroupProps, RadioProps, RenderState, RowDefaultProps, RowRenderState, ScrollbarProps, SelectOption, SelectProps, SelectRef, Size, State, TabPanelProps, TabsProps, TextAreaRef, TextFieldProps, Variant, WindowClasses, WindowPosition, WindowProps };

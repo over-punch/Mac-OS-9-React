@@ -1,7 +1,16 @@
 // Icon Registry - Mac OS 9 React UI
 // Central registry of all available icons with type-safe names
 
-import { CloseIcon, TrashIcon, SearchIcon, CopyIcon, PrintIcon } from './categories/actions';
+import {
+	CloseIcon,
+	TrashIcon,
+	SearchIcon,
+	CopyIcon,
+	PrintIcon,
+	DownloadIcon,
+	LinkIcon,
+	MailIcon,
+} from './categories/actions';
 import {
 	FolderIcon,
 	FolderOpenIcon,
@@ -9,6 +18,8 @@ import {
 	ApplicationIcon,
 	DiskIcon,
 	HardDriveIcon,
+	ImageIcon,
+	MusicIcon,
 } from './categories/files';
 import {
 	ArrowUpIcon,
@@ -25,6 +36,9 @@ import {
 	GrabberIcon,
 	ChevronRightIcon,
 	ChevronDownIcon,
+	UserIcon,
+	LockIcon,
+	CalendarIcon,
 } from './categories/ui';
 
 /**
@@ -38,6 +52,9 @@ export const iconRegistry = {
 	search: SearchIcon,
 	copy: CopyIcon,
 	print: PrintIcon,
+	download: DownloadIcon,
+	link: LinkIcon,
+	mail: MailIcon,
 
 	// Files
 	folder: FolderIcon,
@@ -46,6 +63,8 @@ export const iconRegistry = {
 	application: ApplicationIcon,
 	disk: DiskIcon,
 	hardDrive: HardDriveIcon,
+	image: ImageIcon,
+	music: MusicIcon,
 
 	// Navigation
 	arrowUp: ArrowUpIcon,
@@ -74,6 +93,9 @@ export const iconRegistry = {
 	grabber: GrabberIcon,
 	chevronRight: ChevronRightIcon,
 	chevronDown: ChevronDownIcon,
+	user: UserIcon,
+	lock: LockIcon,
+	calendar: CalendarIcon,
 } as const;
 
 /**

@@ -326,7 +326,7 @@ function readParentMetrics(element: HTMLElement): ParentMetrics {
  * - Classic Mac OS 9 window styling with beveled edges
  * - Optional title bar with window controls
  * - Active/inactive states
- * - Composable with custom TitleBar component
+ * - Composable with a custom title bar via the `titleBar` prop
  * - Flexible sizing
  * - Draggable windows (optional) — by pointer or keyboard
  * - Resizable windows (optional) — by pointer or keyboard
@@ -345,8 +345,9 @@ function readParentMetrics(element: HTMLElement): ParentMetrics {
  *   <p>Window content goes here</p>
  * </Window>
  *
- * // Window with custom title bar
- * <Window titleBar={<TitleBar title="Custom" />}>
+ * // Window with a custom title bar. `titleBar` replaces the default one
+ * // entirely, so it owns its own markup, styling, and drag affordance.
+ * <Window titleBar={<MyToolbar onClose={close} />}>
  *   <p>Content</p>
  * </Window>
  *
@@ -860,7 +861,7 @@ export const Window = forwardRef<HTMLDivElement, WindowProps>(
 				return (
 					<div
 						className={titleBarClassNames}
-						data-numControls={[onClose, onMinimize, onMaximize].filter(Boolean).length}
+						data-num-controls={[onClose, onMinimize, onMaximize].filter(Boolean).length}
 						onPointerDown={handleTitleBarPointerDown}
 						onKeyDown={draggable ? handleTitleBarKeyDown : undefined}
 						tabIndex={draggable ? 0 : undefined}

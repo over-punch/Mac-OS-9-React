@@ -1998,6 +1998,29 @@
 		transition: none;
 	}
 }
+
+/* ========================================
+ * Multiline
+ * ======================================== */
+
+textarea.TextField-module_input {
+	/* The multiline variant shares .input so the inset bevel, sizing and
+	 * error styling stay identical to the single-line field. These are the
+	 * only textarea-specific corrections. */
+	resize: vertical;
+	min-height: calc(var(--font-size-md) * 3);
+	line-height: var(--line-height-normal);
+	font-family: inherit;
+}
+
+/* Keep the hidden error paragraph out of the layout entirely. Without this,
+ * `hidden` is overridden by the display rule on .error-message and the empty
+ * paragraph still reserves space. */
+
+.TextField-module_error-message[hidden] {
+	display: none;
+}
+
 /* Select Component Styles - Mac OS 9 */
 
 .Select-module_wrapper {
@@ -3072,17 +3095,17 @@
 
 }
 
-.Window-module_titleBar[data-numControls="3"] .Window-module_titleCenter > :first-child{
+.Window-module_titleBar[data-num-controls="3"] .Window-module_titleCenter > :first-child{
 	width: calc(100% - (48px + var(--spacing-2)));
 	margin-left: calc(48px + var(--spacing-2));
 }
 
-.Window-module_titleBar[data-numControls="2"] .Window-module_titleCenter> :first-child {
+.Window-module_titleBar[data-num-controls="2"] .Window-module_titleCenter> :first-child {
 	width: calc(100% - (36px + var(--spacing-2)));
 	margin-left: calc(36px + var(--spacing-2));
 }
 
-.Window-module_titleBar[data-numControls="1"] .Window-module_titleCenter> :first-child {
+.Window-module_titleBar[data-num-controls="1"] .Window-module_titleCenter> :first-child {
 	width: calc(100% - (24px));
 	margin-left: calc(24px);
 	}

@@ -3,7 +3,7 @@
 
 import type { Meta, StoryObj } from '@storybook/react';
 import { FolderList } from './FolderList';
-import { FolderIcon, FileIcon, DocumentIcon, ImageIcon, MusicIcon } from '../Icon/icons';
+import { FolderIcon, DocumentIcon, DocumentIcon, ImageIcon, MusicIcon } from '../Icon/categories';
 
 const meta: Meta<typeof FolderList> = {
 	title: 'Components/FolderList',
@@ -184,7 +184,7 @@ export const ManyItems: Story = {
 			name: `Document ${i + 1}.txt`,
 			modified: `Jan ${(i % 31) + 1}, 2026`,
 			size: `${Math.floor(Math.random() * 1000)} KB`,
-			icon: <FileIcon />,
+			icon: <DocumentIcon />,
 		})),
 		width: 600,
 		height: 400,
