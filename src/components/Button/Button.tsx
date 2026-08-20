@@ -338,11 +338,19 @@ const ButtonImpl = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonProps
 	// stray `aria-disabled`/`aria-busy` in the rest props can't contradict the
 	// component's own `disabled`/`loading` state.
 	//
-	// aria-disabled is applied on every branch, not just the anchor. The
-	// `<button>` element also gets a native `disabled`, which is what actually
-	// blocks interaction; aria-disabled alongside it keeps the exposed state
-	// identical no matter which element Button ends up rendering, which is the
-	// consistency the other form components are aligned to.
+	// The library's rule for disabled state, applied consistently across every
+	// component:
+	//
+	//   - An element with a native disabled attribute (button, input, select,
+	//     textarea) uses that alone. It already removes the element from the
+	//     accessibility tree and the tab order, and a redundant aria-disabled
+	//     is one more thing that can drift out of sync with it.
+	//   - An element with no native equivalent (an anchor, a RadioGroup
+	//     wrapper, an asChild target) carries aria-disabled instead, with the
+	//     behaviour enforced in the event handler.
+	//
+	// aria-disabled is set here for the anchor and asChild branches; the
+	// <button> branch below clears it.
 	const sharedAria: ComputedAriaAttributes = {
 		'aria-label': iconOnly ? (resolvedAriaLabel ?? iconOnlyFallbackLabel) : resolvedAriaLabel,
 		'aria-describedby': resolvedAriaDescribedBy,
@@ -489,6 +497,9 @@ const ButtonImpl = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonProps
 			formTarget={formTarget}
 			className={classNames}
 			{...sharedAria}
+			// Applied after the spread so it wins: native disabled is
+			// authoritative on a <button>. See the note above.
+			aria-disabled={undefined}
 		>
 			{renderButtonContent()}
 		</button>

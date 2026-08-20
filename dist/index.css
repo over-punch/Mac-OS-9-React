@@ -13,9 +13,7 @@
  *   /base      opt-in global html/body element styles
  *
  * No remote font request is made from this file. See webfonts.css.
- */
-
-/**
+ *//**
  * Mac OS 9 UI — Self-hosted font faces
  *
  * Declares the bundled "Pixel" bitmap family. Imported by theme.css so the
@@ -407,7 +405,6 @@
 /* ========================================
  * Note on Base Styles
  * ======================================== */
-
 /* Global element styles (html, body, box-sizing) live in base.css so they
  * never override a consuming application's own styles.
  * Import '@liiift-studio/mac-os9-ui/base' if you want those global styles. */
@@ -417,13 +414,11 @@
  * ======================================== */
 
 /* Text utilities */
-
 .bold {
 	font-weight: var(--font-weight-bold);
 }
 
 /* Bevel effects */
-
 .bevel {
 	box-shadow: var(--shadow-bevel);
 }
@@ -433,7 +428,6 @@
 }
 
 /* Border utilities */
-
 .border {
 	border: var(--border-width-thin) solid var(--color-border);
 }
@@ -443,7 +437,6 @@
 }
 
 /* Surface styles */
-
 .surface {
 	background-color: var(--color-surface);
 }
@@ -453,20 +446,17 @@
 }
 
 /* Text utilities */
-
 .text-inverse {
 	color: var(--color-text-inverse);
 }
 
 /* Focus styles for keyboard navigation */
-
 .focus-visible:focus-visible {
 	outline: var(--border-width-thin) dotted var(--color-focus);
 	outline-offset: 2px;
 }
 
 /* Disabled state */
-
 .disabled {
 	opacity: 0.5;
 	cursor: not-allowed;
@@ -524,7 +514,6 @@
 }
 
 /* For links styled as buttons */
-
 .Button-module_button[href] {
 	text-decoration: none;
 }
@@ -583,13 +572,11 @@
  * ======================================== */
 
 /* Hover state - subtle highlight */
-
 .Button-module_button:hover:not(:disabled) {
 	background-color: var(--color-gray-100);
 }
 
 /* Active/Pressed state - inverted bevel */
-
 .Button-module_button:active:not(:disabled) {
 	box-shadow: var(--shadow-inset);
 	background-color: var(--color-gray-300);
@@ -598,7 +585,6 @@
 }
 
 /* Focus state - keyboard navigation */
-
 .Button-module_button:focus-visible {
 	outline: 1px dotted var(--color-focus);
 	outline-offset: 2px;
@@ -637,7 +623,6 @@
 }
 
 /* Mac OS 9 watch cursor during loading */
-
 .Button-module_button--cursor-loading {
 	cursor: wait;
 }
@@ -673,7 +658,6 @@
 }
 
 /* Icon-only buttons should be square */
-
 .Button-module_button--icon-only {
 	padding: var(--spacing-1);
 	aspect-ratio: 1;
@@ -692,7 +676,6 @@
  * ======================================== */
 
 /* High contrast mode support */
-
 @media (prefers-contrast: high) {
 	.Button-module_button {
 		border-width: var(--border-width-medium);
@@ -700,7 +683,6 @@
 }
 
 /* Reduced motion support */
-
 @media (prefers-reduced-motion: reduce) {
 	.Button-module_button {
 		transition: none;
@@ -768,7 +750,6 @@
  * Small pixelated corner (1-2px chamfer)
  * Used for buttons, checkboxes, and small UI elements
  */
-
 .IconButton-module_pixelated-corner-sm {
 	/* Clip the actual corners */
 	clip-path: polygon(
@@ -794,7 +775,6 @@
  * Medium pixelated corner (3-4px chamfer)
  * Used for dialog boxes, windows, larger UI elements
  */
-
 .IconButton-module_pixelated-corner-md {
 	clip-path: polygon(
 		/* Top-left corner */
@@ -831,7 +811,6 @@
  * Alternative technique using pseudo-elements
  * Better browser compatibility but more complex
   */
-
 .IconButton-module_pixelated-corner-pseudo::before,
 .IconButton-module_pixelated-corner-pseudo::after {
 	content: '';
@@ -840,7 +819,6 @@
 }
 
 /* Top corners */
-
 .IconButton-module_pixelated-corner-pseudo::before {
 	top: 0;
 	left: 2px;
@@ -853,7 +831,6 @@
 }
 
 /* Bottom corners */
-
 .IconButton-module_pixelated-corner-pseudo::after {
 	bottom: 0;
 	left: 2px;
@@ -875,7 +852,6 @@
  * 
  * Usage: Apply to element with background color
  */
-
 .IconButton-module_mac-corner {
 	position: relative;
 	/* Create notched corners effect */
@@ -883,7 +859,6 @@
 }
 
 /* Top-left notch */
-
 .IconButton-module_mac-corner::before {
 	content: '';
 	position: absolute;
@@ -898,7 +873,6 @@
 }
 
 /* Top-right notch */
-
 .IconButton-module_mac-corner::after {
 	content: '';
 	position: absolute;
@@ -920,7 +894,6 @@
  * Creates simple chamfered (cut) corners
  * Lightweight alternative to full pixelated effect
  */
-
 .IconButton-module_chamfered-sm {
 	clip-path: polygon(
 		2px 0,
@@ -956,7 +929,6 @@
  * Tab with pixelated top corners only
  * Bottom remains flat for connection to content
  */
-
 .IconButton-module_tab-corner {
 	position: relative;
 	clip-path: polygon(
@@ -981,7 +953,6 @@
 /**
  * Button with all rounded pixelated corners
  */
-
 .IconButton-module_button-corner {
 	clip-path: polygon(
 		/* Top edge with corners */
@@ -1125,7 +1096,6 @@
 }
 
 /* Layout direction variants */
-
 .IconButton-module_iconButton--label-top,
 .IconButton-module_iconButton--label-bottom {
 	flex-direction: column;
@@ -1201,27 +1171,23 @@
  * ======================================== */
 
 /* Hover state */
-
 .IconButton-module_iconButton:hover:not(:disabled) {
 	background: var(--color-gray-300);
 }
 
 /* Active/pressed state */
-
 .IconButton-module_iconButton:active:not(:disabled) {
 	box-shadow: var(--shadow-inset);
 	background: var(--color-gray-500);
 }
 
 /* Focus state */
-
 .IconButton-module_iconButton:focus-visible {
 	outline: 1px dotted var(--color-focus);
 	outline-offset: -3px;
 }
 
 /* Disabled state */
-
 .IconButton-module_iconButton--disabled,
 .IconButton-module_iconButton:disabled {
 	opacity: 0.5;
@@ -1234,7 +1200,6 @@
  * ======================================== */
 
 /* Reduced motion support */
-
 @media (prefers-reduced-motion: reduce) {
 	.IconButton-module_iconButton {
 		transition: none;
@@ -1242,7 +1207,6 @@
 }
 
 /* High contrast mode support */
-
 @media (prefers-contrast: high) {
 	.IconButton-module_iconButton {
 		border-width: 2px;
@@ -1341,7 +1305,6 @@
 }
 
 /* Checkmark using pseudo-element */
-
 .Checkbox-module_checkbox:checked::after {
 	content: '';
 	position: absolute;
@@ -1472,7 +1435,6 @@
  * ======================================== */
 
 /* High contrast mode support */
-
 @media (prefers-contrast: high) {
 	.Checkbox-module_checkbox {
 		border-width: var(--border-width-medium);
@@ -1485,7 +1447,6 @@
 }
 
 /* Reduced motion support */
-
 @media (prefers-reduced-motion: reduce) {
 	.Checkbox-module_checkbox {
 		transition: none;
@@ -1583,7 +1544,6 @@
 }
 
 /* Radio dot using pseudo-element */
-
 .Radio-module_radio:checked::after {
 	content: '';
 	position: absolute;
@@ -1681,7 +1641,6 @@
  * ======================================== */
 
 /* High contrast mode support */
-
 @media (prefers-contrast: high) {
 	.Radio-module_radio {
 		border-width: var(--border-width-medium);
@@ -1705,7 +1664,6 @@
 }
 
 /* Reduced motion support */
-
 @media (prefers-reduced-motion: reduce) {
 	.Radio-module_radio {
 		transition: none;
@@ -1882,7 +1840,6 @@
 }
 
 /* Adjust input padding when icons are present */
-
 .TextField-module_input-wrapper--with-left-icon .TextField-module_input {
 	padding-left: calc(var(--spacing-6) + var(--spacing-2));
 }
@@ -1953,7 +1910,6 @@
  * ======================================== */
 
 /* Number input - remove spinner */
-
 .TextField-module_input[type='number']::-webkit-inner-spin-button,
 .TextField-module_input[type='number']::-webkit-outer-spin-button {
 	-webkit-appearance: none;
@@ -1965,7 +1921,6 @@
 }
 
 /* Search input */
-
 .TextField-module_input[type='search']::-webkit-search-decoration,
 .TextField-module_input[type='search']::-webkit-search-cancel-button,
 .TextField-module_input[type='search']::-webkit-search-results-button,
@@ -1974,7 +1929,6 @@
 }
 
 /* Password input */
-
 .TextField-module_input[type='password'] {
 	font-family: monospace;
 }
@@ -1984,7 +1938,6 @@
  * ======================================== */
 
 /* High contrast mode support */
-
 @media (prefers-contrast: high) {
 	.TextField-module_input {
 		border-width: var(--border-width-medium);
@@ -1992,13 +1945,11 @@
 }
 
 /* Reduced motion support */
-
 @media (prefers-reduced-motion: reduce) {
 	.TextField-module_input {
 		transition: none;
 	}
 }
-
 /* ========================================
  * Multiline
  * ======================================== */
@@ -2016,7 +1967,6 @@ textarea.TextField-module_input {
 /* Keep the hidden error paragraph out of the layout entirely. Without this,
  * `hidden` is overridden by the display rule on .error-message and the empty
  * paragraph still reserves space. */
-
 .TextField-module_error-message[hidden] {
 	display: none;
 }
@@ -2234,7 +2184,6 @@ textarea.TextField-module_input {
  * ======================================== */
 
 /* High contrast mode support */
-
 @media (prefers-contrast: high) {
 	.Select-module_select {
 		border-width: var(--border-width-medium);
@@ -2242,7 +2191,6 @@ textarea.TextField-module_input {
 }
 
 /* Reduced motion support */
-
 @media (prefers-reduced-motion: reduce) {
 	.Select-module_select {
 		transition: none;
@@ -2270,7 +2218,6 @@ textarea.TextField-module_input {
  * Small pixelated corner (1-2px chamfer)
  * Used for buttons, checkboxes, and small UI elements
  */
-
 .Tabs-module_pixelated-corner-sm {
 	/* Clip the actual corners */
 	clip-path: polygon(
@@ -2296,7 +2243,6 @@ textarea.TextField-module_input {
  * Medium pixelated corner (3-4px chamfer)
  * Used for dialog boxes, windows, larger UI elements
  */
-
 .Tabs-module_pixelated-corner-md {
 	clip-path: polygon(
 		/* Top-left corner */
@@ -2333,7 +2279,6 @@ textarea.TextField-module_input {
  * Alternative technique using pseudo-elements
  * Better browser compatibility but more complex
   */
-
 .Tabs-module_pixelated-corner-pseudo::before,
 .Tabs-module_pixelated-corner-pseudo::after {
 	content: '';
@@ -2342,7 +2287,6 @@ textarea.TextField-module_input {
 }
 
 /* Top corners */
-
 .Tabs-module_pixelated-corner-pseudo::before {
 	top: 0;
 	left: 2px;
@@ -2355,7 +2299,6 @@ textarea.TextField-module_input {
 }
 
 /* Bottom corners */
-
 .Tabs-module_pixelated-corner-pseudo::after {
 	bottom: 0;
 	left: 2px;
@@ -2377,7 +2320,6 @@ textarea.TextField-module_input {
  * 
  * Usage: Apply to element with background color
  */
-
 .Tabs-module_mac-corner {
 	position: relative;
 	/* Create notched corners effect */
@@ -2385,7 +2327,6 @@ textarea.TextField-module_input {
 }
 
 /* Top-left notch */
-
 .Tabs-module_mac-corner::before {
 	content: '';
 	position: absolute;
@@ -2400,7 +2341,6 @@ textarea.TextField-module_input {
 }
 
 /* Top-right notch */
-
 .Tabs-module_mac-corner::after {
 	content: '';
 	position: absolute;
@@ -2422,7 +2362,6 @@ textarea.TextField-module_input {
  * Creates simple chamfered (cut) corners
  * Lightweight alternative to full pixelated effect
  */
-
 .Tabs-module_chamfered-sm {
 	clip-path: polygon(
 		2px 0,
@@ -2458,7 +2397,6 @@ textarea.TextField-module_input {
  * Tab with pixelated top corners only
  * Bottom remains flat for connection to content
  */
-
 .Tabs-module_tab-corner {
 	position: relative;
 	clip-path: polygon(
@@ -2483,7 +2421,6 @@ textarea.TextField-module_input {
 /**
  * Button with all rounded pixelated corners
  */
-
 .Tabs-module_button-corner {
 	clip-path: polygon(
 		/* Top edge with corners */
@@ -2623,7 +2560,6 @@ textarea.TextField-module_input {
 }
 
 /* Active tab - raised above panel */
-
 .Tabs-module_tab--active {
 	background: var(--color-surface);
 	z-index: 1;
@@ -2631,7 +2567,6 @@ textarea.TextField-module_input {
 }
 
 /* Disabled tab */
-
 .Tabs-module_tab--disabled {
 	opacity: 0.5;
 	cursor: not-allowed;
@@ -2724,7 +2659,6 @@ textarea.TextField-module_input {
  * ======================================== */
 
 /* Reduced motion support */
-
 @media (prefers-reduced-motion: reduce) {
 	.Tabs-module_tab {
 		transition: none;
@@ -2753,7 +2687,6 @@ textarea.TextField-module_input {
  * Small pixelated corner (1-2px chamfer)
  * Used for buttons, checkboxes, and small UI elements
  */
-
 .Window-module_pixelated-corner-sm {
 	/* Clip the actual corners */
 	clip-path: polygon(
@@ -2779,7 +2712,6 @@ textarea.TextField-module_input {
  * Medium pixelated corner (3-4px chamfer)
  * Used for dialog boxes, windows, larger UI elements
  */
-
 .Window-module_pixelated-corner-md {
 	clip-path: polygon(
 		/* Top-left corner */
@@ -2816,7 +2748,6 @@ textarea.TextField-module_input {
  * Alternative technique using pseudo-elements
  * Better browser compatibility but more complex
   */
-
 .Window-module_pixelated-corner-pseudo::before,
 .Window-module_pixelated-corner-pseudo::after {
 	content: '';
@@ -2825,7 +2756,6 @@ textarea.TextField-module_input {
 }
 
 /* Top corners */
-
 .Window-module_pixelated-corner-pseudo::before {
 	top: 0;
 	left: 2px;
@@ -2838,7 +2768,6 @@ textarea.TextField-module_input {
 }
 
 /* Bottom corners */
-
 .Window-module_pixelated-corner-pseudo::after {
 	bottom: 0;
 	left: 2px;
@@ -2860,7 +2789,6 @@ textarea.TextField-module_input {
  * 
  * Usage: Apply to element with background color
  */
-
 .Window-module_mac-corner {
 	position: relative;
 	/* Create notched corners effect */
@@ -2868,7 +2796,6 @@ textarea.TextField-module_input {
 }
 
 /* Top-left notch */
-
 .Window-module_mac-corner::before {
 	content: '';
 	position: absolute;
@@ -2883,7 +2810,6 @@ textarea.TextField-module_input {
 }
 
 /* Top-right notch */
-
 .Window-module_mac-corner::after {
 	content: '';
 	position: absolute;
@@ -2905,7 +2831,6 @@ textarea.TextField-module_input {
  * Creates simple chamfered (cut) corners
  * Lightweight alternative to full pixelated effect
  */
-
 .Window-module_chamfered-sm {
 	clip-path: polygon(
 		2px 0,
@@ -2941,7 +2866,6 @@ textarea.TextField-module_input {
  * Tab with pixelated top corners only
  * Bottom remains flat for connection to content
  */
-
 .Window-module_tab-corner {
 	position: relative;
 	clip-path: polygon(
@@ -2966,7 +2890,6 @@ textarea.TextField-module_input {
 /**
  * Button with all rounded pixelated corners
  */
-
 .Window-module_button-corner {
 	clip-path: polygon(
 		/* Top edge with corners */
@@ -3094,17 +3017,14 @@ textarea.TextField-module_input {
 	position: relative;
 
 }
-
 .Window-module_titleBar[data-num-controls="3"] .Window-module_titleCenter > :first-child{
 	width: calc(100% - (48px + var(--spacing-2)));
 	margin-left: calc(48px + var(--spacing-2));
 }
-
 .Window-module_titleBar[data-num-controls="2"] .Window-module_titleCenter> :first-child {
 	width: calc(100% - (36px + var(--spacing-2)));
 	margin-left: calc(36px + var(--spacing-2));
 }
-
 .Window-module_titleBar[data-num-controls="1"] .Window-module_titleCenter> :first-child {
 	width: calc(100% - (24px));
 	margin-left: calc(24px);
@@ -3116,13 +3036,10 @@ textarea.TextField-module_input {
 	width: 100%;
 	grid-template-columns: 1fr max-content 1fr;
 }
-
 .Window-module_titleCenter svg{
 	width: 100%;
 }
-
 /* Header striped lines - left side */
-
 .Window-module_titleBar::before {
 	content: '';
 	left: 60px;
@@ -3146,7 +3063,6 @@ textarea.TextField-module_input {
 }
 
 /* Header striped lines - right side */
-
 .Window-module_titleBar::after {
 	content: '';
 	right: 8px;
@@ -3173,7 +3089,6 @@ textarea.TextField-module_input {
 }
 
 /* Title Bar Draggable States */
-
 .Window-module_titleBar--draggable {
 	/* Draggable title bar - show grab cursor */
 	cursor: grab;
@@ -3244,7 +3159,6 @@ textarea.TextField-module_input {
 }
 
 /* Control button visual indicators */
-
 .Window-module_closeBox,
 .Window-module_minimizeBox,
 .Window-module_maximizeBox {
@@ -3254,7 +3168,6 @@ textarea.TextField-module_input {
 }
 
 /* Close button: X pattern */
-
 .Window-module_closeBox::before,
 .Window-module_closeBox::after {
 	content: '';
@@ -3275,7 +3188,6 @@ textarea.TextField-module_input {
 } */
 
 /* Minimize button: dash */
-
 .Window-module_minimizeBox::before {
 	content: '';
 	position: absolute;
@@ -3288,7 +3200,6 @@ textarea.TextField-module_input {
 }
 
 /* Maximize button: small square */
-
 .Window-module_maximizeBox::before {
 	content: '';
 	position: absolute;
@@ -3405,7 +3316,6 @@ textarea.TextField-module_input {
  * ======================================== */
 
 /* High contrast mode */
-
 @media (prefers-contrast: high) {
 	.Window-module_window {
 		border-width: 2px;
@@ -3417,7 +3327,6 @@ textarea.TextField-module_input {
 }
 
 /* Reduced motion */
-
 @media (prefers-reduced-motion: reduce) {
 	.Window-module_controlButton {
 		transition: none;
@@ -3478,7 +3387,6 @@ textarea.TextField-module_input {
  * ======================================== */
 
 /* Reduced motion */
-
 @media (prefers-reduced-motion: reduce) {
 	.Dialog-module_dialogContainer {
 		animation: none;
@@ -3650,7 +3558,6 @@ textarea.TextField-module_input {
  * ======================================== */
 
 /* When menu item is hovered, change text color of all children */
-
 .MenuItem-module_menuItem:hover:not(.MenuItem-module_menuItem--disabled) .MenuItem-module_checkmark,
 .MenuItem-module_menuItem:hover:not(.MenuItem-module_menuItem--disabled) .MenuItem-module_icon,
 .MenuItem-module_menuItem:hover:not(.MenuItem-module_menuItem--disabled) .MenuItem-module_label,
@@ -3660,7 +3567,6 @@ textarea.TextField-module_input {
 }
 
 /* When menu item is selected, change text color of all children */
-
 .MenuItem-module_menuItem--selected .MenuItem-module_checkmark,
 .MenuItem-module_menuItem--selected .MenuItem-module_icon,
 .MenuItem-module_menuItem--selected .MenuItem-module_label,
@@ -3674,7 +3580,6 @@ textarea.TextField-module_input {
  * ======================================== */
 
 /* High contrast mode */
-
 @media (prefers-contrast: high) {
 	.MenuItem-module_menuItem:hover:not(.MenuItem-module_menuItem--disabled) {
 		outline: 2px solid currentColor;
@@ -3683,7 +3588,6 @@ textarea.TextField-module_input {
 }
 
 /* Reduced motion */
-
 @media (prefers-reduced-motion: reduce) {
 	.MenuItem-module_menuItem {
 		transition: none;
@@ -3909,7 +3813,6 @@ textarea.TextField-module_input {
  * ======================================== */
 
 /* High contrast mode */
-
 @media (prefers-contrast: high) {
 	.MenuBar-module_menuBar {
 		border-width: 2px;
@@ -3927,7 +3830,6 @@ textarea.TextField-module_input {
 }
 
 /* Reduced motion */
-
 @media (prefers-reduced-motion: reduce) {
 	.MenuBar-module_menuButton {
 		transition: none;
@@ -3969,7 +3871,6 @@ textarea.TextField-module_input {
 }
 
 /* Disabled state */
-
 .Scrollbar-module_scrollbar--disabled {
 	opacity: 0.5;
 	cursor: not-allowed;
@@ -4011,7 +3912,6 @@ textarea.TextField-module_input {
 }
 
 /* Arrow states */
-
 .Scrollbar-module_arrow:hover:not(:disabled) {
 	background: var(--color-gray-300);
 }
@@ -4027,7 +3927,6 @@ textarea.TextField-module_input {
 }
 
 /* Arrow icons */
-
 .Scrollbar-module_arrowIcon {
 	width: 0;
 	height: 0;
@@ -4035,7 +3934,6 @@ textarea.TextField-module_input {
 }
 
 /* Vertical scrollbar arrows */
-
 .Scrollbar-module_scrollbar--vertical .Scrollbar-module_arrow--start .Scrollbar-module_arrowIcon {
 	/* Up arrow */
 	border-width: 0 3px 4px 3px;
@@ -4049,7 +3947,6 @@ textarea.TextField-module_input {
 }
 
 /* Horizontal scrollbar arrows */
-
 .Scrollbar-module_scrollbar--horizontal .Scrollbar-module_arrow--start .Scrollbar-module_arrowIcon {
 	/* Left arrow */
 	border-width: 3px 4px 3px 0;
@@ -4113,7 +4010,6 @@ textarea.TextField-module_input {
 }
 
 /* Vertical thumb */
-
 .Scrollbar-module_scrollbar--vertical .Scrollbar-module_thumb {
 	left: 0;
 	right: 0;
@@ -4121,7 +4017,6 @@ textarea.TextField-module_input {
 }
 
 /* Horizontal thumb */
-
 .Scrollbar-module_scrollbar--horizontal .Scrollbar-module_thumb {
 	top: 0;
 	bottom: 0;
@@ -4133,14 +4028,12 @@ textarea.TextField-module_input {
  * ======================================== */
 
 /* Keyboard focus */
-
 .Scrollbar-module_arrow:focus-visible {
 	outline: 1px dotted var(--color-focus);
 	outline-offset: -2px;
 }
 
 /* Reduced motion support */
-
 @media (prefers-reduced-motion: reduce) {
 	.Scrollbar-module_thumb {
 		transition: none;
@@ -4148,7 +4041,6 @@ textarea.TextField-module_input {
 }
 
 /* High contrast mode support */
-
 @media (prefers-contrast: high) {
 	.Scrollbar-module_scrollbar {
 		border-width: 2px;
@@ -4326,14 +4218,12 @@ textarea.TextField-module_input {
  * ======================================== */
 
 /* Keyboard focus */
-
 .ListView-module_row:focus-visible {
 	outline: 1px dotted var(--color-focus);
 	outline-offset: -1px;
 }
 
 /* Reduced motion support */
-
 @media (prefers-reduced-motion: reduce) {
 	.ListView-module_row {
 		transition: none;
@@ -4341,7 +4231,6 @@ textarea.TextField-module_input {
 }
 
 /* High contrast mode support */
-
 @media (prefers-contrast: high) {
 	.ListView-module_listView {
 		border-width: 2px;

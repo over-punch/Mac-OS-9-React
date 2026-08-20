@@ -64,7 +64,6 @@ describe('Button', () => {
 		render(<Button disabled>Disabled</Button>);
 		const button = screen.getByRole('button');
 		expect(button).toBeDisabled();
-		expect(button).toHaveAttribute('aria-disabled', 'true');
 	});
 
 	it('renders with full width', () => {
@@ -162,10 +161,25 @@ describe('Button', () => {
 		expect(screen.getByRole('button')).toBeInTheDocument();
 	});
 
-	it('sets aria-disabled when disabled', () => {
+	it('relies on native disabled for a button, without a redundant aria-disabled', () => {
 		render(<Button disabled>Disabled Button</Button>);
 		const button = screen.getByRole('button');
-		expect(button).toHaveAttribute('aria-disabled', 'true');
+		// A native <button> with `disabled` is already out of the accessibility
+		// tree and the tab order. A second aria-disabled adds nothing and is
+		// one more piece of state that can drift out of sync.
+		expect(button).toBeDisabled();
+		expect(button).not.toHaveAttribute('aria-disabled');
+	});
+
+	it('uses aria-disabled for a link, which has no native disabled', () => {
+		render(
+			<Button as="a" href="/somewhere" disabled>
+				Disabled Link
+			</Button>
+		);
+		const link = screen.getByText('Disabled Link').closest('a');
+		expect(link).toHaveAttribute('aria-disabled', 'true');
+		expect(link).not.toHaveAttribute('href');
 	});
 
 	it('is keyboard focusable when enabled', () => {
