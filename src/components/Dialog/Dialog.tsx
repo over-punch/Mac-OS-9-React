@@ -16,9 +16,17 @@
 //  - Focus restore on close checks isConnected before calling .focus(),
 //    so a detached trigger doesn't silently fail focus management
 
-import React, { forwardRef, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, {
+	forwardRef,
+	useCallback,
+	useEffect,
+	useLayoutEffect,
+	useRef,
+	useState,
+} from 'react';
 import { createPortal } from 'react-dom';
 import { Window, type WindowProps } from '../Window/Window';
+import { mergeClasses } from '../../utils/classNames';
 import styles from './Dialog.module.css';
 
 /**
@@ -122,7 +130,7 @@ function isElementFocusable(el: HTMLElement): boolean {
 
 function getFocusables(root: HTMLElement): HTMLElement[] {
 	return Array.from(root.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter(
-		isElementFocusable,
+		isElementFocusable
 	);
 }
 
@@ -266,7 +274,7 @@ export const Dialog = forwardRef<HTMLDivElement, DialogProps>(
 			children,
 			...windowProps
 		},
-		ref,
+		ref
 	) => {
 		const dialogRef = useRef<HTMLDivElement>(null);
 		const previousActiveElement = useRef<HTMLElement | null>(null);
@@ -416,12 +424,12 @@ export const Dialog = forwardRef<HTMLDivElement, DialogProps>(
 					onClose?.();
 				}
 			},
-			[closeOnBackdropClick, onClose],
+			[closeOnBackdropClick, onClose]
 		);
 
 		if (!open) return null;
 
-		const backdropClassNames = [styles.backdrop, backdropClassName].filter(Boolean).join(' ');
+		const backdropClassNames = mergeClasses(styles.backdrop, backdropClassName);
 
 		const dialogTree = (
 			<div className={backdropClassNames} onClick={handleBackdropClick}>
@@ -448,7 +456,7 @@ export const Dialog = forwardRef<HTMLDivElement, DialogProps>(
 		// into; rendering null for that first pass keeps SSR output empty and
 		// matches what the client produces on hydration.
 		return portalTarget ? createPortal(dialogTree, portalTarget) : null;
-	},
+	}
 );
 
 Dialog.displayName = 'Dialog';

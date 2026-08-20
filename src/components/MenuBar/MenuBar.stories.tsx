@@ -19,45 +19,51 @@ type Story = StoryObj<typeof meta>;
 
 // Simple logo component for examples
 const Logo = () => (
-	<div style={{
-		width: '16px',
-		height: '16px',
-		backgroundColor: '#000',
-		borderRadius: '2px',
-		display: 'flex',
-		alignItems: 'center',
-		justifyContent: 'center',
-		color: '#fff',
-		fontSize: '10px',
-		fontWeight: 'bold'
-	}}>
-
-	</div>
+	<div
+		style={{
+			width: '16px',
+			height: '16px',
+			backgroundColor: '#000',
+			borderRadius: '2px',
+			display: 'flex',
+			alignItems: 'center',
+			justifyContent: 'center',
+			color: '#fff',
+			fontSize: '10px',
+			fontWeight: 'bold',
+		}}
+	></div>
 );
 
 // Simple divider component for examples
 const Divider = () => (
-	<div style={{
-		width: '1px',
-		height: '16px',
-		backgroundColor: '#999',
-		alignSelf: 'center'
-	}} />
+	<div
+		style={{
+			width: '1px',
+			height: '16px',
+			backgroundColor: '#999',
+			alignSelf: 'center',
+		}}
+	/>
 );
 
 // Simple clock component for examples
 const Clock = () => {
-	const [time, setTime] = useState(new Date().toLocaleTimeString('en-US', {
-		hour: 'numeric',
-		minute: '2-digit'
-	}));
+	const [time, setTime] = useState(
+		new Date().toLocaleTimeString('en-US', {
+			hour: 'numeric',
+			minute: '2-digit',
+		})
+	);
 
 	useEffect(() => {
 		const timer = setInterval(() => {
-			setTime(new Date().toLocaleTimeString('en-US', {
-				hour: 'numeric',
-				minute: '2-digit'
-			}));
+			setTime(
+				new Date().toLocaleTimeString('en-US', {
+					hour: 'numeric',
+					minute: '2-digit',
+				})
+			);
 		}, 1000);
 		return () => clearInterval(timer);
 	}, []);
@@ -238,7 +244,12 @@ export const WithDisabledItems: Story = {
 								<>
 									<MenuItem label="Undo" disabled shortcut="⌘Z" />
 									<MenuItem label="Redo" disabled shortcut="⇧⌘Z" />
-									<MenuItem separator label="Cut" shortcut="⌘X" onClick={() => console.log('Cut')} />
+									<MenuItem
+										separator
+										label="Cut"
+										shortcut="⌘X"
+										onClick={() => console.log('Cut')}
+									/>
 									<MenuItem label="Copy" shortcut="⌘C" onClick={() => console.log('Copy')} />
 									<MenuItem label="Paste" disabled shortcut="⌘V" />
 								</>
@@ -302,29 +313,44 @@ export const WithSubmenus: Story = {
 							label: 'File',
 							items: (
 								<>
-									<MenuItem 
+									<MenuItem
 										label="New"
 										items={
 											<>
 												<MenuItem label="Text Document" onClick={() => console.log('New Text')} />
-												<MenuItem label="Spreadsheet" onClick={() => console.log('New Spreadsheet')} />
-												<MenuItem label="Presentation" onClick={() => console.log('New Presentation')} />
+												<MenuItem
+													label="Spreadsheet"
+													onClick={() => console.log('New Spreadsheet')}
+												/>
+												<MenuItem
+													label="Presentation"
+													onClick={() => console.log('New Presentation')}
+												/>
 											</>
 										}
 									/>
-									<MenuItem 
+									<MenuItem
 										label="Open Recent"
 										items={
 											<>
 												<MenuItem label="Project A" onClick={() => console.log('Open Project A')} />
 												<MenuItem label="Project B" onClick={() => console.log('Open Project B')} />
 												<MenuItem label="Project C" onClick={() => console.log('Open Project C')} />
-												<MenuItem separator label="Clear Recent" onClick={() => console.log('Clear')} />
+												<MenuItem
+													separator
+													label="Clear Recent"
+													onClick={() => console.log('Clear')}
+												/>
 											</>
 										}
 									/>
-									<MenuItem separator label="Save" shortcut="⌘S" onClick={() => console.log('Save')} />
-									<MenuItem 
+									<MenuItem
+										separator
+										label="Save"
+										shortcut="⌘S"
+										onClick={() => console.log('Save')}
+									/>
+									<MenuItem
 										label="Export"
 										items={
 											<>
@@ -343,16 +369,24 @@ export const WithSubmenus: Story = {
 								<>
 									<MenuItem label="Undo" shortcut="⌘Z" onClick={() => console.log('Undo')} />
 									<MenuItem label="Redo" shortcut="⇧⌘Z" onClick={() => console.log('Redo')} />
-									<MenuItem separator label="Cut" shortcut="⌘X" onClick={() => console.log('Cut')} />
+									<MenuItem
+										separator
+										label="Cut"
+										shortcut="⌘X"
+										onClick={() => console.log('Cut')}
+									/>
 									<MenuItem label="Copy" shortcut="⌘C" onClick={() => console.log('Copy')} />
 									<MenuItem label="Paste" shortcut="⌘V" onClick={() => console.log('Paste')} />
-									<MenuItem 
+									<MenuItem
 										separator
 										label="Transform"
 										items={
 											<>
 												<MenuItem label="Rotate 90° CW" onClick={() => console.log('Rotate CW')} />
-												<MenuItem label="Rotate 90° CCW" onClick={() => console.log('Rotate CCW')} />
+												<MenuItem
+													label="Rotate 90° CCW"
+													onClick={() => console.log('Rotate CCW')}
+												/>
 												<MenuItem label="Flip Horizontal" onClick={() => console.log('Flip H')} />
 												<MenuItem label="Flip Vertical" onClick={() => console.log('Flip V')} />
 											</>
@@ -437,7 +471,9 @@ export const WithStatusArea: Story = {
 					rightContent={[
 						<Clock key="clock" />,
 						<Divider key="divider" />,
-						<div key="finder" style={{ fontSize: '12px', fontWeight: 'bold' }}>Finder</div>,
+						<div key="finder" style={{ fontSize: '12px', fontWeight: 'bold' }}>
+							Finder
+						</div>,
 					]}
 				/>
 			</div>
@@ -514,7 +550,7 @@ export const MacOS9Style: Story = {
 							label: 'File',
 							items: (
 								<>
-									<MenuItem 
+									<MenuItem
 										label="New"
 										shortcut="⌘N"
 										items={
@@ -537,9 +573,9 @@ export const MacOS9Style: Story = {
 								<>
 									<MenuItem label="Undo" disabled shortcut="⌘Z" />
 									<MenuItem label="Redo" disabled shortcut="⇧⌘Z" />
-									<MenuItem separator label="Cut" shortcut="⌘X" onClick={() => { }} />
-									<MenuItem label="Copy" shortcut="⌘C" onClick={() => { }} />
-									<MenuItem label="Paste" shortcut="⌘V" onClick={() => { }} />
+									<MenuItem separator label="Cut" shortcut="⌘X" onClick={() => {}} />
+									<MenuItem label="Copy" shortcut="⌘C" onClick={() => {}} />
+									<MenuItem label="Paste" shortcut="⌘V" onClick={() => {}} />
 								</>
 							),
 						},
@@ -547,9 +583,9 @@ export const MacOS9Style: Story = {
 							label: 'View',
 							items: (
 								<>
-									<MenuItem label="Zoom In" shortcut="⌘+" onClick={() => { }} />
-									<MenuItem label="Zoom Out" shortcut="⌘-" onClick={() => { }} />
-									<MenuItem label="Actual Size" shortcut="⌘0" onClick={() => { }} />
+									<MenuItem label="Zoom In" shortcut="⌘+" onClick={() => {}} />
+									<MenuItem label="Zoom Out" shortcut="⌘-" onClick={() => {}} />
+									<MenuItem label="Actual Size" shortcut="⌘0" onClick={() => {}} />
 								</>
 							),
 						},
@@ -557,7 +593,9 @@ export const MacOS9Style: Story = {
 					rightContent={[
 						<Clock key="clock" />,
 						<Divider key="divider" />,
-						<div key="finder" style={{ fontSize: '12px', fontWeight: 'bold' }}>Finder</div>,
+						<div key="finder" style={{ fontSize: '12px', fontWeight: 'bold' }}>
+							Finder
+						</div>,
 					]}
 				/>
 			</div>

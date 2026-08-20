@@ -26,7 +26,7 @@ export const Alert: Story = {
 	args: { children: <></> },
 	render: () => {
 		const [open, setOpen] = useState(false);
-		
+
 		return (
 			<>
 				<Button onClick={() => setOpen(true)}>Show Alert</Button>
@@ -58,7 +58,7 @@ export const Confirm: Story = {
 	args: { children: <></> },
 	render: () => {
 		const [open, setOpen] = useState(false);
-		
+
 		return (
 			<>
 				<Button onClick={() => setOpen(true)}>Show Confirmation</Button>
@@ -72,9 +72,13 @@ export const Confirm: Story = {
 					<div style={{ textAlign: 'center' }}>
 						<p>Are you sure you want to delete this file?</p>
 						<p style={{ fontSize: '12px', color: '#666' }}>This action cannot be undone.</p>
-						<div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginTop: '24px' }}>
+						<div
+							style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginTop: '24px' }}
+						>
 							<Button onClick={() => setOpen(false)}>Cancel</Button>
-							<Button variant="danger" onClick={() => setOpen(false)}>Delete</Button>
+							<Button variant="danger" onClick={() => setOpen(false)}>
+								Delete
+							</Button>
 						</div>
 					</div>
 				</Dialog>
@@ -90,16 +94,11 @@ export const WithCloseButton: Story = {
 	args: { children: <></> },
 	render: () => {
 		const [open, setOpen] = useState(false);
-		
+
 		return (
 			<>
 				<Button onClick={() => setOpen(true)}>Show Dialog</Button>
-				<Dialog
-					open={open}
-					onClose={() => setOpen(false)}
-					title="Document Properties"
-					width={400}
-				>
+				<Dialog open={open} onClose={() => setOpen(false)} title="Document Properties" width={400}>
 					<div>
 						<p>Window with close button in the titlebar.</p>
 						<p>Click the X button or press Escape to close.</p>
@@ -117,25 +116,24 @@ export const FormDialog: Story = {
 	args: { children: <></> },
 	render: () => {
 		const [open, setOpen] = useState(false);
-		
+
 		return (
 			<>
 				<Button onClick={() => setOpen(true)}>Show Form</Button>
-				<Dialog
-					open={open}
-					onClose={() => setOpen(false)}
-					title="User Preferences"
-					width={450}
-				>
+				<Dialog open={open} onClose={() => setOpen(false)} title="User Preferences" width={450}>
 					<div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
 						<TextField label="Name" defaultValue="User" />
 						<TextField label="Email" defaultValue="user@example.com" />
 						<Checkbox label="Enable notifications" defaultChecked />
 						<Checkbox label="Auto-save documents" />
 						<Checkbox label="Show line numbers" />
-						<div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '8px' }}>
+						<div
+							style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', marginTop: '8px' }}
+						>
 							<Button onClick={() => setOpen(false)}>Cancel</Button>
-							<Button variant="primary" onClick={() => setOpen(false)}>Save</Button>
+							<Button variant="primary" onClick={() => setOpen(false)}>
+								Save
+							</Button>
 						</div>
 					</div>
 				</Dialog>
@@ -151,7 +149,7 @@ export const NoBackdropClose: Story = {
 	args: { children: <></> },
 	render: () => {
 		const [open, setOpen] = useState(false);
-		
+
 		return (
 			<>
 				<Button onClick={() => setOpen(true)}>Show Dialog</Button>
@@ -185,7 +183,7 @@ export const NoEscapeClose: Story = {
 	args: { children: <></> },
 	render: () => {
 		const [open, setOpen] = useState(false);
-		
+
 		return (
 			<>
 				<Button onClick={() => setOpen(true)}>Show Dialog</Button>
@@ -200,7 +198,9 @@ export const NoEscapeClose: Story = {
 					<div>
 						<p>Pressing Escape won’t close this dialog.</p>
 						<p>You must click a button.</p>
-						<div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginTop: '16px' }}>
+						<div
+							style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginTop: '16px' }}
+						>
 							<Button onClick={() => setOpen(false)}>Cancel</Button>
 							<Button variant="primary" onClick={() => setOpen(false)}>
 								Confirm
@@ -220,7 +220,7 @@ export const SaveChanges: Story = {
 	args: { children: <></> },
 	render: () => {
 		const [open, setOpen] = useState(false);
-		
+
 		return (
 			<>
 				<Button onClick={() => setOpen(true)}>Quit Application</Button>
@@ -234,10 +234,14 @@ export const SaveChanges: Story = {
 					<div style={{ textAlign: 'center' }}>
 						<p>You have unsaved changes.</p>
 						<p>Do you want to save before quitting?</p>
-						<div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginTop: '24px' }}>
+						<div
+							style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginTop: '24px' }}
+						>
 							<Button onClick={() => setOpen(false)}>Cancel</Button>
 							<Button onClick={() => setOpen(false)}>Don’t Save</Button>
-							<Button variant="primary" onClick={() => setOpen(false)}>Save</Button>
+							<Button variant="primary" onClick={() => setOpen(false)}>
+								Save
+							</Button>
 						</div>
 					</div>
 				</Dialog>
@@ -253,7 +257,7 @@ export const Error: Story = {
 	args: { children: <></> },
 	render: () => {
 		const [open, setOpen] = useState(false);
-		
+
 		return (
 			<>
 				<Button onClick={() => setOpen(true)}>Show Error</Button>
@@ -265,8 +269,18 @@ export const Error: Story = {
 					showControls={false}
 				>
 					<div>
-						<p><strong>An error occurred:</strong></p>
-						<p style={{ fontSize: '12px', fontFamily: 'monospace', background: '#f5f5f5', padding: '8px', margin: '8px 0' }}>
+						<p>
+							<strong>An error occurred:</strong>
+						</p>
+						<p
+							style={{
+								fontSize: '12px',
+								fontFamily: 'monospace',
+								background: '#f5f5f5',
+								padding: '8px',
+								margin: '8px 0',
+							}}
+						>
 							File not found: /Users/Documents/file.txt
 						</p>
 						<p>Please check the file path and try again.</p>
@@ -289,7 +303,7 @@ export const LongContent: Story = {
 	args: { children: <></> },
 	render: () => {
 		const [open, setOpen] = useState(false);
-		
+
 		return (
 			<>
 				<Button onClick={() => setOpen(true)}>Show Long Content</Button>
@@ -302,12 +316,30 @@ export const LongContent: Story = {
 				>
 					<div>
 						<h3>Software License Agreement</h3>
-						<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
-						<p>Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-						<p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
-						<p>Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
-						<p>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium.</p>
-						<p>Totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.</p>
+						<p>
+							Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor
+							incididunt ut labore et dolore magna aliqua.
+						</p>
+						<p>
+							Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex
+							ea commodo consequat.
+						</p>
+						<p>
+							Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat
+							nulla pariatur.
+						</p>
+						<p>
+							Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt
+							mollit anim id est laborum.
+						</p>
+						<p>
+							Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque
+							laudantium.
+						</p>
+						<p>
+							Totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto
+							beatae vitae dicta sunt explicabo.
+						</p>
 						<p>Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit.</p>
 						<div style={{ marginTop: '16px', textAlign: 'right' }}>
 							<Button variant="primary" onClick={() => setOpen(false)}>
@@ -329,7 +361,7 @@ export const StackedDialogs: Story = {
 	render: () => {
 		const [firstOpen, setFirstOpen] = useState(false);
 		const [secondOpen, setSecondOpen] = useState(false);
-		
+
 		return (
 			<>
 				<Button onClick={() => setFirstOpen(true)}>Open First Dialog</Button>

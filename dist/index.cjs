@@ -68,6 +68,49 @@ function sanitizeUrl(href) {
     return undefined;
 }
 
+// Utility for merging CSS class names
+// Filters out falsy values and joins valid class names with spaces
+/**
+ * Merges multiple class names into a single string.
+ *
+ * Keeps only non-empty strings. A plain `.filter(Boolean)` would keep a
+ * truthy number too, so `mergeClasses(styles.row, itemCount)` would have
+ * emitted `class="row 5"`; here the number is dropped.
+ *
+ * @param classes - Class names to merge
+ * @returns Merged class name string
+ *
+ * @example
+ * ```ts
+ * mergeClasses('base', isActive && 'active', undefined, 'custom')
+ * // Returns: "base active custom"
+ * ```
+ */
+const mergeClasses = (...classes) => {
+    return classes
+        .filter((value) => typeof value === 'string' && value !== '')
+        .join(' ');
+};
+/**
+ * Creates a class name builder function with a base class
+ * Useful for component-level class management
+ *
+ * @param baseClass - Base class name
+ * @returns Function that merges additional classes with base
+ *
+ * @example
+ * ```ts
+ * const cn = createClassBuilder('button');
+ * cn('primary', isDisabled && 'disabled')
+ * // Returns: "button primary disabled"
+ * ```
+ */
+const createClassBuilder = (baseClass) => {
+    return (...additionalClasses) => {
+        return mergeClasses(baseClass, ...additionalClasses);
+    };
+};
+
 var styles$e = {"button":"Button-module_button","button--sm":"Button-module_button--sm","button--md":"Button-module_button--md","button--lg":"Button-module_button--lg","button--default":"Button-module_button--default","button--primary":"Button-module_button--primary","button--danger":"Button-module_button--danger","button--disabled":"Button-module_button--disabled","button--full-width":"Button-module_button--full-width","button--loading":"Button-module_button--loading","button--cursor-loading":"Button-module_button--cursor-loading","button__loading-spinner":"Button-module_button__loading-spinner","button__text":"Button-module_button__text","button__icon-left":"Button-module_button__icon-left","button__icon-right":"Button-module_button__icon-right","button__icon-only":"Button-module_button__icon-only","button--icon-only":"Button-module_button--icon-only"};
 
 /**
@@ -131,20 +174,7 @@ const ButtonImpl = React.forwardRef((props, ref) => {
     // Determine if rendering as link
     const isLink = props.as === 'a';
     // Build class names
-    const classNames = [
-        styles$e.button,
-        styles$e[`button--${variant}`],
-        styles$e[`button--${size}`],
-        fullWidth && styles$e['button--full-width'],
-        disabled && styles$e['button--disabled'],
-        loading && styles$e['button--loading'],
-        loading && useCursorLoading && styles$e['button--cursor-loading'],
-        iconOnly && styles$e['button--icon-only'],
-        (leftIcon || rightIcon) && styles$e['button--with-icon'],
-        className,
-    ]
-        .filter(Boolean)
-        .join(' ');
+    const classNames = mergeClasses(styles$e.button, styles$e[`button--${variant}`], styles$e[`button--${size}`], fullWidth && styles$e['button--full-width'], disabled && styles$e['button--disabled'], loading && styles$e['button--loading'], loading && useCursorLoading && styles$e['button--cursor-loading'], iconOnly && styles$e['button--icon-only'], (leftIcon || rightIcon) && styles$e['button--with-icon'], className);
     // Shared ARIA. These are spread AFTER the caller's remaining props so a
     // stray `aria-disabled`/`aria-busy` in the rest props can't contradict the
     // component's own `disabled`/`loading` state.
@@ -199,7 +229,7 @@ const ButtonImpl = React.forwardRef((props, ref) => {
             ...domProps,
             ...sharedAria,
             ref,
-            className: [classNames, childProps.className].filter(Boolean).join(' '),
+            className: mergeClasses(classNames, childProps.className),
             onClick: (event) => {
                 if (disabled || loading) {
                     event.preventDefault();
@@ -260,9 +290,7 @@ var styles$d = {"icon":"Icon-module_icon","icon--xs":"Icon-module_icon--xs","ico
  * ```
  */
 const Icon = React.forwardRef(({ size = 'md', children, label, className = '', ...props }, ref) => {
-    const classNames = [styles$d.icon, styles$d[`icon--${size}`], className]
-        .filter(Boolean)
-        .join(' ');
+    const classNames = mergeClasses(styles$d.icon, styles$d[`icon--${size}`], className);
     return (jsxRuntime.jsx("svg", { ref: ref, className: classNames, viewBox: "0 0 24 24", fill: "currentColor", xmlns: "http://www.w3.org/2000/svg", "aria-label": label, "aria-hidden": !label, role: label ? 'img' : 'presentation', ...props, children: children }));
 });
 Icon.displayName = 'Icon';
@@ -1188,17 +1216,7 @@ var styles$c = {"pixelated-corner-sm":"IconButton-module_pixelated-corner-sm","p
  */
 const IconButton = React.forwardRef(({ icon, label, labelPosition = 'right', variant = 'default', size = 'md', disabled = false, className = '', ...props }, ref) => {
     // Build class names
-    const classNames = [
-        styles$c.iconButton,
-        styles$c[`iconButton--${variant}`],
-        styles$c[`iconButton--${size}`],
-        label && styles$c['iconButton--with-label'],
-        label && styles$c[`iconButton--label-${labelPosition}`],
-        disabled && styles$c['iconButton--disabled'],
-        className,
-    ]
-        .filter(Boolean)
-        .join(' ');
+    const classNames = mergeClasses(styles$c.iconButton, styles$c[`iconButton--${variant}`], styles$c[`iconButton--${size}`], label && styles$c['iconButton--with-label'], label && styles$c[`iconButton--label-${labelPosition}`], disabled && styles$c['iconButton--disabled'], className);
     return (jsxRuntime.jsxs("button", { ref: ref, type: "button", className: classNames, disabled: disabled, ...props, children: [label && (labelPosition === 'left' || labelPosition === 'top') && (jsxRuntime.jsx("span", { className: styles$c.label, children: label })), jsxRuntime.jsx("span", { className: styles$c.icon, children: icon }), label && (labelPosition === 'right' || labelPosition === 'bottom') && (jsxRuntime.jsx("span", { className: styles$c.label, children: label }))] }));
 });
 IconButton.displayName = 'IconButton';
@@ -1255,25 +1273,9 @@ const Checkbox = React.forwardRef(({ checked, defaultChecked, indeterminate = fa
     const generatedId = React.useId();
     const checkboxId = id ?? generatedId;
     // Build class names
-    const wrapperClassNames = [
-        styles$b.wrapper,
-        styles$b[`wrapper--${size}`],
-        styles$b[`wrapper--label-${labelPosition}`],
-        disabled && styles$b['wrapper--disabled'],
-        error && styles$b['wrapper--error'],
-        className,
-    ]
-        .filter(Boolean)
-        .join(' ');
-    const checkboxClassNames = [
-        styles$b.checkbox,
-        styles$b[`checkbox--${size}`],
-        indeterminate && styles$b['checkbox--indeterminate'],
-        error && styles$b['checkbox--error'],
-    ]
-        .filter(Boolean)
-        .join(' ');
-    const labelClassNames = [styles$b.label, styles$b[`label--${size}`]].filter(Boolean).join(' ');
+    const wrapperClassNames = mergeClasses(styles$b.wrapper, styles$b[`wrapper--${size}`], styles$b[`wrapper--label-${labelPosition}`], disabled && styles$b['wrapper--disabled'], error && styles$b['wrapper--error'], className);
+    const checkboxClassNames = mergeClasses(styles$b.checkbox, styles$b[`checkbox--${size}`], indeterminate && styles$b['checkbox--indeterminate'], error && styles$b['checkbox--error']);
+    const labelClassNames = mergeClasses(styles$b.label, styles$b[`label--${size}`]);
     // ARIA attributes
     //
     // Note: we deliberately do NOT set `aria-checked`. Per ARIA 1.2,
@@ -1330,24 +1332,9 @@ const Radio = React.forwardRef(({ checked, defaultChecked, disabled = false, lab
     const generatedId = React.useId();
     const radioId = id || generatedId;
     // Build class names
-    const wrapperClassNames = [
-        styles$a.wrapper,
-        styles$a[`wrapper--${size}`],
-        styles$a[`wrapper--label-${labelPosition}`],
-        resolvedDisabled && styles$a['wrapper--disabled'],
-        error && styles$a['wrapper--error'],
-        className,
-    ]
-        .filter(Boolean)
-        .join(' ');
-    const radioClassNames = [
-        styles$a.radio,
-        styles$a[`radio--${size}`],
-        error && styles$a['radio--error'],
-    ]
-        .filter(Boolean)
-        .join(' ');
-    const labelClassNames = [styles$a.label, styles$a[`label--${size}`]].filter(Boolean).join(' ');
+    const wrapperClassNames = mergeClasses(styles$a.wrapper, styles$a[`wrapper--${size}`], styles$a[`wrapper--label-${labelPosition}`], resolvedDisabled && styles$a['wrapper--disabled'], error && styles$a['wrapper--error'], className);
+    const radioClassNames = mergeClasses(styles$a.radio, styles$a[`radio--${size}`], error && styles$a['radio--error']);
+    const labelClassNames = mergeClasses(styles$a.label, styles$a[`label--${size}`]);
     // ARIA attributes
     const ariaAttributes = {
         'aria-label': !label ? ariaLabel : undefined,
@@ -1488,42 +1475,12 @@ const TextField = React.forwardRef(({ label, labelPosition = 'top', size = 'md',
     const helperId = `${inputId}-helper`;
     const errorId = `${inputId}-error`;
     // Combine aria-describedby
-    const describedByIds = [
-        helperText && helperId,
-        error && errorMessage && errorId,
-        ariaDescribedBy,
-    ]
-        .filter(Boolean)
-        .join(' ');
+    const describedByIds = mergeClasses(helperText && helperId, error && errorMessage && errorId, ariaDescribedBy);
     // Build class names
-    const wrapperClassNames = [
-        styles$9.wrapper,
-        styles$9[`wrapper--${size}`],
-        styles$9[`wrapper--label-${labelPosition}`],
-        fullWidth && styles$9['wrapper--full-width'],
-        disabled && styles$9['wrapper--disabled'],
-        wrapperClassName,
-    ]
-        .filter(Boolean)
-        .join(' ');
-    const inputWrapperClassNames = [
-        styles$9['input-wrapper'],
-        (leftIcon || rightIcon) && styles$9['input-wrapper--with-icon'],
-        leftIcon && styles$9['input-wrapper--with-left-icon'],
-        rightIcon && styles$9['input-wrapper--with-right-icon'],
-    ]
-        .filter(Boolean)
-        .join(' ');
-    const inputClassNames = [
-        styles$9.input,
-        styles$9[`input--${size}`],
-        error && styles$9['input--error'],
-        fullWidth && styles$9['input--full-width'],
-        className,
-    ]
-        .filter(Boolean)
-        .join(' ');
-    const labelClassNames = [styles$9.label, styles$9[`label--${size}`]].filter(Boolean).join(' ');
+    const wrapperClassNames = mergeClasses(styles$9.wrapper, styles$9[`wrapper--${size}`], styles$9[`wrapper--label-${labelPosition}`], fullWidth && styles$9['wrapper--full-width'], disabled && styles$9['wrapper--disabled'], wrapperClassName);
+    const inputWrapperClassNames = mergeClasses(styles$9['input-wrapper'], (leftIcon || rightIcon) && styles$9['input-wrapper--with-icon'], leftIcon && styles$9['input-wrapper--with-left-icon'], rightIcon && styles$9['input-wrapper--with-right-icon']);
+    const inputClassNames = mergeClasses(styles$9.input, styles$9[`input--${size}`], error && styles$9['input--error'], fullWidth && styles$9['input--full-width'], className);
+    const labelClassNames = mergeClasses(styles$9.label, styles$9[`label--${size}`]);
     // ARIA attributes
     const ariaAttributes = {
         'aria-label': !label ? ariaLabel : undefined,
@@ -1582,34 +1539,11 @@ const Select = React.forwardRef(({ label, labelPosition = 'top', size = 'md', fu
     const helperId = `${selectId}-helper`;
     const errorId = `${selectId}-error`;
     // Combine aria-describedby
-    const describedByIds = [
-        helperText && helperId,
-        error && errorMessage && errorId,
-        ariaDescribedBy,
-    ]
-        .filter(Boolean)
-        .join(' ');
+    const describedByIds = mergeClasses(helperText && helperId, error && errorMessage && errorId, ariaDescribedBy);
     // Build class names
-    const wrapperClassNames = [
-        styles$8.wrapper,
-        styles$8[`wrapper--${size}`],
-        styles$8[`wrapper--label-${labelPosition}`],
-        fullWidth && styles$8['wrapper--full-width'],
-        disabled && styles$8['wrapper--disabled'],
-        wrapperClassName,
-    ]
-        .filter(Boolean)
-        .join(' ');
-    const selectClassNames = [
-        styles$8.select,
-        styles$8[`select--${size}`],
-        error && styles$8['select--error'],
-        fullWidth && styles$8['select--full-width'],
-        className,
-    ]
-        .filter(Boolean)
-        .join(' ');
-    const labelClassNames = [styles$8.label, styles$8[`label--${size}`]].filter(Boolean).join(' ');
+    const wrapperClassNames = mergeClasses(styles$8.wrapper, styles$8[`wrapper--${size}`], styles$8[`wrapper--label-${labelPosition}`], fullWidth && styles$8['wrapper--full-width'], disabled && styles$8['wrapper--disabled'], wrapperClassName);
+    const selectClassNames = mergeClasses(styles$8.select, styles$8[`select--${size}`], error && styles$8['select--error'], fullWidth && styles$8['select--full-width'], className);
+    const labelClassNames = mergeClasses(styles$8.label, styles$8[`label--${size}`]);
     // ARIA attributes
     const ariaAttributes = {
         'aria-label': !label ? ariaLabel : undefined,
@@ -1747,34 +1681,13 @@ const Tabs = React.forwardRef(function Tabs({ children, defaultActiveTab = 0, ac
         handleTabChange(newIndex);
     }, [tabs, handleTabChange]);
     // Class names
-    const containerClassNames = [styles$7.container, className].filter(Boolean).join(' ');
-    const tabListClassNames = [
-        styles$7.tabList,
-        styles$7[`tabList--${size}`],
-        fullWidth && styles$7['tabList--full-width'],
-        tabListClassName,
-    ]
-        .filter(Boolean)
-        .join(' ');
-    const panelContainerClassNames = [
-        styles$7.panelContainer,
-        styles$7[`panelContainer--${size}`],
-        panelClassName,
-    ]
-        .filter(Boolean)
-        .join(' ');
+    const containerClassNames = mergeClasses(styles$7.container, className);
+    const tabListClassNames = mergeClasses(styles$7.tabList, styles$7[`tabList--${size}`], fullWidth && styles$7['tabList--full-width'], tabListClassName);
+    const panelContainerClassNames = mergeClasses(styles$7.panelContainer, styles$7[`panelContainer--${size}`], panelClassName);
     return (jsxRuntime.jsxs("div", { ref: ref, className: containerClassNames, children: [jsxRuntime.jsx("div", { role: "tablist", "aria-label": ariaLabelledBy ? undefined : ariaLabel, "aria-labelledby": ariaLabelledBy, className: tabListClassNames, children: tabs.map((tab, index) => {
                     const isActive = index === activeTabIndex;
                     const isDisabled = tab.props.disabled;
-                    const tabClassNames = [
-                        styles$7.tab,
-                        styles$7[`tab--${size}`],
-                        isActive && styles$7['tab--active'],
-                        isDisabled && styles$7['tab--disabled'],
-                        fullWidth && styles$7['tab--full-width'],
-                    ]
-                        .filter(Boolean)
-                        .join(' ');
+                    const tabClassNames = mergeClasses(styles$7.tab, styles$7[`tab--${size}`], isActive && styles$7['tab--active'], isDisabled && styles$7['tab--disabled'], fullWidth && styles$7['tab--full-width']);
                     return (jsxRuntime.jsxs("button", { role: "tab", type: "button", "aria-selected": isActive, "aria-controls": `${baseId}-panel-${index}`, id: `${baseId}-tab-${index}`, tabIndex: isActive ? 0 : -1, disabled: isDisabled, className: tabClassNames, onClick: () => handleTabChange(index), onKeyDown: (e) => handleKeyDown(e, index), children: [tab.props.icon && jsxRuntime.jsx("span", { className: styles$7.tabIcon, children: tab.props.icon }), tab.props.label] }, index));
                 }) }), tabs.map((tab, index) => {
                 const isActive = index === activeTabIndex;
@@ -1788,44 +1701,6 @@ const Tabs = React.forwardRef(function Tabs({ children, defaultActiveTab = 0, ac
             })] }));
 });
 Tabs.displayName = 'Tabs';
-
-// Utility for merging CSS class names
-// Filters out falsy values and joins valid class names with spaces
-/**
- * Merges multiple class names into a single string
- * Filters out undefined, null, false, and empty strings
- *
- * @param classes - Class names to merge
- * @returns Merged class name string
- *
- * @example
- * ```ts
- * mergeClasses('base', isActive && 'active', undefined, 'custom')
- * // Returns: "base active custom"
- * ```
- */
-const mergeClasses = (...classes) => {
-    return classes.filter(Boolean).join(' ');
-};
-/**
- * Creates a class name builder function with a base class
- * Useful for component-level class management
- *
- * @param baseClass - Base class name
- * @returns Function that merges additional classes with base
- *
- * @example
- * ```ts
- * const cn = createClassBuilder('button');
- * cn('primary', isDisabled && 'disabled')
- * // Returns: "button primary disabled"
- * ```
- */
-const createClassBuilder = (baseClass) => {
-    return (...additionalClasses) => {
-        return mergeClasses(baseClass, ...additionalClasses);
-    };
-};
 
 var styles$6 = {"window":"Window-module_window","window--active":"Window-module_window--active","window--inactive":"Window-module_window--inactive","window--draggable":"Window-module_window--draggable","titleBar":"Window-module_titleBar","titleCenter":"Window-module_titleCenter","titleBar--draggable":"Window-module_titleBar--draggable","titleBar--dragging":"Window-module_titleBar--dragging","controls":"Window-module_controls","controlButton":"Window-module_controlButton","closeBox":"Window-module_closeBox","minimizeBox":"Window-module_minimizeBox","maximizeBox":"Window-module_maximizeBox","titleText":"Window-module_titleText","content":"Window-module_content","resizeHandle":"Window-module_resizeHandle"};
 
@@ -1862,7 +1737,12 @@ function readParentMetrics(element) {
     const parent = element.offsetParent;
     if (parent) {
         const rect = parent.getBoundingClientRect();
-        return { left: rect.left, top: rect.top, width: parent.clientWidth, height: parent.clientHeight };
+        return {
+            left: rect.left,
+            top: rect.top,
+            width: parent.clientWidth,
+            height: parent.clientHeight,
+        };
     }
     const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : Number.POSITIVE_INFINITY;
     const viewportHeight = typeof window !== 'undefined' ? window.innerHeight : Number.POSITIVE_INFINITY;
@@ -2545,7 +2425,7 @@ const Dialog = React.forwardRef(({ open = false, onClose, closeOnBackdropClick =
     }, [closeOnBackdropClick, onClose]);
     if (!open)
         return null;
-    const backdropClassNames = [styles$5.backdrop, backdropClassName].filter(Boolean).join(' ');
+    const backdropClassNames = mergeClasses(styles$5.backdrop, backdropClassName);
     const dialogTree = (jsxRuntime.jsx("div", { className: backdropClassNames, onClick: handleBackdropClick, children: jsxRuntime.jsx("div", { className: styles$5.dialogContainer, ref: dialogRef, role: role, "aria-modal": "true", "aria-label": ariaLabelledBy ? undefined : resolvedAriaLabel, "aria-labelledby": ariaLabelledBy, "aria-describedby": ariaDescribedBy, children: jsxRuntime.jsx(Window, { ...windowProps, ref: ref, active: true, onClose: onClose, children: children }) }) }));
     // `container === null` opts out of portalling entirely.
     if (container === null)
@@ -2645,15 +2525,7 @@ const MenuItem = React.forwardRef(({ label, shortcut, keyShortcut, disabled = fa
             ref.current = node;
     }, [ref]);
     // Class names
-    const menuItemClassNames = [
-        styles$4.menuItem,
-        selected ? styles$4['menuItem--selected'] : '',
-        disabled ? styles$4['menuItem--disabled'] : '',
-        separator ? styles$4['menuItem--separator'] : '',
-        className,
-    ]
-        .filter(Boolean)
-        .join(' ');
+    const menuItemClassNames = mergeClasses(styles$4.menuItem, selected ? styles$4['menuItem--selected'] : '', disabled ? styles$4['menuItem--disabled'] : '', separator ? styles$4['menuItem--separator'] : '', className);
     // Handle click
     const handleClick = (event) => {
         if (disabled) {
@@ -2902,8 +2774,8 @@ const MenuBar = React.forwardRef(({ menus, openMenuIndex, defaultOpenMenuIndex, 
         }
     };
     // Class names
-    const menuBarClassNames = [styles$3.menuBar, className].filter(Boolean).join(' ');
-    const dropdownClassNames = [styles$3.dropdown, dropdownClassName].filter(Boolean).join(' ');
+    const menuBarClassNames = mergeClasses(styles$3.menuBar, className);
+    const dropdownClassNames = mergeClasses(styles$3.dropdown, dropdownClassName);
     // Callback ref to handle both internal state and forwarded ref
     const handleRef = React.useCallback((node) => {
         setMenuBarElement(node);
@@ -2922,13 +2794,7 @@ const MenuBar = React.forwardRef(({ menus, openMenuIndex, defaultOpenMenuIndex, 
                     const isOpen = activeOpenIndex === index;
                     const isDropdown = menu.type !== 'link';
                     const id = triggerId(index);
-                    const menuButtonClassNames = [
-                        styles$3.menuButton,
-                        isOpen ? styles$3['menuButton--open'] : '',
-                        menu.disabled ? styles$3['menuButton--disabled'] : '',
-                    ]
-                        .filter(Boolean)
-                        .join(' ');
+                    const menuButtonClassNames = mergeClasses(styles$3.menuButton, isOpen ? styles$3['menuButton--open'] : '', menu.disabled ? styles$3['menuButton--disabled'] : '');
                     // The label used to be an <h3>, which put a heading into the
                     // document outline for every menu — so a page with a menu bar
                     // announced "File, heading level 3" and polluted screen-reader
@@ -3066,7 +2932,10 @@ const MenuDropdown = React.forwardRef(({ label, items, disabled = false, classNa
         if (overflowBottom > 0) {
             const trigger = containerRef.current?.getBoundingClientRect();
             const spaceAbove = trigger ? trigger.top : 0;
-            y = rect.height + (trigger?.height ?? 0) <= spaceAbove ? -(rect.height + (trigger?.height ?? 0)) : -overflowBottom;
+            y =
+                rect.height + (trigger?.height ?? 0) <= spaceAbove
+                    ? -(rect.height + (trigger?.height ?? 0))
+                    : -overflowBottom;
         }
         setCollisionOffset(x === 0 && y === 0 ? null : { x, y });
     }, [isOpen, avoidCollisions, items]);
@@ -3075,21 +2944,9 @@ const MenuDropdown = React.forwardRef(({ label, items, disabled = false, classNa
             setIsOpen((open) => !open);
         }
     };
-    const menuContainerClassNames = [styles$3.menuContainer, className].filter(Boolean).join(' ');
-    const menuButtonClassNames = [
-        styles$3.menuButton,
-        isOpen ? styles$3['menuButton--open'] : '',
-        disabled ? styles$3['menuButton--disabled'] : '',
-    ]
-        .filter(Boolean)
-        .join(' ');
-    const dropdownClassNames = [
-        styles$3.dropdown,
-        align === 'right' ? styles$3['dropdown--right'] : '',
-        dropdownClassName,
-    ]
-        .filter(Boolean)
-        .join(' ');
+    const menuContainerClassNames = mergeClasses(styles$3.menuContainer, className);
+    const menuButtonClassNames = mergeClasses(styles$3.menuButton, isOpen ? styles$3['menuButton--open'] : '', disabled ? styles$3['menuButton--disabled'] : '');
+    const dropdownClassNames = mergeClasses(styles$3.dropdown, align === 'right' ? styles$3['dropdown--right'] : '', dropdownClassName);
     return (jsxRuntime.jsxs("div", { ref: setContainerRef, className: menuContainerClassNames, children: [jsxRuntime.jsx("button", { id: triggerId, type: "button", className: menuButtonClassNames, onClick: handleToggle, disabled: disabled, "aria-haspopup": "menu", "aria-expanded": isOpen, "aria-disabled": disabled, children: typeof label === 'string' ? jsxRuntime.jsx("span", { className: styles$3.menuLabel, children: label }) : label }), isOpen && (jsxRuntime.jsx("div", { ref: dropdownRef, className: dropdownClassNames, role: "menu", "aria-labelledby": triggerId, style: collisionOffset
                     ? { transform: `translate(${collisionOffset.x}px, ${collisionOffset.y}px)` }
                     : undefined, onClick: () => setIsOpen(false), children: items }))] }));
@@ -3143,14 +3000,7 @@ const Scrollbar = React.forwardRef(({ orientation = 'vertical', value = 0, viewp
     const maxThumbPos = 100 - thumbSize;
     const thumbPos = value * maxThumbPos;
     // Class names
-    const classNames = [
-        styles$2.scrollbar,
-        styles$2[`scrollbar--${orientation}`],
-        disabled && styles$2['scrollbar--disabled'],
-        className,
-    ]
-        .filter(Boolean)
-        .join(' ');
+    const classNames = mergeClasses(styles$2.scrollbar, styles$2[`scrollbar--${orientation}`], disabled && styles$2['scrollbar--disabled'], className);
     // Handle arrow clicks
     const handleDecrement = React.useCallback(() => commitValue(value - step), [commitValue, step, value]);
     const handleIncrement = React.useCallback(() => commitValue(value + step), [commitValue, step, value]);
@@ -3195,9 +3045,7 @@ const Scrollbar = React.forwardRef(({ orientation = 'vertical', value = 0, viewp
         if (disabled || !onChange || !trackRef.current)
             return;
         const rect = trackRef.current.getBoundingClientRect();
-        const clickPos = isVertical
-            ? event.clientY - rect.top
-            : event.clientX - rect.left;
+        const clickPos = isVertical ? event.clientY - rect.top : event.clientX - rect.left;
         const trackSize = isVertical ? rect.height : rect.width;
         // Convert click position to scroll value (0-1)
         const clickRatio = clickPos / trackSize;

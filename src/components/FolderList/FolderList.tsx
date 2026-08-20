@@ -8,7 +8,13 @@
 
 import React, { forwardRef } from 'react';
 import { Window, WindowProps } from '../Window/Window';
-import { ListView, ListColumn, ListItem, ListViewClasses, ListViewProps } from '../ListView/ListView';
+import {
+	ListView,
+	ListColumn,
+	ListItem,
+	ListViewClasses,
+	ListViewProps,
+} from '../ListView/ListView';
 import styles from './FolderList.module.css';
 
 /**
@@ -53,8 +59,7 @@ type ForwardedListViewProps<TItem extends ListItem> = Omit<
 >;
 
 export interface FolderListProps<TItem extends ListItem = ListItem>
-	extends Omit<WindowProps, 'children' | 'classes'>,
-		ForwardedListViewProps<TItem> {
+	extends Omit<WindowProps, 'children' | 'classes'>, ForwardedListViewProps<TItem> {
 	/**
 	 * Column definitions for the list
 	 * @default [{ key: 'name', label: 'Name' }, { key: 'modified', label: 'Date Modified' }, { key: 'size', label: 'Size' }]
@@ -86,10 +91,10 @@ const DEFAULT_COLUMNS: readonly ListColumn[] = [
 
 /**
  * Mac OS 9 style FolderList component
- * 
+ *
  * Window with integrated ListView for browsing files and folders.
  * Similar to Finder list view in Mac OS 9.
- * 
+ *
  * @example
  * ```tsx
  * // Basic folder list
@@ -103,7 +108,7 @@ const DEFAULT_COLUMNS: readonly ListColumn[] = [
  *   onSelectionChange={(ids) => console.log('Selected:', ids)}
  *   onItemOpen={(item) => console.log('Open:', item.name)}
  * />
- * 
+ *
  * // Draggable folder list
  * <FolderList
  *   title="My Documents"

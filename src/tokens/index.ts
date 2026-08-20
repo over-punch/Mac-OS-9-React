@@ -61,7 +61,7 @@ export const colors = {
 /**
  * Typography tokens
  * Based on Figma text styles and authentic Mac OS 9 system fonts
- * 
+ *
  * Mac OS 9 Typography:
  * - Charcoal: Primary system UI font (menus, buttons, dialogs)
  * - Geneva: Body text and secondary UI elements
@@ -98,40 +98,40 @@ export const typography = {
 	// base.css. The px comments are the rendered size at a 16px root.
 	fontSize: {
 		xs: '0.5625rem', // 9px  - smallest UI text
-		sm: '0.625rem',  // 10px - small labels
-		md: '0.75rem',   // 12px - standard UI text (Mac OS 9 default)
+		sm: '0.625rem', // 10px - small labels
+		md: '0.75rem', // 12px - standard UI text (Mac OS 9 default)
 		lg: '0.8125rem', // 13px - slightly larger UI text
-		xl: '0.875rem',  // 14px - large UI text
-		'2xl': '1rem',     // 16px - headings
+		xl: '0.875rem', // 14px - large UI text
+		'2xl': '1rem', // 16px - headings
 		'3xl': '1.125rem', // 18px - large headings
-		'4xl': '1.25rem',  // 20px - major headings
-		'5xl': '1.5rem',   // 24px - display text
+		'4xl': '1.25rem', // 20px - major headings
+		'5xl': '1.5rem', // 24px - display text
 	},
 	// The bundled Pixel family ships exactly two real weights, 400 and 700, in
 	// both roman and italic, so nothing here is ever synthesised by the browser.
 	// `normal` is 700 on purpose: Mac OS 9's Charcoal reads as bold, and
 	// matching it is the point of the library. Use `regular` for the 400 face.
 	fontWeight: {
-		regular: 400,  // Pixel Regular - the true 400 face
-		light: 400,    // Alias of regular; Pixel has no lighter face
-		normal: 700,   // Charcoal-like bold - Mac OS 9 UI default
-		medium: 700,   // No real 500 face; resolves to bold
+		regular: 400, // Pixel Regular - the true 400 face
+		light: 400, // Alias of regular; Pixel has no lighter face
+		normal: 700, // Charcoal-like bold - Mac OS 9 UI default
+		medium: 700, // No real 500 face; resolves to bold
 		semibold: 700, // No real 600 face; resolves to bold
-		bold: 700,     // Pixel Bold - the true 700 face
+		bold: 700, // Pixel Bold - the true 700 face
 	},
 	lineHeight: {
-		tight: 1.2,    // Tight leading (Mac OS 9 style)
-		snug: 1.3,     // Snug
-		normal: 1.4,   // Normal (Mac OS 9 used tighter line heights)
-		relaxed: 1.5,  // Relaxed
-		loose: 1.6,    // Loose
+		tight: 1.2, // Tight leading (Mac OS 9 style)
+		snug: 1.3, // Snug
+		normal: 1.4, // Normal (Mac OS 9 used tighter line heights)
+		relaxed: 1.5, // Relaxed
+		loose: 1.6, // Loose
 	},
 	letterSpacing: {
 		tighter: '-0.02em', // Slightly tighter
-		tight: '-0.01em',   // Tight
-		normal: '0',        // Normal - Mac OS 9 default
-		wide: '0.01em',     // Wide
-		wider: '0.02em',    // Wider
+		tight: '-0.01em', // Tight
+		normal: '0', // Normal - Mac OS 9 default
+		wide: '0.01em', // Wide
+		wider: '0.02em', // Wider
 	},
 } as const;
 
@@ -169,7 +169,7 @@ export const spacing = {
 /**
  * Shadow tokens for Mac OS 9 bevel effects
  * Exact values from Figma Window Shadow effect (67:95038)
- * 
+ *
  * Classic 3-layer bevel:
  * 1. Hard drop shadow (2px, 2px, 0 blur) - creates depth
  * 2. Top-left highlight (light inner shadow)

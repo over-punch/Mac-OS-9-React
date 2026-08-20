@@ -352,9 +352,26 @@ export const InForm: Story = {
 				<h3 style={{ margin: '0 0 8px 0', fontSize: '14px', fontFamily: 'Geneva, sans-serif' }}>
 					Preferences
 				</h3>
-				<Select name="country" label="Country" options={countryOptions} required placeholder="Select country..." />
-				<Select name="size" label="Shirt Size" options={sizeOptions} required placeholder="Select size..." />
-				<Select name="color" label="Favorite Color" options={colorOptions} placeholder="Select color..." />
+				<Select
+					name="country"
+					label="Country"
+					options={countryOptions}
+					required
+					placeholder="Select country..."
+				/>
+				<Select
+					name="size"
+					label="Shirt Size"
+					options={sizeOptions}
+					required
+					placeholder="Select size..."
+				/>
+				<Select
+					name="color"
+					label="Favorite Color"
+					options={colorOptions}
+					placeholder="Select color..."
+				/>
 				<button
 					type="submit"
 					style={{
@@ -488,7 +505,9 @@ export const FileSaveDialog: Story = {
 			</h3>
 			<div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
 				<div>
-					<label style={{ fontSize: '12px', display: 'block', marginBottom: '4px' }}>File name:</label>
+					<label style={{ fontSize: '12px', display: 'block', marginBottom: '4px' }}>
+						File name:
+					</label>
 					<input
 						type="text"
 						defaultValue="Untitled.txt"
@@ -583,7 +602,12 @@ export const KeyboardNavigation: Story = {
 			</p>
 			<Select label="First select" options={colorOptions} placeholder="Tab to next" />
 			<Select label="Second select" options={sizeOptions} placeholder="Tab to next" />
-			<Select label="Third select (disabled)" options={colorOptions} placeholder="Skipped" disabled />
+			<Select
+				label="Third select (disabled)"
+				options={colorOptions}
+				placeholder="Skipped"
+				disabled
+			/>
 			<Select label="Fourth select" options={countryOptions} placeholder="Tab to next" />
 		</div>
 	),

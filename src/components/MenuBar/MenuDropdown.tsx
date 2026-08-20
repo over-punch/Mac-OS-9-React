@@ -2,6 +2,7 @@
 // Standalone dropdown menu sharing the MenuBar's styling
 
 import React, { forwardRef, useCallback, useId, useLayoutEffect, useState, useRef } from 'react';
+import { mergeClasses } from '../../utils/classNames';
 import styles from './MenuBar.module.css';
 
 export interface MenuDropdownProps {
@@ -177,7 +178,10 @@ export const MenuDropdown = forwardRef<HTMLDivElement, MenuDropdownProps>(
 			if (overflowBottom > 0) {
 				const trigger = containerRef.current?.getBoundingClientRect();
 				const spaceAbove = trigger ? trigger.top : 0;
-				y = rect.height + (trigger?.height ?? 0) <= spaceAbove ? -(rect.height + (trigger?.height ?? 0)) : -overflowBottom;
+				y =
+					rect.height + (trigger?.height ?? 0) <= spaceAbove
+						? -(rect.height + (trigger?.height ?? 0))
+						: -overflowBottom;
 			}
 
 			setCollisionOffset(x === 0 && y === 0 ? null : { x, y });
@@ -189,23 +193,19 @@ export const MenuDropdown = forwardRef<HTMLDivElement, MenuDropdownProps>(
 			}
 		};
 
-		const menuContainerClassNames = [styles.menuContainer, className].filter(Boolean).join(' ');
+		const menuContainerClassNames = mergeClasses(styles.menuContainer, className);
 
-		const menuButtonClassNames = [
+		const menuButtonClassNames = mergeClasses(
 			styles.menuButton,
 			isOpen ? styles['menuButton--open'] : '',
-			disabled ? styles['menuButton--disabled'] : '',
-		]
-			.filter(Boolean)
-			.join(' ');
+			disabled ? styles['menuButton--disabled'] : ''
+		);
 
-		const dropdownClassNames = [
+		const dropdownClassNames = mergeClasses(
 			styles.dropdown,
 			align === 'right' ? styles['dropdown--right'] : '',
-			dropdownClassName,
-		]
-			.filter(Boolean)
-			.join(' ');
+			dropdownClassName
+		);
 
 		return (
 			<div ref={setContainerRef} className={menuContainerClassNames}>

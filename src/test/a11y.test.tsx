@@ -52,13 +52,34 @@ const cases: ReadonlyArray<readonly [string, React.ReactElement]> = [
 			<IconLibrary icon="close" label={null} />
 		</Button>,
 	],
-	['Button (link)', <Button key="bl" as="a" href="/docs">Read the docs</Button>],
-	['Button (loading)', <Button key="bld" loading loadingText="Saving…">Save</Button>],
+	[
+		'Button (link)',
+		<Button key="bl" as="a" href="/docs">
+			Read the docs
+		</Button>,
+	],
+	[
+		'Button (loading)',
+		<Button key="bld" loading loadingText="Saving…">
+			Save
+		</Button>,
+	],
 	['Checkbox', <Checkbox key="c" label="Show hidden files" />],
 	['Checkbox (error)', <Checkbox key="ce" label="Accept terms" error />],
-	['IconButton', <IconButton key="ib" icon={<IconLibrary icon="trash" label={null} />} aria-label="Delete" />],
-	['IconButton (labelled)', <IconButton key="ibl" icon={<IconLibrary icon="print" label={null} />} label="Print" />],
-	['Icon', <Icon key="i" label="Alert"><rect width="16" height="16" /></Icon>],
+	[
+		'IconButton',
+		<IconButton key="ib" icon={<IconLibrary icon="trash" label={null} />} aria-label="Delete" />,
+	],
+	[
+		'IconButton (labelled)',
+		<IconButton key="ibl" icon={<IconLibrary icon="print" label={null} />} label="Print" />,
+	],
+	[
+		'Icon',
+		<Icon key="i" label="Alert">
+			<rect width="16" height="16" />
+		</Icon>,
+	],
 	['IconLibrary', <IconLibrary key="il" icon="folder" />],
 	['ListView', <ListView key="lv" columns={listColumns} items={listItems} selectedIds={['1']} />],
 	['ListView (empty)', <ListView key="lve" columns={listColumns} items={[]} />],
@@ -78,10 +99,17 @@ const cases: ReadonlyArray<readonly [string, React.ReactElement]> = [
 		'MenuDropdown',
 		<MenuDropdown key="md" label="Options" items={<MenuItem label="Preferences…" />} />,
 	],
-	['MenuItem', <div key="mi" role="menu"><MenuItem label="Save" shortcut="⌘S" /></div>],
+	[
+		'MenuItem',
+		<div key="mi" role="menu">
+			<MenuItem label="Save" shortcut="⌘S" />
+		</div>,
+	],
 	[
 		'MenuItem (checked)',
-		<div key="mic" role="menu"><MenuItem label="Show Grid" checked /></div>,
+		<div key="mic" role="menu">
+			<MenuItem label="Show Grid" checked />
+		</div>,
 	],
 	[
 		'RadioGroup',
@@ -90,7 +118,10 @@ const cases: ReadonlyArray<readonly [string, React.ReactElement]> = [
 			<Radio value="list" label="List" />
 		</RadioGroup>,
 	],
-	['Scrollbar', <Scrollbar key="sb" ariaLabel="Document scroll" value={0.25} viewportRatio={0.4} />],
+	[
+		'Scrollbar',
+		<Scrollbar key="sb" ariaLabel="Document scroll" value={0.25} viewportRatio={0.4} />,
+	],
 	[
 		'Scrollbar (horizontal)',
 		<Scrollbar key="sbh" orientation="horizontal" ariaLabel="Pan" value={0} viewportRatio={0.5} />,
@@ -122,10 +153,7 @@ const cases: ReadonlyArray<readonly [string, React.ReactElement]> = [
 			<p>Window body</p>
 		</Window>,
 	],
-	[
-		'FolderList',
-		<FolderList key="fl" title="Macintosh HD" items={listItems} />,
-	],
+	['FolderList', <FolderList key="fl" title="Macintosh HD" items={listItems} />],
 ];
 
 describe('accessibility', () => {

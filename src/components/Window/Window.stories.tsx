@@ -122,7 +122,9 @@ export const Inactive: Story = {
 		children: (
 			<div>
 				<p>This window is inactive (slightly dimmed).</p>
-				<p>Toggle the <code>active</code> prop to see the difference.</p>
+				<p>
+					Toggle the <code>active</code> prop to see the difference.
+				</p>
 			</div>
 		),
 	},
@@ -218,28 +220,28 @@ export const ScrollableContent: Story = {
 			<div>
 				<h2>Lorem Ipsum</h2>
 				<p>
-					Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor
-					incididunt ut labore et dolore magna aliqua.
+					Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt
+					ut labore et dolore magna aliqua.
 				</p>
 				<p>
-					Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip
-					ex ea commodo consequat.
+					Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
+					commodo consequat.
 				</p>
 				<p>
-					Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu
-					fugiat nulla pariatur.
+					Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat
+					nulla pariatur.
 				</p>
 				<p>
-					Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt
-					mollit anim id est laborum.
+					Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit
+					anim id est laborum.
 				</p>
 				<p>
-					Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium
-					doloremque laudantium.
+					Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque
+					laudantium.
 				</p>
 				<p>
-					Totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto
-					beatae vitae dicta sunt explicabo.
+					Totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae
+					vitae dicta sunt explicabo.
 				</p>
 			</div>
 		),
@@ -261,7 +263,9 @@ export const Resizable: Story = {
 		onClose: () => alert('Close'),
 		children: (
 			<div>
-				<p><strong>Try resizing this window!</strong></p>
+				<p>
+					<strong>Try resizing this window!</strong>
+				</p>
 				<p>Click and drag the resize handle in the bottom-right corner (diagonal lines).</p>
 				<p>Minimum size: 250x150px</p>
 				<p>Resize dynamically updates the window dimensions.</p>
@@ -280,16 +284,21 @@ export const ResizableWithConstraints: Story = {
 	},
 	render: () => {
 		const [size, setSize] = useState({ width: 400, height: 300 });
-		
+
 		return (
 			<div>
-				<div style={{ marginBottom: '16px', padding: '12px', background: '#f5f5f5', borderRadius: '4px' }}>
+				<div
+					style={{
+						marginBottom: '16px',
+						padding: '12px',
+						background: '#f5f5f5',
+						borderRadius: '4px',
+					}}
+				>
 					<p style={{ marginBottom: '8px' }}>
 						<strong>Current Size:</strong> {size.width}px × {size.height}px
 					</p>
-					<p style={{ fontSize: '12px', color: '#666' }}>
-						Min: 300×200px | Max: 600×500px
-					</p>
+					<p style={{ fontSize: '12px', color: '#666' }}>Min: 300×200px | Max: 600×500px</p>
 				</div>
 				<Window
 					title="Constrained Resize"
@@ -304,7 +313,9 @@ export const ResizableWithConstraints: Story = {
 					onClose={() => alert('Close')}
 				>
 					<div>
-						<p><strong>This window has size constraints.</strong></p>
+						<p>
+							<strong>This window has size constraints.</strong>
+						</p>
 						<p>Try resizing beyond the min/max bounds - it won’t go past them!</p>
 						<p>The parent component tracks the size via onResize callback.</p>
 					</div>
@@ -323,7 +334,9 @@ export const DraggableAndResizable: Story = {
 		children: <></>,
 	},
 	render: () => (
-		<div style={{ position: 'relative', width: '900px', height: '600px', border: '1px dashed #ccc' }}>
+		<div
+			style={{ position: 'relative', width: '900px', height: '600px', border: '1px dashed #ccc' }}
+		>
 			<Window
 				title="Drag & Resize Me"
 				width={400}
@@ -336,7 +349,9 @@ export const DraggableAndResizable: Story = {
 				onClose={() => alert('Close')}
 			>
 				<div>
-					<p><strong>This window is both draggable AND resizable!</strong></p>
+					<p>
+						<strong>This window is both draggable AND resizable!</strong>
+					</p>
 					<p>Drag it by the title bar to move it around.</p>
 					<p>Drag the bottom-right corner to resize it.</p>
 					<p>Just like a real Mac OS 9 window!</p>
@@ -356,9 +371,7 @@ export const Alert: Story = {
 		showControls: false,
 		children: (
 			<div style={{ textAlign: 'center' }}>
-				<p style={{ marginBottom: '24px' }}>
-					Are you sure you want to quit without saving?
-				</p>
+				<p style={{ marginBottom: '24px' }}>Are you sure you want to quit without saving?</p>
 				<div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
 					<Button variant="primary">Don’t Save</Button>
 					<Button>Cancel</Button>
@@ -422,8 +435,12 @@ export const Draggable: Story = {
 		children: <></>,
 	},
 	render: () => (
-		<div style={{ position: 'relative', width: '800px', height: '600px', border: '1px dashed #ccc' }}>
-			<p style={{ position: 'absolute', top: '10px', left: '10px', color: '#666', fontSize: '12px' }}>
+		<div
+			style={{ position: 'relative', width: '800px', height: '600px', border: '1px dashed #ccc' }}
+		>
+			<p
+				style={{ position: 'absolute', top: '10px', left: '10px', color: '#666', fontSize: '12px' }}
+			>
 				Container area - drag the window by its title bar
 			</p>
 			<Window
@@ -434,9 +451,14 @@ export const Draggable: Story = {
 				onClose={() => alert('Close')}
 			>
 				<div>
-					<p><strong>Try dragging this window!</strong></p>
+					<p>
+						<strong>Try dragging this window!</strong>
+					</p>
 					<p>Click and hold the title bar, then move your mouse to drag.</p>
-					<p>The window starts in normal document flow but becomes absolutely positioned once you drag it.</p>
+					<p>
+						The window starts in normal document flow but becomes absolutely positioned once you
+						drag it.
+					</p>
 					<p style={{ marginTop: '16px', fontSize: '12px', color: '#666' }}>
 						Notice the grab cursor when hovering over the title bar.
 					</p>
@@ -455,7 +477,9 @@ export const DraggableWithInitialPosition: Story = {
 		children: <></>,
 	},
 	render: () => (
-		<div style={{ position: 'relative', width: '800px', height: '600px', border: '1px dashed #ccc' }}>
+		<div
+			style={{ position: 'relative', width: '800px', height: '600px', border: '1px dashed #ccc' }}
+		>
 			<Window
 				title="Positioned Window"
 				width={350}
@@ -465,7 +489,9 @@ export const DraggableWithInitialPosition: Story = {
 				onClose={() => alert('Close')}
 			>
 				<div>
-					<p><strong>This window starts at a specific position.</strong></p>
+					<p>
+						<strong>This window starts at a specific position.</strong>
+					</p>
 					<p>It’s absolutely positioned from the start at x:100, y:80.</p>
 					<p>Drag it anywhere you like!</p>
 				</div>
@@ -484,10 +510,17 @@ export const DraggableControlled: Story = {
 	},
 	render: () => {
 		const [position, setPosition] = useState<WindowPosition>({ x: 50, y: 50 });
-		
+
 		return (
 			<div>
-				<div style={{ marginBottom: '16px', padding: '12px', background: '#f5f5f5', borderRadius: '4px' }}>
+				<div
+					style={{
+						marginBottom: '16px',
+						padding: '12px',
+						background: '#f5f5f5',
+						borderRadius: '4px',
+					}}
+				>
 					<p style={{ marginBottom: '8px' }}>
 						<strong>Controlled Position:</strong> x: {position.x}px, y: {position.y}px
 					</p>
@@ -497,7 +530,14 @@ export const DraggableControlled: Story = {
 						<Button onClick={() => setPosition({ x: 400, y: 50 })}>Right</Button>
 					</div>
 				</div>
-				<div style={{ position: 'relative', width: '800px', height: '500px', border: '1px dashed #ccc' }}>
+				<div
+					style={{
+						position: 'relative',
+						width: '800px',
+						height: '500px',
+						border: '1px dashed #ccc',
+					}}
+				>
 					<Window
 						title="Controlled Window"
 						width={350}
@@ -508,7 +548,9 @@ export const DraggableControlled: Story = {
 						onClose={() => alert('Close')}
 					>
 						<div>
-							<p><strong>This window’s position is controlled.</strong></p>
+							<p>
+								<strong>This window’s position is controlled.</strong>
+							</p>
 							<p>The parent component tracks and can change the position.</p>
 							<p>Try the buttons above or drag the window!</p>
 						</div>
@@ -528,7 +570,9 @@ export const MultipleDraggableWindows: Story = {
 		children: <></>,
 	},
 	render: () => (
-		<div style={{ position: 'relative', width: '900px', height: '600px', border: '1px dashed #ccc' }}>
+		<div
+			style={{ position: 'relative', width: '900px', height: '600px', border: '1px dashed #ccc' }}
+		>
 			<Window
 				title="Window 1"
 				width={300}
@@ -538,7 +582,9 @@ export const MultipleDraggableWindows: Story = {
 				onClose={() => alert('Close Window 1')}
 			>
 				<div>
-					<p><strong>Window 1</strong></p>
+					<p>
+						<strong>Window 1</strong>
+					</p>
 					<p>Drag me around!</p>
 				</div>
 			</Window>
@@ -551,7 +597,9 @@ export const MultipleDraggableWindows: Story = {
 				onClose={() => alert('Close Window 2')}
 			>
 				<div>
-					<p><strong>Window 2</strong></p>
+					<p>
+						<strong>Window 2</strong>
+					</p>
 					<p>You can drag all windows independently.</p>
 				</div>
 			</Window>
@@ -564,7 +612,9 @@ export const MultipleDraggableWindows: Story = {
 				onClose={() => alert('Close Window 3')}
 			>
 				<div>
-					<p><strong>Window 3</strong></p>
+					<p>
+						<strong>Window 3</strong>
+					</p>
 					<p>Just like a real desktop!</p>
 				</div>
 			</Window>

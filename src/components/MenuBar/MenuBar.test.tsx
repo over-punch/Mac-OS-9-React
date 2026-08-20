@@ -239,9 +239,7 @@ describe('MenuBar', () => {
 		});
 
 		it('strips a javascript: href', () => {
-			render(
-				<MenuBar menus={[{ label: 'Bad', type: 'link', href: 'javascript:alert(1)' }]} />
-			);
+			render(<MenuBar menus={[{ label: 'Bad', type: 'link', href: 'javascript:alert(1)' }]} />);
 			expect(screen.getByRole('menuitem', { name: 'Bad' })).not.toHaveAttribute(
 				'href',
 				expect.stringContaining('javascript')

@@ -7,21 +7,21 @@ import { DividerIcon } from './categories/ui';
 
 /**
  * Icon component for displaying SVG icons with consistent sizing.
- * 
+ *
  * ## Usage Patterns
- * 
+ *
  * 1. **Direct Import** (Recommended for tree-shaking):
  * ```tsx
  * import { DividerIcon } from '@liiift-studio/mac-os9-ui';
  * <DividerIcon />
  * ```
- * 
+ *
  * 2. **By Name** (Convenient for dynamic icons):
  * ```tsx
  * import { IconLibrary } from '@liiift-studio/mac-os9-ui';
  * <IconLibrary icon="divider" size="md" />
  * ```
- * 
+ *
  * 3. **Custom SVG** (For one-off icons):
  * ```tsx
  * import { Icon } from '@liiift-studio/mac-os9-ui';
@@ -37,7 +37,8 @@ const meta = {
 		layout: 'centered',
 		docs: {
 			description: {
-				component: 'Icon components for the Mac OS 9 UI library. Supports multiple sizes and custom viewBox dimensions.',
+				component:
+					'Icon components for the Mac OS 9 UI library. Supports multiple sizes and custom viewBox dimensions.',
 			},
 		},
 	},
@@ -64,15 +65,11 @@ export const CustomIcon: Story = {
 export const Divider: Story = {
 	render: () => (
 		<div>
-			<h3 style={{ marginBottom: '16px', fontFamily: 'Chicago, sans-serif' }}>
-				Divider Icon
-			</h3>
+			<h3 style={{ marginBottom: '16px', fontFamily: 'Chicago, sans-serif' }}>Divider Icon</h3>
 			<div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
 				<div style={{ textAlign: 'center' }}>
 					<DividerIcon />
-					<div style={{ fontSize: '11px', marginTop: '4px' }}>
-						Direct import
-					</div>
+					<div style={{ fontSize: '11px', marginTop: '4px' }}>Direct import</div>
 				</div>
 				<div style={{ textAlign: 'center' }}>
 					<IconLibrary icon="divider" />
@@ -134,12 +131,9 @@ export const InMenuBar: Story = {
 export const Sizes: Story = {
 	render: () => (
 		<div>
-			<h3 style={{ marginBottom: '16px', fontFamily: 'Chicago, sans-serif' }}>
-				Icon Sizes
-			</h3>
+			<h3 style={{ marginBottom: '16px', fontFamily: 'Chicago, sans-serif' }}>Icon Sizes</h3>
 			<p style={{ fontSize: '12px', marginBottom: '16px', color: '#666' }}>
-				Note: Divider uses a custom 10x32 viewBox, so sizes affect overall
-				scale
+				Note: Divider uses a custom 10x32 viewBox, so sizes affect overall scale
 			</p>
 			<div style={{ display: 'flex', alignItems: 'flex-end', gap: '24px' }}>
 				<div style={{ textAlign: 'center' }}>

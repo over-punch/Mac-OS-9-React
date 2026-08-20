@@ -7,6 +7,7 @@
 // silently dropped at bundle time.
 
 import React, { forwardRef, ButtonHTMLAttributes } from 'react';
+import { mergeClasses } from '../../utils/classNames';
 import styles from './IconButton.module.css';
 
 export interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -52,25 +53,25 @@ export interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>
 
 /**
  * IconButton component for Mac OS 9 UI
- * 
+ *
  * Button with an icon, optionally with a text label.
  * Supports all button variants and sizes.
- * 
+ *
  * @example
  * ```tsx
  * // Icon-only button
  * <IconButton icon={<SaveIcon />} />
- * 
+ *
  * // Icon with label
- * <IconButton 
- *   icon={<FolderIcon />} 
+ * <IconButton
+ *   icon={<FolderIcon />}
  *   label="New Folder"
  *   variant="primary"
  * />
- * 
+ *
  * // Icon with label on different sides
- * <IconButton 
- *   icon={<SearchIcon />} 
+ * <IconButton
+ *   icon={<SearchIcon />}
  *   label="Search"
  *   labelPosition="right"
  * />
@@ -91,33 +92,25 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
 		ref
 	) => {
 		// Build class names
-		const classNames = [
+		const classNames = mergeClasses(
 			styles.iconButton,
 			styles[`iconButton--${variant}`],
 			styles[`iconButton--${size}`],
 			label && styles['iconButton--with-label'],
 			label && styles[`iconButton--label-${labelPosition}`],
 			disabled && styles['iconButton--disabled'],
-			className,
-		]
-			.filter(Boolean)
-			.join(' ');
+			className
+		);
 
 		return (
-			<button
-				ref={ref}
-				type="button"
-				className={classNames}
-				disabled={disabled}
-				{...props}
-			>
-		{label && (labelPosition === 'left' || labelPosition === 'top') && (
-			<span className={styles.label}>{label}</span>
-		)}
-		<span className={styles.icon}>{icon}</span>
-		{label && (labelPosition === 'right' || labelPosition === 'bottom') && (
-			<span className={styles.label}>{label}</span>
-		)}
+			<button ref={ref} type="button" className={classNames} disabled={disabled} {...props}>
+				{label && (labelPosition === 'left' || labelPosition === 'top') && (
+					<span className={styles.label}>{label}</span>
+				)}
+				<span className={styles.icon}>{icon}</span>
+				{label && (labelPosition === 'right' || labelPosition === 'bottom') && (
+					<span className={styles.label}>{label}</span>
+				)}
 			</button>
 		);
 	}

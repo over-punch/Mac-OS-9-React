@@ -7,6 +7,7 @@
 // silently dropped at bundle time.
 
 import React, { forwardRef, useRef, useState, useEffect, useCallback } from 'react';
+import { mergeClasses } from '../../utils/classNames';
 import styles from './Scrollbar.module.css';
 
 export interface ScrollbarProps {
@@ -76,10 +77,10 @@ export interface ScrollbarProps {
 
 /**
  * Mac OS 9 style Scrollbar component
- * 
+ *
  * Classic scrollbar with arrow buttons and draggable thumb.
  * Can be used standalone or integrated with scrollable content.
- * 
+ *
  * @example
  * ```tsx
  * <Scrollbar
@@ -130,7 +131,7 @@ export const Scrollbar = forwardRef<HTMLDivElement, ScrollbarProps>(
 		if (process.env.NODE_ENV !== 'production' && viewportRatio === undefined) {
 			console.warn(
 				'Scrollbar: `viewportRatio` is required to size the thumb and the page step. ' +
-					'Pass clientHeight / scrollHeight (or the width equivalent) for the scrolled region.',
+					'Pass clientHeight / scrollHeight (or the width equivalent) for the scrolled region.'
 			);
 		}
 		const effectiveViewportRatio = viewportRatio ?? 1;
@@ -142,18 +143,22 @@ export const Scrollbar = forwardRef<HTMLDivElement, ScrollbarProps>(
 		const thumbPos = value * maxThumbPos;
 
 		// Class names
-		const classNames = [
+		const classNames = mergeClasses(
 			styles.scrollbar,
 			styles[`scrollbar--${orientation}`],
 			disabled && styles['scrollbar--disabled'],
-			className,
-		]
-			.filter(Boolean)
-			.join(' ');
+			className
+		);
 
 		// Handle arrow clicks
-		const handleDecrement = useCallback(() => commitValue(value - step), [commitValue, step, value]);
-		const handleIncrement = useCallback(() => commitValue(value + step), [commitValue, step, value]);
+		const handleDecrement = useCallback(
+			() => commitValue(value - step),
+			[commitValue, step, value]
+		);
+		const handleIncrement = useCallback(
+			() => commitValue(value + step),
+			[commitValue, step, value]
+		);
 
 		// WAI-ARIA scrollbar keyboard interaction.
 		// Arrow keys step by `step`, PageUp/PageDown step by `viewportRatio`,
@@ -200,9 +205,7 @@ export const Scrollbar = forwardRef<HTMLDivElement, ScrollbarProps>(
 				if (disabled || !onChange || !trackRef.current) return;
 
 				const rect = trackRef.current.getBoundingClientRect();
-				const clickPos = isVertical
-					? event.clientY - rect.top
-					: event.clientX - rect.left;
+				const clickPos = isVertical ? event.clientY - rect.top : event.clientX - rect.left;
 				const trackSize = isVertical ? rect.height : rect.width;
 
 				// Convert click position to scroll value (0-1)

@@ -178,7 +178,13 @@ export const AllStates: Story = {
 			<Radio name="states1" value="unchecked" label="Unchecked" />
 			<Radio name="states2" value="checked" defaultChecked label="Checked" />
 			<Radio name="states3" value="disabled" disabled label="Disabled" />
-			<Radio name="states4" value="disabled-checked" disabled defaultChecked label="Disabled checked" />
+			<Radio
+				name="states4"
+				value="disabled-checked"
+				disabled
+				defaultChecked
+				label="Disabled checked"
+			/>
 			<Radio name="states5" value="error" error label="Error state" />
 		</div>
 	),
@@ -322,7 +328,9 @@ export const InForm: Story = {
 				onSubmit={(e) => {
 					e.preventDefault();
 					const formData = new FormData(e.currentTarget);
-					alert(`Shipping method: ${formData.get('shipping')}\nPayment: ${formData.get('payment')}`);
+					alert(
+						`Shipping method: ${formData.get('shipping')}\nPayment: ${formData.get('payment')}`
+					);
 				}}
 				style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '300px' }}
 			>
@@ -338,7 +346,9 @@ export const InForm: Story = {
 				</fieldset>
 
 				<fieldset style={{ border: 'none', padding: 0, margin: 0 }}>
-					<legend style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '8px' }}>Payment Method:</legend>
+					<legend style={{ fontSize: '12px', fontWeight: 'bold', marginBottom: '8px' }}>
+						Payment Method:
+					</legend>
 					<div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
 						<Radio name="payment" value="credit" label="Credit Card" defaultChecked />
 						<Radio name="payment" value="debit" label="Debit Card" />

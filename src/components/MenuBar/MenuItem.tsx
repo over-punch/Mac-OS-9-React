@@ -2,6 +2,7 @@
 // Individual menu item for use within MenuBar
 
 import React, { forwardRef, useCallback, useRef, useState } from 'react';
+import { mergeClasses } from '../../utils/classNames';
 import styles from './MenuItem.module.css';
 
 export interface MenuItemProps {
@@ -129,9 +130,9 @@ function toAriaKeyShortcuts(shortcut: string | undefined): string | undefined {
 
 /**
  * Mac OS 9 style MenuItem component
- * 
+ *
  * Individual menu item for use within MenuBar or dropdown menus.
- * 
+ *
  * Features:
  * - Classic Mac OS 9 menu item styling
  * - Disabled state support
@@ -142,24 +143,24 @@ function toAriaKeyShortcuts(shortcut: string | undefined): string | undefined {
  * - Icon support
  * - Submenu indicator
  * - Full keyboard and mouse support
- * 
+ *
  * @example
  * ```tsx
  * // Basic menu item
  * <MenuItem label="Open..." onClick={() => console.log('Open')} />
- * 
+ *
  * // With keyboard shortcut
  * <MenuItem label="Save" shortcut="⌘S" onClick={() => console.log('Save')} />
- * 
+ *
  * // Disabled item
  * <MenuItem label="Undo" disabled />
- * 
+ *
  * // Checked item (toggle)
  * <MenuItem label="Show Grid" checked onClick={() => console.log('Toggle')} />
- * 
+ *
  * // With separator
  * <MenuItem label="Preferences..." separator onClick={() => console.log('Prefs')} />
- * 
+ *
  * // With submenu indicator
  * <MenuItem label="Recent Files" hasSubmenu />
  * ```
@@ -203,15 +204,13 @@ export const MenuItem = forwardRef<HTMLButtonElement, MenuItemProps>(
 		);
 
 		// Class names
-		const menuItemClassNames = [
+		const menuItemClassNames = mergeClasses(
 			styles.menuItem,
 			selected ? styles['menuItem--selected'] : '',
 			disabled ? styles['menuItem--disabled'] : '',
 			separator ? styles['menuItem--separator'] : '',
-			className,
-		]
-			.filter(Boolean)
-			.join(' ');
+			className
+		);
 
 		// Handle click
 		const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -232,8 +231,7 @@ export const MenuItem = forwardRef<HTMLButtonElement, MenuItemProps>(
 				setIsSubmenuOpen(true);
 				// Defer focus until after the submenu renders.
 				queueMicrotask(() => {
-					const firstItem =
-						submenuRef.current?.querySelector<HTMLElement>('[role="menuitem"]');
+					const firstItem = submenuRef.current?.querySelector<HTMLElement>('[role="menuitem"]');
 					firstItem?.focus();
 				});
 			} else if (event.key === 'ArrowLeft' && isSubmenuOpen) {

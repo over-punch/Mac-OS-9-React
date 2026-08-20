@@ -874,7 +874,7 @@ interface SelectProps extends Omit<SelectHTMLAttributes<HTMLSelectElement>, 'siz
      * Options for the select dropdown
      * Alternative to providing option elements as children
      */
-    options?: SelectOption[];
+    options?: readonly SelectOption[];
     /**
      * Placeholder text (creates a disabled first option)
      */
@@ -2584,8 +2584,20 @@ declare const tokens: {
 };
 
 /**
- * Merges multiple class names into a single string
- * Filters out undefined, null, false, and empty strings
+ * A value that may be passed to {@link mergeClasses}.
+ *
+ * Numbers and booleans are accepted because conditional expressions
+ * naturally produce them — `count && styles.badge` is `0` when `count` is
+ * zero, and `flag && styles.on` is `false` when the flag is off. Only
+ * non-empty strings survive into the output.
+ */
+type ClassValue = string | number | boolean | null | undefined;
+/**
+ * Merges multiple class names into a single string.
+ *
+ * Keeps only non-empty strings. A plain `.filter(Boolean)` would keep a
+ * truthy number too, so `mergeClasses(styles.row, itemCount)` would have
+ * emitted `class="row 5"`; here the number is dropped.
  *
  * @param classes - Class names to merge
  * @returns Merged class name string
@@ -2596,7 +2608,7 @@ declare const tokens: {
  * // Returns: "base active custom"
  * ```
  */
-declare const mergeClasses: (...classes: (string | undefined | false | null)[]) => string;
+declare const mergeClasses: (...classes: ClassValue[]) => string;
 /**
  * Creates a class name builder function with a base class
  * Useful for component-level class management
@@ -2611,7 +2623,7 @@ declare const mergeClasses: (...classes: (string | undefined | false | null)[]) 
  * // Returns: "button primary disabled"
  * ```
  */
-declare const createClassBuilder: (baseClass: string) => (...additionalClasses: (string | undefined | false | null)[]) => string;
+declare const createClassBuilder: (baseClass: string) => (...additionalClasses: ClassValue[]) => string;
 
 export { AlertIcon, ApplicationIcon, ArrowDownIcon, ArrowLeftIcon, ArrowRightIcon, ArrowUpIcon, Button, CalendarIcon, CheckIcon, Checkbox, ChevronDownIcon, ChevronRightIcon, CloseIcon, CopyIcon, Dialog, DiskIcon, DividerIcon, DocumentIcon, DownloadIcon, ErrorIcon, FolderIcon, FolderList, FolderOpenIcon, GrabberIcon, HardDriveIcon, HomeIcon, Icon, IconButton, IconLibrary, ImageIcon, InfoIcon, LinkIcon, ListView, LockIcon, MailIcon, MenuBar, MenuDropdown, MenuItem, MusicIcon, PauseIcon, PlayIcon, PrintIcon, QuestionIcon, Radio, RadioGroup, ResizeHandleIcon, Scrollbar, SearchIcon, Select, StopIcon, TabPanel, Tabs, TextField, TrashIcon, UserIcon, VolumeIcon, VolumeMuteIcon, Window, borders, colors, createClassBuilder, mergeClasses, shadows, spacing, tokens, transitions, typography, zIndex };
 export type { BaseComponentProps, ButtonProps, ButtonRef, CellRenderState, CheckboxProps, ComponentClasses, DialogProps, DivRef, FocusableElement, FolderListClasses, FolderListProps, HeaderCellDefaultProps, HeaderCellRenderState, IconButtonProps, IconLibraryProps, IconName, IconProps, InputRef, ListColumn, ListItem, ListViewClasses, ListViewProps, Menu, MenuBarProps, MenuDropdownProps, MenuItemData, MenuItemProps, RadioGroupProps, RadioProps, RenderState, RowDefaultProps, RowRenderState, ScrollbarProps, SelectOption, SelectProps, SelectRef, Size, State, TabPanelProps, TabsProps, TextAreaRef, TextFieldProps, Variant, WindowClasses, WindowPosition, WindowProps };

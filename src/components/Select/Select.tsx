@@ -2,6 +2,7 @@
 // Classic dropdown select with label support and full accessibility
 
 import React, { forwardRef, SelectHTMLAttributes } from 'react';
+import { mergeClasses } from '../../utils/classNames';
 import styles from './Select.module.css';
 
 export interface SelectOption {
@@ -10,8 +11,7 @@ export interface SelectOption {
 	disabled?: boolean;
 }
 
-export interface SelectProps
-	extends Omit<SelectHTMLAttributes<HTMLSelectElement>, 'size'> {
+export interface SelectProps extends Omit<SelectHTMLAttributes<HTMLSelectElement>, 'size'> {
 	/**
 	 * Label text for the select
 	 */
@@ -85,9 +85,9 @@ export interface SelectProps
 
 /**
  * Mac OS 9 style Select component
- * 
+ *
  * Classic dropdown select with raised bevel effect and optional label.
- * 
+ *
  * Features:
  * - Classic Mac OS 9 popup menu styling
  * - Label positioning (top/left/right)
@@ -98,7 +98,7 @@ export interface SelectProps
  * - Full accessibility with ARIA support
  * - Keyboard navigation
  * - Form integration
- * 
+ *
  * @example
  * ```tsx
  * // With options prop
@@ -111,7 +111,7 @@ export interface SelectProps
  *   ]}
  *   placeholder="Select a color..."
  * />
- * 
+ *
  * // With children
  * <Select label="Country">
  *   <option value="us">United States</option>
@@ -153,37 +153,31 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
 		const errorId = `${selectId}-error`;
 
 		// Combine aria-describedby
-		const describedByIds = [
+		const describedByIds = mergeClasses(
 			helperText && helperId,
 			error && errorMessage && errorId,
-			ariaDescribedBy,
-		]
-			.filter(Boolean)
-			.join(' ');
+			ariaDescribedBy
+		);
 
 		// Build class names
-		const wrapperClassNames = [
+		const wrapperClassNames = mergeClasses(
 			styles.wrapper,
 			styles[`wrapper--${size}`],
 			styles[`wrapper--label-${labelPosition}`],
 			fullWidth && styles['wrapper--full-width'],
 			disabled && styles['wrapper--disabled'],
-			wrapperClassName,
-		]
-			.filter(Boolean)
-			.join(' ');
+			wrapperClassName
+		);
 
-		const selectClassNames = [
+		const selectClassNames = mergeClasses(
 			styles.select,
 			styles[`select--${size}`],
 			error && styles['select--error'],
 			fullWidth && styles['select--full-width'],
-			className,
-		]
-			.filter(Boolean)
-			.join(' ');
+			className
+		);
 
-		const labelClassNames = [styles.label, styles[`label--${size}`]].filter(Boolean).join(' ');
+		const labelClassNames = mergeClasses(styles.label, styles[`label--${size}`]);
 
 		// ARIA attributes
 		const ariaAttributes = {

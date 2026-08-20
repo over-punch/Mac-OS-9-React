@@ -2,10 +2,10 @@
 // Classic text input with label support and full accessibility
 
 import React, { forwardRef, InputHTMLAttributes, TextareaHTMLAttributes } from 'react';
+import { mergeClasses } from '../../utils/classNames';
 import styles from './TextField.module.css';
 
-export interface TextFieldProps
-	extends Omit<InputHTMLAttributes<HTMLInputElement>, 'size'> {
+export interface TextFieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'size'> {
 	/**
 	 * Label text for the text field
 	 */
@@ -118,9 +118,9 @@ export interface TextFieldProps
 
 /**
  * Mac OS 9 style TextField component
- * 
+ *
  * Classic text input with inset bevel effect and optional label.
- * 
+ *
  * Features:
  * - Classic Mac OS 9 inset bevel styling
  * - Label positioning (top/left/right)
@@ -131,26 +131,26 @@ export interface TextFieldProps
  * - Full accessibility with ARIA support
  * - Keyboard navigation
  * - Form integration
- * 
+ *
  * @example
  * ```tsx
  * // Basic text field
  * <TextField placeholder="Enter text..." />
- * 
+ *
  * // With label
  * <TextField label="Username" placeholder="Enter username" />
- * 
+ *
  * // With error
- * <TextField 
- *   label="Email" 
- *   error 
+ * <TextField
+ *   label="Email"
+ *   error
  *   errorMessage="Invalid email address"
  *   value={email}
  *   onChange={(e) => setEmail(e.target.value)}
  * />
- * 
+ *
  * // With icons
- * <TextField 
+ * <TextField
  *   leftIcon={<SearchIcon />}
  *   placeholder="Search..."
  * />
@@ -195,46 +195,38 @@ export const TextField = forwardRef<HTMLInputElement | HTMLTextAreaElement, Text
 		const errorId = `${inputId}-error`;
 
 		// Combine aria-describedby
-		const describedByIds = [
+		const describedByIds = mergeClasses(
 			helperText && helperId,
 			error && errorMessage && errorId,
-			ariaDescribedBy,
-		]
-			.filter(Boolean)
-			.join(' ');
+			ariaDescribedBy
+		);
 
-	// Build class names
-	const wrapperClassNames = [
-		styles.wrapper,
-		styles[`wrapper--${size}`],
-		styles[`wrapper--label-${labelPosition}`],
-		fullWidth && styles['wrapper--full-width'],
-		disabled && styles['wrapper--disabled'],
-		wrapperClassName,
-	]
-		.filter(Boolean)
-		.join(' ');
+		// Build class names
+		const wrapperClassNames = mergeClasses(
+			styles.wrapper,
+			styles[`wrapper--${size}`],
+			styles[`wrapper--label-${labelPosition}`],
+			fullWidth && styles['wrapper--full-width'],
+			disabled && styles['wrapper--disabled'],
+			wrapperClassName
+		);
 
-	const inputWrapperClassNames = [
-		styles['input-wrapper'],
-		(leftIcon || rightIcon) && styles['input-wrapper--with-icon'],
-		leftIcon && styles['input-wrapper--with-left-icon'],
-		rightIcon && styles['input-wrapper--with-right-icon'],
-	]
-		.filter(Boolean)
-		.join(' ');
+		const inputWrapperClassNames = mergeClasses(
+			styles['input-wrapper'],
+			(leftIcon || rightIcon) && styles['input-wrapper--with-icon'],
+			leftIcon && styles['input-wrapper--with-left-icon'],
+			rightIcon && styles['input-wrapper--with-right-icon']
+		);
 
-	const inputClassNames = [
-		styles.input,
-		styles[`input--${size}`],
-		error && styles['input--error'],
-		fullWidth && styles['input--full-width'],
-		className,
-	]
-		.filter(Boolean)
-		.join(' ');
+		const inputClassNames = mergeClasses(
+			styles.input,
+			styles[`input--${size}`],
+			error && styles['input--error'],
+			fullWidth && styles['input--full-width'],
+			className
+		);
 
-	const labelClassNames = [styles.label, styles[`label--${size}`]].filter(Boolean).join(' ');
+		const labelClassNames = mergeClasses(styles.label, styles[`label--${size}`]);
 
 		// ARIA attributes
 		const ariaAttributes = {
@@ -252,40 +244,40 @@ export const TextField = forwardRef<HTMLInputElement | HTMLTextAreaElement, Text
 				)}
 
 				<div className={inputWrapperClassNames}>
-			{leftIcon && (
-				<span className={styles['input-icon-left']} aria-hidden="true">
-					{leftIcon}
-				</span>
-			)}
+					{leftIcon && (
+						<span className={styles['input-icon-left']} aria-hidden="true">
+							{leftIcon}
+						</span>
+					)}
 
-			{multiline ? (
-				<textarea
-					ref={ref as React.Ref<HTMLTextAreaElement>}
-					id={inputId}
-					rows={rows}
-					className={inputClassNames}
-					disabled={disabled}
-					{...ariaAttributes}
-					{...(props as unknown as TextareaHTMLAttributes<HTMLTextAreaElement>)}
-					{...textareaProps}
-				/>
-			) : (
-				<input
-					ref={ref as React.Ref<HTMLInputElement>}
-					type={type}
-					id={inputId}
-					className={inputClassNames}
-					disabled={disabled}
-					{...ariaAttributes}
-					{...props}
-				/>
-			)}
+					{multiline ? (
+						<textarea
+							ref={ref as React.Ref<HTMLTextAreaElement>}
+							id={inputId}
+							rows={rows}
+							className={inputClassNames}
+							disabled={disabled}
+							{...ariaAttributes}
+							{...(props as unknown as TextareaHTMLAttributes<HTMLTextAreaElement>)}
+							{...textareaProps}
+						/>
+					) : (
+						<input
+							ref={ref as React.Ref<HTMLInputElement>}
+							type={type}
+							id={inputId}
+							className={inputClassNames}
+							disabled={disabled}
+							{...ariaAttributes}
+							{...props}
+						/>
+					)}
 
-			{rightIcon && (
-				<span className={styles['input-icon-right']} aria-hidden="true">
-					{rightIcon}
-				</span>
-			)}
+					{rightIcon && (
+						<span className={styles['input-icon-right']} aria-hidden="true">
+							{rightIcon}
+						</span>
+					)}
 				</div>
 
 				{label && labelPosition === 'right' && (
@@ -294,25 +286,25 @@ export const TextField = forwardRef<HTMLInputElement | HTMLTextAreaElement, Text
 					</label>
 				)}
 
-		{helperText && !error && (
-			<p id={helperId} className={styles['helper-text']}>
-				{helperText}
-			</p>
-		)}
+				{helperText && !error && (
+					<p id={helperId} className={styles['helper-text']}>
+						{helperText}
+					</p>
+				)}
 
-		{/* The live region is always mounted, not conditionally rendered.
+				{/* The live region is always mounted, not conditionally rendered.
 		    Assistive tech only announces changes to a region that already
 		    existed — inserting the region and its text at the same moment is
 		    frequently missed entirely. */}
-		<p
-			id={errorId}
-			className={styles['error-message']}
-			role={errorLiveRegion === 'off' ? undefined : 'status'}
-			aria-live={errorLiveRegion === 'off' ? undefined : errorLiveRegion}
-			hidden={!(error && errorMessage)}
-		>
-			{error && errorMessage ? errorMessage : null}
-		</p>
+				<p
+					id={errorId}
+					className={styles['error-message']}
+					role={errorLiveRegion === 'off' ? undefined : 'status'}
+					aria-live={errorLiveRegion === 'off' ? undefined : errorLiveRegion}
+					hidden={!(error && errorMessage)}
+				>
+					{error && errorMessage ? errorMessage : null}
+				</p>
 			</div>
 		);
 	}

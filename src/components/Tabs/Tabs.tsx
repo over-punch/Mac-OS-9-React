@@ -11,6 +11,7 @@ import React, {
 	isValidElement,
 	ReactElement,
 } from 'react';
+import { mergeClasses } from '../../utils/classNames';
 import styles from './Tabs.module.css';
 
 export interface TabPanelProps {
@@ -121,9 +122,9 @@ export interface TabsProps {
 
 /**
  * Mac OS 9 style Tabs component
- * 
+ *
  * Classic tabbed navigation with raised tab appearance and inset panel.
- * 
+ *
  * Features:
  * - Classic Mac OS 9 tab styling
  * - Controlled and uncontrolled modes
@@ -131,7 +132,7 @@ export interface TabsProps {
  * - Full accessibility with ARIA
  * - Optional icons in tabs
  * - Disabled tab states
- * 
+ *
  * @example
  * ```tsx
  * // Uncontrolled
@@ -143,7 +144,7 @@ export interface TabsProps {
  *     <p>Advanced settings content</p>
  *   </TabPanel>
  * </Tabs>
- * 
+ *
  * // Controlled
  * <Tabs activeTab={activeIndex} onChange={setActiveIndex}>
  *   <TabPanel label="Tab 1">Content 1</TabPanel>
@@ -185,8 +186,8 @@ export const Tabs = forwardRef<HTMLDivElement, TabsProps>(function Tabs(
 	// churned along with them.
 	const tabs = useMemo(
 		() =>
-			Children.toArray(children).filter(
-				(child): child is ReactElement<TabPanelProps> => isValidElement(child)
+			Children.toArray(children).filter((child): child is ReactElement<TabPanelProps> =>
+				isValidElement(child)
 			),
 		[children]
 	);
@@ -259,24 +260,20 @@ export const Tabs = forwardRef<HTMLDivElement, TabsProps>(function Tabs(
 	);
 
 	// Class names
-	const containerClassNames = [styles.container, className].filter(Boolean).join(' ');
+	const containerClassNames = mergeClasses(styles.container, className);
 
-	const tabListClassNames = [
+	const tabListClassNames = mergeClasses(
 		styles.tabList,
 		styles[`tabList--${size}`],
 		fullWidth && styles['tabList--full-width'],
-		tabListClassName,
-	]
-		.filter(Boolean)
-		.join(' ');
+		tabListClassName
+	);
 
-	const panelContainerClassNames = [
+	const panelContainerClassNames = mergeClasses(
 		styles.panelContainer,
 		styles[`panelContainer--${size}`],
-		panelClassName,
-	]
-		.filter(Boolean)
-		.join(' ');
+		panelClassName
+	);
 
 	return (
 		<div ref={ref} className={containerClassNames}>
@@ -290,15 +287,13 @@ export const Tabs = forwardRef<HTMLDivElement, TabsProps>(function Tabs(
 					const isActive = index === activeTabIndex;
 					const isDisabled = tab.props.disabled;
 
-					const tabClassNames = [
+					const tabClassNames = mergeClasses(
 						styles.tab,
 						styles[`tab--${size}`],
 						isActive && styles['tab--active'],
 						isDisabled && styles['tab--disabled'],
-						fullWidth && styles['tab--full-width'],
-					]
-						.filter(Boolean)
-						.join(' ');
+						fullWidth && styles['tab--full-width']
+					);
 
 					return (
 						<button

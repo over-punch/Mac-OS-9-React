@@ -235,7 +235,11 @@ export const Controlled: Story = {
 		const [checked, setChecked] = React.useState(false);
 		return (
 			<div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-				<Checkbox checked={checked} onChange={(e) => setChecked(e.target.checked)} label="Controlled checkbox" />
+				<Checkbox
+					checked={checked}
+					onChange={(e) => setChecked(e.target.checked)}
+					label="Controlled checkbox"
+				/>
 				<p style={{ fontSize: '11px' }}>Checked: {checked ? 'Yes' : 'No'}</p>
 			</div>
 		);
@@ -320,7 +324,8 @@ export const SelectAllExample: Story = {
 	parameters: {
 		docs: {
 			description: {
-				story: 'Classic "Select All" pattern with parent checkbox showing indeterminate state when some items are selected',
+				story:
+					'Classic "Select All" pattern with parent checkbox showing indeterminate state when some items are selected',
 			},
 		},
 	},
@@ -337,7 +342,9 @@ export const InForm: Story = {
 				onSubmit={(e) => {
 					e.preventDefault();
 					const formData = new FormData(e.currentTarget);
-					alert(`Terms: ${formData.get('terms') ? 'Accepted' : 'Not accepted'}\nNewsletter: ${formData.get('newsletter') ? 'Subscribed' : 'Not subscribed'}`);
+					alert(
+						`Terms: ${formData.get('terms') ? 'Accepted' : 'Not accepted'}\nNewsletter: ${formData.get('newsletter') ? 'Subscribed' : 'Not subscribed'}`
+					);
 				}}
 				style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxWidth: '300px' }}
 			>
@@ -437,9 +444,7 @@ export const FilePermissions: Story = {
 export const KeyboardNavigation: Story = {
 	render: () => (
 		<div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-			<p style={{ fontSize: '11px', marginBottom: '8px' }}>
-				Use Tab to navigate, Space to toggle
-			</p>
+			<p style={{ fontSize: '11px', marginBottom: '8px' }}>Use Tab to navigate, Space to toggle</p>
 			<Checkbox label="First checkbox" />
 			<Checkbox label="Second checkbox" />
 			<Checkbox label="Third checkbox" />

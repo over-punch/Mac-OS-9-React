@@ -2,10 +2,13 @@
 // Classic checkbox with label support and full accessibility
 
 import React, { forwardRef, InputHTMLAttributes } from 'react';
+import { mergeClasses } from '../../utils/classNames';
 import styles from './Checkbox.module.css';
 
-export interface CheckboxProps
-	extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type' | 'size'> {
+export interface CheckboxProps extends Omit<
+	InputHTMLAttributes<HTMLInputElement>,
+	'type' | 'size'
+> {
 	/**
 	 * Whether the checkbox is checked
 	 * For controlled component usage
@@ -77,10 +80,10 @@ export interface CheckboxProps
 
 /**
  * Mac OS 9 style Checkbox component
- * 
+ *
  * Classic checkbox with raised bevel effect and optional label.
  * Supports checked, unchecked, indeterminate, and disabled states.
- * 
+ *
  * Features:
  * - Classic Mac OS 9 bevel styling
  * - Indeterminate state support
@@ -89,21 +92,21 @@ export interface CheckboxProps
  * - Full accessibility with ARIA support
  * - Keyboard navigation (Space to toggle)
  * - Form integration
- * 
+ *
  * @example
  * ```tsx
  * // Uncontrolled
  * <Checkbox label="Accept terms" />
- * 
+ *
  * // Controlled
- * <Checkbox 
- *   checked={isChecked} 
+ * <Checkbox
+ *   checked={isChecked}
  *   onChange={(e) => setIsChecked(e.target.checked)}
  *   label="Subscribe to newsletter"
  * />
- * 
+ *
  * // Indeterminate (for "select all")
- * <Checkbox 
+ * <Checkbox
  *   indeterminate={someSelected && !allSelected}
  *   checked={allSelected}
  *   onChange={handleSelectAll}
@@ -146,28 +149,24 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
 		const generatedId = React.useId();
 		const checkboxId = id ?? generatedId;
 
-	// Build class names
-	const wrapperClassNames = [
-		styles.wrapper,
-		styles[`wrapper--${size}`],
-		styles[`wrapper--label-${labelPosition}`],
-		disabled && styles['wrapper--disabled'],
-		error && styles['wrapper--error'],
-		className,
-	]
-		.filter(Boolean)
-		.join(' ');
+		// Build class names
+		const wrapperClassNames = mergeClasses(
+			styles.wrapper,
+			styles[`wrapper--${size}`],
+			styles[`wrapper--label-${labelPosition}`],
+			disabled && styles['wrapper--disabled'],
+			error && styles['wrapper--error'],
+			className
+		);
 
-	const checkboxClassNames = [
-		styles.checkbox,
-		styles[`checkbox--${size}`],
-		indeterminate && styles['checkbox--indeterminate'],
-		error && styles['checkbox--error'],
-	]
-		.filter(Boolean)
-		.join(' ');
+		const checkboxClassNames = mergeClasses(
+			styles.checkbox,
+			styles[`checkbox--${size}`],
+			indeterminate && styles['checkbox--indeterminate'],
+			error && styles['checkbox--error']
+		);
 
-	const labelClassNames = [styles.label, styles[`label--${size}`]].filter(Boolean).join(' ');
+		const labelClassNames = mergeClasses(styles.label, styles[`label--${size}`]);
 
 		// ARIA attributes
 		//

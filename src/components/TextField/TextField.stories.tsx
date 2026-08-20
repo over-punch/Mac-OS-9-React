@@ -3,13 +3,7 @@
 import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react';
 import { TextField } from './TextField';
-import {
-	SearchIcon,
-	UserIcon,
-	LockIcon,
-	MailIcon,
-	CalendarIcon,
-} from '../Icon/categories';
+import { SearchIcon, UserIcon, LockIcon, MailIcon, CalendarIcon } from '../Icon/categories';
 import '../../styles/theme.css';
 
 const meta = {
@@ -307,7 +301,9 @@ export const WithLeftIcon: Story = {
 };
 
 export const WithRightIcon: Story = {
-	render: () => <TextField rightIcon={<UserIcon />} label="Username" placeholder="Enter username" />,
+	render: () => (
+		<TextField rightIcon={<UserIcon />} label="Username" placeholder="Enter username" />
+	),
 	parameters: {
 		docs: {
 			description: {
@@ -323,7 +319,12 @@ export const IconExamples: Story = {
 			<TextField leftIcon={<SearchIcon />} placeholder="Search files..." />
 			<TextField leftIcon={<UserIcon />} label="Username" placeholder="Enter username" />
 			<TextField leftIcon={<MailIcon />} type="email" label="Email" placeholder="you@example.com" />
-			<TextField leftIcon={<LockIcon />} type="password" label="Password" placeholder="Enter password" />
+			<TextField
+				leftIcon={<LockIcon />}
+				type="password"
+				label="Password"
+				placeholder="Enter password"
+			/>
 			<TextField leftIcon={<CalendarIcon />} type="date" label="Birth Date" />
 		</div>
 	),
@@ -349,7 +350,9 @@ export const LoginForm: Story = {
 				alert(`Username: ${formData.get('username')}\nPassword: ${formData.get('password')}`);
 			}}
 			style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '300px' }}
-		>	<h3 style={{ margin: '0 0 8px 0', fontSize: '14px', fontFamily: 'Geneva, sans-serif' }}>
+		>
+			{' '}
+			<h3 style={{ margin: '0 0 8px 0', fontSize: '14px', fontFamily: 'Geneva, sans-serif' }}>
 				Login
 			</h3>
 			<TextField
@@ -543,7 +546,13 @@ export const ContactForm: Story = {
 			<div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
 				<TextField label="First Name" placeholder="John" fullWidth />
 				<TextField label="Last Name" placeholder="Doe" fullWidth />
-				<TextField type="email" label="Email" leftIcon={<MailIcon />} placeholder="john@example.com" fullWidth />
+				<TextField
+					type="email"
+					label="Email"
+					leftIcon={<MailIcon />}
+					placeholder="john@example.com"
+					fullWidth
+				/>
 				<TextField type="tel" label="Phone" placeholder="+1 (555) 123-4567" fullWidth />
 			</div>
 		</div>

@@ -24,7 +24,9 @@ beforeAll(() => {
 			(this as HTMLElement).style?.display === 'none' ||
 			(this as HTMLElement).style?.visibility === 'hidden';
 		const rects = hidden ? [] : [{ width: 10, height: 10 } as DOMRect];
-		return Object.assign(rects, { item: (i: number) => rects[i] ?? null }) as unknown as DOMRectList;
+		return Object.assign(rects, {
+			item: (i: number) => rects[i] ?? null,
+		}) as unknown as DOMRectList;
 	};
 });
 

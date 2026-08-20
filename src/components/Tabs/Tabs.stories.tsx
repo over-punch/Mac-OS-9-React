@@ -343,7 +343,14 @@ export const DocumentProperties: Story = {
 					</div>
 				</TabPanel>
 				<TabPanel label="Preview">
-					<div style={{ fontSize: '11px', fontFamily: 'monospace', padding: '8px', backgroundColor: '#fff' }}>
+					<div
+						style={{
+							fontSize: '11px',
+							fontFamily: 'monospace',
+							padding: '8px',
+							backgroundColor: '#fff',
+						}}
+					>
 						This is a preview of the document content...
 					</div>
 				</TabPanel>
@@ -395,7 +402,9 @@ export const InstallerWizard: Story = {
 								<p>END USER LICENSE AGREEMENT...</p>
 								<p>By installing this software, you agree to...</p>
 							</div>
-							<label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px' }}>
+							<label
+								style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px' }}
+							>
 								<input type="checkbox" />I accept the terms
 							</label>
 						</div>
@@ -403,14 +412,20 @@ export const InstallerWizard: Story = {
 					<TabPanel label="Install">
 						<div>
 							<h3 style={{ margin: '0 0 12px 0', fontSize: '14px' }}>Installation</h3>
-							<p style={{ margin: '0 0 16px 0', fontSize: '12px' }}>Ready to install. Click Install to begin.</p>
-							<button style={{ padding: '6px 16px', fontSize: '12px', cursor: 'pointer' }}>Install</button>
+							<p style={{ margin: '0 0 16px 0', fontSize: '12px' }}>
+								Ready to install. Click Install to begin.
+							</p>
+							<button style={{ padding: '6px 16px', fontSize: '12px', cursor: 'pointer' }}>
+								Install
+							</button>
 						</div>
 					</TabPanel>
 					<TabPanel label="Finish">
 						<div>
 							<h3 style={{ margin: '0 0 12px 0', fontSize: '14px' }}>Installation Complete!</h3>
-							<p style={{ margin: 0, fontSize: '12px' }}>The software has been successfully installed.</p>
+							<p style={{ margin: 0, fontSize: '12px' }}>
+								The software has been successfully installed.
+							</p>
 						</div>
 					</TabPanel>
 				</Tabs>

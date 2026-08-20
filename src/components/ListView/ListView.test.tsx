@@ -66,7 +66,9 @@ describe('ListView', () => {
 		});
 
 		it('accepts custom empty content', () => {
-			render(<ListView columns={columns} items={[]} emptyState={<span>This folder is empty</span>} />);
+			render(
+				<ListView columns={columns} items={[]} emptyState={<span>This folder is empty</span>} />
+			);
 			expect(screen.getByText('This folder is empty')).toBeInTheDocument();
 		});
 

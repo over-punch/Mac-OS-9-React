@@ -2,7 +2,15 @@
 // Classic radio button with label support and full accessibility
 // Includes companion RadioGroup component for WAI-ARIA radiogroup pattern
 
-import React, { forwardRef, InputHTMLAttributes, useCallback, useId, useRef, useState } from 'react';
+import React, {
+	forwardRef,
+	InputHTMLAttributes,
+	useCallback,
+	useId,
+	useRef,
+	useState,
+} from 'react';
+import { mergeClasses } from '../../utils/classNames';
 import styles from './Radio.module.css';
 
 /**
@@ -20,8 +28,7 @@ interface RadioGroupContextValue {
 
 const RadioGroupContext = React.createContext<RadioGroupContextValue | null>(null);
 
-export interface RadioProps
-	extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type' | 'size'> {
+export interface RadioProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type' | 'size'> {
 	/**
 	 * Whether the radio is checked
 	 * For controlled component usage
@@ -152,27 +159,23 @@ export const Radio = forwardRef<HTMLInputElement, RadioProps>(
 		const generatedId = useId();
 		const radioId = id || generatedId;
 
-	// Build class names
-	const wrapperClassNames = [
-		styles.wrapper,
-		styles[`wrapper--${size}`],
-		styles[`wrapper--label-${labelPosition}`],
-		resolvedDisabled && styles['wrapper--disabled'],
-		error && styles['wrapper--error'],
-		className,
-	]
-		.filter(Boolean)
-		.join(' ');
+		// Build class names
+		const wrapperClassNames = mergeClasses(
+			styles.wrapper,
+			styles[`wrapper--${size}`],
+			styles[`wrapper--label-${labelPosition}`],
+			resolvedDisabled && styles['wrapper--disabled'],
+			error && styles['wrapper--error'],
+			className
+		);
 
-	const radioClassNames = [
-		styles.radio,
-		styles[`radio--${size}`],
-		error && styles['radio--error'],
-	]
-		.filter(Boolean)
-		.join(' ');
+		const radioClassNames = mergeClasses(
+			styles.radio,
+			styles[`radio--${size}`],
+			error && styles['radio--error']
+		);
 
-	const labelClassNames = [styles.label, styles[`label--${size}`]].filter(Boolean).join(' ');
+		const labelClassNames = mergeClasses(styles.label, styles[`label--${size}`]);
 
 		// ARIA attributes
 		const ariaAttributes = {
@@ -390,9 +393,7 @@ export const RadioGroup = forwardRef<HTMLDivElement, RadioGroupProps>(
 				onKeyDown={handleKeyDown}
 				className={className}
 			>
-				<RadioGroupContext.Provider value={contextValue}>
-					{children}
-				</RadioGroupContext.Provider>
+				<RadioGroupContext.Provider value={contextValue}>{children}</RadioGroupContext.Provider>
 			</div>
 		);
 	}

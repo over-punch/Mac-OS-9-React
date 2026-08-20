@@ -27,7 +27,7 @@ export const TabShape: React.FC<TabShapeProps> = ({
 	// For large tabs (22px height) - use full Figma pattern
 	const isLarge = height === 22;
 	const edgeWidth = 12;
-	const totalWidth = width + (edgeWidth * 2);
+	const totalWidth = width + edgeWidth * 2;
 
 	if (!isLarge) {
 		// For small tabs, simplified border

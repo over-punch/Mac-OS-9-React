@@ -100,7 +100,12 @@ describe('Window', () => {
 		it('moves the window with the arrow keys', () => {
 			const onPositionChange = vi.fn();
 			render(
-				<Window title="W" draggable defaultPosition={{ x: 100, y: 100 }} onPositionChange={onPositionChange}>
+				<Window
+					title="W"
+					draggable
+					defaultPosition={{ x: 100, y: 100 }}
+					onPositionChange={onPositionChange}
+				>
 					c
 				</Window>
 			);
@@ -114,12 +119,20 @@ describe('Window', () => {
 		it('takes a 10x step when Shift is held', () => {
 			const onPositionChange = vi.fn();
 			render(
-				<Window title="W" draggable defaultPosition={{ x: 100, y: 100 }} onPositionChange={onPositionChange}>
+				<Window
+					title="W"
+					draggable
+					defaultPosition={{ x: 100, y: 100 }}
+					onPositionChange={onPositionChange}
+				>
 					c
 				</Window>
 			);
 
-			fireEvent.keyDown(screen.getByLabelText('Move W window'), { key: 'ArrowDown', shiftKey: true });
+			fireEvent.keyDown(screen.getByLabelText('Move W window'), {
+				key: 'ArrowDown',
+				shiftKey: true,
+			});
 
 			expect(onPositionChange).toHaveBeenCalledWith({ x: 100, y: 110 });
 		});
@@ -146,7 +159,12 @@ describe('Window', () => {
 		it('ignores keys that are not arrows', () => {
 			const onPositionChange = vi.fn();
 			render(
-				<Window title="W" draggable defaultPosition={{ x: 10, y: 10 }} onPositionChange={onPositionChange}>
+				<Window
+					title="W"
+					draggable
+					defaultPosition={{ x: 10, y: 10 }}
+					onPositionChange={onPositionChange}
+				>
 					c
 				</Window>
 			);
@@ -161,7 +179,12 @@ describe('Window', () => {
 		it('will not let the window be pushed off the top of the parent', () => {
 			const onPositionChange = vi.fn();
 			render(
-				<Window title="W" draggable defaultPosition={{ x: 50, y: 0 }} onPositionChange={onPositionChange}>
+				<Window
+					title="W"
+					draggable
+					defaultPosition={{ x: 50, y: 0 }}
+					onPositionChange={onPositionChange}
+				>
 					c
 				</Window>
 			);
@@ -179,12 +202,20 @@ describe('Window', () => {
 			// 1024px viewport x maxes out at 1000.
 			window.innerWidth = 1024;
 			render(
-				<Window title="W" draggable defaultPosition={{ x: 995, y: 10 }} onPositionChange={onPositionChange}>
+				<Window
+					title="W"
+					draggable
+					defaultPosition={{ x: 995, y: 10 }}
+					onPositionChange={onPositionChange}
+				>
 					c
 				</Window>
 			);
 
-			fireEvent.keyDown(screen.getByLabelText('Move W window'), { key: 'ArrowRight', shiftKey: true });
+			fireEvent.keyDown(screen.getByLabelText('Move W window'), {
+				key: 'ArrowRight',
+				shiftKey: true,
+			});
 
 			expect(onPositionChange).toHaveBeenCalledWith({ x: 1000, y: 10 });
 		});

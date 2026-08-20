@@ -8,13 +8,7 @@ export { default } from './Icon';
 export { IconLibrary, type IconLibraryProps } from './IconLibrary';
 
 // Icon registry and utilities
-export {
-	iconRegistry,
-	getIcon,
-	hasIcon,
-	getAllIconNames,
-	type IconName,
-} from './registry';
+export { iconRegistry, getIcon, hasIcon, getAllIconNames, type IconName } from './registry';
 
 // Icon types
 export type { IconComponent, IconCategory, IconMetadata } from './types';

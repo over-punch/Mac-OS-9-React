@@ -310,10 +310,17 @@ function readParentMetrics(element: HTMLElement): ParentMetrics {
 	const parent = element.offsetParent as HTMLElement | null;
 	if (parent) {
 		const rect = parent.getBoundingClientRect();
-		return { left: rect.left, top: rect.top, width: parent.clientWidth, height: parent.clientHeight };
+		return {
+			left: rect.left,
+			top: rect.top,
+			width: parent.clientWidth,
+			height: parent.clientHeight,
+		};
 	}
-	const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : Number.POSITIVE_INFINITY;
-	const viewportHeight = typeof window !== 'undefined' ? window.innerHeight : Number.POSITIVE_INFINITY;
+	const viewportWidth =
+		typeof window !== 'undefined' ? window.innerWidth : Number.POSITIVE_INFINITY;
+	const viewportHeight =
+		typeof window !== 'undefined' ? window.innerHeight : Number.POSITIVE_INFINITY;
 	return { left: 0, top: 0, width: viewportWidth, height: viewportHeight };
 }
 
@@ -420,15 +427,21 @@ export const Window = forwardRef<HTMLDivElement, WindowProps>(
 		// successful resize and stays true thereafter; from that point on
 		// `internalSize` is the canonical width/height so the user's resize
 		// persists after pointerup (issue #10).
-		const [internalSize, setInternalSize] = useState<{ width: number | string; height: number | string }>({
+		const [internalSize, setInternalSize] = useState<{
+			width: number | string;
+			height: number | string;
+		}>({
 			width,
 			height,
 		});
 		const [isResizing, setIsResizing] = useState(false);
 		const [hasBeenResized, setHasBeenResized] = useState(false);
-		const resizeStartRef = useRef<{ width: number; height: number; pointerX: number; pointerY: number } | null>(
-			null
-		);
+		const resizeStartRef = useRef<{
+			width: number;
+			height: number;
+			pointerX: number;
+			pointerY: number;
+		} | null>(null);
 
 		// requestAnimationFrame coalescing. Pointer devices fire moves far
 		// faster than the browser paints; without this every event triggered a
@@ -510,7 +523,8 @@ export const Window = forwardRef<HTMLDivElement, WindowProps>(
 
 		/** Publishes a new position to whichever source of truth is in charge. */
 		const commitPosition = useCallback((next: WindowPosition) => {
-			const { controlledPosition: liveControlled, onPositionChange: liveOnChange } = latestRef.current;
+			const { controlledPosition: liveControlled, onPositionChange: liveOnChange } =
+				latestRef.current;
 			if (liveControlled && liveOnChange) {
 				liveOnChange(next);
 			} else {
@@ -774,7 +788,12 @@ export const Window = forwardRef<HTMLDivElement, WindowProps>(
 					})();
 
 				commitPosition(
-					clampPosition(origin.x + delta.dx * step, origin.y + delta.dy * step, windowElement, metrics)
+					clampPosition(
+						origin.x + delta.dx * step,
+						origin.y + delta.dy * step,
+						windowElement,
+						metrics
+					)
 				);
 			},
 			[draggable, keyboardStep, currentPosition, commitPosition, clampPosition]
@@ -908,7 +927,9 @@ export const Window = forwardRef<HTMLDivElement, WindowProps>(
 						)}
 						<div className={styles.titleCenter}>
 							<TitleBarPattern />
-							<div className={mergeClasses(styles.titleText, classes?.titleText, 'bold')}>{title}</div>
+							<div className={mergeClasses(styles.titleText, classes?.titleText, 'bold')}>
+								{title}
+							</div>
 							<TitleBarPattern />
 						</div>
 					</div>

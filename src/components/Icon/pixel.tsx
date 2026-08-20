@@ -111,7 +111,10 @@ export function createPixelIcon(
  * Pass `label={null}` for a purely decorative icon that sits next to its own
  * text — repeating the name to a screen reader is noise.
  */
-export interface PixelIconProps extends Omit<React.ComponentProps<typeof Icon>, 'children' | 'label'> {
+export interface PixelIconProps extends Omit<
+	React.ComponentProps<typeof Icon>,
+	'children' | 'label'
+> {
 	/** Accessible name. Defaults to the icon's own name; `null` hides it. */
 	label?: string | null;
 }

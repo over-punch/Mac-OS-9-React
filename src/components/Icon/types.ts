@@ -17,13 +17,7 @@ export type IconComponent = React.FC<PixelIconProps>;
  * Icon category types
  * Used to organize icons into logical groups
  */
-export type IconCategory =
-	| 'actions'
-	| 'files'
-	| 'navigation'
-	| 'media'
-	| 'status'
-	| 'ui';
+export type IconCategory = 'actions' | 'files' | 'navigation' | 'media' | 'status' | 'ui';
 
 /**
  * Icon metadata for documentation and discovery

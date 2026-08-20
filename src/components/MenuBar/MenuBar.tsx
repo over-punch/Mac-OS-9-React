@@ -4,6 +4,7 @@
 import React, { forwardRef, useRef, useState, useEffect, useCallback, useId } from 'react';
 import { sanitizeUrl } from '../../utils/url';
 import { MenuItem } from './MenuItem';
+import { mergeClasses } from '../../utils/classNames';
 import styles from './MenuBar.module.css';
 
 /**
@@ -399,8 +400,8 @@ export const MenuBar = forwardRef<HTMLDivElement, MenuBarProps>(
 		};
 
 		// Class names
-		const menuBarClassNames = [styles.menuBar, className].filter(Boolean).join(' ');
-		const dropdownClassNames = [styles.dropdown, dropdownClassName].filter(Boolean).join(' ');
+		const menuBarClassNames = mergeClasses(styles.menuBar, className);
+		const dropdownClassNames = mergeClasses(styles.dropdown, dropdownClassName);
 
 		// Callback ref to handle both internal state and forwarded ref
 		const handleRef = useCallback(
@@ -432,13 +433,11 @@ export const MenuBar = forwardRef<HTMLDivElement, MenuBarProps>(
 						const isDropdown = menu.type !== 'link';
 						const id = triggerId(index);
 
-						const menuButtonClassNames = [
+						const menuButtonClassNames = mergeClasses(
 							styles.menuButton,
 							isOpen ? styles['menuButton--open'] : '',
-							menu.disabled ? styles['menuButton--disabled'] : '',
-						]
-							.filter(Boolean)
-							.join(' ');
+							menu.disabled ? styles['menuButton--disabled'] : ''
+						);
 
 						// The label used to be an <h3>, which put a heading into the
 						// document outline for every menu — so a page with a menu bar

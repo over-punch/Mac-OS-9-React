@@ -28,7 +28,7 @@ const sampleItems = [
 const defaultColumns = [
 	{ key: 'name', label: 'Name', width: '40%' },
 	{ key: 'modified', label: 'Date Modified', width: '35%' },
-	{ key: 'size', label: 'Size', width: '25%'},
+	{ key: 'size', label: 'Size', width: '25%' },
 ];
 
 /**
@@ -48,7 +48,7 @@ export const Default: Story = {
 export const WithSelection: Story = {
 	render: () => {
 		const [selectedIds, setSelectedIds] = useState<string[]>(['1']);
-		
+
 		return (
 			<div>
 				<p style={{ marginBottom: '1rem', fontFamily: 'var(--font-system)' }}>
@@ -72,7 +72,7 @@ export const WithSelection: Story = {
 export const WithCustomClasses: Story = {
 	render: () => {
 		const [selectedIds, setSelectedIds] = useState<string[]>([]);
-		
+
 		return (
 			<div>
 				<style>{`
@@ -98,7 +98,7 @@ export const WithCustomClasses: Story = {
 						color: #0000AA;
 					}
 				`}</style>
-				
+
 				<ListView
 					columns={defaultColumns}
 					items={sampleItems}
@@ -125,7 +125,7 @@ export const WithCellInteractions: Story = {
 	render: () => {
 		const [selectedIds, setSelectedIds] = useState<string[]>([]);
 		const [lastClicked, setLastClicked] = useState<string>('');
-		
+
 		return (
 			<div>
 				<p style={{ marginBottom: '1rem', fontFamily: 'var(--font-system)' }}>
@@ -156,17 +156,14 @@ export const WithCustomCellRendering: Story = {
 	render: () => {
 		const [selectedIds, setSelectedIds] = useState<string[]>([]);
 		const [log, setLog] = useState<string[]>([]);
-		
+
 		const addLog = (message: string) => {
-			setLog(prev => [...prev.slice(-2), message]);
+			setLog((prev) => [...prev.slice(-2), message]);
 		};
-		
+
 		// Add actions column
-		const columns = [
-			...defaultColumns,
-			{ key: 'actions', label: 'Actions', width: '20%' },
-		];
-		
+		const columns = [...defaultColumns, { key: 'actions', label: 'Actions', width: '20%' }];
+
 		return (
 			<div>
 				<div style={{ marginBottom: '1rem', fontFamily: 'var(--font-system)', minHeight: '40px' }}>
@@ -184,8 +181,8 @@ export const WithCustomCellRendering: Story = {
 						if (column.key === 'actions') {
 							return (
 								<div style={{ display: 'flex', gap: '4px' }}>
-									<Button 
-										size="sm" 
+									<Button
+										size="sm"
 										onClick={(e) => {
 											e.stopPropagation();
 											addLog(`Edit: ${item.name}`);
@@ -193,8 +190,8 @@ export const WithCustomCellRendering: Story = {
 									>
 										Edit
 									</Button>
-									<Button 
-										size="sm" 
+									<Button
+										size="sm"
 										variant="danger"
 										onClick={(e) => {
 											e.stopPropagation();
@@ -206,7 +203,7 @@ export const WithCustomCellRendering: Story = {
 								</div>
 							);
 						}
-						
+
 						// Default rendering for other cells
 						return value;
 					}}
@@ -224,7 +221,7 @@ export const WithCustomHeaderRendering: Story = {
 		const [selectedIds, setSelectedIds] = useState<string[]>([]);
 		const [sortColumn, setSortColumn] = useState<string>('');
 		const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
-		
+
 		return (
 			<div>
 				<p style={{ marginBottom: '1rem', fontFamily: 'var(--font-system)' }}>
@@ -265,7 +262,7 @@ export const WithCustomHeaderRendering: Story = {
 export const WithCustomRowRendering: Story = {
 	render: () => {
 		const [selectedIds, setSelectedIds] = useState<string[]>([]);
-		
+
 		return (
 			<div>
 				<ListView
@@ -277,15 +274,17 @@ export const WithCustomRowRendering: Story = {
 					renderRow={(item, _state, defaultProps) => {
 						// Custom row with hover effect and type-based styling
 						const isFolder = item.type === 'folder';
-						
+
 						return (
-							<div 
+							<div
 								{...defaultProps}
 								style={{
-									background: state.isSelected 
-										? '#0000AA' 
-										: state.isHovered 
-											? isFolder ? '#FFF8DC' : '#E6F2FF'
+									background: state.isSelected
+										? '#0000AA'
+										: state.isHovered
+											? isFolder
+												? '#FFF8DC'
+												: '#E6F2FF'
 											: 'transparent',
 									color: state.isSelected ? 'white' : 'black',
 									fontWeight: isFolder ? 'bold' : 'normal',
@@ -298,7 +297,14 @@ export const WithCustomRowRendering: Story = {
 									<span style={{ color: state.isSelected ? '#DDD' : '#666', fontSize: '0.9em' }}>
 										{item.modified}
 									</span>
-									<span style={{ color: state.isSelected ? '#DDD' : '#666', fontSize: '0.9em', minWidth: '60px', textAlign: 'right' }}>
+									<span
+										style={{
+											color: state.isSelected ? '#DDD' : '#666',
+											fontSize: '0.9em',
+											minWidth: '60px',
+											textAlign: 'right',
+										}}
+									>
 										{item.size}
 									</span>
 								</div>
@@ -317,7 +323,7 @@ export const WithCustomRowRendering: Story = {
 export const WithDataAttributes: Story = {
 	render: () => {
 		const [selectedIds, setSelectedIds] = useState<string[]>([]);
-		
+
 		return (
 			<div>
 				<style>{`
@@ -343,7 +349,7 @@ export const WithDataAttributes: Story = {
 						cursor: pointer;
 					}
 				`}</style>
-				
+
 				<ListView
 					className="data-attr-example"
 					columns={defaultColumns}
@@ -364,18 +370,18 @@ export const CompleteExample: Story = {
 	render: () => {
 		const [selectedIds, setSelectedIds] = useState<string[]>([]);
 		const [messages, setMessages] = useState<string[]>([]);
-		
+
 		const addMessage = (msg: string) => {
-			setMessages(prev => [...prev.slice(-3), msg]);
+			setMessages((prev) => [...prev.slice(-3), msg]);
 		};
-		
+
 		const columns = [
 			{ key: 'name', label: 'Name', width: '35%' },
 			{ key: 'modified', label: 'Modified', width: '30%' },
 			{ key: 'size', label: 'Size', width: '20%' },
 			{ key: 'actions', label: '', width: '15%' },
 		];
-		
+
 		return (
 			<div style={{ width: '600px' }}>
 				<style>{`
@@ -387,21 +393,25 @@ export const CompleteExample: Story = {
 						background: rgba(0, 0, 170, 0.05);
 					}
 				`}</style>
-				
-				<div style={{ 
-					marginBottom: '1rem', 
-					fontFamily: 'var(--font-system)',
-					minHeight: '60px',
-					padding: '8px',
-					background: '#F0F0F0',
-					border: '1px solid #999',
-				}}>
+
+				<div
+					style={{
+						marginBottom: '1rem',
+						fontFamily: 'var(--font-system)',
+						minHeight: '60px',
+						padding: '8px',
+						background: '#F0F0F0',
+						border: '1px solid #999',
+					}}
+				>
 					<strong>Activity Log:</strong>
 					{messages.map((msg, i) => (
-						<div key={i} style={{ fontSize: '0.9em' }}>{msg}</div>
+						<div key={i} style={{ fontSize: '0.9em' }}>
+							{msg}
+						</div>
 					))}
 				</div>
-				
+
 				<ListView
 					className="complete-example"
 					columns={columns}
@@ -421,7 +431,7 @@ export const CompleteExample: Story = {
 					renderCell={(value, item, column, _state) => {
 						if (column.key === 'actions') {
 							return (
-								<Button 
+								<Button
 									size="sm"
 									onClick={(e) => {
 										e.stopPropagation();
@@ -432,7 +442,7 @@ export const CompleteExample: Story = {
 								</Button>
 							);
 						}
-						
+
 						if (column.key === 'name') {
 							const icon = item.type === 'folder' ? '📁' : '📄';
 							return (
@@ -442,7 +452,7 @@ export const CompleteExample: Story = {
 								</span>
 							);
 						}
-						
+
 						return value;
 					}}
 				/>

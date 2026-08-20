@@ -61,7 +61,7 @@ export function sanitizeUrl(href: string | undefined): string | undefined {
 	if (typeof process !== 'undefined' && process.env && process.env.NODE_ENV !== 'production') {
 		console.warn(
 			`[@liiift-studio/mac-os9-ui] Refused unsafe URL scheme "${scheme}:" in href. ` +
-				`Allowed schemes: ${SAFE_URL_SCHEMES.join(', ')}, plus relative URLs.`,
+				`Allowed schemes: ${SAFE_URL_SCHEMES.join(', ')}, plus relative URLs.`
 		);
 	}
 	return undefined;

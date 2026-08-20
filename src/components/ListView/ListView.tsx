@@ -716,9 +716,7 @@ function ListViewInner<TItem extends ListItem = ListItem>(
 						<div key={column.key} {...headerElementProps}>
 							{column.label}
 							{isSorted && (
-								<span className={styles.sortIndicator}>
-									{sortDirection === 'asc' ? '▲' : '▼'}
-								</span>
+								<span className={styles.sortIndicator}>{sortDirection === 'asc' ? '▲' : '▼'}</span>
 							)}
 						</div>
 					);

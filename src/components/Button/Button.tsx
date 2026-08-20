@@ -12,6 +12,7 @@ import React, {
 	AriaAttributes,
 } from 'react';
 import { sanitizeUrl } from '../../utils/url';
+import { mergeClasses } from '../../utils/classNames';
 import styles from './Button.module.css';
 
 /**
@@ -144,8 +145,7 @@ interface BaseButtonProps {
 
 // Button-specific props
 interface ButtonAsButton
-	extends BaseButtonProps,
-		Omit<ButtonHTMLAttributes<HTMLButtonElement>, keyof BaseButtonProps> {
+	extends BaseButtonProps, Omit<ButtonHTMLAttributes<HTMLButtonElement>, keyof BaseButtonProps> {
 	/**
 	 * Render as button element
 	 * @default 'button'
@@ -180,8 +180,7 @@ interface ButtonAsButton
 
 // Link-specific props
 interface ButtonAsLink
-	extends BaseButtonProps,
-		Omit<AnchorHTMLAttributes<HTMLAnchorElement>, keyof BaseButtonProps> {
+	extends BaseButtonProps, Omit<AnchorHTMLAttributes<HTMLAnchorElement>, keyof BaseButtonProps> {
 	/**
 	 * Render as anchor element
 	 */
@@ -311,7 +310,7 @@ const ButtonImpl = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonProps
 	) {
 		console.error(
 			'Button: `iconOnly` was set but no accessible name could be determined. ' +
-				'Pass `aria-label`, because non-string children cannot supply one.',
+				'Pass `aria-label`, because non-string children cannot supply one.'
 		);
 	}
 
@@ -319,7 +318,7 @@ const ButtonImpl = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonProps
 	const isLink = props.as === 'a';
 
 	// Build class names
-	const classNames = [
+	const classNames = mergeClasses(
 		styles.button,
 		styles[`button--${variant}`],
 		styles[`button--${size}`],
@@ -329,10 +328,8 @@ const ButtonImpl = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonProps
 		loading && useCursorLoading && styles['button--cursor-loading'],
 		iconOnly && styles['button--icon-only'],
 		(leftIcon || rightIcon) && styles['button--with-icon'],
-		className,
-	]
-		.filter(Boolean)
-		.join(' ');
+		className
+	);
 
 	// Shared ARIA. These are spread AFTER the caller's remaining props so a
 	// stray `aria-disabled`/`aria-busy` in the rest props can't contradict the
@@ -418,7 +415,7 @@ const ButtonImpl = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonProps
 			...domProps,
 			...sharedAria,
 			ref,
-			className: [classNames, childProps.className].filter(Boolean).join(' '),
+			className: mergeClasses(classNames, childProps.className),
 			onClick: (event: React.MouseEvent) => {
 				if (disabled || loading) {
 					event.preventDefault();

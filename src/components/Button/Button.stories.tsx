@@ -568,7 +568,8 @@ export const KeyboardNavigation: Story = {
 	parameters: {
 		docs: {
 			description: {
-				story: 'Test keyboard navigation with Tab, Enter, and Space keys. Focus indicators should be visible.',
+				story:
+					'Test keyboard navigation with Tab, Enter, and Space keys. Focus indicators should be visible.',
 			},
 		},
 	},
