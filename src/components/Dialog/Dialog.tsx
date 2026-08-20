@@ -337,8 +337,9 @@ export const Dialog = forwardRef<HTMLDivElement, DialogProps>(
 
 			if (!target) {
 				const focusables = getFocusables(root);
-				if (focusables.length > 0) {
-					target = focusables[0];
+				const firstFocusable = focusables[0];
+				if (firstFocusable) {
+					target = firstFocusable;
 				} else {
 					// No focusable children — focus the container itself so the
 					// trap still has somewhere to land. Make it programmatically
@@ -382,6 +383,9 @@ export const Dialog = forwardRef<HTMLDivElement, DialogProps>(
 
 				const first = focusables[0];
 				const last = focusables[focusables.length - 1];
+				// getFocusables returned a non-empty array above, so both ends
+				// exist; this narrows them for the compiler.
+				if (!first || !last) return;
 				const active = document.activeElement as HTMLElement | null;
 
 				// If focus has escaped the dialog (e.g., user clicked outside

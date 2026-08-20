@@ -363,6 +363,7 @@ export const RadioGroup = forwardRef<HTMLDivElement, RadioGroupProps>(
 						);
 			const nextIndex = (startIndex + direction + radios.length) % radios.length;
 			const target = radios[nextIndex];
+			if (!target) return;
 			target.focus();
 			// Selecting on arrow move matches the WAI-ARIA radiogroup pattern
 			// for automatic activation. The synthetic ChangeEvent piggybacks

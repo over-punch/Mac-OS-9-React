@@ -55,7 +55,7 @@ function sanitizeUrl(href) {
         // No scheme at all (e.g. "example.com/foo") — treat as relative; cannot inject script.
         return trimmed;
     }
-    const scheme = match[1].toLowerCase();
+    const scheme = (match[1] ?? '').toLowerCase();
     if (SAFE_URL_SCHEMES.includes(scheme)) {
         return trimmed;
     }
@@ -147,11 +147,19 @@ const ButtonImpl = forwardRef((props, ref) => {
     // stray `aria-disabled`/`aria-busy` in the rest props can't contradict the
     // component's own `disabled`/`loading` state.
     //
-    // aria-disabled is applied on every branch, not just the anchor. The
-    // `<button>` element also gets a native `disabled`, which is what actually
-    // blocks interaction; aria-disabled alongside it keeps the exposed state
-    // identical no matter which element Button ends up rendering, which is the
-    // consistency the other form components are aligned to.
+    // The library's rule for disabled state, applied consistently across every
+    // component:
+    //
+    //   - An element with a native disabled attribute (button, input, select,
+    //     textarea) uses that alone. It already removes the element from the
+    //     accessibility tree and the tab order, and a redundant aria-disabled
+    //     is one more thing that can drift out of sync with it.
+    //   - An element with no native equivalent (an anchor, a RadioGroup
+    //     wrapper, an asChild target) carries aria-disabled instead, with the
+    //     behaviour enforced in the event handler.
+    //
+    // aria-disabled is set here for the anchor and asChild branches; the
+    // <button> branch below clears it.
     const sharedAria = {
         'aria-label': iconOnly ? (resolvedAriaLabel ?? iconOnlyFallbackLabel) : resolvedAriaLabel,
         'aria-describedby': resolvedAriaDescribedBy,
@@ -225,7 +233,7 @@ const ButtonImpl = forwardRef((props, ref) => {
     }
     // --- Button ------------------------------------------------------------
     const { type = 'button', form, formAction, formMethod, formNoValidate, formTarget, ...buttonProps } = domProps;
-    return (jsx("button", { ...buttonProps, ref: ref, type: type, disabled: disabled || loading, form: form, formAction: formAction, formMethod: formMethod, formNoValidate: formNoValidate, formTarget: formTarget, className: classNames, ...sharedAria, children: renderButtonContent() }));
+    return (jsx("button", { ...buttonProps, ref: ref, type: type, disabled: disabled || loading, form: form, formAction: formAction, formMethod: formMethod, formNoValidate: formNoValidate, formTarget: formTarget, className: classNames, ...sharedAria, "aria-disabled": undefined, children: renderButtonContent() }));
 });
 ButtonImpl.displayName = 'Button';
 const Button = ButtonImpl;
@@ -284,7 +292,7 @@ function pixelsToRects(map) {
             runFill = undefined;
         };
         for (let x = 0; x < row.length; x += 1) {
-            const fill = PIXEL_FILLS[row[x]];
+            const fill = PIXEL_FILLS[row[x] ?? '.'];
             if (fill !== runFill) {
                 flush(x);
                 if (fill) {
@@ -1406,6 +1414,8 @@ const RadioGroup = forwardRef(({ name, value, defaultValue, onChange, disabled =
             : Math.max(0, radios.findIndex((r) => r.value === String(currentValue)));
         const nextIndex = (startIndex + direction + radios.length) % radios.length;
         const target = radios[nextIndex];
+        if (!target)
+            return;
         target.focus();
         // Selecting on arrow move matches the WAI-ARIA radiogroup pattern
         // for automatic activation. The synthetic ChangeEvent piggybacks
@@ -2451,8 +2461,9 @@ const Dialog = forwardRef(({ open = false, onClose, closeOnBackdropClick = true,
         }
         if (!target) {
             const focusables = getFocusables(root);
-            if (focusables.length > 0) {
-                target = focusables[0];
+            const firstFocusable = focusables[0];
+            if (firstFocusable) {
+                target = firstFocusable;
             }
             else {
                 // No focusable children — focus the container itself so the
@@ -2499,6 +2510,10 @@ const Dialog = forwardRef(({ open = false, onClose, closeOnBackdropClick = true,
             }
             const first = focusables[0];
             const last = focusables[focusables.length - 1];
+            // getFocusables returned a non-empty array above, so both ends
+            // exist; this narrows them for the compiler.
+            if (!first || !last)
+                return;
             const active = document.activeElement;
             // If focus has escaped the dialog (e.g., user clicked outside
             // and Tabbed), pull it back in.
@@ -2868,7 +2883,7 @@ const MenuBar = forwardRef(({ menus, openMenuIndex, defaultOpenMenuIndex, onMenu
     // Handle menu button click
     const handleMenuClick = (index) => {
         const menu = menus[index];
-        if (menu?.disabled)
+        if (!menu || menu.disabled)
             return;
         if (menu.type === 'link') {
             // For link-type menus, trigger the onClick handler
@@ -3460,7 +3475,7 @@ function ListViewInner({ columns, items, selectedIds = [], onSelectionChange, on
                     const headerDefaultProps = {
                         key: column.key,
                         className: mergeClasses(styles$1.headerCell, column.sortable !== false && styles$1.sortable, classes?.headerCell),
-                        style: columnStyles[columnIndex],
+                        style: columnStyles[columnIndex] ?? {},
                         onClick: () => handleColumnClick(column.key, column.sortable),
                         'data-column': column.key,
                         'data-sortable': column.sortable !== false,

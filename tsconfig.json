@@ -11,6 +11,11 @@
 		"noEmit": true,
 		"jsx": "react-jsx",
 		"strict": true,
+		// The library indexes into arrays and record types constantly — focusable
+		// element lists, pixel maps, column arrays, regex match groups. Without
+		// this, every one of those reads was typed as definitely-present when it
+		// was not.
+		"noUncheckedIndexedAccess": true,
 		"noUnusedLocals": false,
 		"noUnusedParameters": false,
 		"noFallthroughCasesInSwitch": true,

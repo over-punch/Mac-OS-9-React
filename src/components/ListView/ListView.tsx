@@ -690,7 +690,7 @@ function ListViewInner<TItem extends ListItem = ListItem>(
 							column.sortable !== false && styles.sortable,
 							classes?.headerCell
 						),
-						style: columnStyles[columnIndex],
+						style: columnStyles[columnIndex] ?? {},
 						onClick: () => handleColumnClick(column.key, column.sortable),
 						'data-column': column.key,
 						'data-sortable': column.sortable !== false,

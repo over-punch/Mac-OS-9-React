@@ -59,7 +59,7 @@ function pixelsToRects(map: PixelMap): React.ReactElement[] {
 		};
 
 		for (let x = 0; x < row.length; x += 1) {
-			const fill = PIXEL_FILLS[row[x]];
+			const fill = PIXEL_FILLS[row[x] ?? '.'];
 			if (fill !== runFill) {
 				flush(x);
 				if (fill) {

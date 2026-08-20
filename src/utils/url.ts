@@ -53,7 +53,7 @@ export function sanitizeUrl(href: string | undefined): string | undefined {
 		return trimmed;
 	}
 
-	const scheme = match[1].toLowerCase();
+	const scheme = (match[1] ?? '').toLowerCase();
 	if (SAFE_URL_SCHEMES.includes(scheme)) {
 		return trimmed;
 	}

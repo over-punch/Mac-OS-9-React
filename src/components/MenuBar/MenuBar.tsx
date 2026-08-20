@@ -381,7 +381,7 @@ export const MenuBar = forwardRef<HTMLDivElement, MenuBarProps>(
 		// Handle menu button click
 		const handleMenuClick = (index: number) => {
 			const menu = menus[index];
-			if (menu?.disabled) return;
+			if (!menu || menu.disabled) return;
 
 			if (menu.type === 'link') {
 				// For link-type menus, trigger the onClick handler
