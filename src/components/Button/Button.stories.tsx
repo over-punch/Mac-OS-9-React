@@ -138,11 +138,14 @@ export const AllSizes: Story = {
 // ========================================
 
 export const AsLink: Story = {
-	args: {
-		as: 'a',
-		href: '/dashboard',
-		children: 'Go to Dashboard',
-	} as any,
+	// Rendered rather than driven by `args`: ButtonProps is a discriminated
+	// union, and Storybook's Story args type resolves to only the `<button>`
+	// member of it. This used to be forced through with `as any`.
+	render: () => (
+		<Button as="a" href="/dashboard">
+			Go to Dashboard
+		</Button>
+	),
 	parameters: {
 		docs: {
 			description: {

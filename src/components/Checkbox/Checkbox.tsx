@@ -142,7 +142,9 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
 		}, [indeterminate, combinedRef]);
 
 		// Generate ID if not provided (for label association)
-		const checkboxId = id || React.useId();
+		// useId must be called unconditionally — see the note in TextField.
+		const generatedId = React.useId();
+		const checkboxId = id ?? generatedId;
 
 	// Build class names
 	const wrapperClassNames = [

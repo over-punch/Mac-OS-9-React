@@ -144,7 +144,9 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
 		ref
 	) => {
 		// Generate ID if not provided (for label association)
-		const selectId = id || React.useId();
+		// useId must be called unconditionally — see the note in TextField.
+		const generatedId = React.useId();
+		const selectId = id ?? generatedId;
 
 		// Generate helper/error text ID for aria-describedby
 		const helperId = `${selectId}-helper`;

@@ -1,9 +1,29 @@
 // Button component - Mac OS 9 style
-// Enhanced with polymorphic support, loading states, and icon support
+// Polymorphic button/link with loading states, icon support, and an
+// `asChild` escape hatch for router link components.
 
-import React, { forwardRef, ButtonHTMLAttributes, AnchorHTMLAttributes } from 'react';
+import React, {
+	forwardRef,
+	isValidElement,
+	cloneElement,
+	Children,
+	ButtonHTMLAttributes,
+	AnchorHTMLAttributes,
+	AriaAttributes,
+} from 'react';
 import { sanitizeUrl } from '../../utils/url';
 import styles from './Button.module.css';
+
+/**
+ * The ARIA attributes Button computes for itself.
+ *
+ * Typed explicitly rather than as `Record<string, any>` so a typo in an
+ * attribute name is a compile error and the values are checked.
+ */
+type ComputedAriaAttributes = Pick<
+	AriaAttributes,
+	'aria-label' | 'aria-describedby' | 'aria-pressed' | 'aria-disabled' | 'aria-busy'
+>;
 
 // Common props shared by button and link variants
 interface BaseButtonProps {
@@ -59,22 +79,55 @@ interface BaseButtonProps {
 	rightIcon?: React.ReactNode;
 
 	/**
-	 * If true, only displays icon (children used as aria-label)
+	 * If true, only displays the icon.
+	 *
+	 * An icon-only button has no visible text, so it needs an accessible name.
+	 * Supply `aria-label`. If `children` happens to be a plain string it is
+	 * used as a fallback, but any other node type — an `<svg>`, a component,
+	 * a fragment — cannot produce a name, and in development the component
+	 * logs an error rather than shipping an unlabelled control.
 	 */
 	iconOnly?: boolean;
 
 	/**
-	 * Override aria-label
+	 * Render the child element instead of a `<button>`, merging Button's
+	 * className and props into it.
+	 *
+	 * This is the integration point for router link components — Next.js
+	 * `<Link>`, React Router `<Link>`, TanStack Router, and so on — which
+	 * need to own the element they render.
+	 *
+	 * Expects exactly one React element child.
+	 *
+	 * @default false
+	 *
+	 * @example
+	 * ```tsx
+	 * import Link from 'next/link';
+	 *
+	 * <Button asChild variant="primary">
+	 *   <Link href="/dashboard">Go to Dashboard</Link>
+	 * </Button>
+	 * ```
+	 */
+	asChild?: boolean;
+
+	/**
+	 * Override aria-label.
+	 * @deprecated Use the standard `aria-label` attribute instead. This alias
+	 * remains for backwards compatibility; `aria-label` wins if both are set.
 	 */
 	ariaLabel?: string;
 
 	/**
-	 * ID of element that describes this button
+	 * ID of element that describes this button.
+	 * @deprecated Use the standard `aria-describedby` attribute instead.
 	 */
 	ariaDescribedBy?: string;
 
 	/**
-	 * For toggle buttons - indicates pressed state
+	 * For toggle buttons - indicates pressed state.
+	 * @deprecated Use the standard `aria-pressed` attribute instead.
 	 */
 	ariaPressed?: boolean;
 
@@ -90,7 +143,9 @@ interface BaseButtonProps {
 }
 
 // Button-specific props
-interface ButtonAsButton extends BaseButtonProps, Omit<ButtonHTMLAttributes<HTMLButtonElement>, keyof BaseButtonProps | 'aria-label' | 'aria-describedby' | 'aria-pressed'> {
+interface ButtonAsButton
+	extends BaseButtonProps,
+		Omit<ButtonHTMLAttributes<HTMLButtonElement>, keyof BaseButtonProps> {
 	/**
 	 * Render as button element
 	 * @default 'button'
@@ -124,7 +179,9 @@ interface ButtonAsButton extends BaseButtonProps, Omit<ButtonHTMLAttributes<HTML
 }
 
 // Link-specific props
-interface ButtonAsLink extends BaseButtonProps, Omit<AnchorHTMLAttributes<HTMLAnchorElement>, keyof BaseButtonProps | 'aria-label' | 'aria-describedby' | 'aria-pressed'> {
+interface ButtonAsLink
+	extends BaseButtonProps,
+		Omit<AnchorHTMLAttributes<HTMLAnchorElement>, keyof BaseButtonProps> {
 	/**
 	 * Render as anchor element
 	 */
@@ -155,32 +212,53 @@ interface ButtonAsLink extends BaseButtonProps, Omit<AnchorHTMLAttributes<HTMLAn
 export type ButtonProps = ButtonAsButton | ButtonAsLink;
 
 /**
+ * Call signature for Button.
+ *
+ * `forwardRef` can only be given one ref type, so a polymorphic component
+ * declared with it ends up with `HTMLButtonElement | HTMLAnchorElement` and
+ * every consumer has to cast their ref. Overloading the call signature lets
+ * the `as` prop pick the ref type instead, so `useRef<HTMLAnchorElement>`
+ * type-checks against `<Button as="a">` with no cast.
+ */
+interface ButtonComponent {
+	(props: ButtonAsLink & { ref?: React.Ref<HTMLAnchorElement> }): React.ReactElement | null;
+	(props: ButtonAsButton & { ref?: React.Ref<HTMLButtonElement> }): React.ReactElement | null;
+	displayName?: string;
+}
+
+/**
  * Mac OS 9 style Button component
- * 
+ *
  * Polymorphic component that can render as button or link with consistent styling.
- * 
+ *
  * Features:
  * - Classic 3-layer bevel effect (highlight, shadow, drop shadow)
- * - Polymorphic - renders as <button> or <a> based on `as` prop
+ * - Polymorphic - renders as `<button>` or `<a>` based on the `as` prop, or
+ *   defers to a router link via `asChild`
  * - Loading states with optional Mac OS 9 watch cursor
  * - Icon support (left, right, or icon-only)
- * - Full accessibility with ARIA support
+ * - Standard `aria-*` attributes pass straight through
  * - Form integration props
  * - Auto-security for external links
- * 
+ *
  * @example
  * ```tsx
  * // Button
  * <Button onClick={handleClick}>Click Me</Button>
  * <Button variant="primary" size="lg">Primary Action</Button>
  * <Button loading loadingText="Saving...">Save</Button>
- * 
+ *
  * // Link styled as button
  * <Button as="a" href="/dashboard">Go to Dashboard</Button>
  * <Button as="a" href="https://example.com" target="_blank">
  *   External Link
  * </Button>
- * 
+ *
+ * // Router link
+ * <Button asChild>
+ *   <Link href="/dashboard">Go to Dashboard</Link>
+ * </Button>
+ *
  * // With icons
  * <Button leftIcon={<FolderIcon />}>Open</Button>
  * <Button iconOnly aria-label="Close">
@@ -188,170 +266,237 @@ export type ButtonProps = ButtonAsButton | ButtonAsLink;
  * </Button>
  * ```
  */
-export const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonProps>(
-	(props, ref) => {
-		const {
-			variant = 'default',
-			size = 'md',
-			disabled = false,
-			fullWidth = false,
-			loading = false,
-			loadingText,
-			useCursorLoading = false,
-			leftIcon,
-			rightIcon,
-			iconOnly = false,
-			ariaLabel,
-			ariaDescribedBy,
-			ariaPressed,
-			className = '',
-			children,
-			...restProps
-		} = props;
+const ButtonImpl = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonProps>((props, ref) => {
+	const {
+		variant = 'default',
+		size = 'md',
+		disabled = false,
+		fullWidth = false,
+		loading = false,
+		loadingText,
+		useCursorLoading = false,
+		leftIcon,
+		rightIcon,
+		iconOnly = false,
+		asChild = false,
+		ariaLabel,
+		ariaDescribedBy,
+		ariaPressed,
+		className = '',
+		children,
+		...restProps
+	} = props;
 
-		// Determine if rendering as link
-		const isLink = props.as === 'a';
-		const Component = isLink ? 'a' : 'button';
+	// Standard aria-* attributes win over the deprecated camelCase aliases.
+	const {
+		'aria-label': ariaLabelAttr,
+		'aria-describedby': ariaDescribedByAttr,
+		'aria-pressed': ariaPressedAttr,
+		...domProps
+	} = restProps as Record<string, unknown> & ComputedAriaAttributes;
 
-		// Build class names
-		const classNames = [
-			styles.button,
-			styles[`button--${variant}`],
-			styles[`button--${size}`],
-			fullWidth && styles['button--full-width'],
-			disabled && styles['button--disabled'],
-			loading && styles['button--loading'],
-			loading && useCursorLoading && styles['button--cursor-loading'],
-			iconOnly && styles['button--icon-only'],
-			(leftIcon || rightIcon) && styles['button--with-icon'],
-			className,
-		]
-			.filter(Boolean)
-			.join(' ');
+	const resolvedAriaLabel = (ariaLabelAttr as string | undefined) ?? ariaLabel;
+	const resolvedAriaDescribedBy = (ariaDescribedByAttr as string | undefined) ?? ariaDescribedBy;
+	const resolvedAriaPressed = (ariaPressedAttr as boolean | undefined) ?? ariaPressed;
 
-		// Prepare ARIA attributes
-		const ariaAttributes: Record<string, any> = {
-			'aria-label': iconOnly ? (ariaLabel || (typeof children === 'string' ? children : undefined)) : ariaLabel,
-			'aria-describedby': ariaDescribedBy,
-			'aria-pressed': ariaPressed,
-			'aria-disabled': disabled || loading,
-			'aria-busy': loading,
-		};
-
-		// Handle link-specific props
-		if (isLink) {
-			const { href, target, rel, download, ...linkProps } = restProps as ButtonAsLink;
-
-			// Block javascript:/data:/vbscript: hrefs before they reach the DOM.
-			// sanitizeUrl returns undefined for unsafe schemes; an anchor with no
-			// href is non-functional but still visible, which is the desired
-			// fail-closed behavior for untrusted input.
-			const safeHref = sanitizeUrl(href);
-
-			// Auto-add security rel for external links
-			let finalRel = rel;
-			if (target === '_blank' && !rel) {
-				finalRel = 'noopener noreferrer';
-			}
-
-			// Links can't be truly disabled, so prevent default
-			const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-				if (disabled || loading) {
-					e.preventDefault();
-					return;
-				}
-				linkProps.onClick?.(e);
-			};
-
-			return (
-				<a
-					ref={ref as React.Ref<HTMLAnchorElement>}
-					href={disabled || loading ? undefined : safeHref}
-					target={target}
-					rel={finalRel}
-					download={download}
-					className={classNames}
-					{...ariaAttributes}
-					{...linkProps}
-					onClick={handleClick}
-				>
-					{renderButtonContent()}
-				</a>
-			);
-		}
-
-		// Handle button-specific props
-		const {
-			type = 'button',
-			form,
-			formAction,
-			formMethod,
-			formNoValidate,
-			formTarget,
-			...buttonProps
-		} = restProps as ButtonAsButton;
-
-		return (
-			<button
-				ref={ref as React.Ref<HTMLButtonElement>}
-				type={type}
-				disabled={disabled || loading}
-				form={form}
-				formAction={formAction}
-				formMethod={formMethod}
-				formNoValidate={formNoValidate}
-				formTarget={formTarget}
-				className={classNames}
-				{...ariaAttributes}
-				{...buttonProps}
-			>
-				{renderButtonContent()}
-			</button>
+	// An icon-only button with no resolvable accessible name is a control a
+	// screen reader announces as just "button". Fail loudly in development
+	// instead of shipping it silently.
+	const iconOnlyFallbackLabel = typeof children === 'string' ? children : undefined;
+	if (
+		process.env.NODE_ENV !== 'production' &&
+		iconOnly &&
+		!resolvedAriaLabel &&
+		!iconOnlyFallbackLabel
+	) {
+		console.error(
+			'Button: `iconOnly` was set but no accessible name could be determined. ' +
+				'Pass `aria-label`, because non-string children cannot supply one.',
 		);
+	}
 
-		// Render button content with icons and loading state
-		function renderButtonContent() {
-			// Show loading state
-			if (loading) {
-				return (
-					<>
-						{!useCursorLoading && (
-							<span className={styles['button__loading-spinner']} aria-hidden="true">
-								⏳
-							</span>
-						)}
-						<span className={styles['button__text']}>
-							{loadingText || children}
-						</span>
-					</>
-				);
-			}
+	// Determine if rendering as link
+	const isLink = props.as === 'a';
 
-			// Icon-only button
-			if (iconOnly) {
-				return <span className={styles['button__icon-only']}>{children}</span>;
-			}
+	// Build class names
+	const classNames = [
+		styles.button,
+		styles[`button--${variant}`],
+		styles[`button--${size}`],
+		fullWidth && styles['button--full-width'],
+		disabled && styles['button--disabled'],
+		loading && styles['button--loading'],
+		loading && useCursorLoading && styles['button--cursor-loading'],
+		iconOnly && styles['button--icon-only'],
+		(leftIcon || rightIcon) && styles['button--with-icon'],
+		className,
+	]
+		.filter(Boolean)
+		.join(' ');
 
-			// Button with icons
+	// Shared ARIA. These are spread AFTER the caller's remaining props so a
+	// stray `aria-disabled`/`aria-busy` in the rest props can't contradict the
+	// component's own `disabled`/`loading` state.
+	//
+	// aria-disabled is applied on every branch, not just the anchor. The
+	// `<button>` element also gets a native `disabled`, which is what actually
+	// blocks interaction; aria-disabled alongside it keeps the exposed state
+	// identical no matter which element Button ends up rendering, which is the
+	// consistency the other form components are aligned to.
+	const sharedAria: ComputedAriaAttributes = {
+		'aria-label': iconOnly ? (resolvedAriaLabel ?? iconOnlyFallbackLabel) : resolvedAriaLabel,
+		'aria-describedby': resolvedAriaDescribedBy,
+		'aria-pressed': resolvedAriaPressed,
+		'aria-disabled': disabled || loading || undefined,
+		'aria-busy': loading || undefined,
+	};
+
+	// Render button content with icons and loading state
+	function renderButtonContent() {
+		// Show loading state
+		if (loading) {
 			return (
 				<>
-					{leftIcon && (
-						<span className={styles['button__icon-left']} aria-hidden="true">
-							{leftIcon}
+					{!useCursorLoading && (
+						<span className={styles['button__loading-spinner']} aria-hidden="true">
+							⏳
 						</span>
 					)}
-					<span className={styles['button__text']}>{children}</span>
-					{rightIcon && (
-						<span className={styles['button__icon-right']} aria-hidden="true">
-							{rightIcon}
-						</span>
-					)}
+					<span className={styles['button__text']}>{loadingText || children}</span>
 				</>
 			);
 		}
-	}
-);
 
-Button.displayName = 'Button';
+		// Icon-only button
+		if (iconOnly) {
+			return <span className={styles['button__icon-only']}>{children}</span>;
+		}
+
+		// Button with icons
+		return (
+			<>
+				{leftIcon && (
+					<span className={styles['button__icon-left']} aria-hidden="true">
+						{leftIcon}
+					</span>
+				)}
+				<span className={styles['button__text']}>{children}</span>
+				{rightIcon && (
+					<span className={styles['button__icon-right']} aria-hidden="true">
+						{rightIcon}
+					</span>
+				)}
+			</>
+		);
+	}
+
+	// --- asChild: hand rendering to the caller's element -------------------
+	//
+	// The child owns the element and its own href/navigation; Button only
+	// contributes styling, ARIA, and the disabled/loading behaviour.
+	if (asChild) {
+		const child = Children.only(children);
+
+		if (!isValidElement(child)) {
+			if (process.env.NODE_ENV !== 'production') {
+				console.error('Button: `asChild` expects a single React element child.');
+			}
+			return null;
+		}
+
+		const childProps = child.props as { className?: string; onClick?: React.MouseEventHandler };
+
+		return cloneElement(child, {
+			...domProps,
+			...sharedAria,
+			ref,
+			className: [classNames, childProps.className].filter(Boolean).join(' '),
+			onClick: (event: React.MouseEvent) => {
+				if (disabled || loading) {
+					event.preventDefault();
+					return;
+				}
+				childProps.onClick?.(event);
+			},
+		} as React.HTMLAttributes<HTMLElement> & { ref?: React.Ref<unknown> });
+	}
+
+	// --- Anchor ------------------------------------------------------------
+	if (isLink) {
+		const { href, target, rel, download, onClick, ...linkProps } =
+			domProps as unknown as ButtonAsLink;
+
+		// Block javascript:/data:/vbscript: hrefs before they reach the DOM.
+		// sanitizeUrl returns undefined for unsafe schemes; an anchor with no
+		// href is non-functional but still visible, which is the desired
+		// fail-closed behavior for untrusted input.
+		const safeHref = sanitizeUrl(href);
+
+		// Auto-add security rel for external links
+		let finalRel = rel;
+		if (target === '_blank' && !rel) {
+			finalRel = 'noopener noreferrer';
+		}
+
+		// Anchors have no native disabled state, so aria-disabled carries the
+		// meaning and the click handler enforces it.
+		const handleClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
+			if (disabled || loading) {
+				event.preventDefault();
+				return;
+			}
+			onClick?.(event);
+		};
+
+		return (
+			<a
+				{...linkProps}
+				ref={ref as React.Ref<HTMLAnchorElement>}
+				href={disabled || loading ? undefined : safeHref}
+				target={target}
+				rel={finalRel}
+				download={download}
+				className={classNames}
+				onClick={handleClick}
+				{...sharedAria}
+			>
+				{renderButtonContent()}
+			</a>
+		);
+	}
+
+	// --- Button ------------------------------------------------------------
+	const {
+		type = 'button',
+		form,
+		formAction,
+		formMethod,
+		formNoValidate,
+		formTarget,
+		...buttonProps
+	} = domProps as unknown as ButtonAsButton;
+
+	return (
+		<button
+			{...buttonProps}
+			ref={ref as React.Ref<HTMLButtonElement>}
+			type={type}
+			disabled={disabled || loading}
+			form={form}
+			formAction={formAction}
+			formMethod={formMethod}
+			formNoValidate={formNoValidate}
+			formTarget={formTarget}
+			className={classNames}
+			{...sharedAria}
+		>
+			{renderButtonContent()}
+		</button>
+	);
+});
+
+ButtonImpl.displayName = 'Button';
+
+export const Button = ButtonImpl as unknown as ButtonComponent;
 
 export default Button;

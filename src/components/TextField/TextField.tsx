@@ -140,7 +140,11 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
 		ref
 	) => {
 		// Generate ID if not provided (for label association)
-		const inputId = id || React.useId();
+		// useId must be called unconditionally. Writing `id || React.useId()`
+		// short-circuits the hook away whenever `id` is supplied, so the hook
+		// order changes if `id` ever goes from defined to undefined.
+		const generatedId = React.useId();
+		const inputId = id ?? generatedId;
 
 		// Generate helper/error text ID for aria-describedby
 		const helperId = `${inputId}-helper`;
