@@ -180,7 +180,7 @@ export const WithCustomCellRendering: Story = {
 					selectedIds={selectedIds}
 					onSelectionChange={setSelectedIds}
 					height={300}
-					renderCell={(value, item, column, state) => {
+					renderCell={(value, item, column, _state) => {
 						if (column.key === 'actions') {
 							return (
 								<div style={{ display: 'flex', gap: '4px' }}>
@@ -240,7 +240,7 @@ export const WithCustomHeaderRendering: Story = {
 						setSortColumn(column);
 						setSortDirection(direction);
 					}}
-					renderHeaderCell={(column, state, defaultProps) => {
+					renderHeaderCell={(column, _state, defaultProps) => {
 						return (
 							<div {...defaultProps}>
 								<span style={{ marginRight: '4px' }}>📋</span>
@@ -274,7 +274,7 @@ export const WithCustomRowRendering: Story = {
 					selectedIds={selectedIds}
 					onSelectionChange={setSelectedIds}
 					height={300}
-					renderRow={(item, state, defaultProps) => {
+					renderRow={(item, _state, defaultProps) => {
 						// Custom row with hover effect and type-based styling
 						const isFolder = item.type === 'folder';
 						
@@ -418,7 +418,7 @@ export const CompleteExample: Story = {
 							addMessage(`Clicked: ${item.name} - ${column.label}`);
 						}
 					}}
-					renderCell={(value, item, column, state) => {
+					renderCell={(value, item, column, _state) => {
 						if (column.key === 'actions') {
 							return (
 								<Button 

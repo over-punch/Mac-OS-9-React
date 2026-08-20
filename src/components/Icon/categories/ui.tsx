@@ -3,14 +3,15 @@
 
 import React from 'react';
 import { Icon } from '../Icon';
+import { createPixelIcon, type PixelIconProps } from '../pixel';
 
 /**
  * Divider icon
  * Vertical divider for menu bars and toolbars
  * Note: Uses a 10x32 viewBox instead of standard 24x24
  */
-export const DividerIcon: React.FC = () => (
-	<Icon label="Divider" size="sm" viewBox="0 0 10 32">
+export const DividerIcon: React.FC<PixelIconProps> = ({ label = 'Divider', ...props }) => (
+	<Icon label={label === null ? undefined : label} size="sm" viewBox="0 0 10 32" {...props}>
 		<g clipPath="url(#clip0_529_36832)">
 			<path d="M8 4H10V32H8V4Z" fill="#999999" />
 			<path d="M8 0H10V4H8V0Z" fill="#999999" />
@@ -44,3 +45,83 @@ export const DividerIcon: React.FC = () => (
 		</defs>
 	</Icon>
 );
+
+/** Bevelled grow box, matching the Window resize handle. */
+export const ResizeHandleIcon = createPixelIcon('ResizeHandleIcon', 'Resize', [
+	'................',
+	'................',
+	'................',
+	'................',
+	'............##..',
+	'............##..',
+	'................',
+	'........##..##..',
+	'........##..##..',
+	'................',
+	'....##..##..##..',
+	'....##..##..##..',
+	'................',
+	'................',
+	'................',
+	'................',
+]);
+
+/** Textured drag grip, for title bars and splitters. */
+export const GrabberIcon = createPixelIcon('GrabberIcon', 'Drag handle', [
+	'................',
+	'................',
+	'..##..##..##..#.',
+	'..oo..oo..oo..o.',
+	'................',
+	'..##..##..##..#.',
+	'..oo..oo..oo..o.',
+	'................',
+	'..##..##..##..#.',
+	'..oo..oo..oo..o.',
+	'................',
+	'..##..##..##..#.',
+	'..oo..oo..oo..o.',
+	'................',
+	'................',
+	'................',
+]);
+
+/** Small disclosure triangle, pointing right (collapsed). */
+export const ChevronRightIcon = createPixelIcon('ChevronRightIcon', 'Expand', [
+	'................',
+	'................',
+	'................',
+	'......#.........',
+	'......##........',
+	'......###.......',
+	'......####......',
+	'......#####.....',
+	'......####......',
+	'......###.......',
+	'......##........',
+	'......#.........',
+	'................',
+	'................',
+	'................',
+	'................',
+]);
+
+/** Small disclosure triangle, pointing down (expanded). */
+export const ChevronDownIcon = createPixelIcon('ChevronDownIcon', 'Collapse', [
+	'................',
+	'................',
+	'................',
+	'................',
+	'................',
+	'...##########...',
+	'....########....',
+	'.....######.....',
+	'......####......',
+	'.......##.......',
+	'................',
+	'................',
+	'................',
+	'................',
+	'................',
+	'................',
+]);

@@ -19,5 +19,8 @@ export {
 // Icon types
 export type { IconComponent, IconCategory, IconMetadata } from './types';
 
+// Pixel-map icon factory, for defining your own icons in the same style
+export { createPixelIcon, type PixelMap, type PixelIconProps } from './pixel';
+
 // Export all icon components from categories
 export * from './categories';

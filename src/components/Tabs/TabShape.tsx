@@ -8,8 +8,6 @@ interface TabShapeProps {
 	width: number;
 	/** Height of the tab (22px large, 16px small) */
 	height: number;
-	/** Fill color */
-	fill?: string;
 	/** Stroke color */
 	stroke?: string;
 	/** Additional CSS class */
@@ -23,7 +21,6 @@ interface TabShapeProps {
 export const TabShape: React.FC<TabShapeProps> = ({
 	width,
 	height,
-	fill = '#EEEEEE',
 	stroke = '#262626',
 	className,
 }) => {

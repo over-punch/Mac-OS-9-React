@@ -1,12 +1,17 @@
 // TypeScript types for Icon Library - Mac OS 9 React UI
 
 import React from 'react';
+import type { PixelIconProps } from './pixel';
 
 /**
- * Icon component type
- * All icon components should match this signature
+ * Icon component type.
+ *
+ * Every icon accepts the presentational props of the base Icon — `size`,
+ * `className`, `label`, and any SVG attribute. It was previously declared as
+ * a bare `React.FC`, which said icons took no props at all and made
+ * forwarding `size` through IconLibrary a type error.
  */
-export type IconComponent = React.FC;
+export type IconComponent = React.FC<PixelIconProps>;
 
 /**
  * Icon category types

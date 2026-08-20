@@ -122,7 +122,7 @@ export const Inactive: Story = {
 		children: (
 			<div>
 				<p>This window is inactive (slightly dimmed).</p>
-				<p>Toggle the 'active' prop to see the difference.</p>
+				<p>Toggle the <code>active</code> prop to see the difference.</p>
 			</div>
 		),
 	},
@@ -158,7 +158,7 @@ export const Narrow: Story = {
 		children: (
 			<div>
 				<p>This is a narrow window.</p>
-				<p>The title truncates if it's too long for the space available.</p>
+				<p>The title truncates if it’s too long for the space available.</p>
 			</div>
 		),
 	},
@@ -305,7 +305,7 @@ export const ResizableWithConstraints: Story = {
 				>
 					<div>
 						<p><strong>This window has size constraints.</strong></p>
-						<p>Try resizing beyond the min/max bounds - it won't go past them!</p>
+						<p>Try resizing beyond the min/max bounds - it won’t go past them!</p>
 						<p>The parent component tracks the size via onResize callback.</p>
 					</div>
 				</Window>
@@ -360,7 +360,7 @@ export const Alert: Story = {
 					Are you sure you want to quit without saving?
 				</p>
 				<div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-					<Button variant="primary">Don't Save</Button>
+					<Button variant="primary">Don’t Save</Button>
 					<Button>Cancel</Button>
 					<Button>Save</Button>
 				</div>
@@ -466,7 +466,7 @@ export const DraggableWithInitialPosition: Story = {
 			>
 				<div>
 					<p><strong>This window starts at a specific position.</strong></p>
-					<p>It's absolutely positioned from the start at x:100, y:80.</p>
+					<p>It’s absolutely positioned from the start at x:100, y:80.</p>
 					<p>Drag it anywhere you like!</p>
 				</div>
 			</Window>
@@ -508,7 +508,7 @@ export const DraggableControlled: Story = {
 						onClose={() => alert('Close')}
 					>
 						<div>
-							<p><strong>This window's position is controlled.</strong></p>
+							<p><strong>This window’s position is controlled.</strong></p>
 							<p>The parent component tracks and can change the position.</p>
 							<p>Try the buttons above or drag the window!</p>
 						</div>

@@ -164,7 +164,7 @@ export const NoBackdropClose: Story = {
 					showControls={false}
 				>
 					<div>
-						<p>Clicking the backdrop won't close this dialog.</p>
+						<p>Clicking the backdrop won’t close this dialog.</p>
 						<p>You must click the button below.</p>
 						<div style={{ marginTop: '16px', textAlign: 'center' }}>
 							<Button variant="primary" onClick={() => setOpen(false)}>
@@ -198,7 +198,7 @@ export const NoEscapeClose: Story = {
 					showControls={false}
 				>
 					<div>
-						<p>Pressing Escape won't close this dialog.</p>
+						<p>Pressing Escape won’t close this dialog.</p>
 						<p>You must click a button.</p>
 						<div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginTop: '16px' }}>
 							<Button onClick={() => setOpen(false)}>Cancel</Button>
@@ -236,7 +236,7 @@ export const SaveChanges: Story = {
 						<p>Do you want to save before quitting?</p>
 						<div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginTop: '24px' }}>
 							<Button onClick={() => setOpen(false)}>Cancel</Button>
-							<Button onClick={() => setOpen(false)}>Don't Save</Button>
+							<Button onClick={() => setOpen(false)}>Don’t Save</Button>
 							<Button variant="primary" onClick={() => setOpen(false)}>Save</Button>
 						</div>
 					</div>

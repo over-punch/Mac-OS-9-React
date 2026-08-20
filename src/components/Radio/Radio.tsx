@@ -2,7 +2,7 @@
 // Classic radio button with label support and full accessibility
 // Includes companion RadioGroup component for WAI-ARIA radiogroup pattern
 
-import React, { forwardRef, InputHTMLAttributes, useCallback, useEffect, useId, useRef, useState } from 'react';
+import React, { forwardRef, InputHTMLAttributes, useCallback, useId, useRef, useState } from 'react';
 import styles from './Radio.module.css';
 
 /**
