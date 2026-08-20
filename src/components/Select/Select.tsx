@@ -55,7 +55,7 @@ export interface SelectProps
 	 * Options for the select dropdown
 	 * Alternative to providing option elements as children
 	 */
-	options?: SelectOption[];
+	options?: readonly SelectOption[];
 
 	/**
 	 * Placeholder text (creates a disabled first option)
