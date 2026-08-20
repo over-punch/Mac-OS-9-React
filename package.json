@@ -38,6 +38,9 @@
 	"scripts": {
 		"clean": "rm -rf dist",
 		"dev": "storybook dev -p 6006",
+		"site:dev": "vite --config site/vite.config.ts",
+		"site:build": "vite build --config site/vite.config.ts",
+		"site:preview": "vite preview --config site/vite.config.ts",
 		"build": "npm run clean && rollup -c",
 		"build:storybook": "storybook build",
 		"test": "vitest run",

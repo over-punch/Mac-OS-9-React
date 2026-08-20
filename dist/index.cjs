@@ -1491,75 +1491,388 @@ const TextField = React.forwardRef(({ label, labelPosition = 'top', size = 'md',
 });
 TextField.displayName = 'TextField';
 
-var styles$8 = {"wrapper":"Select-module_wrapper","wrapper--full-width":"Select-module_wrapper--full-width","wrapper--disabled":"Select-module_wrapper--disabled","wrapper--label-top":"Select-module_wrapper--label-top","wrapper--label-left":"Select-module_wrapper--label-left","wrapper--label-right":"Select-module_wrapper--label-right","label":"Select-module_label","label--sm":"Select-module_label--sm","label--md":"Select-module_label--md","label--lg":"Select-module_label--lg","select":"Select-module_select","select--sm":"Select-module_select--sm","select--md":"Select-module_select--md","select--lg":"Select-module_select--lg","select--full-width":"Select-module_select--full-width","select--error":"Select-module_select--error","helper-text":"Select-module_helper-text","error-message":"Select-module_error-message","wrapper--sm":"Select-module_wrapper--sm","wrapper--md":"Select-module_wrapper--md","wrapper--lg":"Select-module_wrapper--lg"};
+// useOutsideClick - dismiss on interaction outside a set of elements
+//
+// Consolidates the dismissal logic MenuBar and MenuDropdown each had their
+// own copy of (issue #55).
+//
+// Listens on `pointerdown` in the capture phase but defers the callback to
+// the subsequent `click`, so a control rendered in a portal still receives
+// its own click before the menu closes (issue #36).
+function useOutsideClick({ enabled = true, refs, onOutside }) {
+    const onOutsideRef = React.useRef(onOutside);
+    onOutsideRef.current = onOutside;
+    const refsRef = React.useRef(refs);
+    refsRef.current = refs;
+    React.useEffect(() => {
+        if (!enabled)
+            return;
+        const isInside = (target) => {
+            if (!target)
+                return false;
+            return refsRef.current.some((ref) => ref.current?.contains(target));
+        };
+        // Tracks whether the gesture *started* outside. Dismissing on a click
+        // whose pointerdown began inside would swallow drag-to-select gestures
+        // that happen to end outside the menu.
+        let startedOutside = false;
+        const handlePointerDown = (event) => {
+            startedOutside = !isInside(event.target);
+        };
+        const handleClick = (event) => {
+            if (!startedOutside)
+                return;
+            startedOutside = false;
+            if (isInside(event.target))
+                return;
+            onOutsideRef.current();
+        };
+        const handleEscape = (event) => {
+            if (event.key === 'Escape')
+                onOutsideRef.current();
+        };
+        document.addEventListener('pointerdown', handlePointerDown, true);
+        document.addEventListener('click', handleClick, true);
+        document.addEventListener('keydown', handleEscape);
+        return () => {
+            document.removeEventListener('pointerdown', handlePointerDown, true);
+            document.removeEventListener('click', handleClick, true);
+            document.removeEventListener('keydown', handleEscape);
+        };
+    }, [enabled]);
+}
 
+// useMenuPosition - keep a dropdown inside the viewport
+//
+// Dropdowns were positioned purely in CSS, directly beneath their trigger, so
+// near the bottom or right edge they overflowed the viewport and were clipped
+// by any ancestor with `overflow: hidden` (issue #34).
+//
+// This measures the menu after it opens and flips or shifts it when it would
+// overflow, re-measuring on scroll and resize. It is a deliberately small
+// stand-in for a full positioning library: menus here are simple, always
+// anchored to their trigger, and never need middleware beyond flip + shift.
+function useMenuPosition({ open, anchorRef, menuRef, align = 'left', padding = 8, }) {
+    const [position, setPosition] = React.useState({ style: {}, flipped: false });
+    // Avoids an infinite measure→setState→measure loop: we only commit when
+    // the computed values actually differ from what is already applied.
+    const lastRef = React.useRef('');
+    const update = React.useCallback(() => {
+        const anchor = anchorRef.current;
+        const menu = menuRef.current;
+        if (!anchor || !menu)
+            return;
+        const anchorRect = anchor.getBoundingClientRect();
+        const menuRect = menu.getBoundingClientRect();
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        // Flip above the trigger when there isn't room below but there is above.
+        const spaceBelow = viewportHeight - anchorRect.bottom - padding;
+        const spaceAbove = anchorRect.top - padding;
+        const flipped = menuRect.height > spaceBelow && spaceAbove > spaceBelow;
+        // Shift horizontally so the menu stays fully on screen, preferring the
+        // requested alignment and only moving as far as needed.
+        let left = align === 'right' ? anchorRect.right - menuRect.width : anchorRect.left;
+        const maxLeft = viewportWidth - menuRect.width - padding;
+        if (left > maxLeft)
+            left = maxLeft;
+        if (left < padding)
+            left = padding;
+        const top = flipped ? anchorRect.top - menuRect.height : anchorRect.bottom;
+        // Clamp the height so a very long menu scrolls instead of overflowing.
+        const maxHeight = flipped ? spaceAbove : spaceBelow;
+        const style = {
+            position: 'fixed',
+            left: `${Math.round(left)}px`,
+            top: `${Math.round(top)}px`,
+            maxHeight: `${Math.max(0, Math.round(maxHeight))}px`,
+            overflowY: 'auto',
+        };
+        const signature = `${style.left}|${style.top}|${style.maxHeight}|${flipped}`;
+        if (signature === lastRef.current)
+            return;
+        lastRef.current = signature;
+        setPosition({ style, flipped });
+    }, [anchorRef, menuRef, align, padding]);
+    // Measure before paint so the menu never renders in the wrong place first.
+    React.useLayoutEffect(() => {
+        if (!open) {
+            lastRef.current = '';
+            return;
+        }
+        update();
+    }, [open, update]);
+    React.useEffect(() => {
+        if (!open)
+            return;
+        // `true` captures scrolls in any ancestor, not just the window.
+        window.addEventListener('scroll', update, true);
+        window.addEventListener('resize', update);
+        // Catches the menu's own content changing size after it opened.
+        const observer = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(update) : null;
+        if (observer && menuRef.current)
+            observer.observe(menuRef.current);
+        return () => {
+            window.removeEventListener('scroll', update, true);
+            window.removeEventListener('resize', update);
+            observer?.disconnect();
+        };
+    }, [open, update, menuRef]);
+    return position;
+}
+
+var styles$8 = {"wrapper":"Select-module_wrapper","wrapper--full-width":"Select-module_wrapper--full-width","wrapper--disabled":"Select-module_wrapper--disabled","wrapper--label-top":"Select-module_wrapper--label-top","wrapper--label-left":"Select-module_wrapper--label-left","wrapper--label-right":"Select-module_wrapper--label-right","label":"Select-module_label","label--sm":"Select-module_label--sm","label--md":"Select-module_label--md","label--lg":"Select-module_label--lg","select":"Select-module_select","select--sm":"Select-module_select--sm","select--md":"Select-module_select--md","select--lg":"Select-module_select--lg","select--full-width":"Select-module_select--full-width","select--error":"Select-module_select--error","helper-text":"Select-module_helper-text","error-message":"Select-module_error-message","wrapper--sm":"Select-module_wrapper--sm","wrapper--md":"Select-module_wrapper--md","wrapper--lg":"Select-module_wrapper--lg","value":"Select-module_value","placeholder":"Select-module_placeholder","arrow":"Select-module_arrow","listbox":"Select-module_listbox","option":"Select-module_option","option--active":"Select-module_option--active","option--disabled":"Select-module_option--disabled","optionCheck":"Select-module_optionCheck","optionGroupLabel":"Select-module_optionGroupLabel"};
+
+// Select component - Mac OS 9 style
+// Custom listbox with full keyboard support and pixel-accurate popup
+//
+// Correctness notes (panel review #38, #49):
+//  - Built on a button + role="listbox" popup rather than a native <select>.
+//    A native control only lets the closed box be themed; the opened option
+//    list is drawn by the OS, which broke the library's whole premise of
+//    pixel-perfect Mac OS 9 fidelity. The JSDoc also claimed arrow-key
+//    combobox behaviour that was never implemented (#38)
+//  - Generic over the option value, so a literal union such as
+//    'red' | 'blue' survives into onValueChange instead of widening (#49)
+//  - A hidden input carries the value, so the control still participates in
+//    native form submission and FormData exactly as the old <select> did
+/** Index of the first option that isn't disabled, searching in `step` order. */
+function findEnabled(options, from, step) {
+    for (let i = from; i >= 0 && i < options.length; i += step) {
+        if (!options[i]?.disabled)
+            return i;
+    }
+    return -1;
+}
+function SelectInner({ label, labelPosition = 'top', size = 'md', fullWidth = false, error = false, errorMessage, helperText, options, value: controlledValue, defaultValue, onValueChange, placeholder = 'Select…', disabled = false, required = false, name, id, className = '', 'aria-label': ariaLabel, 'aria-describedby': ariaDescribedBy, }, ref) {
+    const generatedId = React.useId();
+    const selectId = id || generatedId;
+    const listboxId = `${selectId}-listbox`;
+    const helperId = `${selectId}-helper`;
+    const errorId = `${selectId}-error`;
+    const labelId = `${selectId}-label`;
+    const [uncontrolledValue, setUncontrolledValue] = React.useState(defaultValue);
+    const isControlled = controlledValue !== undefined;
+    const value = isControlled ? controlledValue : uncontrolledValue;
+    const [isOpen, setIsOpen] = React.useState(false);
+    const containerRef = React.useRef(null);
+    const triggerRef = React.useRef(null);
+    const listboxRef = React.useRef(null);
+    const selectedIndex = React.useMemo(() => options.findIndex((option) => option.value === value), [options, value]);
+    // Which option the keyboard cursor sits on while the list is open. It
+    // tracks the selection when opening, so typing continues from there.
+    const [activeIndex, setActiveIndex] = React.useState(-1);
+    const setTriggerRef = React.useCallback((node) => {
+        triggerRef.current = node;
+        if (typeof ref === 'function')
+            ref(node);
+        else if (ref)
+            ref.current = node;
+    }, [ref]);
+    useOutsideClick({
+        enabled: isOpen,
+        refs: [containerRef, listboxRef],
+        onOutside: () => setIsOpen(false),
+    });
+    // Keeps the popup on screen near a viewport edge, same as the menus.
+    const { style: popupStyle } = useMenuPosition({
+        open: isOpen,
+        anchorRef: triggerRef,
+        menuRef: listboxRef,
+    });
+    const commit = React.useCallback((next) => {
+        if (!isControlled)
+            setUncontrolledValue(next);
+        onValueChange?.(next);
+    }, [isControlled, onValueChange]);
+    const open = React.useCallback(() => {
+        if (disabled)
+            return;
+        setActiveIndex(selectedIndex >= 0 ? selectedIndex : findEnabled(options, 0, 1));
+        setIsOpen(true);
+    }, [disabled, options, selectedIndex]);
+    const close = React.useCallback((returnFocus = true) => {
+        setIsOpen(false);
+        if (returnFocus)
+            triggerRef.current?.focus();
+    }, []);
+    const selectAt = React.useCallback((index) => {
+        const option = options[index];
+        if (!option || option.disabled)
+            return;
+        commit(option.value);
+        close();
+    }, [options, commit, close]);
+    // Scroll the active option into view as the cursor moves, so keyboard
+    // navigation through a long list stays visible.
+    React.useEffect(() => {
+        if (!isOpen || activeIndex < 0)
+            return;
+        const node = listboxRef.current?.querySelector(`[data-option-index="${activeIndex}"]`);
+        // Optional-called: scrollIntoView is absent in non-browser DOM
+        // implementations, and losing the scroll nicety must not throw.
+        node?.scrollIntoView?.({ block: 'nearest' });
+    }, [isOpen, activeIndex]);
+    // Type-ahead buffer: typing "ba" jumps to the first option starting "ba".
+    const typeaheadRef = React.useRef({
+        query: '',
+        timer: null,
+    });
+    const runTypeahead = React.useCallback((char) => {
+        const state = typeaheadRef.current;
+        if (state.timer !== null)
+            window.clearTimeout(state.timer);
+        state.query += char.toLowerCase();
+        state.timer = window.setTimeout(() => {
+            state.query = '';
+            state.timer = null;
+        }, 500);
+        const match = options.findIndex((option) => !option.disabled && option.label.toLowerCase().startsWith(state.query));
+        if (match === -1)
+            return;
+        if (isOpen) {
+            setActiveIndex(match);
+            return;
+        }
+        const matched = options[match];
+        if (matched)
+            commit(matched.value);
+    }, [options, isOpen, commit]);
+    const handleKeyDown = React.useCallback((event) => {
+        if (disabled)
+            return;
+        // A single printable character feeds type-ahead rather than any
+        // navigation behaviour.
+        if (event.key.length === 1 && event.key !== ' ' && !event.metaKey && !event.ctrlKey) {
+            event.preventDefault();
+            runTypeahead(event.key);
+            return;
+        }
+        switch (event.key) {
+            case 'ArrowDown':
+            case 'ArrowUp': {
+                event.preventDefault();
+                const step = event.key === 'ArrowDown' ? 1 : -1;
+                if (!isOpen) {
+                    open();
+                    return;
+                }
+                const from = activeIndex < 0 ? (step > 0 ? 0 : options.length - 1) : activeIndex + step;
+                const next = findEnabled(options, from, step);
+                if (next !== -1)
+                    setActiveIndex(next);
+                break;
+            }
+            case 'Home': {
+                if (!isOpen)
+                    return;
+                event.preventDefault();
+                setActiveIndex(findEnabled(options, 0, 1));
+                break;
+            }
+            case 'End': {
+                if (!isOpen)
+                    return;
+                event.preventDefault();
+                setActiveIndex(findEnabled(options, options.length - 1, -1));
+                break;
+            }
+            case 'Enter':
+            case ' ': {
+                event.preventDefault();
+                if (!isOpen)
+                    open();
+                else if (activeIndex >= 0)
+                    selectAt(activeIndex);
+                break;
+            }
+            case 'Escape': {
+                if (!isOpen)
+                    return;
+                event.preventDefault();
+                close();
+                break;
+            }
+            case 'Tab': {
+                // Tab commits nothing and simply dismisses, matching native
+                // listbox behaviour; focus continues naturally.
+                if (isOpen)
+                    setIsOpen(false);
+                break;
+            }
+        }
+    }, [disabled, isOpen, activeIndex, options, open, close, selectAt, runTypeahead]);
+    const describedByIds = [
+        helperText && !error ? helperId : null,
+        error && errorMessage ? errorId : null,
+        ariaDescribedBy || null,
+    ]
+        .filter(Boolean)
+        .join(' ');
+    const wrapperClassNames = [
+        styles$8.wrapper,
+        styles$8[`wrapper--label-${labelPosition}`],
+        fullWidth && styles$8['wrapper--full-width'],
+        disabled && styles$8['wrapper--disabled'],
+        className,
+    ]
+        .filter(Boolean)
+        .join(' ');
+    const triggerClassNames = [
+        styles$8.select,
+        styles$8[`select--${size}`],
+        fullWidth && styles$8['select--full-width'],
+        error && styles$8['select--error'],
+    ]
+        .filter(Boolean)
+        .join(' ');
+    const labelClassNames = [styles$8.label, styles$8[`label--${size}`]].filter(Boolean).join(' ');
+    const selectedOption = selectedIndex >= 0 ? options[selectedIndex] : undefined;
+    const labelElement = label ? (jsxRuntime.jsx("span", { id: labelId, className: labelClassNames, onClick: () => triggerRef.current?.focus(), role: "presentation", children: label })) : null;
+    return (jsxRuntime.jsxs("div", { ref: containerRef, className: wrapperClassNames, children: [labelElement && (labelPosition === 'top' || labelPosition === 'left') && labelElement, name && jsxRuntime.jsx("input", { type: "hidden", name: name, value: value ?? '' }), jsxRuntime.jsxs("button", { ref: setTriggerRef, id: selectId, type: "button", className: triggerClassNames, disabled: disabled, onClick: () => (isOpen ? close(false) : open()), onKeyDown: handleKeyDown, role: "combobox", "aria-haspopup": "listbox", "aria-expanded": isOpen, "aria-controls": isOpen ? listboxId : undefined, "aria-activedescendant": isOpen && activeIndex >= 0 ? `${selectId}-option-${activeIndex}` : undefined, "aria-label": ariaLabel, "aria-labelledby": !ariaLabel && label ? labelId : undefined, "aria-invalid": error || undefined, "aria-required": required || undefined, "aria-describedby": describedByIds || undefined, children: [jsxRuntime.jsx("span", { className: selectedOption ? styles$8.value : styles$8.placeholder, children: selectedOption ? selectedOption.label : placeholder }), jsxRuntime.jsx("span", { className: styles$8.arrow, "aria-hidden": "true" })] }), isOpen && (jsxRuntime.jsx("div", { ref: listboxRef, id: listboxId, className: styles$8.listbox, style: popupStyle, role: "listbox", "aria-labelledby": label ? labelId : undefined, tabIndex: -1, children: options.map((option, index) => {
+                    const isSelected = index === selectedIndex;
+                    const isActive = index === activeIndex;
+                    // A heading is drawn whenever the group changes, so
+                    // consecutive options collapse under one label.
+                    const previousGroup = index > 0 ? options[index - 1]?.group : undefined;
+                    const startsGroup = option.group && option.group !== previousGroup;
+                    return (jsxRuntime.jsxs(React.Fragment, { children: [startsGroup && (jsxRuntime.jsx("div", { className: styles$8.optionGroupLabel, role: "presentation", children: option.group })), jsxRuntime.jsxs("div", { id: `${selectId}-option-${index}`, "data-option-index": index, className: [
+                                    styles$8.option,
+                                    isSelected && styles$8['option--selected'],
+                                    isActive && styles$8['option--active'],
+                                    option.disabled && styles$8['option--disabled'],
+                                ]
+                                    .filter(Boolean)
+                                    .join(' '), role: "option", "aria-selected": isSelected, "aria-disabled": option.disabled || undefined, 
+                                // The list keeps DOM focus on the trigger and
+                                // tracks the cursor with aria-activedescendant,
+                                // so pointer hover only moves the cursor.
+                                onMouseEnter: () => !option.disabled && setActiveIndex(index), onClick: () => selectAt(index), children: [jsxRuntime.jsx("span", { className: styles$8.optionCheck, "aria-hidden": "true", children: isSelected ? '✓' : '' }), option.label] })] }, String(option.value)));
+                }) })), labelElement && labelPosition === 'right' && labelElement, helperText && !error && (jsxRuntime.jsx("p", { id: helperId, className: styles$8['helper-text'], children: helperText })), error && errorMessage && (jsxRuntime.jsx("p", { id: errorId, className: styles$8['error-message'], role: "alert", children: errorMessage }))] }));
+}
+const SelectWithRef = React.forwardRef(SelectInner);
+SelectWithRef.displayName = 'Select';
 /**
- * Mac OS 9 style Select component
+ * Mac OS 9 style Select.
  *
- * Classic dropdown select with raised bevel effect and optional label.
- *
- * Features:
- * - Classic Mac OS 9 popup menu styling
- * - Label positioning (top/left/right)
- * - Size variants (sm/md/lg)
- * - Error states with messages
- * - Helper text support
- * - Option groups support
- * - Full accessibility with ARIA support
- * - Keyboard navigation
- * - Form integration
+ * A custom listbox, so the opened option list is drawn by the library rather
+ * than the operating system and keeps the Mac OS 9 look. Supports arrow-key
+ * navigation, Home/End, type-ahead, Escape, and `aria-activedescendant`.
  *
  * @example
  * ```tsx
- * // With options prop
- * <Select
- *   label="Choose a color"
+ * <Select<'red' | 'blue'>
+ *   label="Colour"
  *   options={[
  *     { value: 'red', label: 'Red' },
  *     { value: 'blue', label: 'Blue' },
- *     { value: 'green', label: 'Green' }
  *   ]}
- *   placeholder="Select a color..."
+ *   value={colour}
+ *   onValueChange={setColour}  // receives 'red' | 'blue'
  * />
- *
- * // With children
- * <Select label="Country">
- *   <option value="us">United States</option>
- *   <option value="ca">Canada</option>
- *   <option value="mx">Mexico</option>
- * </Select>
  * ```
  */
-const Select = React.forwardRef(({ label, labelPosition = 'top', size = 'md', fullWidth = false, error = false, errorMessage, helperText, options, placeholder, ariaLabel, ariaDescribedBy, className = '', wrapperClassName = '', id, disabled, children, ...props }, ref) => {
-    // Generate ID if not provided (for label association)
-    // useId must be called unconditionally — see the note in TextField.
-    const generatedId = React.useId();
-    const selectId = id ?? generatedId;
-    // Generate helper/error text ID for aria-describedby
-    const helperId = `${selectId}-helper`;
-    const errorId = `${selectId}-error`;
-    // Combine aria-describedby
-    const describedByIds = mergeClasses(helperText && helperId, error && errorMessage && errorId, ariaDescribedBy);
-    // Build class names
-    const wrapperClassNames = mergeClasses(styles$8.wrapper, styles$8[`wrapper--${size}`], styles$8[`wrapper--label-${labelPosition}`], fullWidth && styles$8['wrapper--full-width'], disabled && styles$8['wrapper--disabled'], wrapperClassName);
-    const selectClassNames = mergeClasses(styles$8.select, styles$8[`select--${size}`], error && styles$8['select--error'], fullWidth && styles$8['select--full-width'], className);
-    const labelClassNames = mergeClasses(styles$8.label, styles$8[`label--${size}`]);
-    // ARIA attributes
-    const ariaAttributes = {
-        'aria-label': !label ? ariaLabel : undefined,
-        'aria-describedby': describedByIds || undefined,
-        'aria-invalid': error,
-    };
-    // Render options from options prop
-    const renderOptions = () => {
-        if (options) {
-            return (jsxRuntime.jsxs(jsxRuntime.Fragment, { children: [placeholder && (jsxRuntime.jsx("option", { value: "", disabled: true, children: placeholder })), options.map((option) => (jsxRuntime.jsx("option", { value: option.value, disabled: option.disabled, children: option.label }, option.value)))] }));
-        }
-        return children;
-    };
-    return (jsxRuntime.jsxs("div", { className: wrapperClassNames, children: [label && (labelPosition === 'top' || labelPosition === 'left') && (jsxRuntime.jsx("label", { htmlFor: selectId, className: labelClassNames, children: label })), jsxRuntime.jsx("select", { ref: ref, id: selectId, className: selectClassNames, disabled: disabled, ...ariaAttributes, ...props, children: renderOptions() }), label && labelPosition === 'right' && (jsxRuntime.jsx("label", { htmlFor: selectId, className: labelClassNames, children: label })), helperText && !error && (jsxRuntime.jsx("p", { id: helperId, className: styles$8['helper-text'], children: helperText })), error && errorMessage && (jsxRuntime.jsx("p", { id: errorId, className: styles$8['error-message'], children: errorMessage }))] }));
-});
-Select.displayName = 'Select';
+const Select = SelectWithRef;
 
 var styles$7 = {"pixelated-corner-sm":"Tabs-module_pixelated-corner-sm","pixelated-corner-md":"Tabs-module_pixelated-corner-md","pixelated-corner-pseudo":"Tabs-module_pixelated-corner-pseudo","mac-corner":"Tabs-module_mac-corner","chamfered-sm":"Tabs-module_chamfered-sm","chamfered-md":"Tabs-module_chamfered-md","tab-corner":"Tabs-module_tab-corner","button-corner":"Tabs-module_button-corner","window-corner":"Tabs-module_window-corner","container":"Tabs-module_container","tabList":"Tabs-module_tabList","tabList--full-width":"Tabs-module_tabList--full-width","tab":"Tabs-module_tab","tab--active":"Tabs-module_tab--active","tab--disabled":"Tabs-module_tab--disabled","tab--sm":"Tabs-module_tab--sm","tab--md":"Tabs-module_tab--md","tab--lg":"Tabs-module_tab--lg","tab--full-width":"Tabs-module_tab--full-width","tabIcon":"Tabs-module_tabIcon","panelContainer":"Tabs-module_panelContainer","panelContainer--sm":"Tabs-module_panelContainer--sm","panelContainer--md":"Tabs-module_panelContainer--md","panelContainer--lg":"Tabs-module_panelContainer--lg"};
 
@@ -1567,9 +1880,9 @@ var styles$7 = {"pixelated-corner-sm":"Tabs-module_pixelated-corner-sm","pixelat
  * TabPanel component - Individual tab content
  * Must be used as a child of Tabs component
  */
-const TabPanel = ({ children }) => {
+function TabPanel({ children, }) {
     return jsxRuntime.jsx(jsxRuntime.Fragment, { children: children });
-};
+}
 TabPanel.displayName = 'TabPanel';
 /**
  * Mac OS 9 style Tabs component
@@ -1603,7 +1916,7 @@ TabPanel.displayName = 'TabPanel';
  * </Tabs>
  * ```
  */
-const Tabs = React.forwardRef(function Tabs({ children, defaultActiveTab = 0, activeTab: controlledActiveTab, onChange, size = 'md', fullWidth = false, className = '', tabListClassName = '', panelClassName = '', ariaLabel = 'Tabs', ariaLabelledBy, }, ref) {
+function TabsInner({ children, defaultActiveTab = 0, activeTab: controlledActiveTab, onChange, size = 'md', fullWidth = false, className = '', tabListClassName = '', panelClassName = '', ariaLabel = 'Tabs', ariaLabelledBy, }, ref) {
     // Controlled vs uncontrolled state
     const [uncontrolledActiveTab, setUncontrolledActiveTab] = React.useState(defaultActiveTab);
     const isControlled = controlledActiveTab !== undefined;
@@ -1699,8 +2012,78 @@ const Tabs = React.forwardRef(function Tabs({ children, defaultActiveTab = 0, ac
                     // unreadable in a screen reader's focus mode.
                     tabIndex: isActive ? 0 : undefined, className: panelContainerClassNames, children: isActive && tab.props.children }, index));
             })] }));
-});
+}
+/**
+ * `forwardRef` erases generics, so the forwarded component is re-cast to a
+ * signature that keeps `TValue` — matching how ListView and Select are
+ * exported. This is what makes a literal union survive into `onChange`:
+ *
+ * ```tsx
+ * <Tabs<'general' | 'advanced'> onChange={(index, value) => …}>
+ *   <TabPanel label="General" value="general">…</TabPanel>
+ *   <TabPanel label="Advanced" value="advanced">…</TabPanel>
+ * </Tabs>
+ * ```
+ */
+const TabsWithRef = React.forwardRef(TabsInner);
+const Tabs = TabsWithRef;
 Tabs.displayName = 'Tabs';
+
+const WindowManagerContext = React.createContext(null);
+/**
+ * Read the surrounding WindowManager, or `null` when there isn't one.
+ * Window uses the null case to fall back to its own props.
+ */
+function useWindowManager() {
+    return React.useContext(WindowManagerContext);
+}
+/**
+ * Provides z-order coordination to every Window rendered beneath it.
+ *
+ * @example
+ * ```tsx
+ * <WindowManagerProvider>
+ *   <Window title="Finder" draggable>…</Window>
+ *   <Window title="Notes" draggable>…</Window>
+ * </WindowManagerProvider>
+ * ```
+ */
+function WindowManagerProvider({ children, baseZIndex = 100, }) {
+    // Stack order, bottom-most first. The last entry is the active window.
+    const [stack, setStack] = React.useState([]);
+    // Mirrors `stack` for synchronous reads inside callbacks, so a raise()
+    // during an event handler doesn't act on a stale render's array.
+    const stackRef = React.useRef([]);
+    stackRef.current = stack;
+    const register = React.useCallback((id) => {
+        setStack((current) => (current.includes(id) ? current : [...current, id]));
+    }, []);
+    const unregister = React.useCallback((id) => {
+        setStack((current) => current.filter((entry) => entry !== id));
+    }, []);
+    const raise = React.useCallback((id) => {
+        setStack((current) => {
+            // Already on top — skip the state update entirely so a click on the
+            // focused window doesn't re-render the whole stack.
+            if (current[current.length - 1] === id)
+                return current;
+            const without = current.filter((entry) => entry !== id);
+            return [...without, id];
+        });
+    }, []);
+    const getZIndex = React.useCallback((id) => {
+        const index = stackRef.current.indexOf(id);
+        return index === -1 ? baseZIndex : baseZIndex + index;
+    }, [baseZIndex]);
+    const value = React.useMemo(() => ({
+        register,
+        unregister,
+        raise,
+        getZIndex,
+        activeId: stack[stack.length - 1] ?? null,
+    }), [register, unregister, raise, getZIndex, stack]);
+    return jsxRuntime.jsx(WindowManagerContext.Provider, { value: value, children: children });
+}
 
 var styles$6 = {"window":"Window-module_window","window--active":"Window-module_window--active","window--inactive":"Window-module_window--inactive","window--draggable":"Window-module_window--draggable","titleBar":"Window-module_titleBar","titleCenter":"Window-module_titleCenter","titleBar--draggable":"Window-module_titleBar--draggable","titleBar--dragging":"Window-module_titleBar--dragging","controls":"Window-module_controls","controlButton":"Window-module_controlButton","closeBox":"Window-module_closeBox","minimizeBox":"Window-module_minimizeBox","maximizeBox":"Window-module_maximizeBox","titleText":"Window-module_titleText","content":"Window-module_content","resizeHandle":"Window-module_resizeHandle"};
 
@@ -1794,7 +2177,22 @@ function readParentMetrics(element) {
  * </Window>
  * ```
  */
-const Window = React.forwardRef(({ children, title, titleBar, active = true, width = 'auto', height = 'auto', className = '', contentClassName = '', classes, showControls = true, onClose, onMinimize, onMaximize, onMouseEnter, onActivate, zIndex, resizable = false, minWidth = 200, minHeight = 100, maxWidth, maxHeight, onResize, draggable = false, defaultPosition, position: controlledPosition, onPositionChange, boundary = 'parent', keyboardStep = 1, }, ref) => {
+const Window = React.forwardRef(({ children, title, titleBar, active = true, width = 'auto', height = 'auto', className = '', contentClassName = '', classes, showControls = true, onClose, onMinimize, onMaximize, onMouseEnter, onActivate, zIndex, id, resizable = false, minWidth = 200, minHeight = 100, maxWidth, maxHeight, onResize, draggable = false, defaultPosition, position: controlledPosition, onPositionChange, boundary = 'parent', keyboardStep = 1, }, ref) => {
+    // Optional z-order coordination. Outside a WindowManagerProvider this is
+    // null and the component falls back to its own `active` / `zIndex`
+    // props, so the manager is purely additive for existing consumers.
+    const manager = useWindowManager();
+    const generatedId = React.useId();
+    const windowId = id ?? generatedId;
+    React.useEffect(() => {
+        if (!manager)
+            return;
+        manager.register(windowId);
+        return () => manager.unregister(windowId);
+        // `manager` identity changes whenever the stack does; depending on it
+        // here would unregister and re-register on every raise.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [windowId]);
     // Root element, used by the keyboard handlers to measure the window
     // without a DOM query.
     const windowRef = React.useRef(null);
@@ -2116,7 +2514,11 @@ const Window = React.forwardRef(({ children, title, titleBar, active = true, wid
         commitSize(rect.width + delta.dx * step, rect.height + delta.dy * step);
     }, [resizable, keyboardStep, commitSize]);
     // --- Rendering --------------------------------------------------------
-    const windowClassNames = mergeClasses(styles$6.window, active ? styles$6['window--active'] : styles$6['window--inactive'], isPositioned && styles$6['window--draggable'], className, classes?.root);
+    // Inside a manager, "active" means "topmost in the stack"; outside one,
+    // the caller's prop stands.
+    const resolvedActive = manager ? manager.activeId === windowId : active;
+    const resolvedZIndex = manager ? manager.getZIndex(windowId) : zIndex;
+    const windowClassNames = mergeClasses(styles$6.window, resolvedActive ? styles$6['window--active'] : styles$6['window--inactive'], isPositioned && styles$6['window--draggable'], className, classes?.root);
     const contentClassNames = mergeClasses(styles$6.content, contentClassName, classes?.content);
     const titleBarClassNames = mergeClasses(styles$6.titleBar, draggable && styles$6['titleBar--draggable'], isDragging && styles$6['titleBar--dragging'], classes?.titleBar);
     const windowStyle = {};
@@ -2131,11 +2533,15 @@ const Window = React.forwardRef(({ children, title, titleBar, active = true, wid
         windowStyle.left = `${currentPosition.x}px`;
         windowStyle.top = `${currentPosition.y}px`;
     }
-    if (zIndex !== undefined) {
-        windowStyle.zIndex = zIndex;
+    if (resolvedZIndex !== undefined) {
+        windowStyle.zIndex = resolvedZIndex;
     }
     // Merge the forwarded ref with our internal one so keyboard handlers
     // can measure the window without a DOM query.
+    const handleActivate = React.useCallback(() => {
+        manager?.raise(windowId);
+        onActivate?.();
+    }, [manager, windowId, onActivate]);
     const setRootRef = React.useCallback((node) => {
         windowRef.current = node;
         if (typeof ref === 'function') {
@@ -2154,7 +2560,7 @@ const Window = React.forwardRef(({ children, title, titleBar, active = true, wid
         }
         return null;
     };
-    return (jsxRuntime.jsxs("div", { ref: setRootRef, className: windowClassNames, style: windowStyle, onMouseEnter: onMouseEnter, onPointerDown: onActivate, onFocusCapture: onActivate, children: [renderTitleBar(), jsxRuntime.jsx("div", { className: contentClassNames, children: children }), resizable && (jsxRuntime.jsx("button", { type: "button", className: mergeClasses(styles$6.resizeHandle, classes?.resizeHandle), onPointerDown: handleResizePointerDown, onKeyDown: handleResizeKeyDown, "aria-label": "Resize window", "aria-keyshortcuts": "ArrowUp ArrowDown ArrowLeft ArrowRight", title: "Resize window", style: { touchAction: 'none' } }))] }));
+    return (jsxRuntime.jsxs("div", { ref: setRootRef, className: windowClassNames, style: windowStyle, onMouseEnter: onMouseEnter, onPointerDown: handleActivate, onFocusCapture: handleActivate, children: [renderTitleBar(), jsxRuntime.jsx("div", { className: contentClassNames, children: children }), resizable && (jsxRuntime.jsx("button", { type: "button", className: mergeClasses(styles$6.resizeHandle, classes?.resizeHandle), onPointerDown: handleResizePointerDown, onKeyDown: handleResizeKeyDown, "aria-label": "Resize window", "aria-keyshortcuts": "ArrowUp ArrowDown ArrowLeft ArrowRight", title: "Resize window", style: { touchAction: 'none' } }))] }));
 });
 Window.displayName = 'Window';
 
@@ -3718,6 +4124,7 @@ exports.UserIcon = UserIcon;
 exports.VolumeIcon = VolumeIcon;
 exports.VolumeMuteIcon = VolumeMuteIcon;
 exports.Window = Window;
+exports.WindowManagerProvider = WindowManagerProvider;
 exports.borders = borders;
 exports.colors = colors;
 exports.createClassBuilder = createClassBuilder;
@@ -3727,4 +4134,7 @@ exports.spacing = spacing;
 exports.tokens = tokens;
 exports.transitions = transitions;
 exports.typography = typography;
+exports.useMenuPosition = useMenuPosition;
+exports.useOutsideClick = useOutsideClick;
+exports.useWindowManager = useWindowManager;
 exports.zIndex = zIndex;

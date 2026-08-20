@@ -111,14 +111,17 @@ export const WithLabel: Story = {
 	},
 };
 
-export const WithChildren: Story = {
+export const SimpleOptions: Story = {
 	render: () => (
-		<Select label="Country">
-			<option value="">Select a country...</option>
-			<option value="us">United States</option>
-			<option value="ca">Canada</option>
-			<option value="mx">Mexico</option>
-		</Select>
+		<Select
+			label="Country"
+			placeholder="Select a country..."
+			options={[
+				{ value: 'us', label: 'United States' },
+				{ value: 'ca', label: 'Canada' },
+				{ value: 'mx', label: 'Mexico' },
+			]}
+		/>
 	),
 	parameters: {
 		docs: {
@@ -273,26 +276,24 @@ export const FullWidth: Story = {
 // With Option Groups
 // ========================================
 
-export const WithOptgroups: Story = {
+export const WithGroups: Story = {
 	render: () => (
-		<Select label="Choose a location" fullWidth>
-			<option value="">Select a location...</option>
-			<optgroup label="North America">
-				<option value="us">United States</option>
-				<option value="ca">Canada</option>
-				<option value="mx">Mexico</option>
-			</optgroup>
-			<optgroup label="Europe">
-				<option value="uk">United Kingdom</option>
-				<option value="fr">France</option>
-				<option value="de">Germany</option>
-			</optgroup>
-			<optgroup label="Asia">
-				<option value="jp">Japan</option>
-				<option value="cn">China</option>
-				<option value="in">India</option>
-			</optgroup>
-		</Select>
+		<Select
+			label="Choose a location"
+			fullWidth
+			placeholder="Select a location..."
+			options={[
+				{ value: 'us', label: 'United States', group: 'North America' },
+				{ value: 'ca', label: 'Canada', group: 'North America' },
+				{ value: 'mx', label: 'Mexico', group: 'North America' },
+				{ value: 'uk', label: 'United Kingdom', group: 'Europe' },
+				{ value: 'fr', label: 'France', group: 'Europe' },
+				{ value: 'de', label: 'Germany', group: 'Europe' },
+				{ value: 'jp', label: 'Japan', group: 'Asia' },
+				{ value: 'cn', label: 'China', group: 'Asia' },
+				{ value: 'in', label: 'India', group: 'Asia' },
+			]}
+		/>
 	),
 	parameters: {
 		docs: {
@@ -315,7 +316,7 @@ export const Controlled: Story = {
 				<Select
 					label="Choose a color"
 					value={value}
-					onChange={(e) => setValue(e.target.value)}
+					onValueChange={setValue}
 					options={colorOptions}
 					placeholder="Select a color..."
 				/>

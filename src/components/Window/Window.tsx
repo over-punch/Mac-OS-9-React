@@ -14,8 +14,9 @@
 //  - The title bar pattern SVG is a module-level constant, so dragging no
 //    longer re-renders 16 <rect> nodes per frame (#54)
 
-import React, { forwardRef, useState, useRef, useEffect, useCallback } from 'react';
+import React, { forwardRef, useState, useRef, useEffect, useCallback, useId } from 'react';
 import { mergeClasses } from '../../utils/classNames';
+import { useWindowManager } from '../WindowManager/WindowManager';
 import { WindowPosition } from '../../types';
 import styles from './Window.module.css';
 
@@ -151,8 +152,19 @@ export interface WindowProps {
 	/**
 	 * Explicit stacking order for the window. Applied as CSS `z-index` on
 	 * the root element. Pair with `onActivate` for click-to-front.
+	 *
+	 * Inside a `<WindowManagerProvider>` the manager assigns the z-index by
+	 * stack position and this prop is ignored — set it only for windows you
+	 * are stacking by hand.
 	 */
 	zIndex?: number;
+
+	/**
+	 * Stable identity for this window within a `<WindowManagerProvider>`.
+	 * Defaults to a generated id. Supply one when windows mount and unmount
+	 * and you want stack position to survive.
+	 */
+	id?: string;
 
 	/**
 	 * Whether the window has a resize handle.
@@ -389,6 +401,7 @@ export const Window = forwardRef<HTMLDivElement, WindowProps>(
 			onMouseEnter,
 			onActivate,
 			zIndex,
+			id,
 			resizable = false,
 			minWidth = 200,
 			minHeight = 100,
@@ -404,6 +417,22 @@ export const Window = forwardRef<HTMLDivElement, WindowProps>(
 		},
 		ref
 	) => {
+		// Optional z-order coordination. Outside a WindowManagerProvider this is
+		// null and the component falls back to its own `active` / `zIndex`
+		// props, so the manager is purely additive for existing consumers.
+		const manager = useWindowManager();
+		const generatedId = useId();
+		const windowId = id ?? generatedId;
+
+		useEffect(() => {
+			if (!manager) return;
+			manager.register(windowId);
+			return () => manager.unregister(windowId);
+			// `manager` identity changes whenever the stack does; depending on it
+			// here would unregister and re-register on every raise.
+			// eslint-disable-next-line react-hooks/exhaustive-deps
+		}, [windowId]);
+
 		// Root element, used by the keyboard handlers to measure the window
 		// without a DOM query.
 		const windowRef = useRef<HTMLDivElement | null>(null);
@@ -820,9 +849,14 @@ export const Window = forwardRef<HTMLDivElement, WindowProps>(
 
 		// --- Rendering --------------------------------------------------------
 
+		// Inside a manager, "active" means "topmost in the stack"; outside one,
+		// the caller's prop stands.
+		const resolvedActive = manager ? manager.activeId === windowId : active;
+		const resolvedZIndex = manager ? manager.getZIndex(windowId) : zIndex;
+
 		const windowClassNames = mergeClasses(
 			styles.window,
-			active ? styles['window--active'] : styles['window--inactive'],
+			resolvedActive ? styles['window--active'] : styles['window--inactive'],
 			isPositioned && styles['window--draggable'],
 			className,
 			classes?.root
@@ -853,12 +887,17 @@ export const Window = forwardRef<HTMLDivElement, WindowProps>(
 			windowStyle.top = `${currentPosition.y}px`;
 		}
 
-		if (zIndex !== undefined) {
-			windowStyle.zIndex = zIndex;
+		if (resolvedZIndex !== undefined) {
+			windowStyle.zIndex = resolvedZIndex;
 		}
 
 		// Merge the forwarded ref with our internal one so keyboard handlers
 		// can measure the window without a DOM query.
+		const handleActivate = useCallback(() => {
+			manager?.raise(windowId);
+			onActivate?.();
+		}, [manager, windowId, onActivate]);
+
 		const setRootRef = useCallback(
 			(node: HTMLDivElement | null) => {
 				windowRef.current = node;
@@ -945,8 +984,8 @@ export const Window = forwardRef<HTMLDivElement, WindowProps>(
 				className={windowClassNames}
 				style={windowStyle}
 				onMouseEnter={onMouseEnter}
-				onPointerDown={onActivate}
-				onFocusCapture={onActivate}
+				onPointerDown={handleActivate}
+				onFocusCapture={handleActivate}
 			>
 				{renderTitleBar()}
 				<div className={contentClassNames}>{children}</div>

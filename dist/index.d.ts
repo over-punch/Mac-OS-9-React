@@ -1,5 +1,5 @@
 import * as React$1 from 'react';
-import React__default, { AnchorHTMLAttributes, ButtonHTMLAttributes, SVGAttributes, InputHTMLAttributes, TextareaHTMLAttributes, SelectHTMLAttributes } from 'react';
+import React__default, { AnchorHTMLAttributes, ButtonHTMLAttributes, SVGAttributes, InputHTMLAttributes, TextareaHTMLAttributes } from 'react';
 
 interface BaseButtonProps {
     /**
@@ -832,15 +832,20 @@ interface TextFieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'si
  */
 declare const TextField: React__default.ForwardRefExoticComponent<TextFieldProps & React__default.RefAttributes<HTMLInputElement | HTMLTextAreaElement>>;
 
-interface SelectOption {
-    value: string | number;
+/** A single choice in the list. */
+interface SelectOption<TValue extends string | number = string> {
+    value: TValue;
     label: string;
     disabled?: boolean;
-}
-interface SelectProps extends Omit<SelectHTMLAttributes<HTMLSelectElement>, 'size'> {
     /**
-     * Label text for the select
+     * Optional group heading. Consecutive options sharing a group are drawn
+     * under one heading, replacing what `<optgroup>` did for the native
+     * control.
      */
+    group?: string;
+}
+interface SelectProps<TValue extends string | number = string> {
+    /** Label text for the select */
     label?: React__default.ReactNode;
     /**
      * Position of the label relative to the select
@@ -862,80 +867,60 @@ interface SelectProps extends Omit<SelectHTMLAttributes<HTMLSelectElement>, 'siz
      * @default false
      */
     error?: boolean;
-    /**
-     * Error message to display below the field
-     */
+    /** Error message to display below the field */
     errorMessage?: string;
-    /**
-     * Helper text to display below the field
-     */
+    /** Helper text to display below the field */
     helperText?: string;
-    /**
-     * Options for the select dropdown
-     * Alternative to providing option elements as children
-     */
-    options?: readonly SelectOption[];
-    /**
-     * Placeholder text (creates a disabled first option)
-     */
+    /** Options for the select dropdown */
+    options: readonly SelectOption<TValue>[];
+    /** Selected value (controlled) */
+    value?: TValue;
+    /** Initial selected value (uncontrolled) */
+    defaultValue?: TValue;
+    /** Called with the newly selected value */
+    onValueChange?: (value: TValue) => void;
+    /** Placeholder shown when nothing is selected */
     placeholder?: string;
-    /**
-     * Override aria-label
-     */
-    ariaLabel?: string;
-    /**
-     * ID of element that describes this select
-     */
-    ariaDescribedBy?: string;
-    /**
-     * Additional CSS class names
-     */
+    /** Whether the control is disabled */
+    disabled?: boolean;
+    /** Whether a value is required for form validation */
+    required?: boolean;
+    /** Name used when the control participates in a form */
+    name?: string;
+    /** Override aria-label */
+    'aria-label'?: string;
+    /** ID of element that describes this select */
+    'aria-describedby'?: string;
+    /** Element id */
+    id?: string;
+    /** Additional CSS class names */
     className?: string;
-    /**
-     * Custom wrapper class name
-     */
-    wrapperClassName?: string;
 }
 /**
- * Mac OS 9 style Select component
+ * Mac OS 9 style Select.
  *
- * Classic dropdown select with raised bevel effect and optional label.
- *
- * Features:
- * - Classic Mac OS 9 popup menu styling
- * - Label positioning (top/left/right)
- * - Size variants (sm/md/lg)
- * - Error states with messages
- * - Helper text support
- * - Option groups support
- * - Full accessibility with ARIA support
- * - Keyboard navigation
- * - Form integration
+ * A custom listbox, so the opened option list is drawn by the library rather
+ * than the operating system and keeps the Mac OS 9 look. Supports arrow-key
+ * navigation, Home/End, type-ahead, Escape, and `aria-activedescendant`.
  *
  * @example
  * ```tsx
- * // With options prop
- * <Select
- *   label="Choose a color"
+ * <Select<'red' | 'blue'>
+ *   label="Colour"
  *   options={[
  *     { value: 'red', label: 'Red' },
  *     { value: 'blue', label: 'Blue' },
- *     { value: 'green', label: 'Green' }
  *   ]}
- *   placeholder="Select a color..."
+ *   value={colour}
+ *   onValueChange={setColour}  // receives 'red' | 'blue'
  * />
- *
- * // With children
- * <Select label="Country">
- *   <option value="us">United States</option>
- *   <option value="ca">Canada</option>
- *   <option value="mx">Mexico</option>
- * </Select>
  * ```
  */
-declare const Select: React__default.ForwardRefExoticComponent<SelectProps & React__default.RefAttributes<HTMLSelectElement>>;
+declare const Select: <TValue extends string | number = string>(props: SelectProps<TValue> & {
+    ref?: React__default.Ref<HTMLButtonElement>;
+}) => React__default.JSX.Element;
 
-interface TabPanelProps {
+interface TabPanelProps<TValue extends string = string> {
     /**
      * Label for the tab
      */
@@ -954,16 +939,22 @@ interface TabPanelProps {
      */
     disabled?: boolean;
     /**
-     * Value identifier for controlled tabs
+     * Value identifier for controlled tabs.
+     *
+     * Generic, so a literal union such as `'general' | 'advanced'` survives
+     * into `onChange` instead of being widened to `string`.
      */
-    value?: string;
+    value?: TValue;
 }
 /**
  * TabPanel component - Individual tab content
  * Must be used as a child of Tabs component
  */
-declare const TabPanel: React__default.FC<TabPanelProps>;
-interface TabsProps {
+declare function TabPanel<TValue extends string = string>({ children, }: TabPanelProps<TValue>): React__default.JSX.Element;
+declare namespace TabPanel {
+    var displayName: string;
+}
+interface TabsProps<TValue extends string = string> {
     /**
      * Tab panels as children.
      *
@@ -986,7 +977,7 @@ interface TabsProps {
     /**
      * Callback when tab changes
      */
-    onChange?: (index: number, value?: string) => void;
+    onChange?: (index: number, value?: TValue) => void;
     /**
      * Size of the tabs
      * @default 'md'
@@ -1020,39 +1011,9 @@ interface TabsProps {
      */
     ariaLabelledBy?: string;
 }
-/**
- * Mac OS 9 style Tabs component
- *
- * Classic tabbed navigation with raised tab appearance and inset panel.
- *
- * Features:
- * - Classic Mac OS 9 tab styling
- * - Controlled and uncontrolled modes
- * - Keyboard navigation (Arrow keys, Home, End)
- * - Full accessibility with ARIA
- * - Optional icons in tabs
- * - Disabled tab states
- *
- * @example
- * ```tsx
- * // Uncontrolled
- * <Tabs>
- *   <TabPanel label="General">
- *     <p>General settings content</p>
- *   </TabPanel>
- *   <TabPanel label="Advanced">
- *     <p>Advanced settings content</p>
- *   </TabPanel>
- * </Tabs>
- *
- * // Controlled
- * <Tabs activeTab={activeIndex} onChange={setActiveIndex}>
- *   <TabPanel label="Tab 1">Content 1</TabPanel>
- *   <TabPanel label="Tab 2">Content 2</TabPanel>
- * </Tabs>
- * ```
- */
-declare const Tabs: React__default.ForwardRefExoticComponent<TabsProps & React__default.RefAttributes<HTMLDivElement>>;
+declare const Tabs: <TValue extends string = string>(props: TabsProps<TValue> & {
+    ref?: React__default.Ref<HTMLDivElement>;
+}) => React__default.ReactElement | null;
 
 /**
  * Generic classes object for targeting sub-elements within components.
@@ -1250,8 +1211,18 @@ interface WindowProps {
     /**
      * Explicit stacking order for the window. Applied as CSS `z-index` on
      * the root element. Pair with `onActivate` for click-to-front.
+     *
+     * Inside a `<WindowManagerProvider>` the manager assigns the z-index by
+     * stack position and this prop is ignored — set it only for windows you
+     * are stacking by hand.
      */
     zIndex?: number;
+    /**
+     * Stable identity for this window within a `<WindowManagerProvider>`.
+     * Defaults to a generated id. Supply one when windows mount and unmount
+     * and you want stack position to survive.
+     */
+    id?: string;
     /**
      * Whether the window has a resize handle.
      *
@@ -1501,6 +1472,46 @@ interface DialogProps extends Omit<WindowProps, 'active'> {
  * ```
  */
 declare const Dialog: React__default.ForwardRefExoticComponent<DialogProps & React__default.RefAttributes<HTMLDivElement>>;
+
+/** Coordination surface consumed by Window. */
+interface WindowManagerContextValue {
+    /** Add a window to the stack; returns nothing, safe to call repeatedly. */
+    register: (id: string) => void;
+    /** Remove a window from the stack when it unmounts. */
+    unregister: (id: string) => void;
+    /** Move a window to the top of the stack and make it active. */
+    raise: (id: string) => void;
+    /** Resolved z-index for a window, by stack order. */
+    getZIndex: (id: string) => number;
+    /** The id of the topmost (focused) window, or null when none. */
+    activeId: string | null;
+}
+/**
+ * Read the surrounding WindowManager, or `null` when there isn't one.
+ * Window uses the null case to fall back to its own props.
+ */
+declare function useWindowManager(): WindowManagerContextValue | null;
+interface WindowManagerProviderProps {
+    children: React__default.ReactNode;
+    /**
+     * z-index assigned to the bottom-most window. Each window above it gets
+     * `baseZIndex + its stack position`.
+     * @default 100
+     */
+    baseZIndex?: number;
+}
+/**
+ * Provides z-order coordination to every Window rendered beneath it.
+ *
+ * @example
+ * ```tsx
+ * <WindowManagerProvider>
+ *   <Window title="Finder" draggable>…</Window>
+ *   <Window title="Notes" draggable>…</Window>
+ * </WindowManagerProvider>
+ * ```
+ */
+declare function WindowManagerProvider({ children, baseZIndex, }: WindowManagerProviderProps): React__default.JSX.Element;
 
 /**
  * A dropdown entry described as data rather than JSX.
@@ -2583,6 +2594,43 @@ declare const tokens: {
     };
 };
 
+interface UseOutsideClickOptions {
+    /** Whether the listener is active. */
+    enabled?: boolean;
+    /** Elements that count as "inside" — a click in any of these is ignored. */
+    refs: Array<React.RefObject<HTMLElement | null>>;
+    /** Called when an interaction lands outside every ref. */
+    onOutside: () => void;
+}
+declare function useOutsideClick({ enabled, refs, onOutside }: UseOutsideClickOptions): void;
+
+/** Resolved placement of an open menu. */
+interface MenuPosition {
+    /** Style to apply to the floating menu element. */
+    style: React.CSSProperties;
+    /** Whether the menu was flipped above its trigger. */
+    flipped: boolean;
+}
+interface UseMenuPositionOptions {
+    /** Whether the menu is currently open (and therefore measurable). */
+    open: boolean;
+    /** The trigger the menu is anchored to. */
+    anchorRef: React.RefObject<HTMLElement | null>;
+    /** The floating menu element. */
+    menuRef: React.RefObject<HTMLElement | null>;
+    /**
+     * Which trigger edge the menu aligns to.
+     * @default 'left'
+     */
+    align?: 'left' | 'right';
+    /**
+     * Space to keep between the menu and the viewport edge.
+     * @default 8
+     */
+    padding?: number;
+}
+declare function useMenuPosition({ open, anchorRef, menuRef, align, padding, }: UseMenuPositionOptions): MenuPosition;
+
 /**
  * A value that may be passed to {@link mergeClasses}.
  *
@@ -2625,5 +2673,5 @@ declare const mergeClasses: (...classes: ClassValue[]) => string;
  */
 declare const createClassBuilder: (baseClass: string) => (...additionalClasses: ClassValue[]) => string;
 
-export { AlertIcon, ApplicationIcon, ArrowDownIcon, ArrowLeftIcon, ArrowRightIcon, ArrowUpIcon, Button, CalendarIcon, CheckIcon, Checkbox, ChevronDownIcon, ChevronRightIcon, CloseIcon, CopyIcon, Dialog, DiskIcon, DividerIcon, DocumentIcon, DownloadIcon, ErrorIcon, FolderIcon, FolderList, FolderOpenIcon, GrabberIcon, HardDriveIcon, HomeIcon, Icon, IconButton, IconLibrary, ImageIcon, InfoIcon, LinkIcon, ListView, LockIcon, MailIcon, MenuBar, MenuDropdown, MenuItem, MusicIcon, PauseIcon, PlayIcon, PrintIcon, QuestionIcon, Radio, RadioGroup, ResizeHandleIcon, Scrollbar, SearchIcon, Select, StopIcon, TabPanel, Tabs, TextField, TrashIcon, UserIcon, VolumeIcon, VolumeMuteIcon, Window, borders, colors, createClassBuilder, mergeClasses, shadows, spacing, tokens, transitions, typography, zIndex };
-export type { BaseComponentProps, ButtonProps, ButtonRef, CellRenderState, CheckboxProps, ComponentClasses, DialogProps, DivRef, FocusableElement, FolderListClasses, FolderListProps, HeaderCellDefaultProps, HeaderCellRenderState, IconButtonProps, IconLibraryProps, IconName, IconProps, InputRef, ListColumn, ListItem, ListViewClasses, ListViewProps, Menu, MenuBarProps, MenuDropdownProps, MenuItemData, MenuItemProps, RadioGroupProps, RadioProps, RenderState, RowDefaultProps, RowRenderState, ScrollbarProps, SelectOption, SelectProps, SelectRef, Size, State, TabPanelProps, TabsProps, TextAreaRef, TextFieldProps, Variant, WindowClasses, WindowPosition, WindowProps };
+export { AlertIcon, ApplicationIcon, ArrowDownIcon, ArrowLeftIcon, ArrowRightIcon, ArrowUpIcon, Button, CalendarIcon, CheckIcon, Checkbox, ChevronDownIcon, ChevronRightIcon, CloseIcon, CopyIcon, Dialog, DiskIcon, DividerIcon, DocumentIcon, DownloadIcon, ErrorIcon, FolderIcon, FolderList, FolderOpenIcon, GrabberIcon, HardDriveIcon, HomeIcon, Icon, IconButton, IconLibrary, ImageIcon, InfoIcon, LinkIcon, ListView, LockIcon, MailIcon, MenuBar, MenuDropdown, MenuItem, MusicIcon, PauseIcon, PlayIcon, PrintIcon, QuestionIcon, Radio, RadioGroup, ResizeHandleIcon, Scrollbar, SearchIcon, Select, StopIcon, TabPanel, Tabs, TextField, TrashIcon, UserIcon, VolumeIcon, VolumeMuteIcon, Window, WindowManagerProvider, borders, colors, createClassBuilder, mergeClasses, shadows, spacing, tokens, transitions, typography, useMenuPosition, useOutsideClick, useWindowManager, zIndex };
+export type { BaseComponentProps, ButtonProps, ButtonRef, CellRenderState, CheckboxProps, ComponentClasses, DialogProps, DivRef, FocusableElement, FolderListClasses, FolderListProps, HeaderCellDefaultProps, HeaderCellRenderState, IconButtonProps, IconLibraryProps, IconName, IconProps, InputRef, ListColumn, ListItem, ListViewClasses, ListViewProps, Menu, MenuBarProps, MenuDropdownProps, MenuItemData, MenuItemProps, MenuPosition, RadioGroupProps, RadioProps, RenderState, RowDefaultProps, RowRenderState, ScrollbarProps, SelectOption, SelectProps, SelectRef, Size, State, TabPanelProps, TabsProps, TextAreaRef, TextFieldProps, UseMenuPositionOptions, UseOutsideClickOptions, Variant, WindowClasses, WindowManagerContextValue, WindowManagerProviderProps, WindowPosition, WindowProps };

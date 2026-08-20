@@ -14,7 +14,7 @@ import React, {
 import { mergeClasses } from '../../utils/classNames';
 import styles from './Tabs.module.css';
 
-export interface TabPanelProps {
+export interface TabPanelProps<TValue extends string = string> {
 	/**
 	 * Label for the tab
 	 */
@@ -37,22 +37,27 @@ export interface TabPanelProps {
 	disabled?: boolean;
 
 	/**
-	 * Value identifier for controlled tabs
+	 * Value identifier for controlled tabs.
+	 *
+	 * Generic, so a literal union such as `'general' | 'advanced'` survives
+	 * into `onChange` instead of being widened to `string`.
 	 */
-	value?: string;
+	value?: TValue;
 }
 
 /**
  * TabPanel component - Individual tab content
  * Must be used as a child of Tabs component
  */
-export const TabPanel: React.FC<TabPanelProps> = ({ children }) => {
+export function TabPanel<TValue extends string = string>({
+	children,
+}: TabPanelProps<TValue>): React.JSX.Element {
 	return <>{children}</>;
-};
+}
 
 TabPanel.displayName = 'TabPanel';
 
-export interface TabsProps {
+export interface TabsProps<TValue extends string = string> {
 	/**
 	 * Tab panels as children.
 	 *
@@ -78,7 +83,7 @@ export interface TabsProps {
 	/**
 	 * Callback when tab changes
 	 */
-	onChange?: (index: number, value?: string) => void;
+	onChange?: (index: number, value?: TValue) => void;
 
 	/**
 	 * Size of the tabs
@@ -152,7 +157,7 @@ export interface TabsProps {
  * </Tabs>
  * ```
  */
-export const Tabs = forwardRef<HTMLDivElement, TabsProps>(function Tabs(
+function TabsInner<TValue extends string = string>(
 	{
 		children,
 		defaultActiveTab = 0,
@@ -165,8 +170,8 @@ export const Tabs = forwardRef<HTMLDivElement, TabsProps>(function Tabs(
 		panelClassName = '',
 		ariaLabel = 'Tabs',
 		ariaLabelledBy,
-	},
-	ref
+	}: TabsProps<TValue>,
+	ref: React.ForwardedRef<HTMLDivElement>
 ) {
 	// Controlled vs uncontrolled state
 	const [uncontrolledActiveTab, setUncontrolledActiveTab] = useState(defaultActiveTab);
@@ -186,7 +191,7 @@ export const Tabs = forwardRef<HTMLDivElement, TabsProps>(function Tabs(
 	// churned along with them.
 	const tabs = useMemo(
 		() =>
-			Children.toArray(children).filter((child): child is ReactElement<TabPanelProps> =>
+			Children.toArray(children).filter((child): child is ReactElement<TabPanelProps<TValue>> =>
 				isValidElement(child)
 			),
 		[children]
@@ -339,8 +344,26 @@ export const Tabs = forwardRef<HTMLDivElement, TabsProps>(function Tabs(
 			})}
 		</div>
 	);
-});
+}
 
-Tabs.displayName = 'Tabs';
+/**
+ * `forwardRef` erases generics, so the forwarded component is re-cast to a
+ * signature that keeps `TValue` — matching how ListView and Select are
+ * exported. This is what makes a literal union survive into `onChange`:
+ *
+ * ```tsx
+ * <Tabs<'general' | 'advanced'> onChange={(index, value) => …}>
+ *   <TabPanel label="General" value="general">…</TabPanel>
+ *   <TabPanel label="Advanced" value="advanced">…</TabPanel>
+ * </Tabs>
+ * ```
+ */
+const TabsWithRef = forwardRef(TabsInner);
+
+export const Tabs = TabsWithRef as <TValue extends string = string>(
+	props: TabsProps<TValue> & { ref?: React.Ref<HTMLDivElement> }
+) => React.ReactElement | null;
+
+(Tabs as { displayName?: string }).displayName = 'Tabs';
 
 export default Tabs;

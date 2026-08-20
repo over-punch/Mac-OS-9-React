@@ -23,6 +23,12 @@ export { Tabs, TabPanel, type TabsProps, type TabPanelProps } from './components
 export { Window, type WindowProps, type WindowClasses } from './components/Window';
 export { Dialog, type DialogProps, type FocusableElement } from './components/Dialog';
 export {
+	WindowManagerProvider,
+	useWindowManager,
+	type WindowManagerContextValue,
+	type WindowManagerProviderProps,
+} from './components/WindowManager';
+export {
 	MenuBar,
 	MenuItem,
 	MenuDropdown,
@@ -52,6 +58,10 @@ export * from './components/Icon/categories';
 
 // Export design tokens
 export * from './tokens';
+
+// Export hooks
+export { useOutsideClick, type UseOutsideClickOptions } from './hooks/useOutsideClick';
+export { useMenuPosition, type MenuPosition, type UseMenuPositionOptions } from './hooks/useMenuPosition';
 
 // Export utilities
 export { mergeClasses, createClassBuilder } from './utils/classNames';

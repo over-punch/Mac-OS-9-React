@@ -2056,15 +2056,18 @@ textarea.TextField-module_input {
 	border-radius: var(--border-radius-none);
 	box-shadow: var(--shadow-bevel);
 	
-	/* Add arrow indicator */
-	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23000000' d='M2 4l4 4 4-4z'/%3E%3C/svg%3E");
-	background-repeat: no-repeat;
-	background-position: right var(--spacing-1) center;
-	
-	/* Remove default select styles */
-	-webkit-appearance: none;
-	-moz-appearance: none;
-	appearance: none;
+	/* The arrow is drawn with CSS borders rather than an inline
+	 * data:image/svg+xml URI. The data URI required consumers to loosen
+	 * img-src in their CSP, and allowing `data:` there opens an XSS bypass
+	 * vector — a steep price for a triangle (issue #121). */
+
+	/* Layout: label on the left, arrow pinned right */
+	display: inline-flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--spacing-2, 8px);
+	text-align: left;
+	font: inherit;
 	
 	/* Cursor */
 	cursor: pointer;
@@ -2196,6 +2199,97 @@ textarea.TextField-module_input {
 		transition: none;
 	}
 }
+
+/* ========================================
+ * Trigger content
+ * ======================================== */
+
+.Select-module_value,
+.Select-module_placeholder {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.Select-module_placeholder {
+	color: var(--color-text-secondary, #666666);
+}
+
+/* Downward triangle, drawn with borders so no data: URI is needed and no
+ * CSP loosening is required of consumers (issue #121). */
+.Select-module_arrow {
+	flex: none;
+	width: 0;
+	height: 0;
+	border-left: 4px solid transparent;
+	border-right: 4px solid transparent;
+	border-top: 4px solid var(--color-text);
+}
+
+.Select-module_select:disabled .Select-module_arrow {
+	border-top-color: var(--color-text-secondary, #666666);
+}
+
+/* ========================================
+ * Listbox popup
+ * ======================================== */
+
+/* Drawn by the library rather than the OS, so the open list keeps the
+ * Mac OS 9 look (issue #38). Positioned by useMenuPosition. */
+.Select-module_listbox {
+	z-index: 1000;
+	min-width: 120px;
+	padding: var(--border-width-thin) 0;
+	background-color: var(--color-surface);
+	border: var(--border-width-thin) solid var(--color-border);
+	box-shadow: var(--shadow-drop);
+	overflow-y: auto;
+}
+
+.Select-module_option {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-1, 4px);
+	padding: 2px var(--spacing-2, 8px);
+	cursor: pointer;
+	white-space: nowrap;
+	user-select: none;
+}
+
+/* Cursor position, moved by arrow keys and hover. DOM focus stays on the
+ * trigger, so this is the only visible indication of the active option. */
+.Select-module_option--active {
+	background-color: var(--color-selection, #0000bb);
+	color: var(--color-selection-text, #ffffff);
+}
+
+.Select-module_option--disabled {
+	color: var(--color-text-secondary, #666666);
+	cursor: not-allowed;
+}
+
+.Select-module_option--disabled.Select-module_option--active {
+	background-color: transparent;
+	color: var(--color-text-secondary, #666666);
+}
+
+/* Fixed-width checkmark gutter so labels stay aligned whether or not the
+ * option is the selected one. */
+.Select-module_optionCheck {
+	display: inline-block;
+	width: 1em;
+	flex: none;
+}
+
+/* Group heading, replacing what <optgroup> drew for the native control. */
+.Select-module_optionGroupLabel {
+	padding: 2px var(--spacing-2, 8px);
+	font-weight: bold;
+	color: var(--color-text-secondary, #666666);
+	user-select: none;
+	cursor: default;
+}
+
 /* Tabs Component Styles - Mac OS 9 */
 
 /* Import pixelated corners utility */
