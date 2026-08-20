@@ -1,283 +1,28 @@
 /**
- * Mac OS 9 Theme
- * CSS Custom Properties for design tokens
- * Extracted from Figma file: vy2T5MCXFz7QWf4Ba86eqN
- * Reference: docs/figma-map.md
+ * Mac OS 9 Theme — default stylesheet entry point
+ *
+ * This is what `@liiift-studio/mac-os9-ui/styles` resolves to. It composes:
+ *
+ *   fonts.css   — @font-face for the bundled, self-hosted Pixel family
+ *   tokens.css  — every design token as a CSS custom property
+ *   (below)     — a small set of utility classes
+ *
+ * Alternative entry points:
+ *   /tokens    tokens.css alone — no font downloads, no utility classes
+ *   /webfonts  opt-in Google Fonts for IBM Plex and EB Garamond
+ *   /base      opt-in global html/body element styles
+ *
+ * No remote font request is made from this file. See webfonts.css.
  */
 
-/* ========================================
- * Google Fonts Import
- * Import IBM Plex Sans, IBM Plex Mono, and EB Garamond from Google Fonts
- * ======================================== */
-@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600&family=IBM+Plex+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&family=IBM+Plex+Sans:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&display=swap');
-
-/* ========================================
- * Local Font - Pixel Operator
- * ======================================== */
-@font-face {
-	font-family: 'Pixel';
-	src: url("../fonts/Pixel/Normal/Pixel.woff2") format('woff2'),
-		url("../fonts/Pixel/Normal/Pixel.woff") format('woff');
-	font-style: normal;
-	font-weight: normal;
-	font-display: swap;
-}
-
-@font-face {
-	font-family: 'Pixel';
-	src: url("../fonts/Pixel/Normal/Pixel-Bold.woff2") format('woff2'),
-		url("../fonts/Pixel/Normal/Pixel-Bold.woff") format('woff');
-	font-style: normal;
-	font-weight: bold;
-	font-display: swap;
-}
-
-@font-face {
-	font-family: 'Pixel';
-	src: url("../fonts/Pixel/Italic/Pixel-Bold-Italic.woff2") format('woff2'),
-		url("../fonts/Pixel/Italic/Pixel-Bold-Italic.woff") format('woff');
-	font-style: italic;
-	font-weight: bold;
-	font-display: swap;
-}
-
-@font-face {
-	font-family: 'Pixel';
-	src: url("../fonts/Pixel/Italic/Pixel-Italic.woff2") format('woff2'),
-		url("../fonts/Pixel/Italic/Pixel-Italic.woff") format('woff');
-	font-style: italic;
-	font-weight: normal;
-	font-display: swap;
-}
-
-@font-face {
-	font-family: 'PixelSmall';
-	src: url("../fonts/Pixel/Small/Pixel-Bold-Small.woff2") format('woff2'),
-		url("../fonts/Pixel/Small/Pixel-Bold-Small.woff") format('woff');
-	font-style: normal;
-	font-weight: bold;
-	font-display: swap;
-}
-
-@font-face {
-	font-family: 'PixelSmall';
-	src: url("../fonts/Pixel/Small/Pixel-Small.woff2") format('woff2'),
-		url("../fonts/Pixel/Small/Pixel-Small.woff") format('woff');
-	font-style: normal;
-	font-weight: normal;
-	font-display: swap;
-}
-
-:root {
-	/* ========================================
-	 * Colors - Grayscale Palette
-	 * ======================================== */
-	--color-gray-100: #ffffff;
-	--color-gray-200: #eeeeee;
-	--color-gray-300: #dddddd;
-	--color-gray-400: #cccccc;
-	--color-gray-500: #BBBBBB;
-	--color-gray-600: #666666;
-	--color-gray-700: #4d4d4d;
-	--color-gray-800: #333333;
-	--color-gray-900: #262626;
-
-	/* ========================================
-	 * Colors - Accent Colors
-	 * ======================================== */
-	--color-lavender: #ccccff;
-	--color-azul: #0066cc;
-	--color-link-red: #cc0000;
-
-	/* ========================================
-	 * Colors - Semantic Tokens
-	 * ======================================== */
-	--color-background: var(--color-gray-200);
-	--color-foreground: var(--color-gray-900);
-	--color-border: var(--color-gray-900);
-	--color-text: var(--color-gray-900);
-	--color-text-inverse: var(--color-gray-100);
-	--color-surface: var(--color-gray-200);
-	--color-surface-inset: var(--color-gray-100);
-
-	/* Legacy names for compatibility */
-	--color-black: var(--color-gray-900);
-	--color-white: var(--color-gray-100);
-
-	/* ========================================
-	 * Colors - Status Colors
-	 * ======================================== */
-	--color-focus: #000080;
-	--color-error: #cc0000;
-	--color-success: #008000;
-	--color-warning: #ff8c00;
-
-	/* ========================================
-	 * Typography - Font Families
-	 * Authentic Mac OS 9 system fonts
-	 * ======================================== */
-	
-	/* Charcoal - Primary system UI font (menus, buttons, dialogs) */
-	--font-system: 'Pixel', Times;
-
-	/* IBM Plex Sans - Body text and secondary UI elements (open-source alternative to Geneva) */
-	--font-body: 'IBM Plex Sans', monospace;
-	
-	/* EB Garamond - Headlines and editorial content (open-source alternative) */
-	--font-display: 'Pixel', monospace;
-	
-	--font-title: 'EB Garamond', Garamond, Georgia, serif;
-
-	/* IBM Plex Mono - Mac OS 9 monospace font (open-source alternative to Monaco) */
-	--font-mono: 'IBM Plex Mono', monospace;
-	
-	--font-pixel: 'Pixel', monospace;
-	--font-pixel-small: 'PixelSmall', monospace;
-
-	--font-bold: 700
-	/* ========================================
-	 * Typography - Font Sizes
-	 * Mac OS 9 used smaller text (9-12pt typical)
-	 * Using rem units to enable responsive scaling
-	 * ======================================== */
-	--font-size-xs: 0.5625rem;   /* 9pt - smallest UI text (9px at 16px base) */
-	--font-size-sm: 0.625rem;    /* 10pt - small labels (10px at 16px base) */
-	--font-size-md: 0.75rem;     /* 12pt - standard UI text (12px at 16px base - Mac OS 9 default) */
-	--font-size-lg: 0.8125rem;   /* 13pt - slightly larger (13px at 16px base) */
-	--font-size-xl: 0.875rem;    /* 14pt - large UI text (14px at 16px base) */
-	--font-size-2xl: 1rem;       /* 16pt - headings (16px at 16px base) */
-	--font-size-3xl: 1.125rem;   /* 18pt - large headings (18px at 16px base) */
-	--font-size-4xl: 1.25rem;    /* 20pt - major headings (20px at 16px base) */
-	--font-size-5xl: 1.5rem;     /* 24pt - display text (24px at 16px base) */
-
-	/* ========================================
-	 * Typography - Font Weights
-	 * Charcoal Bold is the Mac OS 9 default
-	 * ======================================== */
-	--font-weight-normal: 700;   /* Charcoal Bold - Mac OS 9 default */
-	--font-weight-medium: 700;   /* Medium (same as bold) */
-	--font-weight-semibold: 700; /* Semibold (same as bold) */
-	--font-weight-bold: 700;     /* Bold weight */
-	--font-weight-light: 400;    /* Light (regular Charcoal) */
-
-	/* ========================================
-	 * Typography - Line Heights
-	 * Mac OS 9 used tighter line heights
-	 * ======================================== */
-	--line-height-tight: 1.2;   /* Tight leading (Mac OS 9 style) */
-	--line-height-snug: 1.3;    /* Snug */
-	--line-height-normal: 1.4;  /* Normal (Mac OS 9 default) */
-	--line-height-relaxed: 1.5; /* Relaxed */
-	--line-height-loose: 1.6;   /* Loose */
-
-	/* ========================================
-	 * Typography - Letter Spacing
-	 * ======================================== */
-	--letter-spacing-tighter: -0.02em; /* Slightly tighter */
-	--letter-spacing-tight: -0.01em;   /* Tight */
-	--letter-spacing-normal: 0;        /* Normal - Mac OS 9 default */
-	--letter-spacing-wide: 0.01em;     /* Wide */
-	--letter-spacing-wider: 0.02em;    /* Wider */
-
-	/* ========================================
-	 * Spacing - Scale (2px base unit)
-	 * ======================================== */
-	--spacing-0: 0;
-	--spacing-px: 1px;
-	--spacing-0_5: 2px;
-	--spacing-1: 4px;
-	--spacing-1_5: 6px;
-	--spacing-2: 8px;
-	--spacing-2_5: 10px;
-	--spacing-3: 12px;
-	--spacing-4: 16px;
-	--spacing-5: 20px;
-	--spacing-6: 24px;
-	--spacing-8: 32px;
-	--spacing-10: 40px;
-	--spacing-12: 48px;
-	--spacing-16: 64px;
-
-	/* Legacy spacing names */
-	--spacing-xs: 2px;
-	--spacing-sm: 4px;
-	--spacing-md: 8px;
-	--spacing-lg: 12px;
-	--spacing-xl: 16px;
-	--spacing-2xl: 24px;
-	--spacing-3xl: 32px;
-
-	/* ========================================
-	 * Shadows - Mac OS 9 Bevel Effects
-	 * Exact values from Figma (67:95038)
-	 * ======================================== */
-
-	/* Standard raised bevel (default button state)
-	 * 3-layer composition:
-	 * 1. Top-left highlight (light inner shadow)
-	 * 2. Bottom-right shadow (dark inner shadow)
-	 * 3. Hard drop shadow (creates depth)
-	 */
-	--shadow-bevel: inset 2px 2px 0 rgba(255, 255, 255, 0.6),
-		inset -2px -2px 0 rgba(38, 38, 38, 0.4), 2px 2px 0 rgba(38, 38, 38, 1);
-
-	/* Inverted bevel for pressed/inset states */
-	--shadow-inset: inset -2px -2px 0 rgba(255, 255, 255, 0.6),
-		inset 2px 2px 0 rgba(38, 38, 38, 0.4), inset 0px 0px 0px rgba(38, 38, 38, 1);
-
-	/* Individual shadow layers for custom composition */
-	--shadow-drop: 2px 2px 0 rgba(38, 38, 38, 1);
-	--shadow-highlight: inset 2px 2px 0 rgba(255, 255, 255, 0.6);
-	--shadow-dark: inset -2px -2px 0 rgba(38, 38, 38, 0.4);
-
-	/* No shadow */
-	--shadow-none: none;
-
-	/* ========================================
-	 * Borders
-	 * ======================================== */
-	--border-width-none: 0;
-	--border-width-thin: 1px;
-	--border-width-medium: 2px;
-	--border-width-thick: 3px;
-
-	/* Border radius (Mac OS 9 used square corners) */
-	--border-radius-none: 0;
-	--border-radius-sm: 0;
-	--border-radius-md: 0;
-	--border-radius-lg: 0;
-	--border-radius-full: 0;
-
-	/* ========================================
-	 * Z-Index Scale
-	 * ======================================== */
-	--z-index-base: 0;
-	--z-index-dropdown: 1000;
-	--z-index-sticky: 1100;
-	--z-index-modal: 1200;
-	--z-index-popover: 1300;
-	--z-index-tooltip: 1400;
-
-	/* ========================================
-	 * Transitions
-	 * Mac OS 9 had minimal animations
-	 * ======================================== */
-	--transition-instant: 0ms;
-	--transition-fast: 100ms;
-	--transition-normal: 200ms;
-	--transition-slow: 300ms;
-
-	--transition-timing-linear: linear;
-	--transition-timing-ease-in: cubic-bezier(0.4, 0, 1, 1);
-	--transition-timing-ease-out: cubic-bezier(0, 0, 0.2, 1);
-	--transition-timing-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
-}
+@import './fonts.css';
+@import './tokens.css';
 
 /* ========================================
  * Note on Base Styles
  * ======================================== */
-/* Global element styles (html, body, box-sizing) have been moved to base.css
- * to prevent overriding consuming applications' styles.
+/* Global element styles (html, body, box-sizing) live in base.css so they
+ * never override a consuming application's own styles.
  * Import '@liiift-studio/mac-os9-ui/base' if you want those global styles. */
 
 /* ========================================
@@ -286,7 +31,7 @@
 
 /* Text utilities */
 .bold {
-	font-weight: bold;
+	font-weight: var(--font-weight-bold);
 }
 
 /* Bevel effects */
@@ -323,7 +68,7 @@
 
 /* Focus styles for keyboard navigation */
 .focus-visible:focus-visible {
-	outline: 1px dotted var(--color-focus);
+	outline: var(--border-width-thin) dotted var(--color-focus);
 	outline-offset: 2px;
 }
 

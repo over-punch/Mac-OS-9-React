@@ -1,0 +1,318 @@
+/**
+ * Mac OS 9 UI — Design Tokens
+ *
+ * CSS custom properties for the whole library. Extracted from Figma file
+ * vy2T5MCXFz7QWf4Ba86eqN — see docs/figma-map.md.
+ *
+ * This file contains ONLY custom properties: no @font-face, no element
+ * selectors, no utility classes. Import it directly
+ * (`@liiift-studio/mac-os9-ui/tokens`) when you want the token values
+ * without the bundled font downloads.
+ *
+ * ---------------------------------------------------------------------------
+ * NAMING CONVENTION
+ * ---------------------------------------------------------------------------
+ * Every property follows `--{category}-{name}` or `--{category}-{name}-{modifier}`.
+ * Tokens are organised in three tiers, and you override whichever tier matches
+ * how wide you want the change to reach:
+ *
+ *   1. PRIMITIVES   `--color-gray-500`, `--spacing-2`, `--font-size-md`
+ *      Raw values. Change one and everything downstream moves.
+ *
+ *   2. SEMANTICS    `--color-text`, `--color-surface`, `--color-highlight`
+ *      Roles, expressed in terms of primitives. This is the tier most
+ *      themes should retarget.
+ *
+ *   3. COMPONENTS   `--button-bg`, `--window-titlebar-bg`, `--menu-highlight-bg`
+ *      Per-component hooks, defaulting to a semantic. Override these to
+ *      restyle one component without touching anything else.
+ *
+ * There is no theme provider component — tokens are plain CSS custom
+ * properties, so scope an override to `:root`, a wrapper element, a media
+ * query, or a `[data-theme]` attribute, whichever suits your app:
+ *
+ *   .my-scope { --button-bg: #d8d8f0; }
+ *   [data-theme='night'] { --color-surface: #333333; --color-text: #eeeeee; }
+ * ---------------------------------------------------------------------------
+ */
+
+:root {
+	/* ========================================
+	 * TIER 1 — PRIMITIVES
+	 * Colors - Grayscale Palette
+	 * ======================================== */
+	--color-gray-100: #ffffff;
+	--color-gray-200: #eeeeee;
+	--color-gray-300: #dddddd;
+	--color-gray-400: #cccccc;
+	--color-gray-450: #cbcbcb; /* Title bar fill */
+	--color-gray-475: #c5c5c5; /* Title bar pattern shade */
+	--color-gray-500: #bbbbbb;
+	--color-gray-550: #999999; /* Pinstripe rule */
+	--color-gray-600: #666666;
+	--color-gray-650: #555555; /* Inset border */
+	--color-gray-700: #4d4d4d;
+	--color-gray-800: #333333;
+	--color-gray-900: #262626;
+
+	/* ========================================
+	 * Colors - Accent Colors
+	 * ======================================== */
+	--color-lavender: #ccccff;
+	--color-azul: #0066cc;
+	--color-link-red: #cc0000;
+	--color-blue-highlight: #0000bb; /* Classic menu / selection highlight */
+
+	/* ========================================
+	 * TIER 2 — SEMANTICS
+	 * ======================================== */
+	--color-background: var(--color-gray-200);
+	--color-foreground: var(--color-gray-900);
+	--color-border: var(--color-gray-900);
+	--color-border-inset: var(--color-gray-650);
+	--color-text: var(--color-gray-900);
+	--color-text-inverse: var(--color-gray-100);
+	--color-surface: var(--color-gray-200);
+	--color-surface-inset: var(--color-gray-100);
+	--color-surface-raised: var(--color-gray-300);
+
+	/* Selection / highlight role, used by menus, lists and text selection */
+	--color-highlight: var(--color-blue-highlight);
+	--color-highlight-text: var(--color-gray-100);
+
+	/* Legacy names for compatibility */
+	--color-black: var(--color-gray-900);
+	--color-white: var(--color-gray-100);
+
+	/* ========================================
+	 * Colors - Status Colors
+	 * ======================================== */
+	--color-focus: #000080;
+	--color-error: #cc0000;
+	--color-success: #008000;
+	--color-warning: #ff8c00;
+
+	/* ========================================
+	 * Typography - Font Families
+	 *
+	 * Fallback chains are ordered so that if the bundled Pixel face fails to
+	 * load, the substitute is at least the same *kind* of typeface. Pixel is a
+	 * squarish bitmap face, so it falls back through system UI sans stacks —
+	 * never to a serif such as Times, which was the previous fallback and
+	 * looked nothing like the intended design.
+	 * ======================================== */
+
+	/* Primary system UI font (menus, buttons, dialogs) */
+	--font-system: 'Pixel', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica, Arial,
+		sans-serif;
+
+	/* Body text and secondary UI elements.
+	 * IBM Plex Sans is only present if you opt in to /webfonts. */
+	--font-body: 'IBM Plex Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica,
+		Arial, sans-serif;
+
+	/* Display / headline face, same pixel aesthetic as --font-system */
+	--font-display: 'Pixel', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica, Arial,
+		sans-serif;
+
+	/* Editorial serif. EB Garamond is only present if you opt in to /webfonts. */
+	--font-title: 'EB Garamond', Garamond, Georgia, 'Times New Roman', serif;
+
+	/* Monospace. IBM Plex Mono is only present if you opt in to /webfonts. */
+	--font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, 'Courier New',
+		monospace;
+
+	--font-pixel: 'Pixel', ui-sans-serif, system-ui, sans-serif;
+	--font-pixel-small: 'PixelSmall', 'Pixel', ui-sans-serif, system-ui, sans-serif;
+
+	/* ========================================
+	 * Typography - Font Sizes
+	 * Mac OS 9 used smaller text (9-12pt typical)
+	 * Using rem units to enable responsive scaling
+	 * ======================================== */
+	--font-size-xs: 0.5625rem;   /* 9pt - smallest UI text (9px at 16px base) */
+	--font-size-sm: 0.625rem;    /* 10pt - small labels (10px at 16px base) */
+	--font-size-md: 0.75rem;     /* 12pt - standard UI text (12px at 16px base - Mac OS 9 default) */
+	--font-size-lg: 0.8125rem;   /* 13pt - slightly larger (13px at 16px base) */
+	--font-size-xl: 0.875rem;    /* 14pt - large UI text (14px at 16px base) */
+	--font-size-2xl: 1rem;       /* 16pt - headings (16px at 16px base) */
+	--font-size-3xl: 1.125rem;   /* 18pt - large headings (18px at 16px base) */
+	--font-size-4xl: 1.25rem;    /* 20pt - major headings (20px at 16px base) */
+	--font-size-5xl: 1.5rem;     /* 24pt - display text (24px at 16px base) */
+
+	/* ========================================
+	 * Typography - Font Weights
+	 *
+	 * The bundled Pixel family ships exactly two real weights, 400 and 700,
+	 * in both roman and italic. Every token below resolves to one of those
+	 * two, so the browser never has to synthesise (fake-bold) a weight.
+	 *
+	 * --font-weight-normal is 700 on purpose: Mac OS 9's system face,
+	 * Charcoal, reads as bold, and matching it is the point of the library.
+	 * Use --font-weight-regular when you want the lighter roman face.
+	 * ======================================== */
+	--font-weight-regular: 400;  /* Pixel Regular — the true 400 face */
+	--font-weight-light: 400;    /* Alias of regular; Pixel has no lighter face */
+	--font-weight-normal: 700;   /* Charcoal-like bold — Mac OS 9 UI default */
+	--font-weight-medium: 700;   /* No real 500 face; resolves to bold */
+	--font-weight-semibold: 700; /* No real 600 face; resolves to bold */
+	--font-weight-bold: 700;     /* Pixel Bold — the true 700 face */
+
+	/* ========================================
+	 * Typography - Line Heights
+	 * Mac OS 9 used tighter line heights
+	 * ======================================== */
+	--line-height-tight: 1.2;   /* Tight leading (Mac OS 9 style) */
+	--line-height-snug: 1.3;    /* Snug */
+	--line-height-normal: 1.4;  /* Normal (Mac OS 9 default) */
+	--line-height-relaxed: 1.5; /* Relaxed */
+	--line-height-loose: 1.6;   /* Loose */
+
+	/* ========================================
+	 * Typography - Letter Spacing
+	 * ======================================== */
+	--letter-spacing-tighter: -0.02em; /* Slightly tighter */
+	--letter-spacing-tight: -0.01em;   /* Tight */
+	--letter-spacing-normal: 0;        /* Normal - Mac OS 9 default */
+	--letter-spacing-wide: 0.01em;     /* Wide */
+	--letter-spacing-wider: 0.02em;    /* Wider */
+
+	/* ========================================
+	 * Spacing - Scale (2px base unit)
+	 * ======================================== */
+	--spacing-0: 0;
+	--spacing-px: 1px;
+	--spacing-0_5: 2px;
+	--spacing-1: 4px;
+	--spacing-1_5: 6px;
+	--spacing-2: 8px;
+	--spacing-2_5: 10px;
+	--spacing-3: 12px;
+	--spacing-4: 16px;
+	--spacing-5: 20px;
+	--spacing-6: 24px;
+	--spacing-8: 32px;
+	--spacing-10: 40px;
+	--spacing-12: 48px;
+	--spacing-16: 64px;
+
+	/* Legacy spacing names */
+	--spacing-xs: 2px;
+	--spacing-sm: 4px;
+	--spacing-md: 8px;
+	--spacing-lg: 12px;
+	--spacing-xl: 16px;
+	--spacing-2xl: 24px;
+	--spacing-3xl: 32px;
+
+	/* ========================================
+	 * Shadows - Mac OS 9 Bevel Effects
+	 * Exact values from Figma (67:95038)
+	 * ======================================== */
+
+	/* Standard raised bevel (default button state)
+	 * 3-layer composition:
+	 * 1. Top-left highlight (light inner shadow)
+	 * 2. Bottom-right shadow (dark inner shadow)
+	 * 3. Hard drop shadow (creates depth)
+	 */
+	--shadow-bevel: inset 2px 2px 0 rgba(255, 255, 255, 0.6),
+		inset -2px -2px 0 rgba(38, 38, 38, 0.4), 2px 2px 0 rgba(38, 38, 38, 1);
+
+	/* Inverted bevel for pressed/inset states */
+	--shadow-inset: inset -2px -2px 0 rgba(255, 255, 255, 0.6),
+		inset 2px 2px 0 rgba(38, 38, 38, 0.4), inset 0px 0px 0px rgba(38, 38, 38, 1);
+
+	/* Individual shadow layers for custom composition */
+	--shadow-drop: 2px 2px 0 rgba(38, 38, 38, 1);
+	--shadow-highlight: inset 2px 2px 0 rgba(255, 255, 255, 0.6);
+	--shadow-dark: inset -2px -2px 0 rgba(38, 38, 38, 0.4);
+
+	/* Soft drop used by floating surfaces (dropdowns, dialogs) */
+	--shadow-float: 2px 2px 0 rgba(0, 0, 0, 0.5);
+
+	/* No shadow */
+	--shadow-none: none;
+
+	/* ========================================
+	 * Borders
+	 * ======================================== */
+	--border-width-none: 0;
+	--border-width-thin: 1px;
+	--border-width-medium: 2px;
+	--border-width-thick: 3px;
+
+	/* Border radius (Mac OS 9 used square corners) */
+	--border-radius-none: 0;
+	--border-radius-sm: 0;
+	--border-radius-md: 0;
+	--border-radius-lg: 0;
+	--border-radius-full: 0;
+
+	/* ========================================
+	 * Z-Index Scale
+	 * ======================================== */
+	--z-index-base: 0;
+	--z-index-dropdown: 1000;
+	--z-index-sticky: 1100;
+	--z-index-modal: 1200;
+	--z-index-popover: 1300;
+	--z-index-tooltip: 1400;
+
+	/* ========================================
+	 * Transitions
+	 * Mac OS 9 had minimal animations
+	 * ======================================== */
+	--transition-instant: 0ms;
+	--transition-fast: 100ms;
+	--transition-normal: 200ms;
+	--transition-slow: 300ms;
+
+	--transition-timing-linear: linear;
+	--transition-timing-ease-in: cubic-bezier(0.4, 0, 1, 1);
+	--transition-timing-ease-out: cubic-bezier(0, 0, 0.2, 1);
+	--transition-timing-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+
+	/* ========================================
+	 * TIER 3 — COMPONENT HOOKS
+	 *
+	 * Each defaults to a semantic token. Override any of these to restyle a
+	 * single component without affecting the rest of the library.
+	 * ======================================== */
+
+	/* Button */
+	--button-bg: var(--color-surface);
+	--button-text: var(--color-text);
+	--button-border: var(--color-border);
+
+	/* Window */
+	--window-bg: var(--color-surface);
+	--window-border: var(--color-border);
+	--window-titlebar-bg: var(--color-gray-450);
+	--window-titlebar-text: var(--color-text);
+	--window-titlebar-stripe: var(--color-gray-550);
+	--window-titlebar-pattern-fill: var(--color-gray-300);
+	--window-titlebar-pattern-highlight: var(--color-gray-200);
+	--window-titlebar-pattern-shade: var(--color-gray-475);
+
+	/* Menus */
+	--menu-bg: var(--color-surface);
+	--menu-text: var(--color-text);
+	--menu-highlight-bg: var(--color-highlight);
+	--menu-highlight-text: var(--color-highlight-text);
+
+	/* List views */
+	--listview-bg: var(--color-surface-inset);
+	--listview-header-bg: var(--color-surface);
+	--listview-row-selected-bg: var(--color-highlight);
+	--listview-row-selected-text: var(--color-highlight-text);
+
+	/* Form fields */
+	--field-bg: var(--color-surface-inset);
+	--field-text: var(--color-text);
+	--field-border: var(--color-border);
+
+	/* Scrollbar */
+	--scrollbar-track-bg: var(--color-surface-inset);
+	--scrollbar-thumb-bg: var(--color-surface);
+}

@@ -1,76 +1,143 @@
-
-@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600&family=IBM+Plex+Mono:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&family=IBM+Plex+Sans:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600;1,700&display=swap');
 /**
- * Mac OS 9 Theme
- * CSS Custom Properties for design tokens
- * Extracted from Figma file: vy2T5MCXFz7QWf4Ba86eqN
- * Reference: docs/figma-map.md
+ * Mac OS 9 Theme — default stylesheet entry point
+ *
+ * This is what `@liiift-studio/mac-os9-ui/styles` resolves to. It composes:
+ *
+ *   fonts.css   — @font-face for the bundled, self-hosted Pixel family
+ *   tokens.css  — every design token as a CSS custom property
+ *   (below)     — a small set of utility classes
+ *
+ * Alternative entry points:
+ *   /tokens    tokens.css alone — no font downloads, no utility classes
+ *   /webfonts  opt-in Google Fonts for IBM Plex and EB Garamond
+ *   /base      opt-in global html/body element styles
+ *
+ * No remote font request is made from this file. See webfonts.css.
  */
-/* ========================================
- * Google Fonts Import
- * Import IBM Plex Sans, IBM Plex Mono, and EB Garamond from Google Fonts
- * ======================================== */
-/* ========================================
- * Local Font - Pixel Operator
- * ======================================== */
+
+/**
+ * Mac OS 9 UI — Self-hosted font faces
+ *
+ * Declares the bundled "Pixel" bitmap family. Imported by theme.css so the
+ * default `@liiift-studio/mac-os9-ui/styles` entry point works out of the box.
+ *
+ * Opting out: import `@liiift-studio/mac-os9-ui/tokens` instead of
+ * `/styles` to get the design tokens with no @font-face declarations and no
+ * font downloads, then point --font-system / --font-pixel at your own faces.
+ *
+ * `font-display: block` (rather than `swap`) is deliberate: these are
+ * bitmap-style pixel faces with metrics nothing else matches, so swapping in
+ * a fallback mid-load produces a violent reflow. A brief invisible period
+ * followed by the real face is the calmer trade for this specific family.
+ */
+
 @font-face {
 	font-family: 'Pixel';
-	src: url("fonts/6c5c10ee.woff2") format('woff2'),
-		url("fonts/4d5fab94.woff") format('woff');
+	src: url("fonts/Pixel/Normal/Pixel.woff2") format('woff2'),
+		url("fonts/Pixel/Normal/Pixel.woff") format('woff');
 	font-style: normal;
-	font-weight: normal;
-	font-display: swap;
+	font-weight: 400;
+	font-display: block;
 }
+
 @font-face {
 	font-family: 'Pixel';
-	src: url("fonts/d40c137d.woff2") format('woff2'),
-		url("fonts/faac46b5.woff") format('woff');
+	src: url("fonts/Pixel/Normal/Pixel-Bold.woff2") format('woff2'),
+		url("fonts/Pixel/Normal/Pixel-Bold.woff") format('woff');
 	font-style: normal;
-	font-weight: bold;
-	font-display: swap;
+	font-weight: 700;
+	font-display: block;
 }
+
 @font-face {
 	font-family: 'Pixel';
-	src: url("fonts/99d0ec4d.woff2") format('woff2'),
-		url("fonts/7b13507a.woff") format('woff');
+	src: url("fonts/Pixel/Italic/Pixel-Bold-Italic.woff2") format('woff2'),
+		url("fonts/Pixel/Italic/Pixel-Bold-Italic.woff") format('woff');
 	font-style: italic;
-	font-weight: bold;
-	font-display: swap;
+	font-weight: 700;
+	font-display: block;
 }
+
 @font-face {
 	font-family: 'Pixel';
-	src: url("fonts/c21bb1aa.woff2") format('woff2'),
-		url("fonts/db974009.woff") format('woff');
+	src: url("fonts/Pixel/Italic/Pixel-Italic.woff2") format('woff2'),
+		url("fonts/Pixel/Italic/Pixel-Italic.woff") format('woff');
 	font-style: italic;
-	font-weight: normal;
-	font-display: swap;
+	font-weight: 400;
+	font-display: block;
 }
+
 @font-face {
 	font-family: 'PixelSmall';
-	src: url("fonts/9f492b6d.woff2") format('woff2'),
-		url("fonts/65e59833.woff") format('woff');
+	src: url("fonts/Pixel/Small/Pixel-Bold-Small.woff2") format('woff2'),
+		url("fonts/Pixel/Small/Pixel-Bold-Small.woff") format('woff');
 	font-style: normal;
-	font-weight: bold;
-	font-display: swap;
+	font-weight: 700;
+	font-display: block;
 }
+
 @font-face {
 	font-family: 'PixelSmall';
-	src: url("fonts/e45380e5.woff2") format('woff2'),
-		url("fonts/6fb9ec6b.woff") format('woff');
+	src: url("fonts/Pixel/Small/Pixel-Small.woff2") format('woff2'),
+		url("fonts/Pixel/Small/Pixel-Small.woff") format('woff');
 	font-style: normal;
-	font-weight: normal;
-	font-display: swap;
+	font-weight: 400;
+	font-display: block;
 }
+
+/**
+ * Mac OS 9 UI — Design Tokens
+ *
+ * CSS custom properties for the whole library. Extracted from Figma file
+ * vy2T5MCXFz7QWf4Ba86eqN — see docs/figma-map.md.
+ *
+ * This file contains ONLY custom properties: no @font-face, no element
+ * selectors, no utility classes. Import it directly
+ * (`@liiift-studio/mac-os9-ui/tokens`) when you want the token values
+ * without the bundled font downloads.
+ *
+ * ---------------------------------------------------------------------------
+ * NAMING CONVENTION
+ * ---------------------------------------------------------------------------
+ * Every property follows `--{category}-{name}` or `--{category}-{name}-{modifier}`.
+ * Tokens are organised in three tiers, and you override whichever tier matches
+ * how wide you want the change to reach:
+ *
+ *   1. PRIMITIVES   `--color-gray-500`, `--spacing-2`, `--font-size-md`
+ *      Raw values. Change one and everything downstream moves.
+ *
+ *   2. SEMANTICS    `--color-text`, `--color-surface`, `--color-highlight`
+ *      Roles, expressed in terms of primitives. This is the tier most
+ *      themes should retarget.
+ *
+ *   3. COMPONENTS   `--button-bg`, `--window-titlebar-bg`, `--menu-highlight-bg`
+ *      Per-component hooks, defaulting to a semantic. Override these to
+ *      restyle one component without touching anything else.
+ *
+ * There is no theme provider component — tokens are plain CSS custom
+ * properties, so scope an override to `:root`, a wrapper element, a media
+ * query, or a `[data-theme]` attribute, whichever suits your app:
+ *
+ *   .my-scope { --button-bg: #d8d8f0; }
+ *   [data-theme='night'] { --color-surface: #333333; --color-text: #eeeeee; }
+ * ---------------------------------------------------------------------------
+ */
+
 :root {
 	/* ========================================
+	 * TIER 1 — PRIMITIVES
 	 * Colors - Grayscale Palette
 	 * ======================================== */
 	--color-gray-100: #ffffff;
 	--color-gray-200: #eeeeee;
 	--color-gray-300: #dddddd;
 	--color-gray-400: #cccccc;
-	--color-gray-500: #BBBBBB;
+	--color-gray-450: #cbcbcb; /* Title bar fill */
+	--color-gray-475: #c5c5c5; /* Title bar pattern shade */
+	--color-gray-500: #bbbbbb;
+	--color-gray-550: #999999; /* Pinstripe rule */
 	--color-gray-600: #666666;
+	--color-gray-650: #555555; /* Inset border */
 	--color-gray-700: #4d4d4d;
 	--color-gray-800: #333333;
 	--color-gray-900: #262626;
@@ -81,17 +148,24 @@
 	--color-lavender: #ccccff;
 	--color-azul: #0066cc;
 	--color-link-red: #cc0000;
+	--color-blue-highlight: #0000bb; /* Classic menu / selection highlight */
 
 	/* ========================================
-	 * Colors - Semantic Tokens
+	 * TIER 2 — SEMANTICS
 	 * ======================================== */
 	--color-background: var(--color-gray-200);
 	--color-foreground: var(--color-gray-900);
 	--color-border: var(--color-gray-900);
+	--color-border-inset: var(--color-gray-650);
 	--color-text: var(--color-gray-900);
 	--color-text-inverse: var(--color-gray-100);
 	--color-surface: var(--color-gray-200);
 	--color-surface-inset: var(--color-gray-100);
+	--color-surface-raised: var(--color-gray-300);
+
+	/* Selection / highlight role, used by menus, lists and text selection */
+	--color-highlight: var(--color-blue-highlight);
+	--color-highlight-text: var(--color-gray-100);
 
 	/* Legacy names for compatibility */
 	--color-black: var(--color-gray-900);
@@ -107,27 +181,37 @@
 
 	/* ========================================
 	 * Typography - Font Families
-	 * Authentic Mac OS 9 system fonts
+	 *
+	 * Fallback chains are ordered so that if the bundled Pixel face fails to
+	 * load, the substitute is at least the same *kind* of typeface. Pixel is a
+	 * squarish bitmap face, so it falls back through system UI sans stacks —
+	 * never to a serif such as Times, which was the previous fallback and
+	 * looked nothing like the intended design.
 	 * ======================================== */
-	
-	/* Charcoal - Primary system UI font (menus, buttons, dialogs) */
-	--font-system: 'Pixel', Times;
 
-	/* IBM Plex Sans - Body text and secondary UI elements (open-source alternative to Geneva) */
-	--font-body: 'IBM Plex Sans', monospace;
-	
-	/* EB Garamond - Headlines and editorial content (open-source alternative) */
-	--font-display: 'Pixel', monospace;
-	
-	--font-title: 'EB Garamond', Garamond, Georgia, serif;
+	/* Primary system UI font (menus, buttons, dialogs) */
+	--font-system: 'Pixel', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica, Arial,
+		sans-serif;
 
-	/* IBM Plex Mono - Mac OS 9 monospace font (open-source alternative to Monaco) */
-	--font-mono: 'IBM Plex Mono', monospace;
-	
-	--font-pixel: 'Pixel', monospace;
-	--font-pixel-small: 'PixelSmall', monospace;
+	/* Body text and secondary UI elements.
+	 * IBM Plex Sans is only present if you opt in to /webfonts. */
+	--font-body: 'IBM Plex Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica,
+		Arial, sans-serif;
 
-	--font-bold: 700
+	/* Display / headline face, same pixel aesthetic as --font-system */
+	--font-display: 'Pixel', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica, Arial,
+		sans-serif;
+
+	/* Editorial serif. EB Garamond is only present if you opt in to /webfonts. */
+	--font-title: 'EB Garamond', Garamond, Georgia, 'Times New Roman', serif;
+
+	/* Monospace. IBM Plex Mono is only present if you opt in to /webfonts. */
+	--font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, 'Courier New',
+		monospace;
+
+	--font-pixel: 'Pixel', ui-sans-serif, system-ui, sans-serif;
+	--font-pixel-small: 'PixelSmall', 'Pixel', ui-sans-serif, system-ui, sans-serif;
+
 	/* ========================================
 	 * Typography - Font Sizes
 	 * Mac OS 9 used smaller text (9-12pt typical)
@@ -145,13 +229,21 @@
 
 	/* ========================================
 	 * Typography - Font Weights
-	 * Charcoal Bold is the Mac OS 9 default
+	 *
+	 * The bundled Pixel family ships exactly two real weights, 400 and 700,
+	 * in both roman and italic. Every token below resolves to one of those
+	 * two, so the browser never has to synthesise (fake-bold) a weight.
+	 *
+	 * --font-weight-normal is 700 on purpose: Mac OS 9's system face,
+	 * Charcoal, reads as bold, and matching it is the point of the library.
+	 * Use --font-weight-regular when you want the lighter roman face.
 	 * ======================================== */
-	--font-weight-normal: 700;   /* Charcoal Bold - Mac OS 9 default */
-	--font-weight-medium: 700;   /* Medium (same as bold) */
-	--font-weight-semibold: 700; /* Semibold (same as bold) */
-	--font-weight-bold: 700;     /* Bold weight */
-	--font-weight-light: 400;    /* Light (regular Charcoal) */
+	--font-weight-regular: 400;  /* Pixel Regular — the true 400 face */
+	--font-weight-light: 400;    /* Alias of regular; Pixel has no lighter face */
+	--font-weight-normal: 700;   /* Charcoal-like bold — Mac OS 9 UI default */
+	--font-weight-medium: 700;   /* No real 500 face; resolves to bold */
+	--font-weight-semibold: 700; /* No real 600 face; resolves to bold */
+	--font-weight-bold: 700;     /* Pixel Bold — the true 700 face */
 
 	/* ========================================
 	 * Typography - Line Heights
@@ -223,6 +315,9 @@
 	--shadow-highlight: inset 2px 2px 0 rgba(255, 255, 255, 0.6);
 	--shadow-dark: inset -2px -2px 0 rgba(38, 38, 38, 0.4);
 
+	/* Soft drop used by floating surfaces (dropdowns, dialogs) */
+	--shadow-float: 2px 2px 0 rgba(0, 0, 0, 0.5);
+
 	/* No shadow */
 	--shadow-none: none;
 
@@ -264,56 +359,120 @@
 	--transition-timing-ease-in: cubic-bezier(0.4, 0, 1, 1);
 	--transition-timing-ease-out: cubic-bezier(0, 0, 0.2, 1);
 	--transition-timing-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+
+	/* ========================================
+	 * TIER 3 — COMPONENT HOOKS
+	 *
+	 * Each defaults to a semantic token. Override any of these to restyle a
+	 * single component without affecting the rest of the library.
+	 * ======================================== */
+
+	/* Button */
+	--button-bg: var(--color-surface);
+	--button-text: var(--color-text);
+	--button-border: var(--color-border);
+
+	/* Window */
+	--window-bg: var(--color-surface);
+	--window-border: var(--color-border);
+	--window-titlebar-bg: var(--color-gray-450);
+	--window-titlebar-text: var(--color-text);
+	--window-titlebar-stripe: var(--color-gray-550);
+	--window-titlebar-pattern-fill: var(--color-gray-300);
+	--window-titlebar-pattern-highlight: var(--color-gray-200);
+	--window-titlebar-pattern-shade: var(--color-gray-475);
+
+	/* Menus */
+	--menu-bg: var(--color-surface);
+	--menu-text: var(--color-text);
+	--menu-highlight-bg: var(--color-highlight);
+	--menu-highlight-text: var(--color-highlight-text);
+
+	/* List views */
+	--listview-bg: var(--color-surface-inset);
+	--listview-header-bg: var(--color-surface);
+	--listview-row-selected-bg: var(--color-highlight);
+	--listview-row-selected-text: var(--color-highlight-text);
+
+	/* Form fields */
+	--field-bg: var(--color-surface-inset);
+	--field-text: var(--color-text);
+	--field-border: var(--color-border);
+
+	/* Scrollbar */
+	--scrollbar-track-bg: var(--color-surface-inset);
+	--scrollbar-thumb-bg: var(--color-surface);
 }
+
 /* ========================================
  * Note on Base Styles
  * ======================================== */
-/* Global element styles (html, body, box-sizing) have been moved to base.css
- * to prevent overriding consuming applications' styles.
+
+/* Global element styles (html, body, box-sizing) live in base.css so they
+ * never override a consuming application's own styles.
  * Import '@liiift-studio/mac-os9-ui/base' if you want those global styles. */
+
 /* ========================================
  * Utility Classes
  * ======================================== */
+
 /* Text utilities */
+
 .bold {
-	font-weight: bold;
+	font-weight: var(--font-weight-bold);
 }
+
 /* Bevel effects */
+
 .bevel {
 	box-shadow: var(--shadow-bevel);
 }
+
 .bevel-inset {
 	box-shadow: var(--shadow-inset);
 }
+
 /* Border utilities */
+
 .border {
 	border: var(--border-width-thin) solid var(--color-border);
 }
+
 .border-none {
 	border: none;
 }
+
 /* Surface styles */
+
 .surface {
 	background-color: var(--color-surface);
 }
+
 .surface-inset {
 	background-color: var(--color-surface-inset);
 }
+
 /* Text utilities */
+
 .text-inverse {
 	color: var(--color-text-inverse);
 }
+
 /* Focus styles for keyboard navigation */
+
 .focus-visible:focus-visible {
-	outline: 1px dotted var(--color-focus);
+	outline: var(--border-width-thin) dotted var(--color-focus);
 	outline-offset: 2px;
 }
+
 /* Disabled state */
+
 .disabled {
 	opacity: 0.5;
 	cursor: not-allowed;
 	pointer-events: none;
 }
+
 /* Button Component Styles - Mac OS 9 */
 
 .Button-module_button {
@@ -2479,7 +2638,7 @@
 }
 
 .Tabs-module_tab--full-width {
-	flex: 1;
+	flex: 1 1 auto;
 }
 
 /* ========================================
@@ -2852,7 +3011,7 @@
 	border: var(--border-width-thin) solid var(--color-black);
 	
 	/* Authentic Mac OS 9 drop shadow: sharp 2px offset, no blur */
-	filter: drop-shadow(2px 2px 0px rgba(0, 0, 0, 0.5));
+	filter: drop-shadow(var(--shadow-float));
 	
 	/* Layout */
 	position: relative;
@@ -2896,7 +3055,7 @@
 	align-items: center;
 	
 	/* Styling - authentic Mac OS 9 header color */
-	background-color: #CBCBCB;
+	background-color: var(--window-titlebar-bg);
 	border-bottom: var(--border-width-thin) solid var(--color-black);
 	
 	/* Padding */
@@ -2971,7 +3130,7 @@
 	top: 50%;	
 	flex-grow: 1;
 	/* Responsive width - extends from right edge to center, with padding for title */
-	flex: 1;
+	flex: 1 1 auto;
 	/* max-width: 100px; */
 	height: 12px;
 	
@@ -3000,6 +3159,13 @@
 .Window-module_titleBar--dragging {
 	/* Title bar while being dragged - show grabbing cursor */
 	cursor: grabbing;
+}
+
+.Window-module_titleBar--draggable:focus-visible {
+	/* The draggable title bar is focusable so the window can be moved with
+	 * the arrow keys (WCAG 2.1.1). Show where focus landed. */
+	outline: var(--border-width-thin) dotted var(--color-text);
+	outline-offset: -2px;
 }
 
 /* ========================================
@@ -3144,7 +3310,7 @@
 
 .Window-module_content {
 	/* Content area */
-	flex: 1;
+	flex: 1 1 auto;
 	overflow: auto;
 	
 	/* Background - white content area like authentic Mac OS 9 */
@@ -3158,7 +3324,7 @@
 	
 	/* Authentic inset border */
 	margin: var(--spacing-2);
-	border: var(--border-width-thin) solid #555555;
+	border: var(--border-width-thin) solid var(--color-border-inset);
 }
 
 /* ========================================
@@ -3166,7 +3332,17 @@
  * ======================================== */
 
 .Window-module_resizeHandle {
-	/* Resize handle in bottom-right corner */
+	/* Resize handle in bottom-right corner (Mac OS 9 "grow box").
+	 * Rendered as a <button> so it is reachable by keyboard; these
+	 * resets strip the UA button chrome. */
+	appearance: none;
+	-webkit-appearance: none;
+	border: 0;
+	padding: 0;
+	background-color: transparent;
+	font: inherit;
+	color: inherit;
+
 	position: absolute;
 	bottom: 0;
 	right: 0;
@@ -3187,11 +3363,18 @@
 		transparent 60%
 	);
 	
-	/* Cursor */
+	/* Cursor. nwse-resize is the correct cursor for a bottom-right corner
+	 * handle: Mac OS 9 windows only resize from the grow box. */
 	cursor: nwse-resize;
 	
 	/* Layering */
 	z-index: 5;
+}
+
+.Window-module_resizeHandle:focus-visible {
+	/* Keyboard focus ring for the grow box */
+	outline: var(--border-width-thin) dotted var(--color-text);
+	outline-offset: 1px;
 }
 
 /* ========================================
@@ -3295,9 +3478,9 @@
 	background-color: var(--color-gray-100); /* Light gray like Mac OS 9 */
 	border-bottom: var(--border-width-thin) solid var(--color-black);
 	background: linear-gradient(180deg,
-			#EEEEEE 0%,
-			#DDDDDD 5%,
-			#DDDDDD 90%,
+			var(--color-gray-200) 0%,
+			var(--color-gray-300) 5%,
+			var(--color-gray-300) 90%,
 			#BBBBBB 95%,
 			#262626 100%);
 	/* Layout */
@@ -3331,7 +3514,7 @@
 	/* Container for all menu items */
 	display: flex;
 	align-items: stretch;
-	flex: 1;
+	flex: 1 1 auto;
 }
 
 /* ========================================
@@ -3412,7 +3595,7 @@
 
 .MenuBar-module_menuButton:hover:not(.MenuBar-module_menuButton--disabled) {
 	/* Hover state - blue highlight like Mac OS 9 */
-	background-color: #0000BB;
+	background-color: var(--menu-highlight-bg);
 	color: var(--color-white);
 }
 
@@ -3424,7 +3607,7 @@
 
 .MenuBar-module_menuButton--open {
 	/* Open state - highlighted */
-	background-color: #0000BB;
+	background-color: var(--menu-highlight-bg);
 	color: var(--color-white);
 }
 
@@ -3450,7 +3633,7 @@
 	border: var(--border-width-thin) solid var(--color-black);
 	
 	/* Drop shadow */
-	box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.5);
+	box-shadow: var(--shadow-float);
 	
 	/* Sizing */
 	min-width: 200px;
@@ -3554,7 +3737,7 @@
 
 .MenuItem-module_menuItem:hover:not(.MenuItem-module_menuItem--disabled) {
 	/* Hover state - blue highlight like Mac OS 9 */
-	background-color: #0000BB;
+	background-color: var(--menu-highlight-bg);
 	color: var(--color-white);
 }
 
@@ -3566,7 +3749,7 @@
 
 .MenuItem-module_menuItem--selected {
 	/* Selected/active state */
-	background-color: #0000BB;
+	background-color: var(--menu-highlight-bg);
 	color: var(--color-white);
 }
 
@@ -3604,7 +3787,7 @@
 
 .MenuItem-module_label {
 	/* Label text */
-	flex: 1;
+	flex: 1 1 auto;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
@@ -3636,7 +3819,7 @@
 	border: var(--border-width-thin) solid var(--color-black);
 
 	/* Drop shadow */
-	box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.5);
+	box-shadow: var(--shadow-float);
 
 	/* Sizing */
 	min-width: 200px;
@@ -3849,7 +4032,7 @@
 	background: var(--color-gray-200);
 	
 	/* Layout */
-	flex: 1;
+	flex: 1 1 auto;
 	position: relative;
 	
 	/* Cursor */
@@ -4008,7 +4191,7 @@
 
 .ListView-module_headerCell:last-child {
 	border-right: none;
-	flex: 1; /* Last column takes remaining space */
+	flex: 1 1 auto; /* Last column takes remaining space */
 }
 
 .ListView-module_headerCell.ListView-module_sortable {
@@ -4030,7 +4213,7 @@
 
 .ListView-module_body {
 	/* Layout */
-	flex: 1;
+	flex: 1 1 auto;
 	overflow-y: auto;
 	
 	/* Background */
@@ -4084,7 +4267,7 @@
 
 .ListView-module_cell:last-child {
 	border-right: none;
-	flex: 1; /* Last cell takes remaining space */
+	flex: 1 1 auto; /* Last cell takes remaining space */
 }
 
 .ListView-module_icon {
@@ -4148,7 +4331,7 @@
 
 .FolderList-module_listView {
 	/* Fill the entire content area */
-	flex: 1;
+	flex: 1 1 auto;
 	
 	/* Remove extra borders (Window already has a border) */
 	border: none;
@@ -4156,5 +4339,3 @@
 	/* Remove shadow (already inset in Window) */
 	box-shadow: none;
 }
-
-/*# sourceMappingURL=index.css.map */

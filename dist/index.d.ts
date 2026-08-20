@@ -450,7 +450,8 @@ interface RadioProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type' 
      */
     value?: string | number;
     /**
-     * Name for the radio group (all radios in a group should share the same name)
+     * Name for the radio group (all radios in a group should share the same name).
+     * When the radio is rendered inside a <RadioGroup>, the group's `name` wins.
      */
     name?: string;
     /**
@@ -461,47 +462,90 @@ interface RadioProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type' 
 /**
  * Mac OS 9 style Radio component
  *
- * Classic radio button with raised bevel effect and optional label.
- * Radio buttons work in groups - only one can be selected at a time.
- *
- * Features:
- * - Classic Mac OS 9 circular bevel styling
- * - Radio group support via `name` attribute
- * - Label positioning (left/right)
- * - Controlled and uncontrolled modes
- * - Full accessibility with ARIA support
- * - Keyboard navigation (Arrow keys to navigate group, Space to select)
- * - Form integration
+ * Classic radio button with raised bevel effect and optional label. For
+ * groups of radio buttons, prefer wrapping siblings in <RadioGroup>: that
+ * adds the required ARIA semantics, arrow-key navigation, and ensures
+ * single-selection enforcement across the group.
  *
  * @example
  * ```tsx
- * // Uncontrolled radio group
- * <div>
- *   <Radio name="size" value="small" label="Small" />
- *   <Radio name="size" value="medium" label="Medium" defaultChecked />
- *   <Radio name="size" value="large" label="Large" />
- * </div>
+ * // Recommended: with RadioGroup
+ * <RadioGroup name="size" value={size} onChange={setSize}>
+ *   <Radio value="small" label="Small" />
+ *   <Radio value="medium" label="Medium" />
+ *   <Radio value="large" label="Large" />
+ * </RadioGroup>
  *
- * // Controlled radio group
- * <div>
- *   <Radio
- *     name="color"
- *     value="red"
- *     checked={color === 'red'}
- *     onChange={(e) => setColor(e.target.value)}
- *     label="Red"
- *   />
- *   <Radio
- *     name="color"
- *     value="blue"
- *     checked={color === 'blue'}
- *     onChange={(e) => setColor(e.target.value)}
- *     label="Blue"
- *   />
- * </div>
+ * // Standalone (legacy) still works
+ * <Radio name="color" value="red" label="Red" />
  * ```
  */
 declare const Radio: React__default.ForwardRefExoticComponent<RadioProps & React__default.RefAttributes<HTMLInputElement>>;
+/**
+ * Props accepted by <RadioGroup>.
+ */
+interface RadioGroupProps {
+    /**
+     * Shared name for every <Radio> in the group. When omitted, a stable
+     * auto-generated id is used so radios in the same group are linked.
+     */
+    name?: string;
+    /**
+     * Controlled selected value. Pair with `onChange`.
+     */
+    value?: string | number;
+    /**
+     * Uncontrolled initial value.
+     */
+    defaultValue?: string | number;
+    /**
+     * Fires when the user picks a different option.
+     */
+    onChange?: (value: string | number) => void;
+    /**
+     * Disable every radio in the group at once.
+     */
+    disabled?: boolean;
+    /**
+     * Layout direction. Also controls which arrow keys advance the
+     * selection: vertical uses Up/Down, horizontal uses Left/Right.
+     * @default 'vertical'
+     */
+    orientation?: 'vertical' | 'horizontal';
+    /**
+     * Accessible name for the group. Provide this unless you wire
+     * `ariaLabelledBy` to a visible heading.
+     */
+    ariaLabel?: string;
+    /**
+     * ID of a visible label element for the group.
+     */
+    ariaLabelledBy?: string;
+    /**
+     * Additional CSS class names applied to the group wrapper.
+     */
+    className?: string;
+    /**
+     * One or more <Radio> elements.
+     */
+    children: React__default.ReactNode;
+}
+/**
+ * Container for a set of <Radio> options. Adds the required
+ * WAI-ARIA radiogroup semantics, arrow-key navigation between options,
+ * and a single-selection model.
+ *
+ * @example
+ * ```tsx
+ * const [size, setSize] = useState('medium');
+ * <RadioGroup name="size" value={size} onChange={setSize} ariaLabel="T-shirt size">
+ *   <Radio value="small" label="Small" />
+ *   <Radio value="medium" label="Medium" />
+ *   <Radio value="large" label="Large" />
+ * </RadioGroup>
+ * ```
+ */
+declare const RadioGroup: React__default.ForwardRefExoticComponent<RadioGroupProps & React__default.RefAttributes<HTMLDivElement>>;
 
 interface TextFieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'size'> {
     /**
@@ -895,6 +939,8 @@ interface WindowClasses {
     controlButton?: string;
     /** Content area */
     content?: string;
+    /** Resize handle (grow box) */
+    resizeHandle?: string;
 }
 interface WindowProps {
     /**
@@ -911,7 +957,13 @@ interface WindowProps {
      */
     titleBar?: React__default.ReactNode;
     /**
-     * Whether window is active/focused
+     * Whether window is active/focused.
+     *
+     * Defaults to `true` because the common case is a single standalone
+     * window, which Mac OS 9 always renders in its active state. When you
+     * render several windows, drive this from your own focus state
+     * alongside `onActivate`.
+     *
      * @default true
      */
     active?: boolean;
@@ -959,7 +1011,43 @@ interface WindowProps {
      */
     onMouseEnter?: (event: React__default.MouseEvent<HTMLDivElement>) => void;
     /**
-     * Whether the window has a resize handle
+     * Called when the user interacts with any part of the window (pointer
+     * down or keyboard focus entering it).
+     *
+     * Use this together with `zIndex` and `active` to implement
+     * click-to-front behaviour across a set of windows — the library
+     * deliberately does not own a global window manager, because stacking
+     * order belongs to the app that knows about all the windows.
+     *
+     * @example
+     * ```tsx
+     * const [order, setOrder] = useState(['a', 'b']);
+     * const raise = (id: string) =>
+     *   setOrder((prev) => [...prev.filter((w) => w !== id), id]);
+     *
+     * {order.map((id, i) => (
+     *   <Window
+     *     key={id}
+     *     zIndex={i + 1}
+     *     active={order[order.length - 1] === id}
+     *     onActivate={() => raise(id)}
+     *   />
+     * ))}
+     * ```
+     */
+    onActivate?: () => void;
+    /**
+     * Explicit stacking order for the window. Applied as CSS `z-index` on
+     * the root element. Pair with `onActivate` for click-to-front.
+     */
+    zIndex?: number;
+    /**
+     * Whether the window has a resize handle.
+     *
+     * Mac OS 9 windows resize from the bottom-right "grow box" only — there
+     * are no edge or corner handles on the other three sides. The handle is
+     * keyboard operable: focus it and use the arrow keys.
+     *
      * @default false
      */
     resizable?: boolean;
@@ -990,8 +1078,12 @@ interface WindowProps {
         height: number;
     }) => void;
     /**
-     * Whether the window can be dragged by its title bar
-     * Window starts in normal flow and becomes absolutely positioned when dragged
+     * Whether the window can be dragged by its title bar.
+     *
+     * The window starts in normal flow and becomes absolutely positioned
+     * once it has a position. The title bar is also focusable and moves
+     * with the arrow keys.
+     *
      * @default false
      */
     draggable?: boolean;
@@ -1001,15 +1093,34 @@ interface WindowProps {
      */
     defaultPosition?: WindowPosition;
     /**
-     * Controlled position for draggable windows
-     * Only used when draggable is true
+     * Controlled position for draggable windows.
+     * Only used when draggable is true. Supplying this at any point — including
+     * after mount — immediately positions the window.
      */
     position?: WindowPosition;
     /**
-     * Callback when window position changes (during drag)
+     * Callback when window position changes (during drag or keyboard move)
      * Only called when draggable is true
      */
     onPositionChange?: (position: WindowPosition) => void;
+    /**
+     * How drag movement is constrained.
+     *
+     * - `'parent'` (default) — at least 24px of the title bar always stays
+     *   inside the parent / offsetParent so the user can't lose the window
+     *   by flinging it off-screen.
+     * - `'none'` — no constraint. Caller is responsible for keeping the
+     *   window reachable.
+     *
+     * @default 'parent'
+     */
+    boundary?: 'parent' | 'none';
+    /**
+     * Pixels moved per arrow-key press when dragging or resizing with the
+     * keyboard. Holding Shift multiplies the step by 10.
+     * @default 1
+     */
+    keyboardStep?: number;
 }
 /**
  * Mac OS 9 style Window component
@@ -1022,7 +1133,15 @@ interface WindowProps {
  * - Active/inactive states
  * - Composable with custom TitleBar component
  * - Flexible sizing
- * - Draggable windows (optional) - drag by title bar
+ * - Draggable windows (optional) — by pointer or keyboard
+ * - Resizable windows (optional) — by pointer or keyboard
+ *
+ * **Positioning caveat:** drag positions are expressed in the coordinate
+ * space of the window's `offsetParent`. A CSS `transform`, `filter`, or
+ * `perspective` on an ancestor creates a new containing block, which
+ * changes what `offsetParent` resolves to. If you drag inside a transformed
+ * subtree, make the direct parent `position: relative` so the coordinate
+ * space is unambiguous.
  *
  * @example
  * ```tsx
@@ -1036,37 +1155,14 @@ interface WindowProps {
  *   <p>Content</p>
  * </Window>
  *
- * // Window with controls and callbacks
- * <Window
- *   title="Document"
- *   onClose={() => console.log('Close')}
- *   onMinimize={() => console.log('Minimize')}
- * >
- *   <p>Content</p>
- * </Window>
- *
  * // Draggable window (uncontrolled)
  * <Window title="Draggable" draggable>
- *   <p>Drag me by the title bar!</p>
- * </Window>
- *
- * // Draggable window with initial position
- * <Window
- *   title="Positioned"
- *   draggable
- *   defaultPosition={{ x: 100, y: 100 }}
- * >
- *   <p>Starts at a specific position</p>
+ *   <p>Drag me by the title bar, or focus it and use the arrow keys.</p>
  * </Window>
  *
  * // Controlled draggable window
  * const [pos, setPos] = useState({ x: 0, y: 0 });
- * <Window
- *   title="Controlled"
- *   draggable
- *   position={pos}
- *   onPositionChange={setPos}
- * >
+ * <Window title="Controlled" draggable position={pos} onPositionChange={setPos}>
  *   <p>Parent controls position</p>
  * </Window>
  * ```
@@ -1104,9 +1200,37 @@ interface DialogProps extends Omit<WindowProps, 'active'> {
      */
     trapFocus?: boolean;
     /**
-     * Initial focus element selector or ref
+     * Initial focus target. May be a CSS selector or a ref to a known
+     * element inside the dialog. When omitted, focus moves to the first
+     * focusable element in the dialog (or the dialog container itself
+     * if none exists), as required by the WAI-ARIA dialog pattern.
+     *
+     * **Security note:** when supplied as a string, the value is passed to
+     * `querySelector`. Treat it as a developer-supplied static selector —
+     * never derive it from untrusted input.
      */
-    initialFocus?: string | React__default.RefObject<HTMLElement>;
+    initialFocus?: string | React__default.RefObject<HTMLElement | null>;
+    /**
+     * ARIA role. Use `'alertdialog'` for destructive or error confirmations
+     * so assistive tech announces them more assertively.
+     * @default 'dialog'
+     */
+    role?: 'dialog' | 'alertdialog';
+    /**
+     * Accessible name for the dialog. If omitted and the Window `title`
+     * prop is a string, the title is used as the accessible name. Provide
+     * this explicitly when `title` is a React node.
+     */
+    ariaLabel?: string;
+    /**
+     * ID of a visible element that labels the dialog. Takes precedence over
+     * `ariaLabel` if both are provided.
+     */
+    ariaLabelledBy?: string;
+    /**
+     * ID of a visible element that describes the dialog body.
+     */
+    ariaDescribedBy?: string;
 }
 /**
  * Mac OS 9 style Dialog component
@@ -1116,11 +1240,11 @@ interface DialogProps extends Omit<WindowProps, 'active'> {
  *
  * Features:
  * - Classic Mac OS 9 dialog styling
- * - Modal backdrop with click-to-close
- * - Escape key to close
- * - Focus trapping within dialog
+ * - Modal backdrop with optional click-to-close
+ * - Escape key to close (topmost dialog only when stacked)
+ * - Focus trap that survives stacked dialogs
  * - Centered on screen
- * - Prevents body scroll when open
+ * - Reference-counted body scroll lock
  *
  * @example
  * ```tsx
@@ -1131,12 +1255,11 @@ interface DialogProps extends Omit<WindowProps, 'active'> {
  *   onClose={() => setOpen(false)}
  *   title="Confirm"
  *   width={350}
+ *   role="alertdialog"
  * >
- *   <p>Are you sure?</p>
- *   <div>
- *     <Button onClick={() => setOpen(false)}>Cancel</Button>
- *     <Button variant="primary">OK</Button>
- *   </div>
+ *   <p id="confirm-msg">Are you sure?</p>
+ *   <Button onClick={() => setOpen(false)}>Cancel</Button>
+ *   <Button variant="primary">OK</Button>
  * </Dialog>
  * ```
  */
@@ -1408,7 +1531,8 @@ interface ScrollbarProps {
     value?: number;
     /**
      * Viewport size relative to content size (0-1)
-     * Used to calculate thumb size
+     * Used to calculate thumb size AND the page-step size for
+     * PageUp/PageDown keyboard navigation.
      */
     viewportRatio?: number;
     /**
@@ -1424,6 +1548,22 @@ interface ScrollbarProps {
      * @default false
      */
     disabled?: boolean;
+    /**
+     * Accessible label for the scrollbar track. Required for AT users
+     * unless `controls` points at an element with a known accessible name.
+     */
+    ariaLabel?: string;
+    /**
+     * ID of the scrollable region this scrollbar controls. Surfaces as
+     * `aria-controls` per WAI-ARIA scrollbar pattern.
+     */
+    controls?: string;
+    /**
+     * Per-keystroke increment for Arrow keys, expressed as a fraction of
+     * the full track (0-1).
+     * @default 0.1
+     */
+    step?: number;
 }
 /**
  * Mac OS 9 style Scrollbar component
@@ -1833,14 +1973,19 @@ declare const colors: {
     readonly gray200: "#EEEEEE";
     readonly gray300: "#DDDDDD";
     readonly gray400: "#CCCCCC";
-    readonly gray500: "#999999";
+    readonly gray450: "#CBCBCB";
+    readonly gray475: "#C5C5C5";
+    readonly gray500: "#BBBBBB";
+    readonly gray550: "#999999";
     readonly gray600: "#666666";
+    readonly gray650: "#555555";
     readonly gray700: "#4D4D4D";
     readonly gray800: "#333333";
     readonly gray900: "#262626";
     readonly lavender: "#CCCCFF";
     readonly azul: "#0066CC";
     readonly linkRed: "#CC0000";
+    readonly blueHighlight: "#0000BB";
     readonly background: "#EEEEEE";
     readonly foreground: "#262626";
     readonly border: "#262626";
@@ -1848,6 +1993,10 @@ declare const colors: {
     readonly textInverse: "#FFFFFF";
     readonly surface: "#EEEEEE";
     readonly surfaceInset: "#FFFFFF";
+    readonly surfaceRaised: "#DDDDDD";
+    readonly borderInset: "#555555";
+    readonly highlight: "#0000BB";
+    readonly highlightText: "#FFFFFF";
     readonly black: "#262626";
     readonly white: "#FFFFFF";
     readonly focus: "#000080";
@@ -1867,29 +2016,32 @@ declare const colors: {
  */
 declare const typography: {
     readonly fontFamily: {
-        readonly system: "Charcoal, \"Charcoal CY\", Chicago, \"Chicago Classic\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Helvetica, Arial, sans-serif";
-        readonly body: "Geneva, \"Geneva CY\", \"Lucida Grande\", \"Lucida Sans Unicode\", sans-serif";
-        readonly display: "\"Apple Garamond Light\", \"Apple Garamond\", Garamond, Georgia, serif";
-        readonly chicago: "Chicago, \"Chicago Classic\", \"Charcoal CY\", Charcoal, monospace";
-        readonly mono: "Monaco, \"Monaco CY\", \"SF Mono\", \"Courier New\", Courier, monospace";
+        readonly system: "'Pixel', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif";
+        readonly body: "'IBM Plex Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif";
+        readonly display: "'Pixel', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif";
+        readonly title: "'EB Garamond', Garamond, Georgia, 'Times New Roman', serif";
+        readonly mono: "'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, 'Courier New', monospace";
+        readonly pixel: "'Pixel', ui-sans-serif, system-ui, sans-serif";
+        readonly pixelSmall: "'PixelSmall', 'Pixel', ui-sans-serif, system-ui, sans-serif";
     };
     readonly fontSize: {
-        readonly xs: "9px";
-        readonly sm: "10px";
-        readonly md: "12px";
-        readonly lg: "13px";
-        readonly xl: "14px";
-        readonly '2xl': "16px";
-        readonly '3xl': "18px";
-        readonly '4xl': "20px";
-        readonly '5xl': "24px";
+        readonly xs: "0.5625rem";
+        readonly sm: "0.625rem";
+        readonly md: "0.75rem";
+        readonly lg: "0.8125rem";
+        readonly xl: "0.875rem";
+        readonly '2xl': "1rem";
+        readonly '3xl': "1.125rem";
+        readonly '4xl': "1.25rem";
+        readonly '5xl': "1.5rem";
     };
     readonly fontWeight: {
+        readonly regular: 400;
+        readonly light: 400;
         readonly normal: 700;
         readonly medium: 700;
         readonly semibold: 700;
         readonly bold: 700;
-        readonly light: 400;
     };
     readonly lineHeight: {
         readonly tight: 1.2;
@@ -1945,10 +2097,11 @@ declare const spacing: {
  */
 declare const shadows: {
     readonly bevel: "inset 2px 2px 0 rgba(255, 255, 255, 0.6), inset -2px -2px 0 rgba(38, 38, 38, 0.4), 2px 2px 0 rgba(38, 38, 38, 1)";
-    readonly inset: "inset -2px -2px 0 rgba(255, 255, 255, 0.6), inset 2px 2px 0 rgba(38, 38, 38, 0.4), 2px 2px 0 rgba(38, 38, 38, 1)";
+    readonly inset: "inset -2px -2px 0 rgba(255, 255, 255, 0.6), inset 2px 2px 0 rgba(38, 38, 38, 0.4), inset 0px 0px 0px rgba(38, 38, 38, 1)";
     readonly dropShadow: "2px 2px 0 rgba(38, 38, 38, 1)";
     readonly innerHighlight: "inset 2px 2px 0 rgba(255, 255, 255, 0.6)";
     readonly innerShadow: "inset -2px -2px 0 rgba(38, 38, 38, 0.4)";
+    readonly float: "2px 2px 0 rgba(0, 0, 0, 0.5)";
     readonly raised: {
         readonly highlight: "inset 2px 2px 0 rgba(255, 255, 255, 0.6)";
         readonly shadow: "inset -2px -2px 0 rgba(38, 38, 38, 0.4)";
@@ -2016,14 +2169,19 @@ declare const tokens: {
         readonly gray200: "#EEEEEE";
         readonly gray300: "#DDDDDD";
         readonly gray400: "#CCCCCC";
-        readonly gray500: "#999999";
+        readonly gray450: "#CBCBCB";
+        readonly gray475: "#C5C5C5";
+        readonly gray500: "#BBBBBB";
+        readonly gray550: "#999999";
         readonly gray600: "#666666";
+        readonly gray650: "#555555";
         readonly gray700: "#4D4D4D";
         readonly gray800: "#333333";
         readonly gray900: "#262626";
         readonly lavender: "#CCCCFF";
         readonly azul: "#0066CC";
         readonly linkRed: "#CC0000";
+        readonly blueHighlight: "#0000BB";
         readonly background: "#EEEEEE";
         readonly foreground: "#262626";
         readonly border: "#262626";
@@ -2031,6 +2189,10 @@ declare const tokens: {
         readonly textInverse: "#FFFFFF";
         readonly surface: "#EEEEEE";
         readonly surfaceInset: "#FFFFFF";
+        readonly surfaceRaised: "#DDDDDD";
+        readonly borderInset: "#555555";
+        readonly highlight: "#0000BB";
+        readonly highlightText: "#FFFFFF";
         readonly black: "#262626";
         readonly white: "#FFFFFF";
         readonly focus: "#000080";
@@ -2040,29 +2202,32 @@ declare const tokens: {
     };
     readonly typography: {
         readonly fontFamily: {
-            readonly system: "Charcoal, \"Charcoal CY\", Chicago, \"Chicago Classic\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Helvetica, Arial, sans-serif";
-            readonly body: "Geneva, \"Geneva CY\", \"Lucida Grande\", \"Lucida Sans Unicode\", sans-serif";
-            readonly display: "\"Apple Garamond Light\", \"Apple Garamond\", Garamond, Georgia, serif";
-            readonly chicago: "Chicago, \"Chicago Classic\", \"Charcoal CY\", Charcoal, monospace";
-            readonly mono: "Monaco, \"Monaco CY\", \"SF Mono\", \"Courier New\", Courier, monospace";
+            readonly system: "'Pixel', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif";
+            readonly body: "'IBM Plex Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif";
+            readonly display: "'Pixel', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif";
+            readonly title: "'EB Garamond', Garamond, Georgia, 'Times New Roman', serif";
+            readonly mono: "'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, 'Courier New', monospace";
+            readonly pixel: "'Pixel', ui-sans-serif, system-ui, sans-serif";
+            readonly pixelSmall: "'PixelSmall', 'Pixel', ui-sans-serif, system-ui, sans-serif";
         };
         readonly fontSize: {
-            readonly xs: "9px";
-            readonly sm: "10px";
-            readonly md: "12px";
-            readonly lg: "13px";
-            readonly xl: "14px";
-            readonly '2xl': "16px";
-            readonly '3xl': "18px";
-            readonly '4xl': "20px";
-            readonly '5xl': "24px";
+            readonly xs: "0.5625rem";
+            readonly sm: "0.625rem";
+            readonly md: "0.75rem";
+            readonly lg: "0.8125rem";
+            readonly xl: "0.875rem";
+            readonly '2xl': "1rem";
+            readonly '3xl': "1.125rem";
+            readonly '4xl': "1.25rem";
+            readonly '5xl': "1.5rem";
         };
         readonly fontWeight: {
+            readonly regular: 400;
+            readonly light: 400;
             readonly normal: 700;
             readonly medium: 700;
             readonly semibold: 700;
             readonly bold: 700;
-            readonly light: 400;
         };
         readonly lineHeight: {
             readonly tight: 1.2;
@@ -2126,10 +2291,11 @@ declare const tokens: {
     };
     readonly shadows: {
         readonly bevel: "inset 2px 2px 0 rgba(255, 255, 255, 0.6), inset -2px -2px 0 rgba(38, 38, 38, 0.4), 2px 2px 0 rgba(38, 38, 38, 1)";
-        readonly inset: "inset -2px -2px 0 rgba(255, 255, 255, 0.6), inset 2px 2px 0 rgba(38, 38, 38, 0.4), 2px 2px 0 rgba(38, 38, 38, 1)";
+        readonly inset: "inset -2px -2px 0 rgba(255, 255, 255, 0.6), inset 2px 2px 0 rgba(38, 38, 38, 0.4), inset 0px 0px 0px rgba(38, 38, 38, 1)";
         readonly dropShadow: "2px 2px 0 rgba(38, 38, 38, 1)";
         readonly innerHighlight: "inset 2px 2px 0 rgba(255, 255, 255, 0.6)";
         readonly innerShadow: "inset -2px -2px 0 rgba(38, 38, 38, 0.4)";
+        readonly float: "2px 2px 0 rgba(0, 0, 0, 0.5)";
         readonly raised: {
             readonly highlight: "inset 2px 2px 0 rgba(255, 255, 255, 0.6)";
             readonly shadow: "inset -2px -2px 0 rgba(38, 38, 38, 0.4)";
@@ -2191,5 +2357,5 @@ declare const mergeClasses: (...classes: (string | undefined | false | null)[]) 
  */
 declare const createClassBuilder: (baseClass: string) => (...additionalClasses: (string | undefined | false | null)[]) => string;
 
-export { Button, Checkbox, Dialog, DividerIcon, FolderList, Icon, IconButton, IconLibrary, ListView, MenuBar, MenuDropdown, MenuItem, Radio, Scrollbar, Select, TabPanel, Tabs, TextField, Window, borders, colors, createClassBuilder, mergeClasses, shadows, spacing, tokens, transitions, typography, zIndex };
-export type { BaseComponentProps, ButtonProps, ButtonRef, CellRenderState, CheckboxProps, ComponentClasses, DialogProps, DivRef, FolderListClasses, FolderListProps, HeaderCellDefaultProps, HeaderCellRenderState, IconButtonProps, IconLibraryProps, IconName, IconProps, InputRef, ListColumn, ListItem, ListViewClasses, ListViewProps, Menu, MenuBarProps, MenuDropdownProps, MenuItemProps, RadioProps, RenderState, RowDefaultProps, RowRenderState, ScrollbarProps, SelectOption, SelectProps, SelectRef, Size, State, TabPanelProps, TabsProps, TextAreaRef, TextFieldProps, Variant, WindowClasses, WindowPosition, WindowProps };
+export { Button, Checkbox, Dialog, DividerIcon, FolderList, Icon, IconButton, IconLibrary, ListView, MenuBar, MenuDropdown, MenuItem, Radio, RadioGroup, Scrollbar, Select, TabPanel, Tabs, TextField, Window, borders, colors, createClassBuilder, mergeClasses, shadows, spacing, tokens, transitions, typography, zIndex };
+export type { BaseComponentProps, ButtonProps, ButtonRef, CellRenderState, CheckboxProps, ComponentClasses, DialogProps, DivRef, FolderListClasses, FolderListProps, HeaderCellDefaultProps, HeaderCellRenderState, IconButtonProps, IconLibraryProps, IconName, IconProps, InputRef, ListColumn, ListItem, ListViewClasses, ListViewProps, Menu, MenuBarProps, MenuDropdownProps, MenuItemProps, RadioGroupProps, RadioProps, RenderState, RowDefaultProps, RowRenderState, ScrollbarProps, SelectOption, SelectProps, SelectRef, Size, State, TabPanelProps, TabsProps, TextAreaRef, TextFieldProps, Variant, WindowClasses, WindowPosition, WindowProps };

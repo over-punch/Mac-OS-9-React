@@ -3,7 +3,7 @@
 // Reference: docs/figma-map.md
 //
 // NOTE: These TypeScript tokens MUST stay in sync with the CSS custom
-// properties declared in src/styles/theme.css. Components consume the CSS
+// properties declared in src/styles/tokens.css. Components consume the CSS
 // variables at runtime; this TS export is the public API for consumers
 // who want to read the same values from JavaScript. Keep both files
 // updated together when changing any token value.
@@ -18,8 +18,12 @@ export const colors = {
 	gray200: '#EEEEEE', // 19:2507 - Base UI background
 	gray300: '#DDDDDD', // 18:60 - Inferred mid-tone
 	gray400: '#CCCCCC', // 18:1970 - Inferred mid-tone
+	gray450: '#CBCBCB', // Title bar fill (matches --color-gray-450)
+	gray475: '#C5C5C5', // Title bar pattern shade (matches --color-gray-475)
 	gray500: '#BBBBBB', // 20:7306 - Inferred mid-tone (matches --color-gray-500)
+	gray550: '#999999', // Pinstripe rule (matches --color-gray-550)
 	gray600: '#666666', // 18:52 - Inferred dark tone
+	gray650: '#555555', // Inset border (matches --color-gray-650)
 	gray700: '#4D4D4D', // 18:46 - Inferred dark tone
 	gray800: '#333333', // 45:184845 - Inferred very dark
 	gray900: '#262626', // 18:48 - Black (strokes, borders, text)
@@ -28,6 +32,7 @@ export const colors = {
 	lavender: '#CCCCFF', // 60:134029 - Cover background
 	azul: '#0066CC', // 49:36229 - Accent (inferred)
 	linkRed: '#CC0000', // 102:398, 102:3935 - Link color (inferred)
+	blueHighlight: '#0000BB', // Classic menu / selection highlight
 
 	// Semantic mappings
 	background: '#EEEEEE', // Gray 200
@@ -37,6 +42,10 @@ export const colors = {
 	textInverse: '#FFFFFF', // Gray 100
 	surface: '#EEEEEE', // Gray 200
 	surfaceInset: '#FFFFFF', // Gray 100 (for inset areas)
+	surfaceRaised: '#DDDDDD', // Gray 300
+	borderInset: '#555555', // Gray 650
+	highlight: '#0000BB', // Selection / menu highlight
+	highlightText: '#FFFFFF', // Text on highlight
 
 	// Legacy names for compatibility
 	black: '#262626',
@@ -61,40 +70,54 @@ export const colors = {
  */
 export const typography = {
 	fontFamily: {
-		// Charcoal - Primary system UI font used throughout Mac OS 9
-		// Fallback chain: Try Charcoal variants, then Chicago, then modern system fonts
-		system: 'Charcoal, "Charcoal CY", Chicago, "Chicago Classic", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif',
-		
-		// Geneva - Used for dialog text and body content in Mac OS 9
-		// More readable for longer text than Charcoal
-		body: 'Geneva, "Geneva CY", "Lucida Grande", "Lucida Sans Unicode", sans-serif',
-		
-		// Apple Garamond Light - Used for headlines in Figma
-		display: '"Apple Garamond Light", "Apple Garamond", Garamond, Georgia, serif',
-		
-		// Chicago - Classic Mac OS system font (menu bar, classic UI)
-		chicago: 'Chicago, "Chicago Classic", "Charcoal CY", Charcoal, monospace',
-		
-		// Monaco - Mac OS 9 monospace font
-		mono: 'Monaco, "Monaco CY", "SF Mono", "Courier New", Courier, monospace',
+		// Primary system UI font. Mirrors --font-system: the bundled Pixel
+		// bitmap face, falling back through system UI sans stacks.
+		system:
+			"'Pixel', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif",
+
+		// Body text. Mirrors --font-body. IBM Plex Sans is only present when
+		// the consumer opts in to '@liiift-studio/mac-os9-ui/webfonts'.
+		body: "'IBM Plex Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif",
+
+		// Display / headline face. Mirrors --font-display.
+		display:
+			"'Pixel', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif",
+
+		// Editorial serif. Mirrors --font-title. Requires /webfonts for EB Garamond.
+		title: "'EB Garamond', Garamond, Georgia, 'Times New Roman', serif",
+
+		// Monospace. Mirrors --font-mono. Requires /webfonts for IBM Plex Mono.
+		mono: "'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, 'Courier New', monospace",
+
+		// The bundled pixel faces, addressable directly. Mirrors --font-pixel
+		// and --font-pixel-small.
+		pixel: "'Pixel', ui-sans-serif, system-ui, sans-serif",
+		pixelSmall: "'PixelSmall', 'Pixel', ui-sans-serif, system-ui, sans-serif",
 	},
+	// Values are rem so they scale with the responsive <html> font-size set by
+	// base.css. The px comments are the rendered size at a 16px root.
 	fontSize: {
-		xs: '9px',   // Smallest UI text (9pt Chicago/Charcoal)
-		sm: '10px',  // Small labels (10pt)
-		md: '12px',  // Standard UI text - Mac OS 9 default (12pt)
-		lg: '13px',  // Slightly larger UI text
-		xl: '14px',  // Large UI text
-		'2xl': '16px',  // Headings
-		'3xl': '18px',  // Large headings
-		'4xl': '20px',  // Major headings
-		'5xl': '24px',  // Display text
+		xs: '0.5625rem', // 9px  - smallest UI text
+		sm: '0.625rem',  // 10px - small labels
+		md: '0.75rem',   // 12px - standard UI text (Mac OS 9 default)
+		lg: '0.8125rem', // 13px - slightly larger UI text
+		xl: '0.875rem',  // 14px - large UI text
+		'2xl': '1rem',     // 16px - headings
+		'3xl': '1.125rem', // 18px - large headings
+		'4xl': '1.25rem',  // 20px - major headings
+		'5xl': '1.5rem',   // 24px - display text
 	},
+	// The bundled Pixel family ships exactly two real weights, 400 and 700, in
+	// both roman and italic, so nothing here is ever synthesised by the browser.
+	// `normal` is 700 on purpose: Mac OS 9's Charcoal reads as bold, and
+	// matching it is the point of the library. Use `regular` for the 400 face.
 	fontWeight: {
-		normal: 700,   // Charcoal Bold is the Mac OS 9 default
-		medium: 700,   // Medium (same as bold for Charcoal)
-		semibold: 700, // Semibold (same as bold)
-		bold: 700,     // Bold weight
-		light: 400,    // Light weight (regular Charcoal)
+		regular: 400,  // Pixel Regular - the true 400 face
+		light: 400,    // Alias of regular; Pixel has no lighter face
+		normal: 700,   // Charcoal-like bold - Mac OS 9 UI default
+		medium: 700,   // No real 500 face; resolves to bold
+		semibold: 700, // No real 600 face; resolves to bold
+		bold: 700,     // Pixel Bold - the true 700 face
 	},
 	lineHeight: {
 		tight: 1.2,    // Tight leading (Mac OS 9 style)
@@ -159,12 +182,15 @@ export const shadows = {
 
 	// Inverted bevel for pressed/inset states
 	inset:
-		'inset -2px -2px 0 rgba(255, 255, 255, 0.6), inset 2px 2px 0 rgba(38, 38, 38, 0.4), 2px 2px 0 rgba(38, 38, 38, 1)',
+		'inset -2px -2px 0 rgba(255, 255, 255, 0.6), inset 2px 2px 0 rgba(38, 38, 38, 0.4), inset 0px 0px 0px rgba(38, 38, 38, 1)',
 
 	// Individual layers for custom composition
 	dropShadow: '2px 2px 0 rgba(38, 38, 38, 1)',
 	innerHighlight: 'inset 2px 2px 0 rgba(255, 255, 255, 0.6)',
 	innerShadow: 'inset -2px -2px 0 rgba(38, 38, 38, 0.4)',
+
+	// Soft drop used by floating surfaces (dropdowns, dialogs). Mirrors --shadow-float.
+	float: '2px 2px 0 rgba(0, 0, 0, 0.5)',
 
 	// Legacy format for compatibility
 	raised: {

@@ -1,7 +1,10 @@
 // Scrollbar component - Mac OS 9 style
 // Classic scrollbar with arrows and draggable thumb
 
-'use client';
+// Note: no per-file 'use client' directive. The library ships as a single
+// bundle and Rollup applies the "use client" banner to the whole output,
+// so per-file directives were both inconsistent (4 of 16 components) and
+// silently dropped at bundle time.
 
 import React, { forwardRef, useRef, useState, useEffect, useCallback } from 'react';
 import styles from './Scrollbar.module.css';

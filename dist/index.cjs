@@ -4,6 +4,69 @@
 var jsxRuntime = require('react/jsx-runtime');
 var React = require('react');
 
+// URL sanitization helpers for any component that renders consumer-supplied hrefs.
+// Defends against `javascript:`, `data:`, `vbscript:` and other unsafe schemes
+// that would otherwise execute arbitrary script when a user clicks a link.
+/**
+ * Schemes considered safe for rendering inside an <a href> attribute.
+ *
+ * Notably excludes:
+ *   - javascript: (classic stored-XSS sink)
+ *   - data:      (can deliver text/html with arbitrary script)
+ *   - vbscript:  (legacy IE script execution)
+ *   - file:      (local filesystem disclosure)
+ *   - blob:      (depends on origin; safer to require explicit opt-in)
+ */
+const SAFE_URL_SCHEMES = [
+    'http',
+    'https',
+    'mailto',
+    'tel',
+    'sms',
+    'ftp',
+    'ftps',
+];
+/**
+ * Matches the scheme portion of an absolute URL, e.g. "javascript" in "javascript:alert(1)".
+ * Per RFC 3986, scheme = ALPHA *( ALPHA / DIGIT / "+" / "-" / "." ).
+ */
+const SCHEME_PATTERN = /^([a-z][a-z0-9+.-]*):/i;
+/**
+ * Returns the input href if it uses a safe scheme or is relative;
+ * returns `undefined` if the href would execute script when clicked
+ * (e.g. `javascript:`, `data:`, `vbscript:`).
+ *
+ * In non-production builds, refused URLs trigger a `console.warn` so
+ * consumers passing untrusted data discover the rejection immediately.
+ *
+ * Relative URLs (paths starting with `/`, `.`, `#`, `?`, or with no scheme
+ * at all) are always allowed — they cannot specify a scheme.
+ */
+function sanitizeUrl(href) {
+    if (href === undefined || href === null)
+        return undefined;
+    const trimmed = String(href).trim();
+    if (trimmed === '')
+        return trimmed;
+    // Relative URL prefixes — no scheme can appear, so always safe.
+    if (/^(\/|\.|#|\?)/.test(trimmed))
+        return trimmed;
+    const match = SCHEME_PATTERN.exec(trimmed);
+    if (!match) {
+        // No scheme at all (e.g. "example.com/foo") — treat as relative; cannot inject script.
+        return trimmed;
+    }
+    const scheme = match[1].toLowerCase();
+    if (SAFE_URL_SCHEMES.includes(scheme)) {
+        return trimmed;
+    }
+    if (typeof process !== 'undefined' && process.env && process.env.NODE_ENV !== 'production') {
+        console.warn(`[@liiift-studio/mac-os9-ui] Refused unsafe URL scheme "${scheme}:" in href. ` +
+            `Allowed schemes: ${SAFE_URL_SCHEMES.join(', ')}, plus relative URLs.`);
+    }
+    return undefined;
+}
+
 var styles$e = {"button":"Button-module_button","button--sm":"Button-module_button--sm","button--md":"Button-module_button--md","button--lg":"Button-module_button--lg","button--default":"Button-module_button--default","button--primary":"Button-module_button--primary","button--danger":"Button-module_button--danger","button--disabled":"Button-module_button--disabled","button--full-width":"Button-module_button--full-width","button--loading":"Button-module_button--loading","button--cursor-loading":"Button-module_button--cursor-loading","button__loading-spinner":"Button-module_button__loading-spinner","button__text":"Button-module_button__text","button__icon-left":"Button-module_button__icon-left","button__icon-right":"Button-module_button__icon-right","button__icon-only":"Button-module_button__icon-only","button--icon-only":"Button-module_button--icon-only"};
 
 /**
@@ -70,6 +133,11 @@ const Button = React.forwardRef((props, ref) => {
     // Handle link-specific props
     if (isLink) {
         const { href, target, rel, download, ...linkProps } = restProps;
+        // Block javascript:/data:/vbscript: hrefs before they reach the DOM.
+        // sanitizeUrl returns undefined for unsafe schemes; an anchor with no
+        // href is non-functional but still visible, which is the desired
+        // fail-closed behavior for untrusted input.
+        const safeHref = sanitizeUrl(href);
         // Auto-add security rel for external links
         let finalRel = rel;
         if (target === '_blank' && !rel) {
@@ -83,7 +151,7 @@ const Button = React.forwardRef((props, ref) => {
             }
             linkProps.onClick?.(e);
         };
-        return (jsxRuntime.jsx("a", { ref: ref, href: disabled || loading ? undefined : href, target: target, rel: finalRel, download: download, className: classNames, ...ariaAttributes, ...linkProps, onClick: handleClick, children: renderButtonContent() }));
+        return (jsxRuntime.jsx("a", { ref: ref, href: disabled || loading ? undefined : safeHref, target: target, rel: finalRel, download: download, className: classNames, ...ariaAttributes, ...linkProps, onClick: handleClick, children: renderButtonContent() }));
     }
     // Handle button-specific props
     const { type = 'button', form, formAction, formMethod, formNoValidate, formTarget, ...buttonProps } = restProps;
@@ -183,8 +251,6 @@ IconLibrary.displayName = 'IconLibrary';
 
 var styles$c = {"pixelated-corner-sm":"IconButton-module_pixelated-corner-sm","pixelated-corner-md":"IconButton-module_pixelated-corner-md","pixelated-corner-pseudo":"IconButton-module_pixelated-corner-pseudo","mac-corner":"IconButton-module_mac-corner","chamfered-sm":"IconButton-module_chamfered-sm","chamfered-md":"IconButton-module_chamfered-md","tab-corner":"IconButton-module_tab-corner","button-corner":"IconButton-module_button-corner","window-corner":"IconButton-module_window-corner","iconButton":"IconButton-module_iconButton","icon":"IconButton-module_icon","label":"IconButton-module_label","iconButton--label-top":"IconButton-module_iconButton--label-top","iconButton--label-bottom":"IconButton-module_iconButton--label-bottom","iconButton--label-left":"IconButton-module_iconButton--label-left","iconButton--label-right":"IconButton-module_iconButton--label-right","iconButton--sm":"IconButton-module_iconButton--sm","iconButton--with-label":"IconButton-module_iconButton--with-label","iconButton--md":"IconButton-module_iconButton--md","iconButton--lg":"IconButton-module_iconButton--lg","iconButton--default":"IconButton-module_iconButton--default","iconButton--primary":"IconButton-module_iconButton--primary","iconButton--danger":"IconButton-module_iconButton--danger","iconButton--disabled":"IconButton-module_iconButton--disabled"};
 
-// IconButton component - Mac OS 9 style button with icon
-// Button variant that includes an icon, with optional label
 /**
  * IconButton component for Mac OS 9 UI
  *
@@ -298,11 +364,16 @@ const Checkbox = React.forwardRef(({ checked, defaultChecked, indeterminate = fa
         .join(' ');
     const labelClassNames = [styles$b.label, styles$b[`label--${size}`]].filter(Boolean).join(' ');
     // ARIA attributes
+    //
+    // Note: we deliberately do NOT set `aria-checked`. Per ARIA 1.2,
+    // `aria-checked` cannot be used on a native <input type="checkbox">
+    // — the host language already exposes the checked state. The
+    // tri-state ("mixed") indicator is the DOM `indeterminate` property,
+    // which the effect above sets on the input via ref.
     const ariaAttributes = {
         'aria-label': !label ? ariaLabel : undefined,
         'aria-describedby': ariaDescribedBy,
         'aria-invalid': error,
-        'aria-checked': indeterminate ? 'mixed' : undefined,
     };
     return (jsxRuntime.jsxs("div", { className: wrapperClassNames, children: [label && labelPosition === 'left' && (jsxRuntime.jsx("label", { htmlFor: checkboxId, className: labelClassNames, children: label })), jsxRuntime.jsx("input", { ref: combinedRef, type: "checkbox", id: checkboxId, className: checkboxClassNames, checked: checked, defaultChecked: defaultChecked, disabled: disabled, onChange: onChange, ...ariaAttributes, ...props }), label && labelPosition === 'right' && (jsxRuntime.jsx("label", { htmlFor: checkboxId, className: labelClassNames, children: label }))] }));
 });
@@ -310,58 +381,49 @@ Checkbox.displayName = 'Checkbox';
 
 var styles$a = {"wrapper":"Radio-module_wrapper","wrapper--disabled":"Radio-module_wrapper--disabled","wrapper--error":"Radio-module_wrapper--error","wrapper--label-left":"Radio-module_wrapper--label-left","wrapper--label-right":"Radio-module_wrapper--label-right","radio":"Radio-module_radio","radio--sm":"Radio-module_radio--sm","radio--md":"Radio-module_radio--md","radio--lg":"Radio-module_radio--lg","radio--error":"Radio-module_radio--error","label":"Radio-module_label","label--sm":"Radio-module_label--sm","label--md":"Radio-module_label--md","label--lg":"Radio-module_label--lg","wrapper--sm":"Radio-module_wrapper--sm","wrapper--md":"Radio-module_wrapper--md","wrapper--lg":"Radio-module_wrapper--lg"};
 
+const RadioGroupContext = React.createContext(null);
 /**
  * Mac OS 9 style Radio component
  *
- * Classic radio button with raised bevel effect and optional label.
- * Radio buttons work in groups - only one can be selected at a time.
- *
- * Features:
- * - Classic Mac OS 9 circular bevel styling
- * - Radio group support via `name` attribute
- * - Label positioning (left/right)
- * - Controlled and uncontrolled modes
- * - Full accessibility with ARIA support
- * - Keyboard navigation (Arrow keys to navigate group, Space to select)
- * - Form integration
+ * Classic radio button with raised bevel effect and optional label. For
+ * groups of radio buttons, prefer wrapping siblings in <RadioGroup>: that
+ * adds the required ARIA semantics, arrow-key navigation, and ensures
+ * single-selection enforcement across the group.
  *
  * @example
  * ```tsx
- * // Uncontrolled radio group
- * <div>
- *   <Radio name="size" value="small" label="Small" />
- *   <Radio name="size" value="medium" label="Medium" defaultChecked />
- *   <Radio name="size" value="large" label="Large" />
- * </div>
+ * // Recommended: with RadioGroup
+ * <RadioGroup name="size" value={size} onChange={setSize}>
+ *   <Radio value="small" label="Small" />
+ *   <Radio value="medium" label="Medium" />
+ *   <Radio value="large" label="Large" />
+ * </RadioGroup>
  *
- * // Controlled radio group
- * <div>
- *   <Radio
- *     name="color"
- *     value="red"
- *     checked={color === 'red'}
- *     onChange={(e) => setColor(e.target.value)}
- *     label="Red"
- *   />
- *   <Radio
- *     name="color"
- *     value="blue"
- *     checked={color === 'blue'}
- *     onChange={(e) => setColor(e.target.value)}
- *     label="Blue"
- *   />
- * </div>
+ * // Standalone (legacy) still works
+ * <Radio name="color" value="red" label="Red" />
  * ```
  */
 const Radio = React.forwardRef(({ checked, defaultChecked, disabled = false, label, labelPosition = 'right', size = 'md', error = false, ariaLabel, ariaDescribedBy, className = '', value, name, onChange, id, ...props }, ref) => {
+    // When wrapped by <RadioGroup>, inherit name / value / onChange / disabled
+    // from context. Standalone Radios fall back to their own props.
+    const group = React.useContext(RadioGroupContext);
+    const resolvedName = group?.name ?? name;
+    const resolvedDisabled = disabled || group?.disabled || false;
+    const resolvedChecked = group ? group.value !== undefined && group.value === value : checked;
+    const handleInputChange = (event) => {
+        if (group?.onChange && value !== undefined)
+            group.onChange(value, event);
+        onChange?.(event);
+    };
     // Generate ID if not provided (for label association)
-    const radioId = id || React.useId();
+    const generatedId = React.useId();
+    const radioId = id || generatedId;
     // Build class names
     const wrapperClassNames = [
         styles$a.wrapper,
         styles$a[`wrapper--${size}`],
         styles$a[`wrapper--label-${labelPosition}`],
-        disabled && styles$a['wrapper--disabled'],
+        resolvedDisabled && styles$a['wrapper--disabled'],
         error && styles$a['wrapper--error'],
         className,
     ]
@@ -381,9 +443,84 @@ const Radio = React.forwardRef(({ checked, defaultChecked, disabled = false, lab
         'aria-describedby': ariaDescribedBy,
         'aria-invalid': error,
     };
-    return (jsxRuntime.jsxs("div", { className: wrapperClassNames, children: [label && labelPosition === 'left' && (jsxRuntime.jsx("label", { htmlFor: radioId, className: labelClassNames, children: label })), jsxRuntime.jsx("input", { ref: ref, type: "radio", id: radioId, className: radioClassNames, checked: checked, defaultChecked: defaultChecked, disabled: disabled, value: value, name: name, onChange: onChange, ...ariaAttributes, ...props }), label && labelPosition === 'right' && (jsxRuntime.jsx("label", { htmlFor: radioId, className: labelClassNames, children: label }))] }));
+    return (jsxRuntime.jsxs("div", { className: wrapperClassNames, children: [label && labelPosition === 'left' && (jsxRuntime.jsx("label", { htmlFor: radioId, className: labelClassNames, children: label })), jsxRuntime.jsx("input", { ref: ref, type: "radio", id: radioId, className: radioClassNames, checked: group ? resolvedChecked : checked, defaultChecked: group ? undefined : defaultChecked, disabled: resolvedDisabled, value: value, name: resolvedName, onChange: handleInputChange, ...ariaAttributes, ...props }), label && labelPosition === 'right' && (jsxRuntime.jsx("label", { htmlFor: radioId, className: labelClassNames, children: label }))] }));
 });
 Radio.displayName = 'Radio';
+/**
+ * Container for a set of <Radio> options. Adds the required
+ * WAI-ARIA radiogroup semantics, arrow-key navigation between options,
+ * and a single-selection model.
+ *
+ * @example
+ * ```tsx
+ * const [size, setSize] = useState('medium');
+ * <RadioGroup name="size" value={size} onChange={setSize} ariaLabel="T-shirt size">
+ *   <Radio value="small" label="Small" />
+ *   <Radio value="medium" label="Medium" />
+ *   <Radio value="large" label="Large" />
+ * </RadioGroup>
+ * ```
+ */
+const RadioGroup = React.forwardRef(({ name, value, defaultValue, onChange, disabled = false, orientation = 'vertical', ariaLabel, ariaLabelledBy, className = '', children, }, ref) => {
+    const generatedName = React.useId();
+    const resolvedName = name ?? `radio-group-${generatedName}`;
+    const isControlled = value !== undefined;
+    const [internalValue, setInternalValue] = React.useState(defaultValue);
+    const currentValue = isControlled ? value : internalValue;
+    const handleChildChange = React.useCallback((nextValue) => {
+        if (!isControlled)
+            setInternalValue(nextValue);
+        onChange?.(nextValue);
+    }, [isControlled, onChange]);
+    // Arrow-key navigation. We scope the listener to the group root and
+    // query enabled radios on demand so consumers can render any structure
+    // inside (Radio wrapped in extra divs is fine).
+    const groupRef = React.useRef(null);
+    const setGroupRef = React.useCallback((node) => {
+        groupRef.current = node;
+        if (typeof ref === 'function')
+            ref(node);
+        else if (ref)
+            ref.current = node;
+    }, [ref]);
+    const handleKeyDown = (event) => {
+        const isVertical = orientation === 'vertical';
+        const prevKey = isVertical ? 'ArrowUp' : 'ArrowLeft';
+        const nextKey = isVertical ? 'ArrowDown' : 'ArrowRight';
+        if (event.key !== prevKey && event.key !== nextKey)
+            return;
+        const root = groupRef.current;
+        if (!root)
+            return;
+        const radios = Array.from(root.querySelectorAll(`input[type="radio"][name="${resolvedName}"]:not(:disabled)`));
+        if (radios.length === 0)
+            return;
+        event.preventDefault();
+        const activeIndex = radios.findIndex((r) => r === document.activeElement);
+        const direction = event.key === nextKey ? 1 : -1;
+        // If nothing in the group is focused yet, start from the currently
+        // selected radio (or the first one if there's no selection).
+        const startIndex = activeIndex >= 0
+            ? activeIndex
+            : Math.max(0, radios.findIndex((r) => r.value === String(currentValue)));
+        const nextIndex = (startIndex + direction + radios.length) % radios.length;
+        const target = radios[nextIndex];
+        target.focus();
+        // Selecting on arrow move matches the WAI-ARIA radiogroup pattern
+        // for automatic activation. The synthetic ChangeEvent piggybacks
+        // onto `change` so the consumer's onChange fires once.
+        target.checked = true;
+        target.dispatchEvent(new Event('change', { bubbles: true }));
+    };
+    const contextValue = {
+        name: resolvedName,
+        value: currentValue,
+        disabled,
+        onChange: (nextValue) => handleChildChange(nextValue),
+    };
+    return (jsxRuntime.jsx("div", { ref: setGroupRef, role: "radiogroup", "aria-label": ariaLabel, "aria-labelledby": ariaLabelledBy, "aria-orientation": orientation, "aria-disabled": disabled || undefined, onKeyDown: handleKeyDown, className: className, children: jsxRuntime.jsx(RadioGroupContext.Provider, { value: contextValue, children: children }) }));
+});
+RadioGroup.displayName = 'RadioGroup';
 
 var styles$9 = {"wrapper":"TextField-module_wrapper","wrapper--full-width":"TextField-module_wrapper--full-width","wrapper--disabled":"TextField-module_wrapper--disabled","wrapper--label-top":"TextField-module_wrapper--label-top","wrapper--label-left":"TextField-module_wrapper--label-left","wrapper--label-right":"TextField-module_wrapper--label-right","label":"TextField-module_label","label--sm":"TextField-module_label--sm","label--md":"TextField-module_label--md","label--lg":"TextField-module_label--lg","input-wrapper":"TextField-module_input-wrapper","input":"TextField-module_input","input--sm":"TextField-module_input--sm","input--md":"TextField-module_input--md","input--lg":"TextField-module_input--lg","input--full-width":"TextField-module_input--full-width","input-icon-left":"TextField-module_input-icon-left","input-icon-right":"TextField-module_input-icon-right","input-wrapper--with-left-icon":"TextField-module_input-wrapper--with-left-icon","input-wrapper--with-right-icon":"TextField-module_input-wrapper--with-right-icon","input--error":"TextField-module_input--error","helper-text":"TextField-module_helper-text","error-message":"TextField-module_error-message","wrapper--sm":"TextField-module_wrapper--sm","wrapper--md":"TextField-module_wrapper--md","wrapper--lg":"TextField-module_wrapper--lg"};
 
@@ -759,6 +896,45 @@ const createClassBuilder = (baseClass) => {
 var styles$6 = {"window":"Window-module_window","window--active":"Window-module_window--active","window--inactive":"Window-module_window--inactive","window--draggable":"Window-module_window--draggable","titleBar":"Window-module_titleBar","titleCenter":"Window-module_titleCenter","titleBar--draggable":"Window-module_titleBar--draggable","titleBar--dragging":"Window-module_titleBar--dragging","controls":"Window-module_controls","controlButton":"Window-module_controlButton","closeBox":"Window-module_closeBox","minimizeBox":"Window-module_minimizeBox","maximizeBox":"Window-module_maximizeBox","titleText":"Window-module_titleText","content":"Window-module_content","resizeHandle":"Window-module_resizeHandle"};
 
 /**
+ * Minimum number of pixels of the title bar that must remain inside the
+ * parent rect when `boundary="parent"` is active. Tuned to match a single
+ * close-button hitbox so the user always has somewhere to grab.
+ */
+const DRAG_BOUNDARY_BUFFER = 24;
+/** Multiplier applied to `keyboardStep` while Shift is held. */
+const KEYBOARD_COARSE_MULTIPLIER = 10;
+/**
+ * Decorative pinstripe pattern that flanks the window title.
+ *
+ * Hoisted to module scope and wrapped in `React.memo` so the 16 `<rect>`
+ * nodes are created once for the whole application instead of being
+ * re-created on every drag frame.
+ */
+/**
+ * Fills for the title bar pinstripe, driven by design tokens rather than
+ * literal hexes so a consumer can retheme the title bar. Declared once at
+ * module scope; SVG presentation attributes can't read var(), so these are
+ * applied as inline styles.
+ */
+const PATTERN_FILL = { fill: 'var(--window-titlebar-pattern-fill)' };
+const PATTERN_HIGHLIGHT = { fill: 'var(--window-titlebar-pattern-highlight)' };
+const PATTERN_SHADE = { fill: 'var(--window-titlebar-pattern-shade)' };
+const PATTERN_STRIPE = { fill: 'var(--window-titlebar-stripe)' };
+const TitleBarPattern = React.memo(function TitleBarPattern() {
+    return (jsxRuntime.jsxs("svg", { width: "132", height: "13", viewBox: "0 0 132 13", fill: "none", preserveAspectRatio: "none", "aria-hidden": "true", focusable: "false", xmlns: "http://www.w3.org/2000/svg", children: [jsxRuntime.jsx("rect", { width: "130.517", height: "13", style: PATTERN_FILL }), jsxRuntime.jsx("rect", { width: "1", height: "13", style: PATTERN_HIGHLIGHT }), jsxRuntime.jsx("rect", { x: "130", width: "1", height: "13", style: PATTERN_SHADE }), jsxRuntime.jsx("rect", { y: "1", width: "131.268", height: "1", style: PATTERN_STRIPE }), jsxRuntime.jsx("rect", { y: "5", width: "131.268", height: "1", style: PATTERN_STRIPE }), jsxRuntime.jsx("rect", { y: "9", width: "131.268", height: "1", style: PATTERN_STRIPE }), jsxRuntime.jsx("rect", { y: "3", width: "131.268", height: "1", style: PATTERN_STRIPE }), jsxRuntime.jsx("rect", { y: "7", width: "131.268", height: "1", style: PATTERN_STRIPE }), jsxRuntime.jsx("rect", { y: "11", width: "131.268", height: "1", style: PATTERN_STRIPE })] }));
+});
+/** Reads the metrics of an element's `offsetParent`, falling back to the viewport. */
+function readParentMetrics(element) {
+    const parent = element.offsetParent;
+    if (parent) {
+        const rect = parent.getBoundingClientRect();
+        return { left: rect.left, top: rect.top, width: parent.clientWidth, height: parent.clientHeight };
+    }
+    const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : Number.POSITIVE_INFINITY;
+    const viewportHeight = typeof window !== 'undefined' ? window.innerHeight : Number.POSITIVE_INFINITY;
+    return { left: 0, top: 0, width: viewportWidth, height: viewportHeight };
+}
+/**
  * Mac OS 9 style Window component
  *
  * Classic window container with title bar and content area.
@@ -769,7 +945,15 @@ var styles$6 = {"window":"Window-module_window","window--active":"Window-module_
  * - Active/inactive states
  * - Composable with custom TitleBar component
  * - Flexible sizing
- * - Draggable windows (optional) - drag by title bar
+ * - Draggable windows (optional) — by pointer or keyboard
+ * - Resizable windows (optional) — by pointer or keyboard
+ *
+ * **Positioning caveat:** drag positions are expressed in the coordinate
+ * space of the window's `offsetParent`. A CSS `transform`, `filter`, or
+ * `perspective` on an ancestor creates a new containing block, which
+ * changes what `offsetParent` resolves to. If you drag inside a transformed
+ * subtree, make the direct parent `position: relative` so the coordinate
+ * space is unambiguous.
  *
  * @example
  * ```tsx
@@ -783,62 +967,148 @@ var styles$6 = {"window":"Window-module_window","window--active":"Window-module_
  *   <p>Content</p>
  * </Window>
  *
- * // Window with controls and callbacks
- * <Window
- *   title="Document"
- *   onClose={() => console.log('Close')}
- *   onMinimize={() => console.log('Minimize')}
- * >
- *   <p>Content</p>
- * </Window>
- *
  * // Draggable window (uncontrolled)
  * <Window title="Draggable" draggable>
- *   <p>Drag me by the title bar!</p>
- * </Window>
- *
- * // Draggable window with initial position
- * <Window
- *   title="Positioned"
- *   draggable
- *   defaultPosition={{ x: 100, y: 100 }}
- * >
- *   <p>Starts at a specific position</p>
+ *   <p>Drag me by the title bar, or focus it and use the arrow keys.</p>
  * </Window>
  *
  * // Controlled draggable window
  * const [pos, setPos] = useState({ x: 0, y: 0 });
- * <Window
- *   title="Controlled"
- *   draggable
- *   position={pos}
- *   onPositionChange={setPos}
- * >
+ * <Window title="Controlled" draggable position={pos} onPositionChange={setPos}>
  *   <p>Parent controls position</p>
  * </Window>
  * ```
  */
-const Window = React.forwardRef(({ children, title, titleBar, active = true, width = 'auto', height = 'auto', className = '', contentClassName = '', classes, showControls = true, onClose, onMinimize, onMaximize, onMouseEnter, resizable = false, minWidth = 200, minHeight = 100, maxWidth, maxHeight, onResize, draggable = false, defaultPosition, position: controlledPosition, onPositionChange, }, ref) => {
+const Window = React.forwardRef(({ children, title, titleBar, active = true, width = 'auto', height = 'auto', className = '', contentClassName = '', classes, showControls = true, onClose, onMinimize, onMaximize, onMouseEnter, onActivate, zIndex, resizable = false, minWidth = 200, minHeight = 100, maxWidth, maxHeight, onResize, draggable = false, defaultPosition, position: controlledPosition, onPositionChange, boundary = 'parent', keyboardStep = 1, }, ref) => {
+    // Root element, used by the keyboard handlers to measure the window
+    // without a DOM query.
+    const windowRef = React.useRef(null);
+    // Element captured at gesture start, so mousemove never queries the DOM.
+    const dragWindowRef = React.useRef(null);
+    // Parent metrics captured once per gesture — the positioning ancestor
+    // cannot resize mid-drag, so re-measuring on every move was pure cost.
+    const parentMetricsRef = React.useRef(null);
     // Drag state management
     const [internalPosition, setInternalPosition] = React.useState(defaultPosition || null);
     const [isDragging, setIsDragging] = React.useState(false);
-    const [hasBeenDragged, setHasBeenDragged] = React.useState(!!(defaultPosition || controlledPosition));
+    const [hasBeenDragged, setHasBeenDragged] = React.useState(!!defaultPosition);
     const dragStartRef = React.useRef(null);
-    // Resize state management
+    // Resize state management. `hasBeenResized` flips to true on the first
+    // successful resize and stays true thereafter; from that point on
+    // `internalSize` is the canonical width/height so the user's resize
+    // persists after pointerup (issue #10).
     const [internalSize, setInternalSize] = React.useState({
         width,
         height,
     });
     const [isResizing, setIsResizing] = React.useState(false);
+    const [hasBeenResized, setHasBeenResized] = React.useState(false);
     const resizeStartRef = React.useRef(null);
+    // requestAnimationFrame coalescing. Pointer devices fire moves far
+    // faster than the browser paints; without this every event triggered a
+    // React render (issue #21).
+    const rafRef = React.useRef(null);
+    const pendingPointerRef = React.useRef(null);
+    const cancelPendingFrame = React.useCallback(() => {
+        if (rafRef.current !== null) {
+            cancelAnimationFrame(rafRef.current);
+            rafRef.current = null;
+        }
+        pendingPointerRef.current = null;
+    }, []);
+    // Cancel any in-flight frame if the component unmounts mid-gesture.
+    React.useEffect(() => cancelPendingFrame, [cancelPendingFrame]);
+    // Latest-callback refs. Reading from a ref inside the document pointermove
+    // handler means we can leave callbacks out of the effect dependency
+    // arrays — otherwise the listeners would re-attach mid-drag every time
+    // the parent re-rendered (issue #9), causing dropped move events.
+    const latestRef = React.useRef({
+        controlledPosition,
+        onPositionChange,
+        onResize,
+        minWidth,
+        minHeight,
+        maxWidth,
+        maxHeight,
+        boundary,
+    });
+    React.useEffect(() => {
+        latestRef.current = {
+            controlledPosition,
+            onPositionChange,
+            onResize,
+            minWidth,
+            minHeight,
+            maxWidth,
+            maxHeight,
+            boundary,
+        };
+    });
     // Use controlled position if provided, otherwise use internal state
     const currentPosition = controlledPosition || internalPosition;
-    // Use internal size state for resize tracking
-    const currentWidth = isResizing ? internalSize.width : width;
-    const currentHeight = isResizing ? internalSize.height : height;
-    // Handle mouse down on title bar to start dragging
-    const handleTitleBarMouseDown = React.useCallback((event) => {
+    // A window is absolutely positioned as soon as it has a position from
+    // any source. Deriving this (rather than latching it in state at mount)
+    // means a `position` prop supplied later still takes effect (issue #26).
+    const isPositioned = draggable && (hasBeenDragged || currentPosition !== null);
+    // Once the user has resized, internalSize wins so the dimensions
+    // persist after pointerup. Before that we honor the width/height props.
+    const currentWidth = hasBeenResized ? internalSize.width : width;
+    const currentHeight = hasBeenResized ? internalSize.height : height;
+    /**
+     * Clamps a candidate position so at least DRAG_BOUNDARY_BUFFER pixels of
+     * the window stay inside the positioning ancestor.
+     */
+    const clampPosition = React.useCallback((x, y, element, metrics) => {
+        if (latestRef.current.boundary !== 'parent')
+            return { x, y };
+        const minX = DRAG_BOUNDARY_BUFFER - element.offsetWidth;
+        const maxX = metrics.width - DRAG_BOUNDARY_BUFFER;
+        const minY = 0;
+        const maxY = metrics.height - DRAG_BOUNDARY_BUFFER;
+        return {
+            x: Math.max(minX, Math.min(maxX, x)),
+            y: Math.max(minY, Math.min(maxY, y)),
+        };
+    }, []);
+    /** Publishes a new position to whichever source of truth is in charge. */
+    const commitPosition = React.useCallback((next) => {
+        const { controlledPosition: liveControlled, onPositionChange: liveOnChange } = latestRef.current;
+        if (liveControlled && liveOnChange) {
+            liveOnChange(next);
+        }
+        else {
+            setInternalPosition(next);
+            liveOnChange?.(next);
+        }
+        setHasBeenDragged(true);
+    }, []);
+    /** Clamps and publishes a new size. */
+    const commitSize = React.useCallback((rawWidth, rawHeight) => {
+        const { minWidth: liveMinWidth, minHeight: liveMinHeight, maxWidth: liveMaxWidth, maxHeight: liveMaxHeight, onResize: liveOnResize, } = latestRef.current;
+        let nextWidth = rawWidth;
+        let nextHeight = rawHeight;
+        if (nextWidth < liveMinWidth)
+            nextWidth = liveMinWidth;
+        if (nextHeight < liveMinHeight)
+            nextHeight = liveMinHeight;
+        if (liveMaxWidth && nextWidth > liveMaxWidth)
+            nextWidth = liveMaxWidth;
+        if (liveMaxHeight && nextHeight > liveMaxHeight)
+            nextHeight = liveMaxHeight;
+        setInternalSize({ width: nextWidth, height: nextHeight });
+        setHasBeenResized(true);
+        liveOnResize?.({ width: nextWidth, height: nextHeight });
+    }, []);
+    // Pointer-down on the title bar starts a drag. Pointer Events (instead
+    // of mouse events) unify mouse, touch, and pen input so the component
+    // works on tablets and phones — previously it was mouse-only.
+    const handleTitleBarPointerDown = React.useCallback((event) => {
         if (!draggable)
+            return;
+        // Only react to primary button / primary contact. Ignores
+        // right-click and secondary touches that browsers report
+        // alongside the primary one.
+        if (event.button !== 0 || !event.isPrimary)
             return;
         // Don't start drag if clicking on buttons
         if (event.target.closest('button')) {
@@ -848,21 +1118,23 @@ const Window = React.forwardRef(({ children, title, titleBar, active = true, wid
         const windowElement = event.currentTarget.closest(`.${styles$6.window}`);
         if (!windowElement)
             return;
+        // Store the window element reference for use during drag
+        dragWindowRef.current = windowElement;
+        parentMetricsRef.current = readParentMetrics(windowElement);
         const rect = windowElement.getBoundingClientRect();
-        // Get the parent container to calculate position relative to it
-        const parent = windowElement.offsetParent;
-        const parentRect = parent ? parent.getBoundingClientRect() : { left: 0, top: 0 };
-        // Store drag start info - offset from mouse to window position within parent
-        // This accounts for the parent's coordinate system
+        const metrics = parentMetricsRef.current;
+        // Offset from pointer to window origin, in the parent's space.
         dragStartRef.current = {
-            x: event.clientX - (rect.left - parentRect.left),
-            y: event.clientY - (rect.top - parentRect.top),
+            x: event.clientX - (rect.left - metrics.left),
+            y: event.clientY - (rect.top - metrics.top),
         };
         setIsDragging(true);
     }, [draggable]);
-    // Handle mouse down on resize handle to start resizing
-    const handleResizeMouseDown = React.useCallback((event) => {
+    // Pointer-down on the resize handle starts a resize gesture.
+    const handleResizePointerDown = React.useCallback((event) => {
         if (!resizable)
+            return;
+        if (event.button !== 0 || !event.isPrimary)
             return;
         event.preventDefault();
         event.stopPropagation();
@@ -870,146 +1142,278 @@ const Window = React.forwardRef(({ children, title, titleBar, active = true, wid
         if (!windowElement)
             return;
         const rect = windowElement.getBoundingClientRect();
-        // Store resize start info
         resizeStartRef.current = {
             width: rect.width,
             height: rect.height,
-            mouseX: event.clientX,
-            mouseY: event.clientY,
+            pointerX: event.clientX,
+            pointerY: event.clientY,
         };
         setIsResizing(true);
     }, [resizable]);
-    // Handle mouse move during resize
+    // Resize listeners. Depends only on `isResizing` so they attach once
+    // when the user grabs the handle and detach on pointerup, regardless
+    // of how often the parent re-renders during the gesture (issue #9).
+    // Pointer events instead of mouse events give us mouse/touch/pen
+    // uniformity (issue #11); pointercancel covers system interruptions.
     React.useEffect(() => {
-        if (!isResizing || !resizeStartRef.current)
+        if (!isResizing)
             return;
-        const handleMouseMove = (event) => {
+        const flush = () => {
+            rafRef.current = null;
+            const pointer = pendingPointerRef.current;
+            const start = resizeStartRef.current;
+            if (!pointer || !start)
+                return;
+            commitSize(start.width + (pointer.x - start.pointerX), start.height + (pointer.y - start.pointerY));
+        };
+        const handlePointerMove = (event) => {
+            if (!event.isPrimary)
+                return;
             event.preventDefault();
             if (!resizeStartRef.current)
                 return;
-            // Calculate delta
-            const deltaX = event.clientX - resizeStartRef.current.mouseX;
-            const deltaY = event.clientY - resizeStartRef.current.mouseY;
-            // Calculate new size
-            let newWidth = resizeStartRef.current.width + deltaX;
-            let newHeight = resizeStartRef.current.height + deltaY;
-            // Apply constraints
-            if (newWidth < minWidth)
-                newWidth = minWidth;
-            if (newHeight < minHeight)
-                newHeight = minHeight;
-            if (maxWidth && newWidth > maxWidth)
-                newWidth = maxWidth;
-            if (maxHeight && newHeight > maxHeight)
-                newHeight = maxHeight;
-            // Update size
-            setInternalSize({
-                width: newWidth,
-                height: newHeight,
-            });
-            // Call callback if provided
-            if (onResize) {
-                onResize({ width: newWidth, height: newHeight });
+            pendingPointerRef.current = { x: event.clientX, y: event.clientY };
+            if (rafRef.current === null) {
+                rafRef.current = requestAnimationFrame(flush);
             }
         };
-        const handleMouseUp = () => {
+        const handlePointerEnd = () => {
+            // Apply the final pointer position before tearing down, so a
+            // gesture that ends between frames isn't silently dropped.
+            if (rafRef.current !== null) {
+                cancelAnimationFrame(rafRef.current);
+                rafRef.current = null;
+                flush();
+            }
+            pendingPointerRef.current = null;
             setIsResizing(false);
             resizeStartRef.current = null;
         };
-        document.addEventListener('mousemove', handleMouseMove);
-        document.addEventListener('mouseup', handleMouseUp);
+        document.addEventListener('pointermove', handlePointerMove);
+        document.addEventListener('pointerup', handlePointerEnd);
+        document.addEventListener('pointercancel', handlePointerEnd);
         return () => {
-            document.removeEventListener('mousemove', handleMouseMove);
-            document.removeEventListener('mouseup', handleMouseUp);
+            document.removeEventListener('pointermove', handlePointerMove);
+            document.removeEventListener('pointerup', handlePointerEnd);
+            document.removeEventListener('pointercancel', handlePointerEnd);
+            cancelPendingFrame();
         };
-    }, [isResizing, minWidth, minHeight, maxWidth, maxHeight, onResize]);
-    // Handle mouse move during drag
+    }, [isResizing, commitSize, cancelPendingFrame]);
+    // Drag listeners. Same effect-deps strategy as resize — attach once
+    // on drag start, detach on drag end (issue #9). The boundary clamp
+    // (issue #12) prevents the window from being lost off-screen.
+    // Pointer events for touch / pen support (issue #11).
     React.useEffect(() => {
-        if (!isDragging || !dragStartRef.current)
+        if (!isDragging)
             return;
-        const handleMouseMove = (event) => {
+        const flush = () => {
+            rafRef.current = null;
+            const pointer = pendingPointerRef.current;
+            const start = dragStartRef.current;
+            const windowElement = dragWindowRef.current;
+            const metrics = parentMetricsRef.current;
+            if (!pointer || !start || !windowElement || !metrics)
+                return;
+            commitPosition(clampPosition(pointer.x - metrics.left - start.x, pointer.y - metrics.top - start.y, windowElement, metrics));
+        };
+        const handlePointerMove = (event) => {
+            if (!event.isPrimary)
+                return;
             event.preventDefault();
             if (!dragStartRef.current)
                 return;
-            // Get the window element to find its parent
-            const windowElements = document.querySelectorAll(`.${styles$6.window}`);
-            let windowElement = null;
-            // Find the dragging window (the one with position absolute or the first one)
-            for (const el of Array.from(windowElements)) {
-                const htmlEl = el;
-                if (htmlEl.style.position === 'absolute' || windowElements.length === 1) {
-                    windowElement = htmlEl;
-                    break;
-                }
-            }
-            if (!windowElement)
-                return;
-            // Get parent container to calculate position relative to it
-            const parent = windowElement.offsetParent;
-            const parentRect = parent ? parent.getBoundingClientRect() : { left: 0, top: 0 };
-            const newPosition = {
-                x: event.clientX - parentRect.left - dragStartRef.current.x,
-                y: event.clientY - parentRect.top - dragStartRef.current.y,
-            };
-            // Update position
-            if (controlledPosition && onPositionChange) {
-                onPositionChange(newPosition);
-            }
-            else {
-                setInternalPosition(newPosition);
-            }
-            // Mark as dragged
-            if (!hasBeenDragged) {
-                setHasBeenDragged(true);
+            pendingPointerRef.current = { x: event.clientX, y: event.clientY };
+            if (rafRef.current === null) {
+                rafRef.current = requestAnimationFrame(flush);
             }
         };
-        const handleMouseUp = () => {
+        const handlePointerEnd = () => {
+            if (rafRef.current !== null) {
+                cancelAnimationFrame(rafRef.current);
+                rafRef.current = null;
+                flush();
+            }
+            pendingPointerRef.current = null;
             setIsDragging(false);
             dragStartRef.current = null;
+            dragWindowRef.current = null;
+            parentMetricsRef.current = null;
         };
-        document.addEventListener('mousemove', handleMouseMove);
-        document.addEventListener('mouseup', handleMouseUp);
+        document.addEventListener('pointermove', handlePointerMove);
+        document.addEventListener('pointerup', handlePointerEnd);
+        document.addEventListener('pointercancel', handlePointerEnd);
         return () => {
-            document.removeEventListener('mousemove', handleMouseMove);
-            document.removeEventListener('mouseup', handleMouseUp);
+            document.removeEventListener('pointermove', handlePointerMove);
+            document.removeEventListener('pointerup', handlePointerEnd);
+            document.removeEventListener('pointercancel', handlePointerEnd);
+            cancelPendingFrame();
         };
-    }, [isDragging, controlledPosition, onPositionChange, hasBeenDragged]);
-    // Class names
-    const windowClassNames = mergeClasses(styles$6.window, active ? styles$6['window--active'] : styles$6['window--inactive'], draggable && hasBeenDragged && styles$6['window--draggable'], className, classes?.root);
+    }, [isDragging, commitPosition, clampPosition, cancelPendingFrame]);
+    // --- Keyboard equivalents (WCAG 2.1.1, issue #25) ---------------------
+    /** Maps an arrow key to a unit delta, or null for any other key. */
+    const arrowDelta = (key) => {
+        switch (key) {
+            case 'ArrowLeft':
+                return { dx: -1, dy: 0 };
+            case 'ArrowRight':
+                return { dx: 1, dy: 0 };
+            case 'ArrowUp':
+                return { dx: 0, dy: -1 };
+            case 'ArrowDown':
+                return { dx: 0, dy: 1 };
+            default:
+                return null;
+        }
+    };
+    const handleTitleBarKeyDown = React.useCallback((event) => {
+        if (!draggable)
+            return;
+        const delta = arrowDelta(event.key);
+        if (!delta)
+            return;
+        const windowElement = windowRef.current;
+        if (!windowElement)
+            return;
+        event.preventDefault();
+        const step = keyboardStep * (event.shiftKey ? KEYBOARD_COARSE_MULTIPLIER : 1);
+        const metrics = readParentMetrics(windowElement);
+        // Before the first move the window is still in normal flow, so
+        // derive its current origin from the live layout rect.
+        const origin = currentPosition ??
+            (() => {
+                const rect = windowElement.getBoundingClientRect();
+                return { x: rect.left - metrics.left, y: rect.top - metrics.top };
+            })();
+        commitPosition(clampPosition(origin.x + delta.dx * step, origin.y + delta.dy * step, windowElement, metrics));
+    }, [draggable, keyboardStep, currentPosition, commitPosition, clampPosition]);
+    const handleResizeKeyDown = React.useCallback((event) => {
+        if (!resizable)
+            return;
+        const delta = arrowDelta(event.key);
+        if (!delta)
+            return;
+        const windowElement = windowRef.current;
+        if (!windowElement)
+            return;
+        event.preventDefault();
+        const step = keyboardStep * (event.shiftKey ? KEYBOARD_COARSE_MULTIPLIER : 1);
+        const rect = windowElement.getBoundingClientRect();
+        commitSize(rect.width + delta.dx * step, rect.height + delta.dy * step);
+    }, [resizable, keyboardStep, commitSize]);
+    // --- Rendering --------------------------------------------------------
+    const windowClassNames = mergeClasses(styles$6.window, active ? styles$6['window--active'] : styles$6['window--inactive'], isPositioned && styles$6['window--draggable'], className, classes?.root);
     const contentClassNames = mergeClasses(styles$6.content, contentClassName, classes?.content);
     const titleBarClassNames = mergeClasses(styles$6.titleBar, draggable && styles$6['titleBar--draggable'], isDragging && styles$6['titleBar--dragging'], classes?.titleBar);
-    // Window style
     const windowStyle = {};
-    // Apply width - use currentWidth during resize, otherwise use prop
     if (currentWidth !== 'auto') {
         windowStyle.width = typeof currentWidth === 'number' ? `${currentWidth}px` : currentWidth;
     }
-    // Apply height - use currentHeight during resize, otherwise use prop
     if (currentHeight !== 'auto') {
         windowStyle.height = typeof currentHeight === 'number' ? `${currentHeight}px` : currentHeight;
     }
-    // Apply position if draggable and has been dragged
-    if (draggable && hasBeenDragged && currentPosition) {
+    if (isPositioned && currentPosition) {
         windowStyle.position = 'absolute';
         windowStyle.left = `${currentPosition.x}px`;
         windowStyle.top = `${currentPosition.y}px`;
     }
-    // Render title bar if title provided and no custom titleBar
+    if (zIndex !== undefined) {
+        windowStyle.zIndex = zIndex;
+    }
+    // Merge the forwarded ref with our internal one so keyboard handlers
+    // can measure the window without a DOM query.
+    const setRootRef = React.useCallback((node) => {
+        windowRef.current = node;
+        if (typeof ref === 'function') {
+            ref(node);
+        }
+        else if (ref) {
+            ref.current = node;
+        }
+    }, [ref]);
     const renderTitleBar = () => {
         if (titleBar) {
             return titleBar;
         }
         if (title) {
-            return (jsxRuntime.jsxs("div", { className: titleBarClassNames, "data-numControls": [onClose, onMinimize, onMaximize].filter(Boolean).length, onMouseDown: handleTitleBarMouseDown, children: [showControls && (jsxRuntime.jsxs("div", { className: mergeClasses(styles$6.controls, classes?.controls), children: [onClose && (jsxRuntime.jsx("button", { type: "button", className: mergeClasses(styles$6.controlButton, classes?.controlButton), onClick: onClose, "aria-label": "Close", title: "Close", children: jsxRuntime.jsx("div", { className: styles$6.closeBox }) })), onMinimize && (jsxRuntime.jsx("button", { type: "button", className: mergeClasses(styles$6.controlButton, classes?.controlButton), onClick: onMinimize, "aria-label": "Minimize", title: "Minimize", children: jsxRuntime.jsx("div", { className: styles$6.minimizeBox }) })), onMaximize && (jsxRuntime.jsx("button", { type: "button", className: mergeClasses(styles$6.controlButton, classes?.controlButton), onClick: onMaximize, "aria-label": "Maximize", title: "Maximize", children: jsxRuntime.jsx("div", { className: styles$6.maximizeBox }) }))] })), jsxRuntime.jsxs("div", { className: styles$6.titleCenter, children: [jsxRuntime.jsxs("svg", { width: "132", height: "13", viewBox: "0 0 132 13", fill: "none", preserveAspectRatio: "none", xmlns: "http://www.w3.org/2000/svg", children: [jsxRuntime.jsx("rect", { width: "130.517", height: "13", fill: "#DDDDDD" }), jsxRuntime.jsx("rect", { width: "1", height: "13", fill: "#EEEEEE" }), jsxRuntime.jsx("rect", { x: "130", width: "1", height: "13", fill: "#C5C5C5" }), jsxRuntime.jsx("rect", { y: "1", width: "131.268", height: "1", fill: "#999999" }), jsxRuntime.jsx("rect", { y: "5", width: "131.268", height: "1", fill: "#999999" }), jsxRuntime.jsx("rect", { y: "9", width: "131.268", height: "1", fill: "#999999" }), jsxRuntime.jsx("rect", { y: "3", width: "131.268", height: "1", fill: "#999999" }), jsxRuntime.jsx("rect", { y: "7", width: "131.268", height: "1", fill: "#999999" }), jsxRuntime.jsx("rect", { y: "11", width: "131.268", height: "1", fill: "#999999" })] }), jsxRuntime.jsx("div", { className: mergeClasses(styles$6.titleText, classes?.titleText, 'bold'), children: title }), jsxRuntime.jsxs("svg", { width: "132", height: "13", viewBox: "0 0 132 13", fill: "none", preserveAspectRatio: "none", xmlns: "http://www.w3.org/2000/svg", children: [jsxRuntime.jsx("rect", { width: "130.517", height: "13", fill: "#DDDDDD" }), jsxRuntime.jsx("rect", { width: "1", height: "13", fill: "#EEEEEE" }), jsxRuntime.jsx("rect", { x: "130", width: "1", height: "13", fill: "#C5C5C5" }), jsxRuntime.jsx("rect", { y: "1", width: "131.268", height: "1", fill: "#999999" }), jsxRuntime.jsx("rect", { y: "5", width: "131.268", height: "1", fill: "#999999" }), jsxRuntime.jsx("rect", { y: "9", width: "131.268", height: "1", fill: "#999999" }), jsxRuntime.jsx("rect", { y: "3", width: "131.268", height: "1", fill: "#999999" }), jsxRuntime.jsx("rect", { y: "7", width: "131.268", height: "1", fill: "#999999" }), jsxRuntime.jsx("rect", { y: "11", width: "131.268", height: "1", fill: "#999999" })] })] })] }));
+            return (jsxRuntime.jsxs("div", { className: titleBarClassNames, "data-numControls": [onClose, onMinimize, onMaximize].filter(Boolean).length, onPointerDown: handleTitleBarPointerDown, onKeyDown: draggable ? handleTitleBarKeyDown : undefined, tabIndex: draggable ? 0 : undefined, "aria-label": draggable ? `Move ${title} window` : undefined, "aria-keyshortcuts": draggable ? 'ArrowUp ArrowDown ArrowLeft ArrowRight' : undefined, style: draggable ? { touchAction: 'none' } : undefined, children: [showControls && (jsxRuntime.jsxs("div", { className: mergeClasses(styles$6.controls, classes?.controls), children: [onClose && (jsxRuntime.jsx("button", { type: "button", className: mergeClasses(styles$6.controlButton, classes?.controlButton), onClick: onClose, "aria-label": "Close", title: "Close", children: jsxRuntime.jsx("div", { className: styles$6.closeBox }) })), onMinimize && (jsxRuntime.jsx("button", { type: "button", className: mergeClasses(styles$6.controlButton, classes?.controlButton), onClick: onMinimize, "aria-label": "Minimize", title: "Minimize", children: jsxRuntime.jsx("div", { className: styles$6.minimizeBox }) })), onMaximize && (jsxRuntime.jsx("button", { type: "button", className: mergeClasses(styles$6.controlButton, classes?.controlButton), onClick: onMaximize, "aria-label": "Maximize", title: "Maximize", children: jsxRuntime.jsx("div", { className: styles$6.maximizeBox }) }))] })), jsxRuntime.jsxs("div", { className: styles$6.titleCenter, children: [jsxRuntime.jsx(TitleBarPattern, {}), jsxRuntime.jsx("div", { className: mergeClasses(styles$6.titleText, classes?.titleText, 'bold'), children: title }), jsxRuntime.jsx(TitleBarPattern, {})] })] }));
         }
         return null;
     };
-    return (jsxRuntime.jsxs("div", { ref: ref, className: windowClassNames, style: windowStyle, onMouseEnter: onMouseEnter, children: [renderTitleBar(), jsxRuntime.jsx("div", { className: contentClassNames, children: children }), resizable && (jsxRuntime.jsx("div", { className: styles$6.resizeHandle, onMouseDown: handleResizeMouseDown, "aria-hidden": "true" }))] }));
+    return (jsxRuntime.jsxs("div", { ref: setRootRef, className: windowClassNames, style: windowStyle, onMouseEnter: onMouseEnter, onPointerDown: onActivate, onFocusCapture: onActivate, children: [renderTitleBar(), jsxRuntime.jsx("div", { className: contentClassNames, children: children }), resizable && (jsxRuntime.jsx("button", { type: "button", className: mergeClasses(styles$6.resizeHandle, classes?.resizeHandle), onPointerDown: handleResizePointerDown, onKeyDown: handleResizeKeyDown, "aria-label": "Resize window", "aria-keyshortcuts": "ArrowUp ArrowDown ArrowLeft ArrowRight", title: "Resize window", style: { touchAction: 'none' } }))] }));
 });
 Window.displayName = 'Window';
 
 var styles$5 = {"backdrop":"Dialog-module_backdrop","dialogContainer":"Dialog-module_dialogContainer"};
 
+// --- Module-level dialog coordination -------------------------------------
+// Stack of currently-open dialog containers. Only the last entry is treated
+// as the "topmost" — it owns Escape and the Tab focus trap. This is the
+// canonical web-platform approach for stacked modals and matches what
+// browsers do internally for the dialog element.
+const dialogStack = [];
+// Reference-counted body scroll lock so two stacked dialogs don't fight
+// over `document.body.style.overflow`. The first lock captures whatever
+// value the host app had set, and the last release restores it.
+let scrollLockCount = 0;
+let savedBodyOverflow = null;
+function lockBodyScroll() {
+    if (typeof document === 'undefined')
+        return;
+    scrollLockCount += 1;
+    if (scrollLockCount === 1) {
+        savedBodyOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+    }
+}
+function unlockBodyScroll() {
+    if (typeof document === 'undefined')
+        return;
+    scrollLockCount = Math.max(0, scrollLockCount - 1);
+    if (scrollLockCount === 0) {
+        document.body.style.overflow = savedBodyOverflow ?? '';
+        savedBodyOverflow = null;
+    }
+}
+function isTopmost(el) {
+    return el !== null && dialogStack[dialogStack.length - 1] === el;
+}
+// Comprehensive focusable-element selector. Covers everything the Tab key
+// can naturally reach plus author-provided overrides via [tabindex]. The
+// runtime filter excludes disabled, hidden, aria-hidden, and zero-size
+// elements that should not be tab targets.
+const FOCUSABLE_SELECTOR = [
+    'a[href]',
+    'area[href]',
+    'button',
+    'input',
+    'select',
+    'textarea',
+    'iframe',
+    'audio[controls]',
+    'video[controls]',
+    '[contenteditable="true"]',
+    '[contenteditable=""]',
+    'details > summary:first-of-type',
+    '[tabindex]',
+].join(',');
+function isElementFocusable(el) {
+    // Native disabled, programmatic disabled via aria-disabled,
+    // explicit removal from tab order, and visibility checks.
+    if (el.disabled)
+        return false;
+    if (el.getAttribute('tabindex') === '-1')
+        return false;
+    if (el.hidden)
+        return false;
+    if (el.closest('[aria-hidden="true"]'))
+        return false;
+    if (el.getClientRects().length === 0)
+        return false;
+    return true;
+}
+function getFocusables(root) {
+    return Array.from(root.querySelectorAll(FOCUSABLE_SELECTOR)).filter(isElementFocusable);
+}
 /**
  * Mac OS 9 style Dialog component
  *
@@ -1018,11 +1422,11 @@ var styles$5 = {"backdrop":"Dialog-module_backdrop","dialogContainer":"Dialog-mo
  *
  * Features:
  * - Classic Mac OS 9 dialog styling
- * - Modal backdrop with click-to-close
- * - Escape key to close
- * - Focus trapping within dialog
+ * - Modal backdrop with optional click-to-close
+ * - Escape key to close (topmost dialog only when stacked)
+ * - Focus trap that survives stacked dialogs
  * - Centered on screen
- * - Prevents body scroll when open
+ * - Reference-counted body scroll lock
  *
  * @example
  * ```tsx
@@ -1033,98 +1437,142 @@ var styles$5 = {"backdrop":"Dialog-module_backdrop","dialogContainer":"Dialog-mo
  *   onClose={() => setOpen(false)}
  *   title="Confirm"
  *   width={350}
+ *   role="alertdialog"
  * >
- *   <p>Are you sure?</p>
- *   <div>
- *     <Button onClick={() => setOpen(false)}>Cancel</Button>
- *     <Button variant="primary">OK</Button>
- *   </div>
+ *   <p id="confirm-msg">Are you sure?</p>
+ *   <Button onClick={() => setOpen(false)}>Cancel</Button>
+ *   <Button variant="primary">OK</Button>
  * </Dialog>
  * ```
  */
-const Dialog = React.forwardRef(({ open = false, onClose, closeOnBackdropClick = true, closeOnEscape = true, backdropClassName = '', trapFocus = true, initialFocus, children, ...windowProps }, ref) => {
+const Dialog = React.forwardRef(({ open = false, onClose, closeOnBackdropClick = true, closeOnEscape = true, backdropClassName = '', trapFocus = true, initialFocus, role = 'dialog', ariaLabel, ariaLabelledBy, ariaDescribedBy, children, ...windowProps }, ref) => {
     const dialogRef = React.useRef(null);
     const previousActiveElement = React.useRef(null);
-    // Handle Escape key
+    // Derive an accessible name. Prefer explicit ariaLabelledBy → ariaLabel
+    // → the Window title if it happens to be a plain string.
+    const titleProp = windowProps.title;
+    const resolvedAriaLabel = ariaLabel ?? (typeof titleProp === 'string' ? titleProp : undefined);
+    // Push/pop the dialog onto the stack and lock body scroll while open.
+    // Combining these into one effect ensures they unwind in the right
+    // order on close and avoids races with the other effects below.
+    React.useEffect(() => {
+        if (!open)
+            return;
+        const node = dialogRef.current;
+        if (!node)
+            return;
+        previousActiveElement.current =
+            document.activeElement instanceof HTMLElement ? document.activeElement : null;
+        dialogStack.push(node);
+        lockBodyScroll();
+        return () => {
+            const idx = dialogStack.indexOf(node);
+            if (idx !== -1)
+                dialogStack.splice(idx, 1);
+            unlockBodyScroll();
+            // Defer focus restoration so React can finish any unmount work
+            // before we hand focus back; checking isConnected prevents a
+            // silent jump-to-body if the trigger is gone.
+            const prev = previousActiveElement.current;
+            if (prev && prev.isConnected) {
+                queueMicrotask(() => {
+                    if (prev.isConnected)
+                        prev.focus();
+                });
+            }
+        };
+    }, [open]);
+    // Initial focus. Runs before paint via useLayoutEffect so the user
+    // never sees a flash of focus outside the dialog.
+    React.useLayoutEffect(() => {
+        if (!open || !dialogRef.current)
+            return;
+        const root = dialogRef.current;
+        let target = null;
+        if (typeof initialFocus === 'string') {
+            try {
+                target = root.querySelector(initialFocus);
+            }
+            catch {
+                // Malformed selector — ignore and fall through to default.
+                target = null;
+            }
+        }
+        else if (initialFocus && 'current' in initialFocus) {
+            target = initialFocus.current;
+        }
+        if (!target) {
+            const focusables = getFocusables(root);
+            if (focusables.length > 0) {
+                target = focusables[0];
+            }
+            else {
+                // No focusable children — focus the container itself so the
+                // trap still has somewhere to land. Make it programmatically
+                // focusable in that case.
+                if (!root.hasAttribute('tabindex'))
+                    root.setAttribute('tabindex', '-1');
+                target = root;
+            }
+        }
+        target?.focus();
+    }, [open, initialFocus]);
+    // Escape: only the topmost dialog reacts so stacked dialogs close
+    // one at a time. The bubble phase + stopPropagation also prevents
+    // the host app's own Escape handlers from firing under the modal.
     React.useEffect(() => {
         if (!open || !closeOnEscape)
             return;
-        const handleEscape = (event) => {
-            if (event.key === 'Escape') {
-                event.preventDefault();
-                event.stopPropagation();
-                onClose?.();
-            }
+        const handler = (event) => {
+            if (event.key !== 'Escape')
+                return;
+            if (!isTopmost(dialogRef.current))
+                return;
+            event.preventDefault();
+            event.stopPropagation();
+            onClose?.();
         };
-        document.addEventListener('keydown', handleEscape);
-        return () => document.removeEventListener('keydown', handleEscape);
+        document.addEventListener('keydown', handler);
+        return () => document.removeEventListener('keydown', handler);
     }, [open, closeOnEscape, onClose]);
-    // Store previous active element and restore on close
-    React.useEffect(() => {
-        if (open) {
-            previousActiveElement.current = document.activeElement;
-        }
-        else if (previousActiveElement.current) {
-            previousActiveElement.current.focus();
-        }
-    }, [open]);
-    // Set initial focus
-    React.useEffect(() => {
-        if (!open || !initialFocus)
-            return;
-        const focusElement = () => {
-            if (typeof initialFocus === 'string') {
-                const element = dialogRef.current?.querySelector(initialFocus);
-                element?.focus();
-            }
-            else if (initialFocus.current) {
-                initialFocus.current.focus();
-            }
-        };
-        // Small delay to ensure dialog is rendered
-        setTimeout(focusElement, 10);
-    }, [open, initialFocus]);
-    // Focus trapping
+    // Focus trap: same topmost-only rule.
     React.useEffect(() => {
         if (!open || !trapFocus)
             return;
-        const handleTabKey = (event) => {
+        const handler = (event) => {
             if (event.key !== 'Tab' || !dialogRef.current)
                 return;
-            const focusableElements = dialogRef.current.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
-            const firstElement = focusableElements[0];
-            const lastElement = focusableElements[focusableElements.length - 1];
-            if (event.shiftKey) {
-                // Shift + Tab
-                if (document.activeElement === firstElement) {
-                    event.preventDefault();
-                    lastElement?.focus();
-                }
+            if (!isTopmost(dialogRef.current))
+                return;
+            const focusables = getFocusables(dialogRef.current);
+            if (focusables.length === 0) {
+                event.preventDefault();
+                return;
             }
-            else {
-                // Tab
-                if (document.activeElement === lastElement) {
-                    event.preventDefault();
-                    firstElement?.focus();
-                }
+            const first = focusables[0];
+            const last = focusables[focusables.length - 1];
+            const active = document.activeElement;
+            // If focus has escaped the dialog (e.g., user clicked outside
+            // and Tabbed), pull it back in.
+            if (!active || !dialogRef.current.contains(active)) {
+                event.preventDefault();
+                (event.shiftKey ? last : first).focus();
+                return;
+            }
+            if (event.shiftKey && active === first) {
+                event.preventDefault();
+                last.focus();
+            }
+            else if (!event.shiftKey && active === last) {
+                event.preventDefault();
+                first.focus();
             }
         };
-        document.addEventListener('keydown', handleTabKey);
-        return () => document.removeEventListener('keydown', handleTabKey);
+        document.addEventListener('keydown', handler);
+        return () => document.removeEventListener('keydown', handler);
     }, [open, trapFocus]);
-    // Prevent body scroll when dialog is open
-    React.useEffect(() => {
-        if (open) {
-            document.body.style.overflow = 'hidden';
-        }
-        else {
-            document.body.style.overflow = '';
-        }
-        return () => {
-            document.body.style.overflow = '';
-        };
-    }, [open]);
-    // Handle backdrop click
+    // Backdrop click closes only when the click originated on the
+    // backdrop itself, not on a child element that bubbled up.
     const handleBackdropClick = React.useCallback((event) => {
         if (closeOnBackdropClick && event.target === event.currentTarget) {
             onClose?.();
@@ -1133,7 +1581,7 @@ const Dialog = React.forwardRef(({ open = false, onClose, closeOnBackdropClick =
     if (!open)
         return null;
     const backdropClassNames = [styles$5.backdrop, backdropClassName].filter(Boolean).join(' ');
-    return (jsxRuntime.jsx("div", { className: backdropClassNames, onClick: handleBackdropClick, role: "presentation", "aria-modal": "true", children: jsxRuntime.jsx("div", { className: styles$5.dialogContainer, ref: dialogRef, role: "dialog", "aria-modal": "true", children: jsxRuntime.jsx(Window, { ...windowProps, ref: ref, active: true, onClose: onClose, children: children }) }) }));
+    return (jsxRuntime.jsx("div", { className: backdropClassNames, onClick: handleBackdropClick, children: jsxRuntime.jsx("div", { className: styles$5.dialogContainer, ref: dialogRef, role: role, "aria-modal": "true", "aria-label": ariaLabelledBy ? undefined : resolvedAriaLabel, "aria-labelledby": ariaLabelledBy, "aria-describedby": ariaDescribedBy, children: jsxRuntime.jsx(Window, { ...windowProps, ref: ref, active: true, onClose: onClose, children: children }) }) }));
 });
 Dialog.displayName = 'Dialog';
 
@@ -1334,9 +1782,13 @@ const MenuBar = React.forwardRef(({ menus, openMenuIndex, onMenuOpen, onMenuClos
                     ]
                         .filter(Boolean)
                         .join(' ');
-                    // For link-type menus, render as anchor if href is provided
+                    // For link-type menus, render as anchor if href is provided.
+                    // sanitizeUrl strips javascript:/data:/vbscript: schemes before the
+                    // href reaches the DOM, preventing stored-XSS when consumers wire
+                    // menus from CMS or user-supplied data.
                     if (menu.type === 'link' && menu.href) {
-                        return (jsxRuntime.jsx("div", { className: styles$4.menuContainer, children: jsxRuntime.jsx("a", { href: menu.href, className: menuButtonClassNames, onClick: (e) => {
+                        const safeHref = sanitizeUrl(menu.href);
+                        return (jsxRuntime.jsx("div", { className: styles$4.menuContainer, children: jsxRuntime.jsx("a", { href: safeHref, className: menuButtonClassNames, onClick: (e) => {
                                     if (menu.onClick) {
                                         e.preventDefault();
                                         menu.onClick();
@@ -1393,6 +1845,18 @@ var styles$3 = {"menuItem":"MenuItem-module_menuItem","menuItem--disabled":"Menu
 const MenuItem = React.forwardRef(({ label, shortcut, disabled = false, selected = false, separator = false, checked = false, icon, onClick, onFocus, onBlur, className = '', hasSubmenu = false, items, }, ref) => {
     const [isSubmenuOpen, setIsSubmenuOpen] = React.useState(false);
     const effectiveHasSubmenu = hasSubmenu || !!items;
+    // Internal refs to the trigger button and submenu container, used by the
+    // keyboard handler to move focus into / out of the submenu. The trigger
+    // ref is fanned out so the consumer's forwardRef still receives the node.
+    const buttonRef = React.useRef(null);
+    const submenuRef = React.useRef(null);
+    const setButtonRef = React.useCallback((node) => {
+        buttonRef.current = node;
+        if (typeof ref === 'function')
+            ref(node);
+        else if (ref)
+            ref.current = node;
+    }, [ref]);
     // Class names
     const menuItemClassNames = [
         styles$3.menuItem,
@@ -1411,7 +1875,28 @@ const MenuItem = React.forwardRef(({ label, shortcut, disabled = false, selected
         }
         onClick?.(event);
     };
-    return (jsxRuntime.jsxs("div", { className: styles$3.menuItemContainer, onMouseEnter: () => setIsSubmenuOpen(true), onMouseLeave: () => setIsSubmenuOpen(false), style: { position: 'relative', width: '100%' }, children: [jsxRuntime.jsxs("button", { ref: ref, type: "button", className: menuItemClassNames, onClick: handleClick, onFocus: onFocus, onBlur: onBlur, disabled: disabled, role: "menuitem", "aria-disabled": disabled, "aria-checked": checked ? 'true' : undefined, children: [jsxRuntime.jsx("span", { className: styles$3.checkmark, children: checked && '✓' }), icon && jsxRuntime.jsx("span", { className: styles$3.icon, children: icon }), jsxRuntime.jsx("span", { className: styles$3.label, children: label }), shortcut && jsxRuntime.jsx("span", { className: styles$3.shortcut, children: shortcut }), effectiveHasSubmenu && jsxRuntime.jsx("span", { className: styles$3.submenuArrow, children: "\u25B6" })] }), items && isSubmenuOpen && (jsxRuntime.jsx("div", { className: styles$3.submenu, role: "menu", children: items })), separator && jsxRuntime.jsx("div", { className: styles$3.separatorLine, role: "separator" })] }));
+    // WAI-ARIA menu pattern: ArrowRight opens the submenu and moves focus
+    // to its first item; ArrowLeft closes the submenu and returns focus
+    // to the parent. Hover behavior (mouse enter/leave) is unchanged.
+    const handleKeyDown = (event) => {
+        if (!effectiveHasSubmenu || disabled)
+            return;
+        if (event.key === 'ArrowRight') {
+            event.preventDefault();
+            setIsSubmenuOpen(true);
+            // Defer focus until after the submenu renders.
+            queueMicrotask(() => {
+                const firstItem = submenuRef.current?.querySelector('[role="menuitem"]');
+                firstItem?.focus();
+            });
+        }
+        else if (event.key === 'ArrowLeft' && isSubmenuOpen) {
+            event.preventDefault();
+            setIsSubmenuOpen(false);
+            buttonRef.current?.focus();
+        }
+    };
+    return (jsxRuntime.jsxs("div", { className: styles$3.menuItemContainer, onMouseEnter: () => setIsSubmenuOpen(true), onMouseLeave: () => setIsSubmenuOpen(false), style: { position: 'relative', width: '100%' }, children: [jsxRuntime.jsxs("button", { ref: setButtonRef, type: "button", className: menuItemClassNames, onClick: handleClick, onKeyDown: handleKeyDown, onFocus: onFocus, onBlur: onBlur, disabled: disabled, role: "menuitem", "aria-disabled": disabled, "aria-checked": checked ? 'true' : undefined, "aria-haspopup": effectiveHasSubmenu ? 'menu' : undefined, "aria-expanded": effectiveHasSubmenu ? isSubmenuOpen : undefined, children: [jsxRuntime.jsx("span", { className: styles$3.checkmark, children: checked && '✓' }), icon && jsxRuntime.jsx("span", { className: styles$3.icon, children: icon }), jsxRuntime.jsx("span", { className: styles$3.label, children: label }), shortcut && jsxRuntime.jsx("span", { className: styles$3.shortcut, children: shortcut }), effectiveHasSubmenu && jsxRuntime.jsx("span", { className: styles$3.submenuArrow, children: "\u25B6" })] }), items && isSubmenuOpen && (jsxRuntime.jsx("div", { ref: submenuRef, className: styles$3.submenu, role: "menu", children: items })), separator && jsxRuntime.jsx("div", { className: styles$3.separatorLine, role: "separator" })] }));
 });
 MenuItem.displayName = 'MenuItem';
 
@@ -1473,8 +1958,6 @@ const MenuDropdown = ({ label, items, disabled = false, className = '', dropdown
 
 var styles$2 = {"scrollbar":"Scrollbar-module_scrollbar","scrollbar--vertical":"Scrollbar-module_scrollbar--vertical","scrollbar--horizontal":"Scrollbar-module_scrollbar--horizontal","scrollbar--disabled":"Scrollbar-module_scrollbar--disabled","arrow":"Scrollbar-module_arrow","arrowIcon":"Scrollbar-module_arrowIcon","arrow--start":"Scrollbar-module_arrow--start","arrow--end":"Scrollbar-module_arrow--end","track":"Scrollbar-module_track","thumb":"Scrollbar-module_thumb"};
 
-// Scrollbar component - Mac OS 9 style
-// Classic scrollbar with arrows and draggable thumb
 /**
  * Mac OS 9 style Scrollbar component
  *
@@ -1491,12 +1974,21 @@ var styles$2 = {"scrollbar":"Scrollbar-module_scrollbar","scrollbar--vertical":"
  * />
  * ```
  */
-const Scrollbar = React.forwardRef(({ orientation = 'vertical', value = 0, viewportRatio = 0.2, onChange, className = '', disabled = false, }, ref) => {
+const Scrollbar = React.forwardRef(({ orientation = 'vertical', value = 0, viewportRatio = 0.2, onChange, className = '', disabled = false, ariaLabel, controls, step = 0.1, }, ref) => {
     const trackRef = React.useRef(null);
     const [isDragging, setIsDragging] = React.useState(false);
     const [dragStartPos, setDragStartPos] = React.useState(0);
     const [dragStartValue, setDragStartValue] = React.useState(0);
     const isVertical = orientation === 'vertical';
+    // Helper used by both arrow buttons and keyboard handler to clamp
+    // the next value into the valid 0-1 range before notifying.
+    const commitValue = React.useCallback((next) => {
+        if (disabled || !onChange)
+            return;
+        const clamped = Math.max(0, Math.min(1, next));
+        if (clamped !== value)
+            onChange(clamped);
+    }, [disabled, onChange, value]);
     // Calculate thumb size based on viewport ratio
     const thumbSize = Math.max(viewportRatio * 100, 10); // Minimum 10% size
     // Calculate thumb position
@@ -1512,18 +2004,44 @@ const Scrollbar = React.forwardRef(({ orientation = 'vertical', value = 0, viewp
         .filter(Boolean)
         .join(' ');
     // Handle arrow clicks
-    const handleDecrement = React.useCallback(() => {
-        if (disabled || !onChange)
+    const handleDecrement = React.useCallback(() => commitValue(value - step), [commitValue, step, value]);
+    const handleIncrement = React.useCallback(() => commitValue(value + step), [commitValue, step, value]);
+    // WAI-ARIA scrollbar keyboard interaction.
+    // Arrow keys step by `step`, PageUp/PageDown step by `viewportRatio`,
+    // Home/End jump to the extremes. The handler is attached to the
+    // focusable track so it only fires when the scrollbar itself has focus.
+    const handleKeyDown = React.useCallback((event) => {
+        if (disabled)
             return;
-        const newValue = Math.max(0, value - 0.1);
-        onChange(newValue);
-    }, [disabled, onChange, value]);
-    const handleIncrement = React.useCallback(() => {
-        if (disabled || !onChange)
-            return;
-        const newValue = Math.min(1, value + 0.1);
-        onChange(newValue);
-    }, [disabled, onChange, value]);
+        const decKey = isVertical ? 'ArrowUp' : 'ArrowLeft';
+        const incKey = isVertical ? 'ArrowDown' : 'ArrowRight';
+        switch (event.key) {
+            case decKey:
+                event.preventDefault();
+                commitValue(value - step);
+                break;
+            case incKey:
+                event.preventDefault();
+                commitValue(value + step);
+                break;
+            case 'PageUp':
+                event.preventDefault();
+                commitValue(value - viewportRatio);
+                break;
+            case 'PageDown':
+                event.preventDefault();
+                commitValue(value + viewportRatio);
+                break;
+            case 'Home':
+                event.preventDefault();
+                commitValue(0);
+                break;
+            case 'End':
+                event.preventDefault();
+                commitValue(1);
+                break;
+        }
+    }, [commitValue, disabled, isVertical, step, value, viewportRatio]);
     // Handle track clicks
     const handleTrackClick = React.useCallback((event) => {
         if (disabled || !onChange || !trackRef.current)
@@ -1538,9 +2056,13 @@ const Scrollbar = React.forwardRef(({ orientation = 'vertical', value = 0, viewp
         const newValue = Math.max(0, Math.min(1, clickRatio));
         onChange(newValue);
     }, [disabled, onChange, isVertical]);
-    // Handle thumb drag start
-    const handleThumbMouseDown = React.useCallback((event) => {
+    // Pointer-down on the thumb starts a drag. Pointer Events instead
+    // of mouse events give us mouse/touch/pen support — previously the
+    // thumb was un-draggable on tablets and phones (issue #11).
+    const handleThumbPointerDown = React.useCallback((event) => {
         if (disabled)
+            return;
+        if (event.button !== 0 || !event.isPrimary)
             return;
         event.preventDefault();
         event.stopPropagation();
@@ -1548,11 +2070,14 @@ const Scrollbar = React.forwardRef(({ orientation = 'vertical', value = 0, viewp
         setDragStartPos(isVertical ? event.clientY : event.clientX);
         setDragStartValue(value);
     }, [disabled, isVertical, value]);
-    // Handle drag move
+    // Handle drag move. Pointer events for touch/pen uniformity;
+    // pointercancel covers system interruptions on mobile.
     React.useEffect(() => {
         if (!isDragging || !onChange || !trackRef.current)
             return;
-        const handleMouseMove = (event) => {
+        const handlePointerMove = (event) => {
+            if (!event.isPrimary)
+                return;
             const currentPos = isVertical ? event.clientY : event.clientX;
             const delta = currentPos - dragStartPos;
             const rect = trackRef.current.getBoundingClientRect();
@@ -1561,27 +2086,28 @@ const Scrollbar = React.forwardRef(({ orientation = 'vertical', value = 0, viewp
             const newValue = Math.max(0, Math.min(1, dragStartValue + deltaRatio));
             onChange(newValue);
         };
-        const handleMouseUp = () => {
+        const handlePointerEnd = () => {
             setIsDragging(false);
         };
-        document.addEventListener('mousemove', handleMouseMove);
-        document.addEventListener('mouseup', handleMouseUp);
+        document.addEventListener('pointermove', handlePointerMove);
+        document.addEventListener('pointerup', handlePointerEnd);
+        document.addEventListener('pointercancel', handlePointerEnd);
         return () => {
-            document.removeEventListener('mousemove', handleMouseMove);
-            document.removeEventListener('mouseup', handleMouseUp);
+            document.removeEventListener('pointermove', handlePointerMove);
+            document.removeEventListener('pointerup', handlePointerEnd);
+            document.removeEventListener('pointercancel', handlePointerEnd);
         };
     }, [isDragging, dragStartPos, dragStartValue, onChange, isVertical]);
-    return (jsxRuntime.jsxs("div", { ref: ref, className: classNames, children: [jsxRuntime.jsx("button", { type: "button", className: `${styles$2.arrow} ${styles$2['arrow--start']}`, onClick: handleDecrement, disabled: disabled, "aria-label": isVertical ? 'Scroll up' : 'Scroll left', children: jsxRuntime.jsx("div", { className: styles$2.arrowIcon }) }), jsxRuntime.jsx("div", { ref: trackRef, className: styles$2.track, onClick: handleTrackClick, role: "scrollbar", "aria-valuenow": Math.round(value * 100), "aria-valuemin": 0, "aria-valuemax": 100, "aria-orientation": orientation, children: jsxRuntime.jsx("div", { className: styles$2.thumb, style: {
+    return (jsxRuntime.jsxs("div", { ref: ref, className: classNames, children: [jsxRuntime.jsx("button", { type: "button", className: `${styles$2.arrow} ${styles$2['arrow--start']}`, onClick: handleDecrement, disabled: disabled, "aria-label": isVertical ? 'Scroll up' : 'Scroll left', children: jsxRuntime.jsx("div", { className: styles$2.arrowIcon }) }), jsxRuntime.jsx("div", { ref: trackRef, className: styles$2.track, onClick: handleTrackClick, onKeyDown: handleKeyDown, role: "scrollbar", tabIndex: disabled ? -1 : 0, "aria-valuenow": Math.round(value * 100), "aria-valuemin": 0, "aria-valuemax": 100, "aria-orientation": orientation, "aria-label": ariaLabel, "aria-controls": controls, "aria-disabled": disabled || undefined, children: jsxRuntime.jsx("div", { className: styles$2.thumb, style: {
                         [isVertical ? 'height' : 'width']: `${thumbSize}%`,
                         [isVertical ? 'top' : 'left']: `${thumbPos}%`,
-                    }, onMouseDown: handleThumbMouseDown }) }), jsxRuntime.jsx("button", { type: "button", className: `${styles$2.arrow} ${styles$2['arrow--end']}`, onClick: handleIncrement, disabled: disabled, "aria-label": isVertical ? 'Scroll down' : 'Scroll right', children: jsxRuntime.jsx("div", { className: styles$2.arrowIcon }) })] }));
+                        touchAction: 'none',
+                    }, onPointerDown: handleThumbPointerDown }) }), jsxRuntime.jsx("button", { type: "button", className: `${styles$2.arrow} ${styles$2['arrow--end']}`, onClick: handleIncrement, disabled: disabled, "aria-label": isVertical ? 'Scroll down' : 'Scroll right', children: jsxRuntime.jsx("div", { className: styles$2.arrowIcon }) })] }));
 });
 Scrollbar.displayName = 'Scrollbar';
 
 var styles$1 = {"listView":"ListView-module_listView","header":"ListView-module_header","headerCell":"ListView-module_headerCell","sortable":"ListView-module_sortable","sortIndicator":"ListView-module_sortIndicator","body":"ListView-module_body","row":"ListView-module_row","selected":"ListView-module_selected","cell":"ListView-module_cell","icon":"ListView-module_icon"};
 
-// ListView component - Mac OS 9 style multi-column list
-// List view with sortable columns and row selection
 /**
  * Mac OS 9 style ListView component
  *
@@ -1775,8 +2301,6 @@ ListView.displayName = 'ListView';
 
 var styles = {"folderListContent":"FolderList-module_folderListContent","listView":"FolderList-module_listView"};
 
-// FolderList component - Mac OS 9 style folder/file list window
-// Window component with integrated ListView for file browsing
 /**
  * Mac OS 9 style FolderList component
  *
@@ -1828,6 +2352,12 @@ FolderList.displayName = 'FolderList';
 // Mac OS 9 Design Tokens
 // Extracted from Figma file: vy2T5MCXFz7QWf4Ba86eqN
 // Reference: docs/figma-map.md
+//
+// NOTE: These TypeScript tokens MUST stay in sync with the CSS custom
+// properties declared in src/styles/tokens.css. Components consume the CSS
+// variables at runtime; this TS export is the public API for consumers
+// who want to read the same values from JavaScript. Keep both files
+// updated together when changing any token value.
 /**
  * Color tokens based on Mac OS 9 grayscale palette
  * Extracted from Figma styles and component analysis
@@ -1838,8 +2368,12 @@ const colors = {
     gray200: '#EEEEEE', // 19:2507 - Base UI background
     gray300: '#DDDDDD', // 18:60 - Inferred mid-tone
     gray400: '#CCCCCC', // 18:1970 - Inferred mid-tone
-    gray500: '#999999', // 20:7306 - Inferred mid-tone
+    gray450: '#CBCBCB', // Title bar fill (matches --color-gray-450)
+    gray475: '#C5C5C5', // Title bar pattern shade (matches --color-gray-475)
+    gray500: '#BBBBBB', // 20:7306 - Inferred mid-tone (matches --color-gray-500)
+    gray550: '#999999', // Pinstripe rule (matches --color-gray-550)
     gray600: '#666666', // 18:52 - Inferred dark tone
+    gray650: '#555555', // Inset border (matches --color-gray-650)
     gray700: '#4D4D4D', // 18:46 - Inferred dark tone
     gray800: '#333333', // 45:184845 - Inferred very dark
     gray900: '#262626', // 18:48 - Black (strokes, borders, text)
@@ -1847,6 +2381,7 @@ const colors = {
     lavender: '#CCCCFF', // 60:134029 - Cover background
     azul: '#0066CC', // 49:36229 - Accent (inferred)
     linkRed: '#CC0000', // 102:398, 102:3935 - Link color (inferred)
+    blueHighlight: '#0000BB', // Classic menu / selection highlight
     // Semantic mappings
     background: '#EEEEEE', // Gray 200
     foreground: '#262626', // Gray 900
@@ -1855,6 +2390,10 @@ const colors = {
     textInverse: '#FFFFFF', // Gray 100
     surface: '#EEEEEE', // Gray 200
     surfaceInset: '#FFFFFF', // Gray 100 (for inset areas)
+    surfaceRaised: '#DDDDDD', // Gray 300
+    borderInset: '#555555', // Gray 650
+    highlight: '#0000BB', // Selection / menu highlight
+    highlightText: '#FFFFFF', // Text on highlight
     // Legacy names for compatibility
     black: '#262626',
     white: '#FFFFFF',
@@ -1876,36 +2415,47 @@ const colors = {
  */
 const typography = {
     fontFamily: {
-        // Charcoal - Primary system UI font used throughout Mac OS 9
-        // Fallback chain: Try Charcoal variants, then Chicago, then modern system fonts
-        system: 'Charcoal, "Charcoal CY", Chicago, "Chicago Classic", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif',
-        // Geneva - Used for dialog text and body content in Mac OS 9
-        // More readable for longer text than Charcoal
-        body: 'Geneva, "Geneva CY", "Lucida Grande", "Lucida Sans Unicode", sans-serif',
-        // Apple Garamond Light - Used for headlines in Figma
-        display: '"Apple Garamond Light", "Apple Garamond", Garamond, Georgia, serif',
-        // Chicago - Classic Mac OS system font (menu bar, classic UI)
-        chicago: 'Chicago, "Chicago Classic", "Charcoal CY", Charcoal, monospace',
-        // Monaco - Mac OS 9 monospace font
-        mono: 'Monaco, "Monaco CY", "SF Mono", "Courier New", Courier, monospace',
+        // Primary system UI font. Mirrors --font-system: the bundled Pixel
+        // bitmap face, falling back through system UI sans stacks.
+        system: "'Pixel', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif",
+        // Body text. Mirrors --font-body. IBM Plex Sans is only present when
+        // the consumer opts in to '@liiift-studio/mac-os9-ui/webfonts'.
+        body: "'IBM Plex Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif",
+        // Display / headline face. Mirrors --font-display.
+        display: "'Pixel', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif",
+        // Editorial serif. Mirrors --font-title. Requires /webfonts for EB Garamond.
+        title: "'EB Garamond', Garamond, Georgia, 'Times New Roman', serif",
+        // Monospace. Mirrors --font-mono. Requires /webfonts for IBM Plex Mono.
+        mono: "'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, 'Courier New', monospace",
+        // The bundled pixel faces, addressable directly. Mirrors --font-pixel
+        // and --font-pixel-small.
+        pixel: "'Pixel', ui-sans-serif, system-ui, sans-serif",
+        pixelSmall: "'PixelSmall', 'Pixel', ui-sans-serif, system-ui, sans-serif",
     },
+    // Values are rem so they scale with the responsive <html> font-size set by
+    // base.css. The px comments are the rendered size at a 16px root.
     fontSize: {
-        xs: '9px', // Smallest UI text (9pt Chicago/Charcoal)
-        sm: '10px', // Small labels (10pt)
-        md: '12px', // Standard UI text - Mac OS 9 default (12pt)
-        lg: '13px', // Slightly larger UI text
-        xl: '14px', // Large UI text
-        '2xl': '16px', // Headings
-        '3xl': '18px', // Large headings
-        '4xl': '20px', // Major headings
-        '5xl': '24px', // Display text
+        xs: '0.5625rem', // 9px  - smallest UI text
+        sm: '0.625rem', // 10px - small labels
+        md: '0.75rem', // 12px - standard UI text (Mac OS 9 default)
+        lg: '0.8125rem', // 13px - slightly larger UI text
+        xl: '0.875rem', // 14px - large UI text
+        '2xl': '1rem', // 16px - headings
+        '3xl': '1.125rem', // 18px - large headings
+        '4xl': '1.25rem', // 20px - major headings
+        '5xl': '1.5rem', // 24px - display text
     },
+    // The bundled Pixel family ships exactly two real weights, 400 and 700, in
+    // both roman and italic, so nothing here is ever synthesised by the browser.
+    // `normal` is 700 on purpose: Mac OS 9's Charcoal reads as bold, and
+    // matching it is the point of the library. Use `regular` for the 400 face.
     fontWeight: {
-        normal: 700, // Charcoal Bold is the Mac OS 9 default
-        medium: 700, // Medium (same as bold for Charcoal)
-        semibold: 700, // Semibold (same as bold)
-        bold: 700, // Bold weight
-        light: 400, // Light weight (regular Charcoal)
+        regular: 400, // Pixel Regular - the true 400 face
+        light: 400, // Alias of regular; Pixel has no lighter face
+        normal: 700, // Charcoal-like bold - Mac OS 9 UI default
+        medium: 700, // No real 500 face; resolves to bold
+        semibold: 700, // No real 600 face; resolves to bold
+        bold: 700, // Pixel Bold - the true 700 face
     },
     lineHeight: {
         tight: 1.2, // Tight leading (Mac OS 9 style)
@@ -1964,11 +2514,13 @@ const shadows = {
     // Standard raised bevel (default button state)
     bevel: 'inset 2px 2px 0 rgba(255, 255, 255, 0.6), inset -2px -2px 0 rgba(38, 38, 38, 0.4), 2px 2px 0 rgba(38, 38, 38, 1)',
     // Inverted bevel for pressed/inset states
-    inset: 'inset -2px -2px 0 rgba(255, 255, 255, 0.6), inset 2px 2px 0 rgba(38, 38, 38, 0.4), 2px 2px 0 rgba(38, 38, 38, 1)',
+    inset: 'inset -2px -2px 0 rgba(255, 255, 255, 0.6), inset 2px 2px 0 rgba(38, 38, 38, 0.4), inset 0px 0px 0px rgba(38, 38, 38, 1)',
     // Individual layers for custom composition
     dropShadow: '2px 2px 0 rgba(38, 38, 38, 1)',
     innerHighlight: 'inset 2px 2px 0 rgba(255, 255, 255, 0.6)',
     innerShadow: 'inset -2px -2px 0 rgba(38, 38, 38, 0.4)',
+    // Soft drop used by floating surfaces (dropdowns, dialogs). Mirrors --shadow-float.
+    float: '2px 2px 0 rgba(0, 0, 0, 0.5)',
     // Legacy format for compatibility
     raised: {
         highlight: 'inset 2px 2px 0 rgba(255, 255, 255, 0.6)',
@@ -2056,6 +2608,7 @@ exports.MenuBar = MenuBar;
 exports.MenuDropdown = MenuDropdown;
 exports.MenuItem = MenuItem;
 exports.Radio = Radio;
+exports.RadioGroup = RadioGroup;
 exports.Scrollbar = Scrollbar;
 exports.Select = Select;
 exports.TabPanel = TabPanel;
@@ -2072,4 +2625,3 @@ exports.tokens = tokens;
 exports.transitions = transitions;
 exports.typography = typography;
 exports.zIndex = zIndex;
-//# sourceMappingURL=index.cjs.map

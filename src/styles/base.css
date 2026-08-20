@@ -33,8 +33,14 @@
 html {
 	/* Mobile/default: 14px base - optimal for mobile devices */
 	font-size: 14px;
-	-webkit-font-smoothing: antialiased;
-	-moz-osx-font-smoothing: grayscale;
+
+	/* Do NOT set -webkit-font-smoothing: antialiased here. The bundled Pixel
+	 * family is a bitmap-style face whose whole appeal is hard, unblurred
+	 * pixel edges; greyscale antialiasing softens them into mush. Leaving
+	 * font smoothing at the browser default preserves the crisp rendering.
+	 * If you use this library alongside a conventional body typeface and
+	 * want smoothing for that text, scope it to those elements rather than
+	 * applying it globally on <html>. */
 }
 
 /* ========================================

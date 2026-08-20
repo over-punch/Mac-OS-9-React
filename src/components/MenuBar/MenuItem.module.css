@@ -41,7 +41,7 @@
 
 .menuItem:hover:not(.menuItem--disabled) {
 	/* Hover state - blue highlight like Mac OS 9 */
-	background-color: #0000BB;
+	background-color: var(--menu-highlight-bg);
 	color: var(--color-white);
 }
 
@@ -53,7 +53,7 @@
 
 .menuItem--selected {
 	/* Selected/active state */
-	background-color: #0000BB;
+	background-color: var(--menu-highlight-bg);
 	color: var(--color-white);
 }
 
@@ -123,7 +123,7 @@
 	border: var(--border-width-thin) solid var(--color-black);
 
 	/* Drop shadow */
-	box-shadow: 2px 2px 0px rgba(0, 0, 0, 0.5);
+	box-shadow: var(--shadow-float);
 
 	/* Sizing */
 	min-width: 200px;

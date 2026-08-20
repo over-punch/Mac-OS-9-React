@@ -13,7 +13,7 @@
 	border: var(--border-width-thin) solid var(--color-black);
 	
 	/* Authentic Mac OS 9 drop shadow: sharp 2px offset, no blur */
-	filter: drop-shadow(2px 2px 0px rgba(0, 0, 0, 0.5));
+	filter: drop-shadow(var(--shadow-float));
 	
 	/* Layout */
 	position: relative;
@@ -57,7 +57,7 @@
 	align-items: center;
 	
 	/* Styling - authentic Mac OS 9 header color */
-	background-color: #CBCBCB;
+	background-color: var(--window-titlebar-bg);
 	border-bottom: var(--border-width-thin) solid var(--color-black);
 	
 	/* Padding */
@@ -153,6 +153,13 @@
 .titleBar--dragging {
 	/* Title bar while being dragged - show grabbing cursor */
 	cursor: grabbing;
+}
+
+.titleBar--draggable:focus-visible {
+	/* The draggable title bar is focusable so the window can be moved with
+	 * the arrow keys (WCAG 2.1.1). Show where focus landed. */
+	outline: var(--border-width-thin) dotted var(--color-text);
+	outline-offset: -2px;
 }
 
 /* ========================================
@@ -307,7 +314,7 @@
 	
 	/* Authentic inset border */
 	margin: var(--spacing-2);
-	border: var(--border-width-thin) solid #555555;
+	border: var(--border-width-thin) solid var(--color-border-inset);
 }
 
 /* ========================================
@@ -315,7 +322,17 @@
  * ======================================== */
 
 .resizeHandle {
-	/* Resize handle in bottom-right corner */
+	/* Resize handle in bottom-right corner (Mac OS 9 "grow box").
+	 * Rendered as a <button> so it is reachable by keyboard; these
+	 * resets strip the UA button chrome. */
+	appearance: none;
+	-webkit-appearance: none;
+	border: 0;
+	padding: 0;
+	background-color: transparent;
+	font: inherit;
+	color: inherit;
+
 	position: absolute;
 	bottom: 0;
 	right: 0;
@@ -336,11 +353,18 @@
 		transparent 60%
 	);
 	
-	/* Cursor */
+	/* Cursor. nwse-resize is the correct cursor for a bottom-right corner
+	 * handle: Mac OS 9 windows only resize from the grow box. */
 	cursor: nwse-resize;
 	
 	/* Layering */
 	z-index: 5;
+}
+
+.resizeHandle:focus-visible {
+	/* Keyboard focus ring for the grow box */
+	outline: var(--border-width-thin) dotted var(--color-text);
+	outline-offset: 1px;
 }
 
 /* ========================================

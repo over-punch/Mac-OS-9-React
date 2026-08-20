@@ -8,7 +8,7 @@ import postcssUrl from 'postcss-url';
 import peerDepsExternal from 'rollup-plugin-peer-deps-external';
 import dts from 'rollup-plugin-dts';
 import copy from 'rollup-plugin-copy';
-import { readFileSync } from 'fs';
+import { readFileSync, rmSync } from 'fs';
 
 const packageJson = JSON.parse(readFileSync('./package.json', 'utf-8'));
 
@@ -20,13 +20,16 @@ export default [
 			{
 				file: packageJson.module,
 				format: 'esm',
-				sourcemap: true,
+				// Source maps are deliberately off for the published build: they
+				// leak absolute TS source paths and roughly double the tarball
+				// for no consumer benefit, since the sources aren't shipped.
+				sourcemap: false,
 				banner: '"use client";',
 			},
 			{
 				file: packageJson.main,
 				format: 'cjs',
-				sourcemap: true,
+				sourcemap: false,
 				banner: '"use client";',
 				exports: 'named',
 			},
@@ -48,11 +51,19 @@ export default [
 				plugins: [
 					// Process @import statements - MUST be first
 					postcssImport(),
-					// Copy font files referenced in CSS
+					// Rewrite font references to the stable dist/fonts/Pixel/*
+					// paths written by the copy plugin below.
+					//
+					// This used to be `url: 'copy'` with content hashing, which
+					// emitted a SECOND copy of every face under an unguessable
+					// name — so each font shipped twice and the public
+					// `./fonts/*` export subpath pointed at files whose names
+					// nobody could predict.
 					postcssUrl({
-						url: 'copy',
-						assetsPath: 'fonts',
-						useHash: true,
+						url: (asset) => {
+							const match = /fonts\/Pixel\/(.+)$/.exec(asset.url);
+							return match ? `fonts/Pixel/${match[1]}` : asset.url;
+						},
 					}),
 				],
 				modules: {
@@ -65,8 +76,8 @@ export default [
 				to: 'dist/index.css',
 				// Minimize CSS in production
 				minimize: false,
-				// Enable source maps
-				sourceMap: true,
+				// Source maps off — see the note on the JS outputs above
+				sourceMap: false,
 				// Auto-prefix CSS
 				autoModules: true,
 				// Process .css and .module.css files
@@ -88,62 +99,56 @@ export default [
 				],
 			}),
 
-			// Copy font files to dist
+			// Copy the web font files to dist so the `./fonts/*` export subpath
+			// resolves. The previous targets pointed at src/fonts/pixelOperator,
+			// a directory that does not exist — the glob silently matched
+			// nothing and no fonts were copied at all.
+			// With `flatten: false` the plugin preserves each match's path minus
+			// its first segment ('src/'), so 'src/fonts/Pixel/Normal/Pixel.woff'
+			// lands at '<dest>/fonts/Pixel/Normal/Pixel.woff'. dest is therefore
+			// 'dist', not 'dist/fonts'.
 			copy({
 				targets: [
 					{
-						src: 'src/fonts/pixelOperator/*.ttf',
-						dest: 'dist/fonts/pixelOperator',
+						src: 'src/fonts/Pixel/**/*.{woff,woff2}',
+						dest: 'dist',
 					},
 					{
-						src: 'src/fonts/pixelOperator/LICENSE.txt',
-						dest: 'dist/fonts/pixelOperator',
+						src: 'src/fonts/README.md',
+						dest: 'dist',
 					},
 				],
+				flatten: false,
 			}),
 
-			// Custom plugin to fix CSS paths
-			{
-				name: 'fix-css-font-paths',
-				generateBundle(options, bundle) {
-					// Find the CSS asset
-					const cssFileName = 'index.css';
-					// Note: rollup-plugin-postcss emits assets with keys relative to output dir if extract is true ??
-					// Actually, let's look for any .css asset in the bundle
-					for (const fileName in bundle) {
-						if (fileName.endsWith('.css')) {
-							const asset = bundle[fileName];
-							if (asset.type === 'asset' && typeof asset.source === 'string') {
-								// Correct the font paths
-								// Replace "dist/fonts/" with "fonts/"
-								asset.source = asset.source.replace(/url\s*\(\s*["']?(?:\.?\/?dist\/)?fonts\//g, 'url("fonts/');
-								console.log(`Fixed font paths in ${fileName}`);
-							}
-						}
-					}
-				},
-			},
 		],
+
+		// `react/jsx-runtime` is a subpath of the `react` package, so the
+		// existing `react` peerDependency already covers it — it does not need
+		// its own peerDependencies entry.
 		external: ['react', 'react-dom', 'react/jsx-runtime'],
 	},
 
-	// Build base.css separately (optional global styles)
-	{
-		input: 'src/styles/base.css',
+	// Standalone CSS entry points, each exposed through a package.json export
+	// subpath so consumers can take exactly the layer they want:
+	//
+	//   ./base      global html/body element styles (opt in)
+	//   ./tokens    design tokens only — no @font-face, no font downloads
+	//   ./webfonts  the Google Fonts request (opt in; not bundled by default)
+	...['base', 'tokens', 'webfonts'].map((name) => ({
+		input: `src/styles/${name}.css`,
 		output: {
-			file: 'dist/base.css',
+			file: `dist/${name}.css`,
 		},
 		plugins: [
 			postcss({
-				plugins: [
-					postcssImport(),
-				],
+				plugins: [postcssImport()],
 				extract: true,
 				minimize: false,
-				sourceMap: true,
+				sourceMap: false,
 			}),
 		],
-	},
+	})),
 
 	// Bundle TypeScript declaration files.
 	//
@@ -165,7 +170,23 @@ export default [
 				format: 'cjs',
 			},
 		],
-		plugins: [dts()],
+		plugins: [
+			dts(),
+			// The per-file declaration tree under dist/types exists only as the
+			// input to this bundling step. Shipping it as well as the bundled
+			// dist/index.d.ts duplicated every type and roughly tripled the
+			// declaration payload, so remove it once the bundle is written.
+			{
+				name: 'remove-intermediate-declarations',
+				writeBundle: {
+					sequential: true,
+					order: 'post',
+					handler() {
+						rmSync('dist/types', { recursive: true, force: true });
+					},
+				},
+			},
+		],
 		external: [/\.css$/],
 	},
 ];
