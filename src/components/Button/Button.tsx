@@ -13,6 +13,7 @@ import React, {
 } from 'react';
 import { sanitizeUrl } from '../../utils/url';
 import { mergeClasses } from '../../utils/classNames';
+import { type Size, type Variant } from '../../types';
 import styles from './Button.module.css';
 
 /**
@@ -50,13 +51,13 @@ interface BaseButtonProps {
 	 * Button variant
 	 * @default 'default'
 	 */
-	variant?: 'default' | 'primary' | 'danger';
+	variant?: Variant;
 
 	/**
 	 * Button size
 	 * @default 'md'
 	 */
-	size?: 'sm' | 'md' | 'lg';
+	size?: Size;
 
 	/**
 	 * Whether the button is disabled

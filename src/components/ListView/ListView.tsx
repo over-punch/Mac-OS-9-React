@@ -104,8 +104,24 @@ export interface RowRenderState {
 }
 
 /**
- * Row render prop default props
- * Spread these on your custom element for accessibility and behavior
+ * Props the default row implementation would have applied.
+ *
+ * **Spread these; do not pick from them.** This type describes what the
+ * component needs on a row for it to behave correctly — the listbox option
+ * role, the selection state, the roving tab stop, the key and pointer
+ * handlers — and members will be *added* to it as the row gains behaviour.
+ * Spreading keeps you current; destructuring individual members means a
+ * minor release can quietly take a behaviour away from your custom row.
+ *
+ * The one member you must read rather than spread is `key`, because React
+ * takes it from the element, not from its props.
+ *
+ * ```tsx
+ * renderRow={(item, state, defaultProps) => {
+ *   const { key, ...rowProps } = defaultProps;
+ *   return <div key={key} {...rowProps}>…</div>;
+ * }}
+ * ```
  */
 export interface RowDefaultProps {
 	key: string;
@@ -151,7 +167,12 @@ export interface HeaderCellRenderState {
 }
 
 /**
- * Header cell render prop default props
+ * Props the default header cell would have applied.
+ *
+ * Spread these rather than picking from them — see {@link RowDefaultProps}
+ * for why. Sortable columns carry a button role, a tab stop, the sort state
+ * in their accessible name, and an Enter/Space handler; dropping any of that
+ * makes the column pointer-only again.
  */
 export interface HeaderCellDefaultProps {
 	key: string;

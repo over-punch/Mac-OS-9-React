@@ -16,6 +16,7 @@ import React, { forwardRef, ButtonHTMLAttributes } from 'react';
 import { Button } from '../Button/Button';
 import { mergeClasses } from '../../utils/classNames';
 import { warnMissingProp } from '../../utils/deprecation';
+import { type Size, type Variant } from '../../types';
 import styles from './IconButton.module.css';
 
 /**
@@ -60,13 +61,13 @@ export interface IconButtonProps
 	 * Button variant
 	 * @default 'default'
 	 */
-	variant?: 'default' | 'primary' | 'danger';
+	variant?: Variant;
 
 	/**
 	 * Button size
 	 * @default 'md'
 	 */
-	size?: 'sm' | 'md' | 'lg';
+	size?: Size;
 
 	/**
 	 * Whether button is disabled

@@ -20,6 +20,7 @@ import React, { forwardRef, useCallback, useEffect, useId, useMemo, useRef, useS
 import { useOutsideClick } from '../../hooks/useOutsideClick';
 import { useMenuPosition } from '../../hooks/useMenuPosition';
 import { mergeClasses } from '../../utils/classNames';
+import { type Size } from '../../types';
 import styles from './Select.module.css';
 
 /** A single choice in the list. */
@@ -71,7 +72,7 @@ export interface SelectProps<TValue extends string | number = string> {
 	 * Size of the select
 	 * @default 'md'
 	 */
-	size?: 'sm' | 'md' | 'lg';
+	size?: Size;
 
 	/**
 	 * Whether the select takes full width of its container

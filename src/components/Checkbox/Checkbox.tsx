@@ -5,6 +5,7 @@ import React, { forwardRef, InputHTMLAttributes } from 'react';
 import { mergeClasses } from '../../utils/classNames';
 import { resolveAria } from '../../utils/aria';
 import { FieldMessage, describedBy, type ErrorLiveRegion } from '../FieldMessage';
+import { type Size } from '../../types';
 import styles from './Checkbox.module.css';
 
 /**
@@ -67,7 +68,7 @@ export interface CheckboxProps extends Omit<
 	 * Size of the checkbox
 	 * @default 'md'
 	 */
-	size?: 'sm' | 'md' | 'lg';
+	size?: Size;
 
 	/**
 	 * Error state for form validation

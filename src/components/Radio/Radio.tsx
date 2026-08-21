@@ -14,6 +14,7 @@ import { resolveAria } from '../../utils/aria';
 import { warnDeprecatedProp } from '../../utils/deprecation';
 import { FieldMessage, describedBy, type ErrorLiveRegion } from '../FieldMessage';
 import { mergeClasses } from '../../utils/classNames';
+import { type Size } from '../../types';
 import styles from './Radio.module.css';
 
 /**
@@ -81,7 +82,7 @@ export interface RadioProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 
 	 * Size of the radio
 	 * @default 'md'
 	 */
-	size?: 'sm' | 'md' | 'lg';
+	size?: Size;
 
 	/**
 	 * Error state for form validation

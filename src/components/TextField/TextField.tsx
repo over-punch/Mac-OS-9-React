@@ -5,6 +5,7 @@ import React, { forwardRef, InputHTMLAttributes, TextareaHTMLAttributes } from '
 import { mergeClasses } from '../../utils/classNames';
 import { resolveAria } from '../../utils/aria';
 import { FieldMessage, describedBy, type ErrorLiveRegion } from '../FieldMessage';
+import { type Size } from '../../types';
 import styles from './TextField.module.css';
 
 /**
@@ -45,7 +46,7 @@ export interface TextFieldProps extends Omit<InputHTMLAttributes<HTMLInputElemen
 	 * Size of the text field
 	 * @default 'md'
 	 */
-	size?: 'sm' | 'md' | 'lg';
+	size?: Size;
 
 	/**
 	 * Whether the text field takes full width of its container

@@ -14,6 +14,7 @@ import React, {
 import { mergeClasses } from '../../utils/classNames';
 import { resolveAria } from '../../utils/aria';
 import { warnDeprecatedProp } from '../../utils/deprecation';
+import { type Size } from '../../types';
 import styles from './Tabs.module.css';
 
 export interface TabPanelProps<TValue extends string = string> {
@@ -112,7 +113,7 @@ export interface TabsProps<TValue extends string = string> {
 	 * Size of the tabs
 	 * @default 'md'
 	 */
-	size?: 'sm' | 'md' | 'lg';
+	size?: Size;
 
 	/**
 	 * Whether tabs take full width

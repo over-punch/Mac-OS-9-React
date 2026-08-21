@@ -394,3 +394,69 @@ describe('ListView', () => {
 		expect(await checkA11y(container)).toHaveNoViolations();
 	});
 });
+
+describe('render-prop contract', () => {
+	// RowDefaultProps and HeaderCellDefaultProps are public because the render
+	// props hand them out, which makes them a refactor footgun: they describe
+	// what the component needs for a row to behave. These lock the behaviour a
+	// consumer gets from spreading them, so a change that would silently take
+	// something away from custom rows fails here first.
+
+	it('spreading rowDefaultProps preserves the listbox behaviour', () => {
+		const onSelectionChange = vi.fn();
+		render(
+			<ListView
+				columns={columns}
+				items={items}
+				onSelectionChange={onSelectionChange}
+				renderRow={(item, _state, defaultProps) => {
+					const { key, ...rowProps } = defaultProps;
+					return (
+						<div key={key} {...rowProps}>
+							{String(item.name)}
+						</div>
+					);
+				}}
+			/>
+		);
+
+		const options = screen.getAllByRole('option');
+		expect(options).toHaveLength(4);
+
+		// Selection still works through the spread handlers.
+		fireEvent.click(nth(options, 1));
+		expect(onSelectionChange).toHaveBeenCalledWith(['b']);
+
+		// And so does keyboard navigation.
+		fireEvent.keyDown(nth(options, 1), { key: 'ArrowDown' });
+		expect(onSelectionChange).toHaveBeenLastCalledWith(['c']);
+
+		// Exactly one row remains the tab stop.
+		expect(
+			screen.getAllByRole('option').filter((row) => row.getAttribute('tabindex') === '0')
+		).toHaveLength(1);
+	});
+
+	it('spreading headerCellDefaultProps preserves sorting', () => {
+		const onSort = vi.fn();
+		render(
+			<ListView
+				columns={columns}
+				items={items}
+				onSort={onSort}
+				renderHeaderCell={(column, _state, defaultProps) => {
+					const { key, ...cellProps } = defaultProps;
+					return (
+						<div key={key} {...cellProps}>
+							{column.label}
+						</div>
+					);
+				}}
+			/>
+		);
+
+		const header = screen.getByRole('button', { name: 'Name, sortable' });
+		fireEvent.keyDown(header, { key: 'Enter' });
+		expect(onSort).toHaveBeenCalledWith('name', 'asc');
+	});
+});
