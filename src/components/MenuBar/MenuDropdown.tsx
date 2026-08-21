@@ -24,9 +24,12 @@ export interface MenuDropdownProps {
 	label: React.ReactNode;
 
 	/**
-	 * Menu items (content of the dropdown)
+	 * Dropdown content, as JSX — typically `MenuItem` elements.
+	 *
+	 * Named `content` rather than `items` so that across the MenuBar family
+	 * `items` always means data and `content` always means JSX.
 	 */
-	items: React.ReactNode;
+	content: React.ReactNode;
 
 	/**
 	 * Whether the menu is disabled
@@ -43,9 +46,6 @@ export interface MenuDropdownProps {
 	 * Classes for targeting sub-elements.
 	 */
 	classes?: MenuDropdownClasses;
-
-	/** @deprecated Use `classes.dropdown`. */
-	dropdownClassName?: string;
 
 	/**
 	 * Preferred alignment of the dropdown menu.
@@ -83,7 +83,7 @@ const VIEWPORT_MARGIN = 4;
  * <MenuDropdown
  *   label="Options"
  *   align="right"
- *   items={
+ *   content={
  *     <>
  *       <MenuItem label="Preferences…" onClick={openPrefs} />
  *       <MenuItem label="Sign out" onClick={signOut} />
@@ -96,11 +96,10 @@ export const MenuDropdown = forwardRef<HTMLDivElement, MenuDropdownProps>(
 	(
 		{
 			label,
-			items,
+			content,
 			disabled = false,
 			className = '',
 			classes,
-			dropdownClassName = '',
 			align = 'left',
 			avoidCollisions = true,
 		},
@@ -201,7 +200,7 @@ export const MenuDropdown = forwardRef<HTMLDivElement, MenuDropdownProps>(
 			}
 
 			setCollisionOffset(x === 0 && y === 0 ? null : { x, y });
-		}, [isOpen, avoidCollisions, items]);
+		}, [isOpen, avoidCollisions, content]);
 
 		const handleToggle = () => {
 			if (!disabled) {
@@ -221,7 +220,6 @@ export const MenuDropdown = forwardRef<HTMLDivElement, MenuDropdownProps>(
 		const dropdownClassNames = mergeClasses(
 			styles.dropdown,
 			align === 'right' ? styles['dropdown--right'] : '',
-			dropdownClassName,
 			classes?.dropdown
 		);
 
@@ -256,7 +254,7 @@ export const MenuDropdown = forwardRef<HTMLDivElement, MenuDropdownProps>(
 						}
 						onClick={() => setIsOpen(false)} // Close when an item is clicked
 					>
-						{items}
+						{content}
 					</div>
 				)}
 			</div>

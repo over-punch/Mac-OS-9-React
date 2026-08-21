@@ -3,7 +3,6 @@
 
 import React, { forwardRef, InputHTMLAttributes, TextareaHTMLAttributes } from 'react';
 import { mergeClasses } from '../../utils/classNames';
-import { resolveAria } from '../../utils/aria';
 import { FieldMessage, describedBy, type ErrorLiveRegion } from '../FieldMessage';
 import { type Size } from '../../types';
 import styles from './TextField.module.css';
@@ -94,12 +93,6 @@ export interface TextFieldProps extends Omit<InputHTMLAttributes<HTMLInputElemen
 	 */
 	'aria-describedby'?: string;
 
-	/** @deprecated Use `aria-label`. */
-	ariaLabel?: string;
-
-	/** @deprecated Use `aria-describedby`. */
-	ariaDescribedBy?: string;
-
 	/**
 	 * Additional CSS class names
 	 */
@@ -109,9 +102,6 @@ export interface TextFieldProps extends Omit<InputHTMLAttributes<HTMLInputElemen
 	 * Classes for targeting sub-elements.
 	 */
 	classes?: TextFieldClasses;
-
-	/** @deprecated Use `classes.root`. */
-	wrapperClassName?: string;
 
 	/**
 	 * Render a multi-line field (a `<textarea>`) instead of a single-line
@@ -206,13 +196,10 @@ export const TextField = forwardRef<HTMLInputElement | HTMLTextAreaElement, Text
 			helperText,
 			leftIcon,
 			rightIcon,
-			ariaLabel,
-			ariaDescribedBy,
-			'aria-label': ariaLabelAttr,
-			'aria-describedby': ariaDescribedByAttr,
+			'aria-label': resolvedLabel,
+			'aria-describedby': resolvedDescribedBy,
 			className = '',
 			classes,
-			wrapperClassName = '',
 			type = 'text',
 			id,
 			disabled,
@@ -230,22 +217,6 @@ export const TextField = forwardRef<HTMLInputElement | HTMLTextAreaElement, Text
 		// order changes if `id` ever goes from defined to undefined.
 		const generatedId = React.useId();
 		const inputId = id ?? generatedId;
-
-		// Standard attributes win; the camelCase aliases warn once in development.
-		const resolvedLabel = resolveAria(
-			'TextField',
-			'aria-label',
-			'ariaLabel',
-			ariaLabelAttr,
-			ariaLabel
-		);
-		const resolvedDescribedBy = resolveAria(
-			'TextField',
-			'aria-describedby',
-			'ariaDescribedBy',
-			ariaDescribedByAttr,
-			ariaDescribedBy
-		);
 
 		// Generate helper/error text ID for aria-describedby
 		const helperId = `${inputId}-helper`;
@@ -268,7 +239,6 @@ export const TextField = forwardRef<HTMLInputElement | HTMLTextAreaElement, Text
 			styles[`wrapper--label-${labelPosition}`],
 			fullWidth && styles['wrapper--full-width'],
 			disabled && styles['wrapper--disabled'],
-			wrapperClassName,
 			classes?.root
 		);
 

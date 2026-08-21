@@ -10,8 +10,6 @@ import React, {
 	useRef,
 	useState,
 } from 'react';
-import { resolveAria } from '../../utils/aria';
-import { warnDeprecatedProp } from '../../utils/deprecation';
 import { FieldMessage, describedBy, type ErrorLiveRegion } from '../FieldMessage';
 import { mergeClasses } from '../../utils/classNames';
 import { type Size } from '../../types';
@@ -116,12 +114,6 @@ export interface RadioProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 
 	 */
 	'aria-describedby'?: string;
 
-	/** @deprecated Use `aria-label`. */
-	ariaLabel?: string;
-
-	/** @deprecated Use `aria-describedby`. */
-	ariaDescribedBy?: string;
-
 	/**
 	 * Additional CSS class names
 	 */
@@ -183,16 +175,14 @@ export const Radio = forwardRef<HTMLInputElement, RadioProps>(
 			errorMessage,
 			helperText,
 			errorLiveRegion = 'polite',
-			ariaLabel,
-			ariaDescribedBy,
 			'aria-label': ariaLabelAttr,
 			'aria-describedby': ariaDescribedByAttr,
 			className = '',
 			classes,
 			value,
 			name,
-			onChange,
 			id,
+			onChange,
 			...props
 		},
 		ref
@@ -236,24 +226,15 @@ export const Radio = forwardRef<HTMLInputElement, RadioProps>(
 		const helperId = `${radioId}-helper`;
 		const errorId = `${radioId}-error`;
 
-		// Standard attributes win; the camelCase aliases warn once in development.
 		const ariaAttributes = {
-			'aria-label': !label
-				? resolveAria('Radio', 'aria-label', 'ariaLabel', ariaLabelAttr, ariaLabel)
-				: undefined,
+			'aria-label': !label ? ariaLabelAttr : undefined,
 			'aria-describedby': describedBy({
 				helperId,
 				errorId,
 				helperText,
 				error,
 				errorMessage,
-				callerDescribedBy: resolveAria(
-					'Radio',
-					'aria-describedby',
-					'ariaDescribedBy',
-					ariaDescribedByAttr,
-					ariaDescribedBy
-				),
+				callerDescribedBy: ariaDescribedByAttr,
 			}),
 			'aria-invalid': error,
 		};
@@ -337,9 +318,6 @@ export interface RadioGroupProps<TValue extends string | number = string> {
 	 */
 	onValueChange?: (value: TValue) => void;
 
-	/** @deprecated Use `onValueChange`. */
-	onChange?: (value: TValue) => void;
-
 	/**
 	 * Disable every radio in the group at once.
 	 */
@@ -362,12 +340,6 @@ export interface RadioGroupProps<TValue extends string | number = string> {
 	 * ID of a visible label element for the group.
 	 */
 	'aria-labelledby'?: string;
-
-	/** @deprecated Use `aria-label`. */
-	ariaLabel?: string;
-
-	/** @deprecated Use `aria-labelledby`. */
-	ariaLabelledBy?: string;
 
 	/**
 	 * Additional CSS class names applied to the group wrapper.
@@ -401,12 +373,9 @@ const RadioGroupImpl = forwardRef<HTMLDivElement, RadioGroupProps<string | numbe
 			name,
 			value,
 			defaultValue,
-			onChange,
 			onValueChange,
 			disabled = false,
 			orientation = 'vertical',
-			ariaLabel,
-			ariaLabelledBy,
 			'aria-label': ariaLabelAttr,
 			'aria-labelledby': ariaLabelledByAttr,
 			className = '',
@@ -421,18 +390,12 @@ const RadioGroupImpl = forwardRef<HTMLDivElement, RadioGroupProps<string | numbe
 		const [internalValue, setInternalValue] = useState<string | number | undefined>(defaultValue);
 		const currentValue = isControlled ? value : internalValue;
 
-		// `onValueChange` is the supported name; `onChange` still works and
-		// warns once in development.
-		if (process.env.NODE_ENV !== 'production' && onChange && !onValueChange) {
-			warnDeprecatedProp('RadioGroup', 'onChange', 'onValueChange');
-		}
-
 		const handleChildChange = useCallback(
 			(nextValue: string | number) => {
 				if (!isControlled) setInternalValue(nextValue);
-				(onValueChange ?? onChange)?.(nextValue);
+				onValueChange?.(nextValue);
 			},
-			[isControlled, onValueChange, onChange]
+			[isControlled, onValueChange]
 		);
 
 		// Arrow-key navigation. We scope the listener to the group root and
@@ -507,14 +470,8 @@ const RadioGroupImpl = forwardRef<HTMLDivElement, RadioGroupProps<string | numbe
 			<div
 				ref={setGroupRef}
 				role="radiogroup"
-				aria-label={resolveAria('RadioGroup', 'aria-label', 'ariaLabel', ariaLabelAttr, ariaLabel)}
-				aria-labelledby={resolveAria(
-					'RadioGroup',
-					'aria-labelledby',
-					'ariaLabelledBy',
-					ariaLabelledByAttr,
-					ariaLabelledBy
-				)}
+				aria-label={ariaLabelAttr}
+				aria-labelledby={ariaLabelledByAttr}
 				aria-orientation={orientation}
 				aria-disabled={disabled || undefined}
 				onKeyDown={handleKeyDown}

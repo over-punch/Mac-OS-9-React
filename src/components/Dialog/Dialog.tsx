@@ -26,9 +26,7 @@ import React, {
 } from 'react';
 import { createPortal } from 'react-dom';
 import { Window, type WindowProps, type WindowClasses } from '../Window/Window';
-import { warnDeprecatedProp } from '../../utils/deprecation';
 import { mergeClasses } from '../../utils/classNames';
-import { resolveAria } from '../../utils/aria';
 import styles from './Dialog.module.css';
 
 /**
@@ -183,12 +181,6 @@ export interface DialogProps extends Omit<WindowProps, 'active' | 'classes'> {
 	 */
 	classes?: DialogClasses;
 
-	/** @deprecated Use `classes`. */
-	dialogClasses?: DialogClasses;
-
-	/** @deprecated Use `classes.backdrop`. */
-	backdropClassName?: string;
-
 	/**
 	 * Whether to trap focus within the dialog
 	 * @default true
@@ -231,15 +223,6 @@ export interface DialogProps extends Omit<WindowProps, 'active' | 'classes'> {
 	 * ID of a visible element that describes the dialog body.
 	 */
 	'aria-describedby'?: string;
-
-	/** @deprecated Use `aria-label`. */
-	ariaLabel?: string;
-
-	/** @deprecated Use `aria-labelledby`. */
-	ariaLabelledBy?: string;
-
-	/** @deprecated Use `aria-describedby`. */
-	ariaDescribedBy?: string;
 
 	/**
 	 * Where the dialog is portalled to.
@@ -295,18 +278,13 @@ export const Dialog = forwardRef<HTMLDivElement, DialogProps>(
 			onClose,
 			closeOnBackdropClick = true,
 			closeOnEscape = true,
-			backdropClassName = '',
 			classes,
-			dialogClasses,
 			trapFocus = true,
 			initialFocus,
 			role = 'dialog',
-			ariaLabel,
-			ariaLabelledBy,
-			ariaDescribedBy,
-			'aria-label': ariaLabelAttr,
-			'aria-labelledby': ariaLabelledByAttr,
-			'aria-describedby': ariaDescribedByAttr,
+			'aria-label': label,
+			'aria-labelledby': labelledBy,
+			'aria-describedby': describedBy,
 			container,
 			children,
 			...windowProps
@@ -323,23 +301,6 @@ export const Dialog = forwardRef<HTMLDivElement, DialogProps>(
 			if (container === null) return;
 			setPortalTarget(container ?? document.body);
 		}, [container]);
-
-		// Standard attributes win; the camelCase aliases warn once in development.
-		const label = resolveAria('Dialog', 'aria-label', 'ariaLabel', ariaLabelAttr, ariaLabel);
-		const labelledBy = resolveAria(
-			'Dialog',
-			'aria-labelledby',
-			'ariaLabelledBy',
-			ariaLabelledByAttr,
-			ariaLabelledBy
-		);
-		const describedBy = resolveAria(
-			'Dialog',
-			'aria-describedby',
-			'ariaDescribedBy',
-			ariaDescribedByAttr,
-			ariaDescribedBy
-		);
 
 		// Derive an accessible name. Prefer an explicit labelledby → label
 		// → the Window title if it happens to be a plain string.
@@ -483,19 +444,12 @@ export const Dialog = forwardRef<HTMLDivElement, DialogProps>(
 
 		if (!open) return null;
 
-		// `classes` is the supported name; `dialogClasses` still works and warns
-		// once. It was only ever called that because Dialog extends WindowProps,
-		// where `classes` already meant the Window slots — now DialogClasses
-		// extends WindowClasses, so one prop covers both.
-		if (process.env.NODE_ENV !== 'production' && dialogClasses && !classes) {
-			warnDeprecatedProp('Dialog', 'dialogClasses', 'classes');
-		}
-		const resolvedClasses = classes ?? dialogClasses;
-
 		// Dialog owns backdrop and container; everything else belongs to Window.
-		const { backdrop, container: containerClass, ...windowClasses } = resolvedClasses ?? {};
+		// `DialogClasses` extends `WindowClasses`, so the one `classes` prop
+		// covers both halves.
+		const { backdrop, container: containerClass, ...windowClasses } = classes ?? {};
 
-		const backdropClassNames = mergeClasses(styles.backdrop, backdropClassName, backdrop);
+		const backdropClassNames = mergeClasses(styles.backdrop, backdrop);
 
 		const dialogTree = (
 			<div className={backdropClassNames} onClick={handleBackdropClick}>

@@ -16,6 +16,7 @@
 
 import React, { forwardRef, useState, useRef, useEffect, useCallback, useId } from 'react';
 import { mergeClasses } from '../../utils/classNames';
+import { warnDeprecatedProp } from '../../utils/deprecation';
 import { useWindowManager } from '../WindowManager/WindowManager';
 import { useDraggable } from '../../hooks/useDraggable';
 import { useResizable } from '../../hooks/useResizable';
@@ -90,7 +91,12 @@ export interface WindowProps {
 	className?: string;
 
 	/**
-	 * Custom class name for the content area
+	 * Custom class name for the content area.
+	 *
+	 * @deprecated Use `classes.content`. Every other single-purpose
+	 * `*ClassName` prop in the library was folded into a `classes` object and
+	 * removed in 2.0; this one was never marked deprecated in 1.x, so it warns
+	 * through 2.x and goes away in 3.0.
 	 */
 	contentClassName?: string;
 
@@ -594,6 +600,9 @@ export const Window = forwardRef<HTMLDivElement, WindowProps>(
 			classes?.root
 		);
 
+		if (process.env.NODE_ENV !== 'production' && contentClassName && !classes?.content) {
+			warnDeprecatedProp('Window', 'contentClassName', 'classes.content');
+		}
 		const contentClassNames = mergeClasses(styles.content, contentClassName, classes?.content);
 
 		const titleBarClassNames = mergeClasses(

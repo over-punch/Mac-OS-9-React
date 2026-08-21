@@ -9,6 +9,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { useState } from 'react';
 import { Window } from './Window';
 import { checkA11y } from '../../test/axe';
+import { resetDeprecationWarnings } from '../../utils/deprecation';
 
 /** jsdom reports every element as 0x0, so layout reads need stubbing. */
 function stubLayout({
@@ -361,6 +362,62 @@ describe('Window', () => {
 			);
 			const windowEl = container.querySelector('[class*="window"]') as HTMLElement;
 			expect(windowEl.style.zIndex).toBe('7');
+		});
+	});
+
+	describe('contentClassName', () => {
+		// The last surviving single-purpose `*ClassName` prop. It was never
+		// marked deprecated in 1.x, so it could not be removed with the rest
+		// in 2.0 — it warns through 2.x instead.
+		beforeEach(() => {
+			resetDeprecationWarnings();
+		});
+
+		it('still styles the content area', () => {
+			const { container } = render(
+				<Window title="W" contentClassName="legacy-content">
+					c
+				</Window>
+			);
+			expect(container.querySelector('.legacy-content')).not.toBeNull();
+		});
+
+		it('warns once, naming classes.content and the 3.0 removal', () => {
+			const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+			const { rerender } = render(
+				<Window title="W" contentClassName="legacy-content">
+					c
+				</Window>
+			);
+			rerender(
+				<Window title="W" contentClassName="legacy-content">
+					c
+				</Window>
+			);
+
+			const matching = warn.mock.calls.filter((call) =>
+				String(call[0]).includes('`contentClassName`')
+			);
+			expect(matching).toHaveLength(1);
+			expect(String(matching[0]?.[0])).toContain('classes.content');
+			expect(String(matching[0]?.[0])).toContain('3.0');
+			warn.mockRestore();
+		});
+
+		it('stays quiet when classes.content is used instead', () => {
+			const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+			render(
+				<Window title="W" classes={{ content: 'current-content' }}>
+					c
+				</Window>
+			);
+
+			expect(
+				warn.mock.calls.filter((call) => String(call[0]).includes('`contentClassName`'))
+			).toHaveLength(0);
+			warn.mockRestore();
 		});
 	});
 

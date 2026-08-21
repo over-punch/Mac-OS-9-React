@@ -11,7 +11,6 @@ import { useRef, useState } from 'react';
 import { Dialog } from './Dialog';
 import { Button } from '../Button/Button';
 import { checkA11y } from '../../test/axe';
-import { resetDeprecationWarnings } from '../../utils/deprecation';
 
 // jsdom performs no layout, so getClientRects() returns an empty list for
 // every element — including plainly visible ones. Dialog's focusable filter
@@ -99,16 +98,16 @@ describe('Dialog', () => {
 
 		it('prefers an explicit ariaLabel', () => {
 			render(
-				<Dialog open title="Save changes" ariaLabel="Confirm before quitting">
+				<Dialog open title="Save changes" aria-label="Confirm before quitting">
 					<p>body</p>
 				</Dialog>
 			);
 			expect(screen.getByRole('dialog')).toHaveAccessibleName('Confirm before quitting');
 		});
 
-		it('prefers ariaLabelledBy over everything', () => {
+		it('prefers aria-labelledby over everything', () => {
 			render(
-				<Dialog open title="Save changes" ariaLabel="ignored" ariaLabelledBy="heading">
+				<Dialog open title="Save changes" aria-label="ignored" aria-labelledby="heading">
 					<h2 id="heading">Unsaved work</h2>
 				</Dialog>
 			);
@@ -356,7 +355,7 @@ describe('Dialog', () => {
 
 	it('has no automatically detectable accessibility violations', async () => {
 		render(
-			<Dialog open title="Accessible dialog" ariaDescribedBy="desc">
+			<Dialog open title="Accessible dialog" aria-describedby="desc">
 				<p id="desc">Are you sure?</p>
 				<Button>Cancel</Button>
 				<Button variant="primary">OK</Button>
@@ -367,43 +366,18 @@ describe('Dialog', () => {
 });
 
 describe('classes', () => {
-	it('accepts the deprecated dialogClasses, and warns once', () => {
-		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-		resetDeprecationWarnings();
-
-		const { rerender } = render(
-			<Dialog open title="D" dialogClasses={{ backdrop: 'legacy-backdrop' }}>
-				body
-			</Dialog>
-		);
-		expect(document.querySelector('.legacy-backdrop')).not.toBeNull();
-
-		rerender(
-			<Dialog open title="D" dialogClasses={{ backdrop: 'legacy-backdrop' }}>
-				body
-			</Dialog>
-		);
-
-		const matching = warn.mock.calls.filter((call) => String(call[0]).includes('`dialogClasses`'));
-		expect(matching).toHaveLength(1);
-		expect(String(matching[0]?.[0])).toContain('classes');
-		warn.mockRestore();
-	});
-
-	it('prefers classes when both are given', () => {
-		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+	it('covers the Dialog and Window slots through one prop', () => {
+		// `dialogClasses` existed in 1.x only because Dialog extends
+		// WindowProps, where `classes` already meant the Window slots.
+		// `DialogClasses` now extends `WindowClasses`, so `classes` reaches
+		// both halves and the second prop was removed in 2.0.
 		render(
-			<Dialog
-				open
-				title="D"
-				dialogClasses={{ backdrop: 'legacy' }}
-				classes={{ backdrop: 'current' }}
-			>
+			<Dialog open title="D" classes={{ backdrop: 'my-backdrop', titleBar: 'my-title-bar' }}>
 				body
 			</Dialog>
 		);
-		expect(document.querySelector('.current')).not.toBeNull();
-		expect(document.querySelector('.legacy')).toBeNull();
-		warn.mockRestore();
+
+		expect(document.querySelector('.my-backdrop')).not.toBeNull();
+		expect(document.querySelector('.my-title-bar')).not.toBeNull();
 	});
 });

@@ -89,7 +89,7 @@ const cases: ReadonlyArray<readonly [string, React.ReactElement]> = [
 		<MenuBar
 			key="mb"
 			menus={[
-				{ label: 'File', items: <MenuItem label="Open…" shortcut="⌘O" /> },
+				{ label: 'File', content: <MenuItem label="Open…" shortcut="⌘O" /> },
 				{ label: 'Site', type: 'link', href: '/' },
 			]}
 			defaultOpenMenuIndex={0}
@@ -97,7 +97,7 @@ const cases: ReadonlyArray<readonly [string, React.ReactElement]> = [
 	],
 	[
 		'MenuDropdown',
-		<MenuDropdown key="md" label="Options" items={<MenuItem label="Preferences…" />} />,
+		<MenuDropdown key="md" label="Options" content={<MenuItem label="Preferences…" />} />,
 	],
 	[
 		'MenuItem',
@@ -113,18 +113,18 @@ const cases: ReadonlyArray<readonly [string, React.ReactElement]> = [
 	],
 	[
 		'RadioGroup',
-		<RadioGroup key="rg" name="view" ariaLabel="View as">
+		<RadioGroup key="rg" name="view" aria-label="View as">
 			<Radio value="icon" label="Icons" />
 			<Radio value="list" label="List" />
 		</RadioGroup>,
 	],
 	[
 		'Scrollbar',
-		<Scrollbar key="sb" ariaLabel="Document scroll" value={0.25} viewportRatio={0.4} />,
+		<Scrollbar key="sb" aria-label="Document scroll" value={0.25} viewportRatio={0.4} />,
 	],
 	[
 		'Scrollbar (horizontal)',
-		<Scrollbar key="sbh" orientation="horizontal" ariaLabel="Pan" value={0} viewportRatio={0.5} />,
+		<Scrollbar key="sbh" orientation="horizontal" aria-label="Pan" value={0} viewportRatio={0.5} />,
 	],
 	[
 		'Select',
@@ -139,7 +139,7 @@ const cases: ReadonlyArray<readonly [string, React.ReactElement]> = [
 	],
 	[
 		'Tabs',
-		<Tabs key="t" ariaLabel="Settings">
+		<Tabs key="t" aria-label="Settings">
 			<TabPanel label="General">General settings</TabPanel>
 			<TabPanel label="Advanced">Advanced settings</TabPanel>
 		</Tabs>,
@@ -164,7 +164,7 @@ describe('accessibility', () => {
 
 	it('Dialog has no automatically detectable violations', async () => {
 		render(
-			<Dialog open title="Save changes" ariaDescribedBy="dialog-desc">
+			<Dialog open title="Save changes" aria-describedby="dialog-desc">
 				<p id="dialog-desc">Do you want to save before closing?</p>
 				<Button>Cancel</Button>
 				<Button variant="primary">Save</Button>

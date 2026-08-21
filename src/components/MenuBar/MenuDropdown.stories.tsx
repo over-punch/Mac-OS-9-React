@@ -21,7 +21,7 @@ export const Default: Story = {
 		<div style={{ height: '200px' }}>
 			<MenuDropdown
 				label="Options"
-				items={
+				content={
 					<>
 						<MenuItem label="Settings..." onClick={() => alert('Settings')} />
 						<MenuItem label="Preferences..." onClick={() => alert('Preferences')} />
@@ -39,7 +39,7 @@ export const WithIcon: Story = {
 		<div style={{ height: '200px' }}>
 			<MenuDropdown
 				label={<div style={{ fontWeight: 'bold', fontSize: '12px' }}>Finder</div>}
-				items={
+				content={
 					<>
 						<MenuItem label="About Finder" onClick={() => {}} />
 						<MenuItem separator label="Hide Finder" />
@@ -68,7 +68,7 @@ export const RightAligned: Story = {
 			<MenuDropdown
 				align="right"
 				label="Right Menu"
-				items={
+				content={
 					<>
 						<MenuItem label="Item 1" onClick={() => {}} />
 						<MenuItem label="Item 2" onClick={() => {}} />
@@ -100,7 +100,7 @@ export const InsideMenuBar: Story = {
 						key="user"
 						align="right"
 						label="User"
-						items={
+						content={
 							<>
 								<MenuItem label="Profile" onClick={() => {}} />
 								<MenuItem label="Settings" onClick={() => {}} />

@@ -60,7 +60,7 @@ function Capture() {
 				<div className="grid">
 					<Window title="Preferences" width={330}>
 						<div className="stack">
-							<Tabs ariaLabel="Preferences">
+							<Tabs aria-label="Preferences">
 								<TabPanel label="General">
 									<div className="stack">
 										<TextField label="Your name" defaultValue="Quinn" />
@@ -110,7 +110,7 @@ function Capture() {
 
 						<Window title="Options" width={300}>
 							<div className="stack">
-								<RadioGroup name="view" ariaLabel="View as" defaultValue="icon">
+								<RadioGroup name="view" aria-label="View as" defaultValue="icon">
 									<Radio value="icon" label="as Icons" />
 									<Radio value="list" label="as List" />
 									<Radio value="button" label="as Buttons" />
@@ -201,7 +201,7 @@ function Capture() {
 						menus={[
 							{
 								label: 'File',
-								items: (
+								content: (
 									<>
 										<MenuItem label="New Folder" shortcut="⌘N" />
 										<MenuItem label="Open" shortcut="⌘O" />
@@ -210,9 +210,9 @@ function Capture() {
 									</>
 								),
 							},
-							{ label: 'Edit', items: <MenuItem label="Undo" shortcut="⌘Z" /> },
-							{ label: 'View', items: <MenuItem label="as List" /> },
-							{ label: 'Special', items: <MenuItem label="Restart" /> },
+							{ label: 'Edit', content: <MenuItem label="Undo" shortcut="⌘Z" /> },
+							{ label: 'View', content: <MenuItem label="as List" /> },
+							{ label: 'Special', content: <MenuItem label="Restart" /> },
 						]}
 						rightContent={[<span key="t">4:07 PM</span>]}
 					/>
@@ -222,7 +222,7 @@ function Capture() {
 								columns={COLUMNS}
 								items={FILES}
 								selectedIds={['2']}
-								ariaLabel="Files"
+								aria-label="Files"
 								height={190}
 							/>
 						</Window>
@@ -272,7 +272,7 @@ function Capture() {
 									columns={COLUMNS.slice(0, 2)}
 									items={FILES.slice(0, 3)}
 									selectedIds={['2']}
-									ariaLabel="Files"
+									aria-label="Files"
 									height={110}
 								/>
 								<div className="row">
@@ -291,7 +291,7 @@ function Capture() {
 									columns={COLUMNS.slice(0, 2)}
 									items={FILES.slice(0, 3)}
 									selectedIds={['2']}
-									ariaLabel="Files"
+									aria-label="Files"
 									height={110}
 								/>
 								<div className="row">

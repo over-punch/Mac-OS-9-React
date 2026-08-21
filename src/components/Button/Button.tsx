@@ -133,25 +133,6 @@ interface BaseButtonProps {
 	asChild?: boolean;
 
 	/**
-	 * Override aria-label.
-	 * @deprecated Use the standard `aria-label` attribute instead. This alias
-	 * remains for backwards compatibility; `aria-label` wins if both are set.
-	 */
-	ariaLabel?: string;
-
-	/**
-	 * ID of element that describes this button.
-	 * @deprecated Use the standard `aria-describedby` attribute instead.
-	 */
-	ariaDescribedBy?: string;
-
-	/**
-	 * For toggle buttons - indicates pressed state.
-	 * @deprecated Use the standard `aria-pressed` attribute instead.
-	 */
-	ariaPressed?: boolean;
-
-	/**
 	 * Additional CSS class names
 	 */
 	className?: string;
@@ -304,26 +285,20 @@ const ButtonImpl = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonProps
 		rightIcon,
 		iconOnly = false,
 		asChild = false,
-		ariaLabel,
-		ariaDescribedBy,
-		ariaPressed,
 		className = '',
 		classes,
 		children,
 		...restProps
 	} = props;
 
-	// Standard aria-* attributes win over the deprecated camelCase aliases.
+	// The caller's own ARIA attributes, separated from the rest so the
+	// component can compose with rather than clobber them.
 	const {
-		'aria-label': ariaLabelAttr,
-		'aria-describedby': ariaDescribedByAttr,
-		'aria-pressed': ariaPressedAttr,
+		'aria-label': resolvedAriaLabel,
+		'aria-describedby': resolvedAriaDescribedBy,
+		'aria-pressed': resolvedAriaPressed,
 		...domProps
 	} = restProps as Record<string, unknown> & ComputedAriaAttributes;
-
-	const resolvedAriaLabel = (ariaLabelAttr as string | undefined) ?? ariaLabel;
-	const resolvedAriaDescribedBy = (ariaDescribedByAttr as string | undefined) ?? ariaDescribedBy;
-	const resolvedAriaPressed = (ariaPressedAttr as boolean | undefined) ?? ariaPressed;
 
 	// An icon-only button with no resolvable accessible name is a control a
 	// screen reader announces as just "button". Fail loudly in development

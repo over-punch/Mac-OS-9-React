@@ -581,7 +581,7 @@ export const ARIAExample: Story = {
 		return (
 			<div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
 				<Button
-					ariaPressed={pressed}
+					aria-pressed={pressed}
 					variant={pressed ? 'primary' : 'default'}
 					onClick={() => setPressed(!pressed)}
 				>

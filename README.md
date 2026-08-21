@@ -141,10 +141,11 @@ import { IconLibrary, getAllIconNames } from '@liiift-studio/mac-os9-ui';
 
 ### Creating a Window with Menu Bar
 
-`MenuBar` accepts a `menus` array describing each top-level entry. Each menu's
-`items` can be **either** React nodes (typically a fragment of `MenuItem`
-components) **or** an array of `MenuItemData`, which MenuBar renders for you —
-useful when the menu comes from a config file or an API rather than JSX.
+`MenuBar` accepts a `menus` array describing each top-level entry. A menu's
+contents come from one of two props: `content` for JSX (typically a fragment of
+`MenuItem` components), or `items` for an array of `MenuItemData`, which MenuBar
+renders for you — useful when the menu comes from a config file or an API rather
+than JSX.
 
 MenuBar works controlled (`openMenuIndex` + `onMenuOpen` / `onMenuClose`) or
 uncontrolled (`defaultOpenMenuIndex`).
@@ -165,7 +166,7 @@ function MyApp() {
 				menus={[
 					{
 						label: 'File',
-						items: (
+						content: (
 							<>
 								<MenuItem label="New" shortcut="⌘N" onClick={() => console.log('New')} />
 								{/* `separator` draws a divider AFTER this item — it is not a
@@ -177,7 +178,7 @@ function MyApp() {
 					},
 					{
 						label: 'Edit',
-						items: (
+						content: (
 							<>
 								<MenuItem label="Cut" shortcut="⌘X" onClick={() => console.log('Cut')} />
 								<MenuItem label="Copy" shortcut="⌘C" onClick={() => console.log('Copy')} />
@@ -281,7 +282,7 @@ function MyComponent() {
 				open={open}
 				onClose={() => setOpen(false)}
 				title="Confirm Action"
-				ariaDescribedBy="confirm-copy"
+				aria-describedby="confirm-copy"
 			>
 				<p id="confirm-copy">Are you sure you want to proceed?</p>
 				<div style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
@@ -424,10 +425,12 @@ The keys are typed per component — `ButtonClasses`, `WindowClasses`,
 `SelectClasses`, `MenuItemClasses` and so on, all exported — so a misspelled
 slot is a compile error rather than a class that silently does nothing.
 
-A handful of single-purpose props predate this: `wrapperClassName`,
-`tabListClassName`, `panelClassName`, `dropdownClassName`, `backdropClassName`
-and `contentClassName`. They still work, and are marked deprecated in favour of
-the equivalent `classes` slot.
+`classes` is the only way in. The single-purpose `*ClassName` props that
+predated it — `wrapperClassName`, `tabListClassName`, `panelClassName`,
+`dropdownClassName`, `backdropClassName` and `dialogClasses` — were removed in
+2.0. `Window.contentClassName` is the one holdout: it was never marked
+deprecated in 1.x, so it warns through 2.x and goes in 3.0. Use
+`classes.content`.
 
 **Render props** replace an element outright. Each receives the item, its
 state, and the props the default implementation would have used — spread those
@@ -520,10 +523,11 @@ Anything reporting something other than a single value names what it reports:
 `onSelectionChange` on ListView, `onPositionChange` and `onResize` on Window,
 `onMenuOpen` / `onMenuClose` on MenuBar.
 
-`RadioGroup`, `Scrollbar` and `Tabs` previously used `onChange` for a value.
-Those still work and warn once in development; `Tabs.onChange` keeps its
-original `(index, value)` order, while `onValueChange` leads with the value
-like every other one.
+`RadioGroup`, `Scrollbar` and `Tabs` accepted `onChange` for a value in 1.x.
+Those aliases were removed in 2.0, so the two names never overlap: if a
+component reports a value, `onValueChange` is the only name it answers to.
+`Tabs.onValueChange` leads with the value — `(value, index)` — like every other
+one.
 
 ## Accessibility
 
@@ -565,9 +569,10 @@ MenuItem exposes `aria-keyshortcuts`. Component CSS honours
 `prefers-contrast: high`, `prefers-reduced-motion` and `:focus-visible`.
 
 **Props you must supply.** Some components cannot generate their own
-accessible name: `aria-label` on an `iconOnly` Button and on IconButton,
-`ariaLabel` on Tabs, Scrollbar, RadioGroup and ListView, `ariaDescribedBy` on
-Dialog. Development builds log an error when Button can't resolve a name.
+accessible name: `aria-label` on an `iconOnly` Button, on IconButton, and on
+Tabs, Scrollbar, RadioGroup and ListView; `aria-describedby` on Dialog. These
+are the standard hyphenated attributes — 2.0 removed the camelCase aliases.
+Development builds log an error when Button can't resolve a name.
 
 Accessibility bugs are worth reporting — [open an issue](https://github.com/Liiift-Studio/Mac-OS-9-React/issues).
 
@@ -600,11 +605,87 @@ interface FileRow extends ListItem {
 
 ## Versioning
 
-This package follows semantic versioning. `1.0.0` is the first stable release:
-breaking changes require a major, and the deprecated names carried over from
-0.x are supported until 2.0.
+This package follows semantic versioning. A renamed prop keeps working for one
+major version, warning once in development, before it is removed — so an
+upgrade gives you a migration window rather than a build break.
 
-### Migrating from 0.3.x
+### Migrating to 2.0
+
+`2.0` removes every name `1.x` deprecated. Nothing new was deprecated in its
+place except one prop, so this is a one-time cleanup: if your app builds
+without deprecation warnings on the latest `1.x`, it builds on `2.0`.
+
+**camelCase ARIA props → the standard attributes.** These were aliases for
+attributes React already passes through, so the change is mechanical:
+
+```diff
+- <Tabs ariaLabel="Settings">
++ <Tabs aria-label="Settings">
+- <Dialog open title="Confirm" ariaDescribedBy="copy">
++ <Dialog open title="Confirm" aria-describedby="copy">
+```
+
+`ariaLabel`, `ariaLabelledBy`, `ariaDescribedBy` and `ariaPressed` are gone from
+Button, Checkbox, Dialog, ListView, Radio, RadioGroup, Scrollbar, Tabs and
+TextField.
+
+**Value-shaped `onChange` → `onValueChange`.** On `RadioGroup`, `Scrollbar` and
+`Tabs`, `onChange` reported a value rather than a DOM event. Tabs also changes
+argument order, so check the callback body and not just the name:
+
+```diff
+- <RadioGroup name="view" onChange={setView}>
++ <RadioGroup name="view" onValueChange={setView}>
+
+- <Tabs onChange={(index, value) => select(value, index)}>
++ <Tabs onValueChange={(value, index) => select(value, index)}>
+```
+
+**Single-purpose `*ClassName` props → `classes` slots.**
+
+| Removed | Use |
+|---|---|
+| `TextField.wrapperClassName` | `classes.root` |
+| `Tabs.tabListClassName` | `classes.tabList` |
+| `Tabs.panelClassName` | `classes.panel` |
+| `MenuBar.dropdownClassName` | `classes.dropdown` |
+| `MenuDropdown.dropdownClassName` | `classes.dropdown` |
+| `Dialog.backdropClassName` | `classes.backdrop` |
+| `Dialog.dialogClasses` | `classes` |
+
+`Window.contentClassName` still works. It was never marked deprecated in `1.x`,
+so removing it here would have broken code that had no warning — it warns
+through `2.x` and goes in `3.0`. Use `classes.content`.
+
+**`Menu.items` splits into `items` and `content`.** This is the one change that
+can be silent, so it is worth reading even if you had no warnings.
+
+In `1.x`, `items` was typed `ReactNode | MenuItemData[]` and the two forms were
+told apart at runtime by asking whether the first array element was a React
+element. That guess mis-read `items={[<MenuItem key="a" />]}` — an ordinary way
+to write one JSX child — as data, and rendered an empty menu with no error.
+`items` is now data only, `content` is JSX only, and the type tells them apart:
+
+```diff
+  <MenuBar
+  	menus={[
+- 		{ label: 'File', items: <><MenuItem label="Open…" /></> },
++ 		{ label: 'File', content: <><MenuItem label="Open…" /></> },
+  		{ label: 'Edit', items: [{ label: 'Undo', shortcut: '⌘Z' }] },
+  	]}
+  />
+```
+
+For consistency, the JSX-valued `items` prop on `MenuItem` (its submenu) and on
+`MenuDropdown` is also now `content`. Across the MenuBar family, `items` always
+means data and `content` always means JSX. A menu whose `items` is `[]` opens no
+dropdown, rather than an empty `role="menu"` panel.
+
+**Also gone:** the `resolveAria` helper and `LegacyAriaProps` type, which
+existed only to resolve the ARIA aliases. They were never exported from the
+package root.
+
+### Migrating to 1.0 (from 0.3.x)
 
 `Select` no longer renders a native `<select>`. It is a button plus a
 `role="listbox"` popup, so the whole control can be themed — previously the
@@ -637,11 +718,8 @@ Other breaking changes in 1.0:
 | `IconButton` renders a `Button` internally | only affects CSS targeting its old class names |
 | Button no longer sets `aria-disabled` on a native `<button>` | the `disabled` attribute is authoritative there |
 
-Renamed props still work and warn once in development: `ariaLabel` and the
-other camelCase ARIA props, the value-shaped `onChange` on `RadioGroup`,
-`Scrollbar` and `Tabs`, and `wrapperClassName`, `tabListClassName`,
-`panelClassName`, `dropdownClassName`, `backdropClassName` and
-`dialogClasses`. They are removed in 2.0.
+Those renamed props warned through 1.x and were removed in 2.0 — see
+[Migrating to 2.0](#migrating-to-20).
 
 ### Migrating to 0.3.0
 

@@ -111,9 +111,12 @@ export interface MenuItemProps {
 	hasSubmenu?: boolean;
 
 	/**
-	 * Submenu items
+	 * Submenu content, as JSX — typically nested `MenuItem` elements.
+	 *
+	 * Named `content` rather than `items` so that across the MenuBar family
+	 * `items` always means data and `content` always means JSX.
 	 */
-	items?: React.ReactNode;
+	content?: React.ReactNode;
 }
 
 /**
@@ -207,12 +210,12 @@ export const MenuItem = forwardRef<HTMLButtonElement, MenuItemProps>(
 			className = '',
 			classes,
 			hasSubmenu = false,
-			items,
+			content,
 		},
 		ref
 	) => {
 		const [isSubmenuOpen, setIsSubmenuOpen] = useState(false);
-		const effectiveHasSubmenu = hasSubmenu || !!items;
+		const effectiveHasSubmenu = hasSubmenu || !!content;
 
 		// Internal refs to the trigger button and submenu container, used by the
 		// keyboard handler to move focus into / out of the submenu. The trigger
@@ -321,13 +324,13 @@ export const MenuItem = forwardRef<HTMLButtonElement, MenuItemProps>(
 				</button>
 
 				{/* Submenu */}
-				{items && isSubmenuOpen && (
+				{content && isSubmenuOpen && (
 					<div
 						ref={submenuRef}
 						className={mergeClasses(styles.submenu, classes?.submenu)}
 						role="menu"
 					>
-						{items}
+						{content}
 					</div>
 				)}
 

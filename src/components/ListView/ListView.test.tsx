@@ -332,7 +332,7 @@ describe('ListView', () => {
 
 	describe('keyboard (WCAG 2.1.1)', () => {
 		it('exposes rows as listbox options', () => {
-			render(<ListView columns={columns} items={items} ariaLabel="Files" />);
+			render(<ListView columns={columns} items={items} aria-label="Files" />);
 
 			const listbox = screen.getByRole('listbox', { name: 'Files' });
 			expect(listbox).toHaveAttribute('aria-multiselectable', 'true');

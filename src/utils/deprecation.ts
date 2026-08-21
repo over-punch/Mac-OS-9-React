@@ -1,10 +1,12 @@
 // Development-only deprecation warnings.
 //
-// The 1.0 API renames several props (camelCase ARIA → hyphenated, onChange →
-// onValueChange, errorMessage → error, and so on). The old names still work
-// for one major version, but silently accepting them would leave consumers
-// unaware they are on a removal path — so each use warns once in development
-// and costs nothing in production.
+// A renamed prop keeps working for one major version before it is removed, so
+// consumers get a migration window rather than a build break. Silently
+// accepting the old name would leave them unaware they are on a removal path,
+// so each use warns once in development and costs nothing in production.
+//
+// 2.0 removed everything 1.0 deprecated. What remains here is the mechanism,
+// plus `warnMissingProp`, which is not about renames at all.
 
 /** Names already warned about, so a re-rendering component warns only once. */
 const warned = new Set<string>();
@@ -17,8 +19,14 @@ const warned = new Set<string>();
  * @param component - Component the prop belongs to, e.g. 'Button'
  * @param oldName - The deprecated prop name
  * @param newName - The replacement prop name
+ * @param removedIn - Major version that removes it. Defaults to the next one.
  */
-export function warnDeprecatedProp(component: string, oldName: string, newName: string): void {
+export function warnDeprecatedProp(
+	component: string,
+	oldName: string,
+	newName: string,
+	removedIn = '3.0'
+): void {
 	if (process.env.NODE_ENV === 'production') return;
 
 	const key = `${component}.${oldName}`;
@@ -26,7 +34,7 @@ export function warnDeprecatedProp(component: string, oldName: string, newName: 
 	warned.add(key);
 
 	console.warn(
-		`[mac-os9-ui] ${component}: \`${oldName}\` is deprecated and will be removed in 2.0. ` +
+		`[mac-os9-ui] ${component}: \`${oldName}\` is deprecated and will be removed in ${removedIn}. ` +
 			`Use \`${newName}\` instead.`
 	);
 }

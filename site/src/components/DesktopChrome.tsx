@@ -16,7 +16,7 @@ export function DesktopMenuBar({ compact = false }: { compact?: boolean }) {
 	const menus: Menu[] = [
 		{
 			label: 'File',
-			// The data form of Menu.items — no JSX needed for the dropdown.
+			// Menu.items is the data form; Menu.content takes JSX. No JSX needed here.
 			items: [
 				{ label: 'Install…', shortcut: '⌘I', onClick: () => copy(`npm install ${PKG}`) },
 				{ label: 'View on npm', onClick: () => open(`https://www.npmjs.com/package/${PKG}`) },

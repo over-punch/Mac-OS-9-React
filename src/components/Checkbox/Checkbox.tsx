@@ -3,7 +3,6 @@
 
 import React, { forwardRef, InputHTMLAttributes } from 'react';
 import { mergeClasses } from '../../utils/classNames';
-import { resolveAria } from '../../utils/aria';
 import { FieldMessage, describedBy, type ErrorLiveRegion } from '../FieldMessage';
 import { type Size } from '../../types';
 import styles from './Checkbox.module.css';
@@ -105,12 +104,6 @@ export interface CheckboxProps extends Omit<
 	 */
 	'aria-describedby'?: string;
 
-	/** @deprecated Use `aria-label`. */
-	ariaLabel?: string;
-
-	/** @deprecated Use `aria-describedby`. */
-	ariaDescribedBy?: string;
-
 	/**
 	 * Additional CSS class names
 	 */
@@ -177,10 +170,8 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
 			errorMessage,
 			helperText,
 			errorLiveRegion = 'polite',
-			ariaLabel,
-			ariaDescribedBy,
-			'aria-label': ariaLabelAttr,
-			'aria-describedby': ariaDescribedByAttr,
+			'aria-label': resolvedLabel,
+			'aria-describedby': resolvedDescribedBy,
 			className = '',
 			classes,
 			onChange,
@@ -232,22 +223,6 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
 		// — the host language already exposes the checked state. The
 		// tri-state ("mixed") indicator is the DOM `indeterminate` property,
 		// which the effect above sets on the input via ref.
-		// Standard attributes win; the camelCase aliases warn once in development.
-		const resolvedLabel = resolveAria(
-			'Checkbox',
-			'aria-label',
-			'ariaLabel',
-			ariaLabelAttr,
-			ariaLabel
-		);
-		const resolvedDescribedBy = resolveAria(
-			'Checkbox',
-			'aria-describedby',
-			'ariaDescribedBy',
-			ariaDescribedByAttr,
-			ariaDescribedBy
-		);
-
 		const helperId = `${checkboxId}-helper`;
 		const errorId = `${checkboxId}-error`;
 

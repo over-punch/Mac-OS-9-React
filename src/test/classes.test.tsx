@@ -1,8 +1,9 @@
 // Every component exposes typed `classes` slots.
 //
 // Before this, only Window, ListView and FolderList did; the rest offered
-// one-off props like `wrapperClassName` or nothing at all, so reaching an
-// inner element meant guessing at a hashed CSS-module name.
+// one-off `*ClassName` props or nothing at all, so reaching an inner element
+// meant guessing at a hashed CSS-module name. 2.0 removed the one-off props;
+// `classes` is now the only way in, which is what these tests pin down.
 
 import { describe, it, expect } from 'vitest';
 import { render } from '@testing-library/react';
@@ -137,7 +138,7 @@ describe('classes slots', () => {
 			<MenuBar
 				defaultOpenMenuIndex={0}
 				classes={{ root: 'x-root', trigger: 'x-trigger', dropdown: 'x-dropdown' }}
-				menus={[{ label: 'File', items: <MenuItem label="Open" /> }]}
+				menus={[{ label: 'File', content: <MenuItem label="Open" /> }]}
 			/>
 		);
 		expect(has(container, 'x-root')).toBe(true);

@@ -12,8 +12,6 @@ import React, {
 	ReactElement,
 } from 'react';
 import { mergeClasses } from '../../utils/classNames';
-import { resolveAria } from '../../utils/aria';
-import { warnDeprecatedProp } from '../../utils/deprecation';
 import { type Size } from '../../types';
 import styles from './Tabs.module.css';
 
@@ -106,9 +104,6 @@ export interface TabsProps<TValue extends string = string> {
 	 */
 	onValueChange?: (value: TValue | undefined, index: number) => void;
 
-	/** @deprecated Use `onValueChange`, which leads with the value. */
-	onChange?: (index: number, value?: TValue) => void;
-
 	/**
 	 * Size of the tabs
 	 * @default 'md'
@@ -131,12 +126,6 @@ export interface TabsProps<TValue extends string = string> {
 	 */
 	classes?: TabsClasses;
 
-	/** @deprecated Use `classes.tabList`. */
-	tabListClassName?: string;
-
-	/** @deprecated Use `classes.panel`. */
-	panelClassName?: string;
-
 	/**
 	 * Accessible name for the tab list.
 	 * @default 'Tabs'
@@ -148,12 +137,6 @@ export interface TabsProps<TValue extends string = string> {
 	 * `aria-label`.
 	 */
 	'aria-labelledby'?: string;
-
-	/** @deprecated Use `aria-label`. */
-	ariaLabel?: string;
-
-	/** @deprecated Use `aria-labelledby`. */
-	ariaLabelledBy?: string;
 }
 
 /**
@@ -193,18 +176,13 @@ function TabsInner<TValue extends string = string>(
 		children,
 		defaultActiveTab = 0,
 		activeTab: controlledActiveTab,
-		onChange,
 		onValueChange,
 		size = 'md',
 		fullWidth = false,
 		className = '',
 		classes,
-		tabListClassName = '',
-		panelClassName = '',
-		ariaLabel,
-		ariaLabelledBy,
-		'aria-label': ariaLabelAttr,
-		'aria-labelledby': ariaLabelledByAttr,
+		'aria-label': ariaLabel = 'Tabs',
+		'aria-labelledby': ariaLabelledBy,
 	}: TabsProps<TValue>,
 	ref: React.ForwardedRef<HTMLDivElement>
 ) {
@@ -212,23 +190,6 @@ function TabsInner<TValue extends string = string>(
 	const [uncontrolledActiveTab, setUncontrolledActiveTab] = useState(defaultActiveTab);
 	const isControlled = controlledActiveTab !== undefined;
 	const activeTabIndex = isControlled ? controlledActiveTab : uncontrolledActiveTab;
-
-	// Standard attributes win; the camelCase aliases warn once in development.
-	const resolvedAriaLabel =
-		resolveAria('Tabs', 'aria-label', 'ariaLabel', ariaLabelAttr, ariaLabel) ?? 'Tabs';
-	const resolvedAriaLabelledBy = resolveAria(
-		'Tabs',
-		'aria-labelledby',
-		'ariaLabelledBy',
-		ariaLabelledByAttr,
-		ariaLabelledBy
-	);
-
-	// `onValueChange` is the supported name; `onChange` still works and warns
-	// once in development.
-	if (process.env.NODE_ENV !== 'production' && onChange && !onValueChange) {
-		warnDeprecatedProp('Tabs', 'onChange', 'onValueChange');
-	}
 
 	// Unique per Tabs instance. The ids used to be `tab-0` / `panel-0`, which
 	// collided the moment a page rendered two Tabs — duplicate DOM ids, and
@@ -258,13 +219,9 @@ function TabsInner<TValue extends string = string>(
 			if (!isControlled) {
 				setUncontrolledActiveTab(index);
 			}
-			if (onValueChange) {
-				onValueChange(tab.props.value, index);
-			} else if (onChange) {
-				onChange(index, tab.props.value);
-			}
+			onValueChange?.(tab.props.value, index);
 		},
-		[tabs, isControlled, onValueChange, onChange]
+		[tabs, isControlled, onValueChange]
 	);
 
 	// Keyboard navigation
@@ -327,14 +284,12 @@ function TabsInner<TValue extends string = string>(
 		styles.tabList,
 		styles[`tabList--${size}`],
 		fullWidth && styles['tabList--full-width'],
-		tabListClassName,
 		classes?.tabList
 	);
 
 	const panelContainerClassNames = mergeClasses(
 		styles.panelContainer,
 		styles[`panelContainer--${size}`],
-		panelClassName,
 		classes?.panel
 	);
 
@@ -342,8 +297,8 @@ function TabsInner<TValue extends string = string>(
 		<div ref={ref} className={containerClassNames}>
 			<div
 				role="tablist"
-				aria-label={resolvedAriaLabelledBy ? undefined : resolvedAriaLabel}
-				aria-labelledby={resolvedAriaLabelledBy}
+				aria-label={ariaLabelledBy ? undefined : ariaLabel}
+				aria-labelledby={ariaLabelledBy}
 				className={tabListClassNames}
 			>
 				{tabs.map((tab, index) => {

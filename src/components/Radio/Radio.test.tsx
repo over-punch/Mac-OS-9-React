@@ -32,12 +32,12 @@ describe('RadioGroup', () => {
 	});
 
 	it('selects on click and reports the value', () => {
-		const onChange = vi.fn();
-		renderGroup({ onChange });
+		const onValueChange = vi.fn();
+		renderGroup({ onValueChange });
 
 		fireEvent.click(screen.getByLabelText('as List'));
 
-		expect(onChange).toHaveBeenCalledWith('list');
+		expect(onValueChange).toHaveBeenCalledWith('list');
 	});
 
 	it('honours a controlled value', () => {
@@ -47,12 +47,12 @@ describe('RadioGroup', () => {
 	});
 
 	it('moves selection with the arrow keys', () => {
-		const onChange = vi.fn();
-		renderGroup({ value: 'icon', onChange });
+		const onValueChange = vi.fn();
+		renderGroup({ value: 'icon', onValueChange });
 
 		fireEvent.keyDown(screen.getByRole('radiogroup'), { key: 'ArrowDown' });
 
-		expect(onChange).toHaveBeenCalledWith('list');
+		expect(onValueChange).toHaveBeenCalledWith('list');
 	});
 
 	it('reports its orientation', () => {

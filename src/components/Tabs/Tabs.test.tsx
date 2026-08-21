@@ -34,9 +34,9 @@ describe('Tabs', () => {
 	});
 
 	it('switches panels on click and reports the change', () => {
-		const onChange = vi.fn();
+		const onValueChange = vi.fn();
 		render(
-			<Tabs onChange={onChange}>
+			<Tabs onValueChange={onValueChange}>
 				<TabPanel label="One" value="one">
 					First
 				</TabPanel>
@@ -48,14 +48,14 @@ describe('Tabs', () => {
 
 		fireEvent.click(screen.getByRole('tab', { name: 'Two' }));
 
-		expect(onChange).toHaveBeenCalledWith(1, 'two');
+		expect(onValueChange).toHaveBeenCalledWith('two', 1);
 		expect(screen.getByText('Second')).toBeInTheDocument();
 	});
 
 	it('respects a controlled activeTab', () => {
-		const onChange = vi.fn();
+		const onValueChange = vi.fn();
 		render(
-			<Tabs activeTab={0} onChange={onChange}>
+			<Tabs activeTab={0} onValueChange={onValueChange}>
 				<TabPanel label="One">First</TabPanel>
 				<TabPanel label="Two">Second</TabPanel>
 			</Tabs>
@@ -64,7 +64,7 @@ describe('Tabs', () => {
 		fireEvent.click(screen.getByRole('tab', { name: 'Two' }));
 
 		// The parent owns the state, so the panel does not move on its own.
-		expect(onChange).toHaveBeenCalledWith(1, undefined);
+		expect(onValueChange).toHaveBeenCalledWith(undefined, 1);
 		expect(screen.getByText('First')).toBeInTheDocument();
 	});
 
@@ -115,10 +115,10 @@ describe('Tabs', () => {
 		it('gives two Tabs instances distinct ids', () => {
 			render(
 				<>
-					<Tabs ariaLabel="First set">
+					<Tabs aria-label="First set">
 						<TabPanel label="A">A body</TabPanel>
 					</Tabs>
-					<Tabs ariaLabel="Second set">
+					<Tabs aria-label="Second set">
 						<TabPanel label="B">B body</TabPanel>
 					</Tabs>
 				</>
@@ -155,11 +155,11 @@ describe('Tabs', () => {
 			expect(two).toHaveAttribute('tabindex', '-1');
 		});
 
-		it('supports ariaLabelledBy', () => {
+		it('supports aria-labelledby', () => {
 			render(
 				<>
 					<h2 id="settings-heading">Settings</h2>
-					<Tabs ariaLabelledBy="settings-heading">
+					<Tabs aria-labelledby="settings-heading">
 						<TabPanel label="One">First</TabPanel>
 					</Tabs>
 				</>
@@ -215,9 +215,9 @@ describe('Tabs', () => {
 
 	describe('disabled tabs', () => {
 		it('does not activate a disabled tab on click', () => {
-			const onChange = vi.fn();
+			const onValueChange = vi.fn();
 			render(
-				<Tabs onChange={onChange}>
+				<Tabs onValueChange={onValueChange}>
 					<TabPanel label="One">First</TabPanel>
 					<TabPanel label="Two" disabled>
 						Second
@@ -227,7 +227,7 @@ describe('Tabs', () => {
 
 			fireEvent.click(screen.getByRole('tab', { name: 'Two' }));
 
-			expect(onChange).not.toHaveBeenCalled();
+			expect(onValueChange).not.toHaveBeenCalled();
 			expect(screen.getByText('First')).toBeInTheDocument();
 		});
 
@@ -250,7 +250,7 @@ describe('Tabs', () => {
 
 	it('has no automatically detectable accessibility violations', async () => {
 		const { container } = render(
-			<Tabs ariaLabel="Settings sections">
+			<Tabs aria-label="Settings sections">
 				<TabPanel label="General">General content</TabPanel>
 				<TabPanel label="Advanced">Advanced content</TabPanel>
 			</Tabs>

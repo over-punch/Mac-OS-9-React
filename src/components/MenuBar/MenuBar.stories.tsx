@@ -87,7 +87,7 @@ export const Default: Story = {
 					menus={[
 						{
 							label: 'File',
-							items: (
+							content: (
 								<>
 									<MenuItem label="New" onClick={() => console.log('New')} />
 									<MenuItem label="Open..." onClick={() => console.log('Open')} />
@@ -97,7 +97,7 @@ export const Default: Story = {
 						},
 						{
 							label: 'Edit',
-							items: (
+							content: (
 								<>
 									<MenuItem label="Undo" onClick={() => console.log('Undo')} />
 									<MenuItem label="Redo" onClick={() => console.log('Redo')} />
@@ -127,7 +127,7 @@ export const WithShortcuts: Story = {
 					menus={[
 						{
 							label: 'File',
-							items: (
+							content: (
 								<>
 									<MenuItem label="New" shortcut="⌘N" onClick={() => console.log('New')} />
 									<MenuItem label="Open..." shortcut="⌘O" onClick={() => console.log('Open')} />
@@ -137,7 +137,7 @@ export const WithShortcuts: Story = {
 						},
 						{
 							label: 'Edit',
-							items: (
+							content: (
 								<>
 									<MenuItem label="Undo" shortcut="⌘Z" onClick={() => console.log('Undo')} />
 									<MenuItem label="Redo" shortcut="⇧⌘Z" onClick={() => console.log('Redo')} />
@@ -169,7 +169,7 @@ export const WithCheckmarks: Story = {
 					menus={[
 						{
 							label: 'View',
-							items: (
+							content: (
 								<>
 									<MenuItem
 										label="Show Grid"
@@ -207,7 +207,7 @@ export const WithSeparators: Story = {
 					menus={[
 						{
 							label: 'File',
-							items: (
+							content: (
 								<>
 									<MenuItem label="New" onClick={() => console.log('New')} />
 									<MenuItem label="Open..." onClick={() => console.log('Open')} />
@@ -240,7 +240,7 @@ export const WithDisabledItems: Story = {
 					menus={[
 						{
 							label: 'Edit',
-							items: (
+							content: (
 								<>
 									<MenuItem label="Undo" disabled shortcut="⌘Z" />
 									<MenuItem label="Redo" disabled shortcut="⇧⌘Z" />
@@ -278,7 +278,7 @@ export const WithSubmenuIndicators: Story = {
 					menus={[
 						{
 							label: 'File',
-							items: (
+							content: (
 								<>
 									<MenuItem label="New" hasSubmenu />
 									<MenuItem label="Open Recent" hasSubmenu />
@@ -311,11 +311,11 @@ export const WithSubmenus: Story = {
 					menus={[
 						{
 							label: 'File',
-							items: (
+							content: (
 								<>
 									<MenuItem
 										label="New"
-										items={
+										content={
 											<>
 												<MenuItem label="Text Document" onClick={() => console.log('New Text')} />
 												<MenuItem
@@ -331,7 +331,7 @@ export const WithSubmenus: Story = {
 									/>
 									<MenuItem
 										label="Open Recent"
-										items={
+										content={
 											<>
 												<MenuItem label="Project A" onClick={() => console.log('Open Project A')} />
 												<MenuItem label="Project B" onClick={() => console.log('Open Project B')} />
@@ -352,7 +352,7 @@ export const WithSubmenus: Story = {
 									/>
 									<MenuItem
 										label="Export"
-										items={
+										content={
 											<>
 												<MenuItem label="PDF" onClick={() => console.log('Export PDF')} />
 												<MenuItem label="PNG" onClick={() => console.log('Export PNG')} />
@@ -365,7 +365,7 @@ export const WithSubmenus: Story = {
 						},
 						{
 							label: 'Edit',
-							items: (
+							content: (
 								<>
 									<MenuItem label="Undo" shortcut="⌘Z" onClick={() => console.log('Undo')} />
 									<MenuItem label="Redo" shortcut="⇧⌘Z" onClick={() => console.log('Redo')} />
@@ -380,7 +380,7 @@ export const WithSubmenus: Story = {
 									<MenuItem
 										separator
 										label="Transform"
-										items={
+										content={
 											<>
 												<MenuItem label="Rotate 90° CW" onClick={() => console.log('Rotate CW')} />
 												<MenuItem
@@ -419,7 +419,7 @@ export const WithLogo: Story = {
 					menus={[
 						{
 							label: 'File',
-							items: (
+							content: (
 								<>
 									<MenuItem label="New" shortcut="⌘N" onClick={() => console.log('New')} />
 									<MenuItem label="Open..." shortcut="⌘O" onClick={() => console.log('Open')} />
@@ -429,7 +429,7 @@ export const WithLogo: Story = {
 						},
 						{
 							label: 'Edit',
-							items: (
+							content: (
 								<>
 									<MenuItem label="Undo" shortcut="⌘Z" onClick={() => console.log('Undo')} />
 									<MenuItem label="Redo" shortcut="⇧⌘Z" onClick={() => console.log('Redo')} />
@@ -459,7 +459,7 @@ export const WithStatusArea: Story = {
 					menus={[
 						{
 							label: 'File',
-							items: (
+							content: (
 								<>
 									<MenuItem label="New" onClick={() => console.log('New')} />
 									<MenuItem label="Open..." onClick={() => console.log('Open')} />
@@ -510,7 +510,7 @@ export const WithLinkItems: Story = {
 						{
 							label: 'File',
 							type: 'dropdown',
-							items: (
+							content: (
 								<>
 									<MenuItem label="New" onClick={() => console.log('New')} />
 									<MenuItem label="Open..." onClick={() => console.log('Open')} />
@@ -548,12 +548,12 @@ export const MacOS9Style: Story = {
 					menus={[
 						{
 							label: 'File',
-							items: (
+							content: (
 								<>
 									<MenuItem
 										label="New"
 										shortcut="⌘N"
-										items={
+										content={
 											<>
 												<MenuItem label="Document" onClick={() => alert('New Document')} />
 												<MenuItem label="Folder" onClick={() => alert('New Folder')} />
@@ -569,7 +569,7 @@ export const MacOS9Style: Story = {
 						},
 						{
 							label: 'Edit',
-							items: (
+							content: (
 								<>
 									<MenuItem label="Undo" disabled shortcut="⌘Z" />
 									<MenuItem label="Redo" disabled shortcut="⇧⌘Z" />
@@ -581,7 +581,7 @@ export const MacOS9Style: Story = {
 						},
 						{
 							label: 'View',
-							items: (
+							content: (
 								<>
 									<MenuItem label="Zoom In" shortcut="⌘+" onClick={() => {}} />
 									<MenuItem label="Zoom Out" shortcut="⌘-" onClick={() => {}} />

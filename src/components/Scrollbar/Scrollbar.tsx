@@ -8,8 +8,6 @@
 
 import React, { forwardRef, useRef, useCallback } from 'react';
 import { mergeClasses } from '../../utils/classNames';
-import { resolveAria } from '../../utils/aria';
-import { warnDeprecatedProp } from '../../utils/deprecation';
 import { usePointerGesture } from '../../hooks/usePointerGesture';
 import styles from './Scrollbar.module.css';
 
@@ -66,9 +64,6 @@ export interface ScrollbarProps {
 	 */
 	onValueChange?: (value: number) => void;
 
-	/** @deprecated Use `onValueChange`. */
-	onChange?: (value: number) => void;
-
 	/**
 	 * Additional CSS class names
 	 */
@@ -90,9 +85,6 @@ export interface ScrollbarProps {
 	 * unless `controls` points at an element with a known accessible name.
 	 */
 	'aria-label'?: string;
-
-	/** @deprecated Use `aria-label`. */
-	ariaLabel?: string;
 
 	/**
 	 * ID of the scrollable region this scrollbar controls. Surfaces as
@@ -130,13 +122,11 @@ export const Scrollbar = forwardRef<HTMLDivElement, ScrollbarProps>(
 			orientation = 'vertical',
 			value = 0,
 			viewportRatio,
-			onChange,
 			onValueChange,
-			'aria-label': ariaLabelAttr,
+			'aria-label': ariaLabel,
 			className = '',
 			classes,
 			disabled = false,
-			ariaLabel,
 			controls,
 			step = 0.1,
 		},
@@ -148,12 +138,7 @@ export const Scrollbar = forwardRef<HTMLDivElement, ScrollbarProps>(
 
 		// Helper used by both arrow buttons and keyboard handler to clamp
 		// the next value into the valid 0-1 range before notifying.
-		// `onValueChange` is the supported name; `onChange` still works and
-		// warns once in development.
-		if (process.env.NODE_ENV !== 'production' && onChange && !onValueChange) {
-			warnDeprecatedProp('Scrollbar', 'onChange', 'onValueChange');
-		}
-		const emitValue = onValueChange ?? onChange;
+		const emitValue = onValueChange;
 
 		const commitValue = useCallback(
 			(next: number) => {
@@ -175,15 +160,6 @@ export const Scrollbar = forwardRef<HTMLDivElement, ScrollbarProps>(
 			);
 		}
 		const effectiveViewportRatio = viewportRatio ?? 1;
-
-		// Standard attribute wins; the camelCase alias warns once in development.
-		const resolvedAriaLabel = resolveAria(
-			'Scrollbar',
-			'aria-label',
-			'ariaLabel',
-			ariaLabelAttr,
-			ariaLabel
-		);
 
 		const thumbSize = Math.max(effectiveViewportRatio * 100, 10); // Minimum 10% size
 
@@ -270,9 +246,6 @@ export const Scrollbar = forwardRef<HTMLDivElement, ScrollbarProps>(
 		// lifecycle: listeners attach once per gesture rather than re-binding
 		// whenever a dependency changes mid-drag, and moves are coalesced into
 		// one animation frame.
-		//
-		// The previous effect also guarded on `onChange` specifically, so a
-		// consumer using only `onValueChange` could not drag the thumb at all.
 		const { isActive: isDragging, start: startThumbDrag } = usePointerGesture<{
 			pointer: number;
 			value: number;
@@ -327,7 +300,7 @@ export const Scrollbar = forwardRef<HTMLDivElement, ScrollbarProps>(
 					aria-valuemin={0}
 					aria-valuemax={100}
 					aria-orientation={orientation}
-					aria-label={resolvedAriaLabel}
+					aria-label={ariaLabel}
 					aria-controls={controls}
 					aria-disabled={disabled || undefined}
 				>

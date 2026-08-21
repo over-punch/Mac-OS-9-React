@@ -59,7 +59,7 @@ export function MyApp() {
 				menus={[
 					{
 						label: 'File',
-						items: (
+						content: (
 							<>
 								<MenuItem label="New" shortcut="⌘N" onClick={() => console.log('New')} />
 								<MenuItem
@@ -129,7 +129,7 @@ export function MyDialog() {
 				open={open}
 				onClose={() => setOpen(false)}
 				title="Confirm Action"
-				ariaDescribedBy="confirm-copy"
+				aria-describedby="confirm-copy"
 			>
 				<p id="confirm-copy">Are you sure?</p>
 				<div style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
@@ -185,7 +185,7 @@ export function Generics() {
 	return (
 		<>
 			<ListView<FileRow> items={files} columns={columns} onItemOpen={(row) => row.size} />
-			<Tabs<'general' | 'advanced'> onChange={(index, value) => console.log(index, value)}>
+			<Tabs<'general' | 'advanced'> onValueChange={(value, index) => console.log(value, index)}>
 				<TabPanel label="General" value="general">
 					g
 				</TabPanel>

@@ -1,5 +1,40 @@
 # @liiift-studio/mac-os9-ui
 
+## 2.0.0
+
+### Major Changes
+
+- Remove everything 1.x deprecated, and split `Menu.items` into data and JSX props.
+
+  **Removed — camelCase ARIA aliases.** `ariaLabel`, `ariaLabelledBy`,
+  `ariaDescribedBy` and `ariaPressed` are gone from Button, Checkbox, Dialog,
+  ListView, Radio, RadioGroup, Scrollbar, Tabs and TextField. Use the standard
+  hyphenated attributes, which React passes through unchanged.
+
+  **Removed — value-shaped `onChange`.** `RadioGroup`, `Scrollbar` and `Tabs`
+  report a value, so `onValueChange` is now the only name they answer to.
+  `Tabs.onValueChange` leads with the value: `(value, index)`.
+
+  **Removed — single-purpose `*ClassName` props.** `TextField.wrapperClassName`,
+  `Tabs.tabListClassName`, `Tabs.panelClassName`, `MenuBar.dropdownClassName`,
+  `MenuDropdown.dropdownClassName`, `Dialog.backdropClassName` and
+  `Dialog.dialogClasses` all fold into the typed `classes` object.
+
+  **Changed — `Menu.items` splits into `items` (data) and `content` (JSX).** The
+  1.x union was disambiguated at runtime by asking whether the first array element
+  was a React element, which mis-read `items={[<MenuItem />]}` as data and rendered
+  an empty menu with no error. The JSX-valued `items` prop on `MenuItem` and
+  `MenuDropdown` is likewise now `content`, so across the MenuBar family `items`
+  always means data and `content` always means JSX. A menu whose `items` is `[]`
+  opens no dropdown rather than an empty `role="menu"` panel.
+
+  **Deprecated — `Window.contentClassName`.** The one `*ClassName` prop that was
+  never marked deprecated in 1.x, so it could not be removed here. It warns
+  through 2.x and goes in 3.0. Use `classes.content`.
+
+  Internal: `src/utils/aria.ts` (`resolveAria`, `LegacyAriaProps`) is deleted; it
+  existed only to resolve the ARIA aliases and was never exported from the root.
+
 ## 1.0.0
 
 ### Major Changes

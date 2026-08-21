@@ -149,7 +149,7 @@ export function Desktop() {
 							onClose={() => undefined}
 						>
 							<div className="pane">
-								<Tabs ariaLabel="Reasons to use this library">
+								<Tabs aria-label="Reasons to use this library">
 									<TabPanel label="Real behaviour">
 										<p>
 											The chrome works, not just looks. Windows drag and resize with the pointer
@@ -235,7 +235,7 @@ export function Desktop() {
 					onClose={() => setDialogOpen(false)}
 					title="Dialog"
 					width={380}
-					ariaDescribedBy="dialog-copy"
+					aria-describedby="dialog-copy"
 				>
 					<div className="pane">
 						<p id="dialog-copy">

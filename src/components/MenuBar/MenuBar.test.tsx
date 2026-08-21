@@ -11,8 +11,8 @@ import { checkA11y } from '../../test/axe';
 import { nth } from '../../test/nth';
 
 const menus: Menu[] = [
-	{ label: 'File', items: <MenuItem label="Open…" shortcut="⌘O" /> },
-	{ label: 'Edit', items: <MenuItem label="Undo" shortcut="⌘Z" /> },
+	{ label: 'File', content: <MenuItem label="Open…" shortcut="⌘O" /> },
+	{ label: 'Edit', content: <MenuItem label="Undo" shortcut="⌘Z" /> },
 	{ label: 'Help', type: 'link', href: '/help' },
 ];
 
@@ -180,9 +180,9 @@ describe('MenuBar', () => {
 			render(
 				<MenuBar
 					menus={[
-						{ label: 'File', items: <MenuItem label="Open…" /> },
-						{ label: 'Edit', disabled: true, items: <MenuItem label="Undo" /> },
-						{ label: 'View', items: <MenuItem label="Zoom" /> },
+						{ label: 'File', content: <MenuItem label="Open…" /> },
+						{ label: 'Edit', disabled: true, content: <MenuItem label="Undo" /> },
+						{ label: 'View', content: <MenuItem label="Zoom" /> },
 					]}
 				/>
 			);
@@ -191,6 +191,52 @@ describe('MenuBar', () => {
 			fireEvent.keyDown(screen.getByRole('menubar'), { key: 'ArrowRight' });
 
 			expect(screen.getByRole('menuitem', { name: 'View' })).toHaveFocus();
+		});
+	});
+
+	describe('items and content are separate props', () => {
+		// 1.x had a single `items` prop typed `ReactNode | MenuItemData[]` and
+		// told the two apart at runtime by asking whether the first array
+		// element was a React element — so `[<MenuItem />]`, an ordinary way
+		// to write one JSX child, was read as data and rendered an empty menu.
+		// 2.0 splits them so the type decides instead.
+		it('renders data from items and JSX from content', () => {
+			render(
+				<MenuBar
+					menus={[
+						{ label: 'File', items: [{ label: 'Open…' }] },
+						{ label: 'Edit', content: <MenuItem label="Undo" /> },
+					]}
+					defaultOpenMenuIndex={0}
+				/>
+			);
+			expect(screen.getByRole('menuitem', { name: /Open/ })).toBeInTheDocument();
+		});
+
+		it('opens no dropdown for an empty items array', () => {
+			render(<MenuBar menus={[{ label: 'File', items: [] }]} defaultOpenMenuIndex={0} />);
+
+			// An empty `role="menu"` with no `menuitem` children is not a
+			// useful thing to show a screen reader, so nothing opens.
+			expect(screen.getAllByRole('menuitem')).toHaveLength(1);
+			expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+		});
+
+		it('prefers items when a menu supplies both', () => {
+			render(
+				<MenuBar
+					menus={[
+						{
+							label: 'File',
+							items: [{ label: 'FromData' }],
+							content: <MenuItem label="FromJSX" />,
+						},
+					]}
+					defaultOpenMenuIndex={0}
+				/>
+			);
+			expect(screen.getByRole('menuitem', { name: 'FromData' })).toBeInTheDocument();
+			expect(screen.queryByRole('menuitem', { name: 'FromJSX' })).not.toBeInTheDocument();
 		});
 	});
 
@@ -268,7 +314,7 @@ describe('compound API', () => {
 		render(
 			<MenuBar
 				defaultOpenMenuIndex={0}
-				menus={[{ label: 'File', items: <MenuBar.Item label="Open…" shortcut="⌘O" /> }]}
+				menus={[{ label: 'File', content: <MenuBar.Item label="Open…" shortcut="⌘O" /> }]}
 			/>
 		);
 		expect(screen.getByRole('menuitem', { name: /Open/ })).toBeInTheDocument();
@@ -278,7 +324,7 @@ describe('compound API', () => {
 		render(
 			<MenuBar
 				defaultOpenMenuIndex={0}
-				menus={[{ label: 'File', items: <MenuItem label="Save" /> }]}
+				menus={[{ label: 'File', content: <MenuItem label="Save" /> }]}
 			/>
 		);
 		expect(screen.getByRole('menuitem', { name: 'Save' })).toBeInTheDocument();

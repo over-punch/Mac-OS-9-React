@@ -2,8 +2,8 @@
 //
 // `onChange` is the native DOM change handler, on the components that wrap a
 // native input. `onValueChange` is the parsed value, on every component that
-// reports one. Where a component previously used `onChange` for a value, that
-// name still works and warns once.
+// reports one. 1.x also accepted `onChange` for a value and warned; 2.0
+// removed those aliases, so the two names never overlap.
 
 import { describe, it, expect, vi, beforeEach, afterEach, type MockInstance } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
@@ -110,27 +110,33 @@ describe('onValueChange means the parsed value', () => {
 	});
 });
 
-describe('the deprecated value-shaped onChange', () => {
-	it('still works on RadioGroup, and warns once', () => {
+describe('the value-shaped onChange alias, removed in 2.0', () => {
+	// These components report a value, not a DOM event, so `onValueChange` is
+	// the only name they answer to. 1.x accepted `onChange` for the same thing
+	// and warned; 2.0 removed it. The cast is how a 1.x caller's code reaches
+	// the component now that the prop is off the type — the point of the test
+	// is that it is inert rather than quietly still wired up.
+	it('is gone from RadioGroup', () => {
 		const onChange = vi.fn();
+		const legacy = { onChange } as unknown as { onValueChange?: (value: string) => void };
 		render(
-			<RadioGroup name="v" aria-label="v" onChange={onChange}>
+			<RadioGroup name="v" aria-label="v" {...legacy}>
 				<Radio value="icon" label="Icons" />
 				<Radio value="list" label="List" />
 			</RadioGroup>
 		);
 		fireEvent.click(screen.getByLabelText('List'));
 
-		expect(onChange).toHaveBeenCalledWith('list');
-		expect(
-			warn.mock.calls.filter((call: unknown[]) => String(call[0]).includes('`onChange`'))
-		).toHaveLength(1);
+		expect(onChange).not.toHaveBeenCalled();
 	});
 
-	it('still works on Tabs, with the old argument order', () => {
+	it('is gone from Tabs', () => {
 		const onChange = vi.fn();
+		const legacy = { onChange } as unknown as {
+			onValueChange?: (value: string | undefined, index: number) => void;
+		};
 		render(
-			<Tabs onChange={onChange}>
+			<Tabs {...legacy}>
 				<TabPanel label="One" value="one">
 					1
 				</TabPanel>
@@ -140,21 +146,16 @@ describe('the deprecated value-shaped onChange', () => {
 			</Tabs>
 		);
 		fireEvent.click(screen.getByRole('tab', { name: 'Two' }));
-		expect(onChange).toHaveBeenCalledWith(1, 'two');
+
+		expect(onChange).not.toHaveBeenCalled();
 	});
 
-	it('loses to onValueChange when both are given', () => {
+	it('is gone from Scrollbar', () => {
 		const onChange = vi.fn();
-		const onValueChange = vi.fn();
-		render(
-			<RadioGroup name="v" aria-label="v" onChange={onChange} onValueChange={onValueChange}>
-				<Radio value="icon" label="Icons" />
-				<Radio value="list" label="List" />
-			</RadioGroup>
-		);
-		fireEvent.click(screen.getByLabelText('List'));
+		const legacy = { onChange } as unknown as { onValueChange?: (value: number) => void };
+		render(<Scrollbar aria-label="Doc" value={0.5} viewportRatio={0.3} {...legacy} />);
+		fireEvent.keyDown(screen.getByRole('scrollbar'), { key: 'End' });
 
-		expect(onValueChange).toHaveBeenCalledWith('list');
 		expect(onChange).not.toHaveBeenCalled();
 	});
 });

@@ -11,10 +11,9 @@ import styles from './MenuBar.module.css';
 /**
  * A dropdown entry described as data rather than JSX.
  *
- * `Menu.items` accepts either React nodes or an array of these. The data form
- * exists because the JSX-only shape made menus impossible to serialise, diff,
- * or drive from a CMS, an API response, or a config file — anything that
- * wanted a menu had to construct React elements first.
+ * The data form exists because a JSX-only shape makes menus impossible to
+ * serialise, diff, or drive from a CMS, an API response, or a config file —
+ * anything that wants a menu would first have to construct React elements.
  */
 export interface MenuItemData {
 	/** Item label text */
@@ -55,14 +54,28 @@ export interface Menu {
 	type?: 'dropdown' | 'link';
 
 	/**
-	 * Menu items (content of the dropdown).
+	 * Dropdown entries as data. MenuBar renders each one as a `MenuItem`,
+	 * including any nested `submenu`.
 	 *
-	 * Either React nodes — typically `<MenuItem>` elements — or an array of
-	 * {@link MenuItemData}, which MenuBar renders for you.
+	 * Use this or {@link Menu.content}, not both — `items` wins if you pass
+	 * both. One of the two is required when `type` is `'dropdown'`; an empty
+	 * array opens no dropdown, since there would be nothing in it.
 	 *
-	 * Required when type is 'dropdown'
+	 * In 1.x this prop also accepted React nodes, and the two forms were told
+	 * apart at runtime by asking whether the first array element was a React
+	 * element. That guess mis-read `[<MenuItem />]` — a perfectly ordinary way
+	 * to write one JSX child — as data, and rendered an empty menu. The forms
+	 * are separate props now, so the type tells them apart instead of a guess.
 	 */
-	items?: React.ReactNode | readonly MenuItemData[];
+	items?: readonly MenuItemData[];
+
+	/**
+	 * Dropdown content as JSX — typically `<MenuItem>` elements, but any node
+	 * works when a menu needs custom markup.
+	 *
+	 * Use this or {@link Menu.items}, not both.
+	 */
+	content?: React.ReactNode;
 
 	/**
 	 * Link href (for link-type menus)
@@ -145,9 +158,6 @@ export interface MenuBarProps {
 	 */
 	classes?: MenuBarClasses;
 
-	/** @deprecated Use `classes.dropdown`. */
-	dropdownClassName?: string;
-
 	/**
 	 * Content to display on the left side (typically a logo)
 	 */
@@ -158,11 +168,6 @@ export interface MenuBarProps {
 	 * Can be a single element or array of elements
 	 */
 	rightContent?: React.ReactNode | React.ReactNode[];
-}
-
-/** Narrows `Menu.items` to the data form. */
-function isMenuItemDataArray(items: Menu['items']): items is readonly MenuItemData[] {
-	return Array.isArray(items) && (items.length === 0 || !React.isValidElement(items[0]));
 }
 
 /** Renders the data form of a menu into MenuItem elements. */
@@ -177,7 +182,7 @@ function renderMenuItemData(items: readonly MenuItemData[]): React.ReactNode {
 			separator={item.separator}
 			icon={item.icon}
 			onClick={item.onClick}
-			items={item.submenu ? renderMenuItemData(item.submenu) : undefined}
+			content={item.submenu ? renderMenuItemData(item.submenu) : undefined}
 		/>
 	));
 }
@@ -242,7 +247,6 @@ const MenuBarRoot = forwardRef<HTMLDivElement, MenuBarProps>(
 			onMenuClose,
 			className = '',
 			classes,
-			dropdownClassName = '',
 			leftContent,
 			rightContent,
 		},
@@ -424,7 +428,7 @@ const MenuBarRoot = forwardRef<HTMLDivElement, MenuBarProps>(
 
 		// Class names
 		const menuBarClassNames = mergeClasses(styles.menuBar, className, classes?.root);
-		const dropdownClassNames = mergeClasses(styles.dropdown, dropdownClassName, classes?.dropdown);
+		const dropdownClassNames = mergeClasses(styles.dropdown, classes?.dropdown);
 
 		// Callback ref to handle both internal state and forwarded ref
 		const handleRef = useCallback(
@@ -523,14 +527,12 @@ const MenuBarRoot = forwardRef<HTMLDivElement, MenuBarProps>(
 									{label}
 								</button>
 
-								{isOpen && isDropdown && menu.items && (
+								{isOpen && isDropdown && (menu.items?.length || menu.content) && (
 									// aria-labelledby ties the dropdown back to the trigger
 									// that opened it, so assistive tech announces "File menu"
 									// rather than an anonymous menu.
 									<div className={dropdownClassNames} role="menu" aria-labelledby={id}>
-										{isMenuItemDataArray(menu.items)
-											? renderMenuItemData(menu.items)
-											: (menu.items as React.ReactNode)}
+										{menu.items ? renderMenuItemData(menu.items) : menu.content}
 									</div>
 								)}
 							</div>

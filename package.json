@@ -1,6 +1,6 @@
 {
 	"name": "@liiift-studio/mac-os9-ui",
-	"version": "1.0.0",
+	"version": "2.0.0",
 	"description": "A pixel-perfect Mac OS 9 UI component library for React and TypeScript",
 	"private": false,
 	"sideEffects": [
