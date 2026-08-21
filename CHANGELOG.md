@@ -1,5 +1,35 @@
 # @liiift-studio/mac-os9-ui
 
+## 2.1.1
+
+### Patch Changes
+
+- Fix three defects: a window that resized when you grabbed it, and two found while filling coverage gaps.
+
+  A `Window` switches to `position: absolute` the moment a drag starts. Any width
+  it was inheriting — a grid cell, a flex child, a `width: 100%` rule — then
+  resolved against the positioned ancestor instead, so the window visibly jumped
+  to a different size as you touched the title bar. It now measures itself once
+  at the start of the gesture and keeps the size it already had.
+
+  `maxWidth` and `maxHeight` now constrain layout as well as resizing. They were
+  passed to the resize hook and nowhere else, so the props only took effect once
+  you dragged the grow box.
+
+  `Button` with `asChild` called `React.Children.only`, which throws on anything
+  that is not exactly one element — taking down the consumer's tree, and throwing
+  before the component's own `isValidElement` check could run, so its friendlier
+  error message and `return null` were unreachable. It now counts children
+  instead and fails soft: a development error naming what it received, and
+  nothing rendered.
+
+  `FolderList` declared `classes.window` and `classes.titleBar` but forwarded
+  neither, so setting either did nothing. Both now reach the underlying `Window`.
+  `FolderList` also reached the content area through `Window`'s
+  `contentClassName`, which 2.0 deprecated — so every `FolderList` render logged a
+  deprecation warning about a prop the consumer had never passed and could not
+  stop passing. It goes through `classes` now.
+
 ## 2.1.0
 
 ### Minor Changes

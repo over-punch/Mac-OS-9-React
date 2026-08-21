@@ -486,11 +486,33 @@ export const Window = forwardRef<HTMLDivElement, WindowProps>(
 			[]
 		);
 
+		/**
+		 * Pin the rendered size before the window leaves normal flow.
+		 *
+		 * Grabbing a window switches it to `position: absolute`. Any width it
+		 * was getting from its parent — a grid cell, a flex child, a `width:
+		 * 100%` rule — then resolves against the positioned ancestor instead,
+		 * so the window visibly jumped to a different size the instant you
+		 * touched the title bar. Measuring once at the start of the gesture
+		 * and committing that as an explicit size keeps it exactly the size it
+		 * already was.
+		 */
+		const freezeSize = useCallback(() => {
+			if (hasBeenResized) return;
+			const node = windowRef.current;
+			if (!node) return;
+			const rect = node.getBoundingClientRect();
+			if (rect.width === 0 && rect.height === 0) return;
+			setInternalSize({ width: rect.width, height: rect.height });
+			setHasBeenResized(true);
+		}, [hasBeenResized]);
+
 		const { isDragging, handleProps: dragHandleProps } = useDraggable({
 			enabled: draggable,
 			resolveTarget: resolveWindow,
 			boundary,
 			boundaryBuffer: DRAG_BOUNDARY_BUFFER,
+			onDragStart: freezeSize,
 			onDrag: commitPosition,
 		});
 
@@ -621,6 +643,13 @@ export const Window = forwardRef<HTMLDivElement, WindowProps>(
 		if (currentHeight !== 'auto') {
 			windowStyle.height = typeof currentHeight === 'number' ? `${currentHeight}px` : currentHeight;
 		}
+
+		// The size bounds constrain layout, not just the resize gesture. They
+		// used to be handed to useResizable and nowhere else, so a window with
+		// `maxWidth` still laid out wider than it if its content or its parent
+		// said so — the prop only took effect once you dragged the grow box.
+		if (maxWidth !== undefined) windowStyle.maxWidth = maxWidth;
+		if (maxHeight !== undefined) windowStyle.maxHeight = maxHeight;
 
 		if (isPositioned && currentPosition) {
 			windowStyle.position = 'absolute';

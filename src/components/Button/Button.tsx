@@ -418,11 +418,21 @@ const ButtonImpl = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonProps
 	// The child owns the element and its own href/navigation; Button only
 	// contributes styling, ARIA, and the disabled/loading behaviour.
 	if (asChild) {
-		const child = Children.only(children);
+		// `Children.only` throws on anything that is not exactly one element,
+		// which took down the consumer's whole tree — and threw before the
+		// check below could run, so the friendlier message and the `return
+		// null` were both unreachable. Counting the children instead keeps the
+		// failure soft: a development error naming the problem, and nothing
+		// rendered, rather than an exception from inside the library.
+		const only = Children.toArray(children);
+		const child = only.length === 1 ? only[0] : undefined;
 
 		if (!isValidElement(child)) {
 			if (process.env.NODE_ENV !== 'production') {
-				console.error('Button: `asChild` expects a single React element child.');
+				console.error(
+					'Button: `asChild` expects a single React element child, ' +
+						`received ${only.length === 1 ? 'a non-element' : `${only.length} children`}.`
+				);
 			}
 			return null;
 		}

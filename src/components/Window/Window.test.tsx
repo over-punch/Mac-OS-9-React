@@ -365,6 +365,67 @@ describe('Window', () => {
 		});
 	});
 
+	describe('size on drag', () => {
+		it('keeps the size it already had when the drag starts', () => {
+			// Grabbing a window switches it to position: absolute. Any width it
+			// was inheriting from a grid cell or a `width: 100%` rule then
+			// resolves against the positioned ancestor instead, so the window
+			// jumped to a different size the moment you touched the title bar.
+			stubLayout({ width: 420, height: 260 });
+
+			const { container } = render(
+				<Window title="W" draggable>
+					c
+				</Window>
+			);
+			const windowEl = container.querySelector('[class*="window"]') as HTMLElement;
+			const titleBar = container.querySelector('[class*="titleBar"]') as HTMLElement;
+
+			expect(windowEl.style.width).toBe('');
+
+			fireEvent.pointerDown(titleBar, { clientX: 10, clientY: 10, isPrimary: true });
+
+			expect(windowEl.style.width).toBe('420px');
+			expect(windowEl.style.height).toBe('260px');
+
+			fireEvent.pointerUp(document);
+		});
+
+		it('leaves an explicit width alone', () => {
+			stubLayout({ width: 420, height: 260 });
+
+			const { container } = render(
+				<Window title="W" draggable width={300}>
+					c
+				</Window>
+			);
+			const titleBar = container.querySelector('[class*="titleBar"]') as HTMLElement;
+			const windowEl = container.querySelector('[class*="window"]') as HTMLElement;
+
+			fireEvent.pointerDown(titleBar, { clientX: 10, clientY: 10, isPrimary: true });
+
+			expect(windowEl.style.width).toBe('300px');
+
+			fireEvent.pointerUp(document);
+		});
+	});
+
+	describe('size bounds', () => {
+		it('applies maxWidth and maxHeight to layout, not just to resizing', () => {
+			// These used to be handed to the resize hook and nowhere else, so
+			// the prop only took effect once you dragged the grow box.
+			const { container } = render(
+				<Window title="W" maxWidth={480} maxHeight={320}>
+					c
+				</Window>
+			);
+			const windowEl = container.querySelector('[class*="window"]') as HTMLElement;
+
+			expect(windowEl.style.maxWidth).toBe('480px');
+			expect(windowEl.style.maxHeight).toBe('320px');
+		});
+	});
+
 	describe('contentClassName', () => {
 		// The last surviving single-purpose `*ClassName` prop. It was never
 		// marked deprecated in 1.x, so it could not be removed with the rest

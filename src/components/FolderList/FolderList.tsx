@@ -7,7 +7,7 @@
 // silently dropped at bundle time.
 
 import React, { forwardRef } from 'react';
-import { Window, WindowProps } from '../Window/Window';
+import { Window, WindowProps, type WindowClasses } from '../Window/Window';
 import {
 	ListView,
 	ListColumn,
@@ -15,6 +15,7 @@ import {
 	ListViewClasses,
 	ListViewProps,
 } from '../ListView/ListView';
+import { mergeClasses } from '../../utils/classNames';
 import styles from './FolderList.module.css';
 
 /**
@@ -23,7 +24,7 @@ import styles from './FolderList.module.css';
 export interface FolderListClasses {
 	/** Root window container */
 	root?: string;
-	/** Window component */
+	/** Window content area, around the list */
 	window?: string;
 	/** Title bar */
 	titleBar?: string;
@@ -144,7 +145,9 @@ function FolderListInner<TItem extends ListItem = ListItem>(
 	}: FolderListProps<TItem>,
 	ref: React.ForwardedRef<HTMLDivElement>
 ) {
-	// Build ListView classes from FolderList classes
+	// FolderList is a Window wrapped around a ListView, so its `classes`
+	// object has to be split across both halves. `window` and `titleBar` were
+	// declared here but never forwarded, so setting either did nothing at all.
 	const listViewClasses: ListViewClasses | undefined = classes
 		? {
 				root: classes.listView,
@@ -156,11 +159,20 @@ function FolderListInner<TItem extends ListItem = ListItem>(
 			}
 		: undefined;
 
+	// The content class is passed through `classes` rather than the
+	// `contentClassName` prop: that prop is deprecated as of 2.0, and passing
+	// it from inside the library made every FolderList render log a
+	// deprecation warning the consumer had no way to act on.
+	const windowClasses: WindowClasses = {
+		titleBar: classes?.titleBar,
+		content: mergeClasses(styles.folderListContent, classes?.window),
+	};
+
 	// Window content with ListView
 	return (
 		<Window
 			ref={ref}
-			contentClassName={styles.folderListContent}
+			classes={windowClasses}
 			onMouseEnter={onMouseEnter}
 			className={classes?.root}
 			{...windowProps}

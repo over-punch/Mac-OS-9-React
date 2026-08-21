@@ -278,4 +278,182 @@ describe('Button', () => {
 		expect(button).toHaveClass('custom');
 		expect(button).toBeDisabled();
 	});
+
+	// ---- asChild ---------------------------------------------------------
+	//
+	// The caller owns the element and its navigation; Button contributes
+	// styling, ARIA and the disabled/loading behaviour. These were the least
+	// covered paths in the component.
+	describe('asChild', () => {
+		it('renders the child element rather than a button', () => {
+			render(
+				<Button asChild>
+					<a href="/docs">Docs</a>
+				</Button>
+			);
+
+			const link = screen.getByRole('link', { name: 'Docs' });
+			expect(link).toHaveAttribute('href', '/docs');
+			expect(screen.queryByRole('button')).not.toBeInTheDocument();
+		});
+
+		it("merges its classes onto the child without dropping the child's own", () => {
+			render(
+				<Button asChild className="from-button">
+					<a href="/docs" className="from-child">
+						Docs
+					</a>
+				</Button>
+			);
+
+			const link = screen.getByRole('link', { name: 'Docs' });
+			expect(link).toHaveClass('from-child');
+			expect(link.className).toContain('from-button');
+		});
+
+		it("keeps the child's own onClick", () => {
+			const onClick = vi.fn();
+			render(
+				<Button asChild>
+					<a href="#x" onClick={onClick}>
+						Docs
+					</a>
+				</Button>
+			);
+
+			fireEvent.click(screen.getByRole('link'));
+
+			expect(onClick).toHaveBeenCalled();
+		});
+
+		it("suppresses the child's onClick when disabled", () => {
+			// An anchor has no native disabled state, so this is the only thing
+			// stopping a disabled Button from navigating.
+			const onClick = vi.fn();
+			render(
+				<Button asChild disabled>
+					<a href="#x" onClick={onClick}>
+						Docs
+					</a>
+				</Button>
+			);
+
+			fireEvent.click(screen.getByRole('link'));
+
+			expect(onClick).not.toHaveBeenCalled();
+		});
+
+		it("suppresses the child's onClick while loading", () => {
+			const onClick = vi.fn();
+			render(
+				<Button asChild loading>
+					<a href="#x" onClick={onClick}>
+						Docs
+					</a>
+				</Button>
+			);
+
+			fireEvent.click(screen.getByRole('link'));
+
+			expect(onClick).not.toHaveBeenCalled();
+		});
+
+		it('renders nothing and complains when the child is not an element', () => {
+			// Fails soft rather than throwing: `Children.only` used to take the
+			// consumer's whole tree down before this message could be logged.
+			const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+			const { container } = render(<Button asChild>just text</Button>);
+
+			expect(container.firstChild).toBeNull();
+			expect(error).toHaveBeenCalledWith(expect.stringContaining('asChild'));
+			error.mockRestore();
+		});
+
+		it('renders nothing and complains when given several children', () => {
+			const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+			const { container } = render(
+				<Button asChild>
+					<a href="/a">A</a>
+					<a href="/b">B</a>
+				</Button>
+			);
+
+			expect(container.firstChild).toBeNull();
+			expect(error).toHaveBeenCalledWith(expect.stringContaining('2 children'));
+			error.mockRestore();
+		});
+	});
+
+	// ---- as="a" ----------------------------------------------------------
+	describe('as an anchor', () => {
+		it('renders a link with its href', () => {
+			render(
+				<Button as="a" href="/docs">
+					Docs
+				</Button>
+			);
+			expect(screen.getByRole('link', { name: 'Docs' })).toHaveAttribute('href', '/docs');
+		});
+
+		it('adds rel="noopener noreferrer" for target="_blank"', () => {
+			render(
+				<Button as="a" href="https://example.com" target="_blank">
+					Out
+				</Button>
+			);
+			expect(screen.getByRole('link')).toHaveAttribute('rel', 'noopener noreferrer');
+		});
+
+		it('leaves an explicit rel alone', () => {
+			render(
+				<Button as="a" href="https://example.com" target="_blank" rel="nofollow">
+					Out
+				</Button>
+			);
+			expect(screen.getByRole('link')).toHaveAttribute('rel', 'nofollow');
+		});
+
+		it('strips a javascript: href rather than rendering it', () => {
+			// Fail closed: a visible but non-functional link beats one that
+			// executes whatever was in the untrusted string.
+			render(
+				<Button as="a" href={'javascript:alert(1)' as string}>
+					Bad
+				</Button>
+			);
+
+			const link = screen.getByText('Bad').closest('a');
+			expect(link?.getAttribute('href') ?? '').not.toContain('javascript');
+		});
+
+		it('carries aria-disabled and blocks the click when disabled', () => {
+			const onClick = vi.fn();
+			render(
+				<Button as="a" href="/docs" disabled onClick={onClick}>
+					Docs
+				</Button>
+			);
+
+			const link = screen.getByText('Docs').closest('a')!;
+			expect(link).toHaveAttribute('aria-disabled', 'true');
+
+			fireEvent.click(link);
+			expect(onClick).not.toHaveBeenCalled();
+		});
+
+		it('calls onClick when it is not disabled', () => {
+			const onClick = vi.fn();
+			render(
+				<Button as="a" href="#x" onClick={onClick}>
+					Docs
+				</Button>
+			);
+
+			fireEvent.click(screen.getByRole('link'));
+
+			expect(onClick).toHaveBeenCalled();
+		});
+	});
 });
