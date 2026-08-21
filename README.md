@@ -45,10 +45,10 @@ import { Window, Button } from '@liiift-studio/mac-os9-ui';
 | **React** | 18 or 19 — both are exercised by the test matrix in CI (`react` and `react-dom` are peer dependencies) |
 | **Runtime dependencies** | None |
 | **Module formats** | ESM (`dist/index.js`) and CommonJS (`dist/index.cjs`) |
-| **Bundle** | 186 KB ESM, 46 KB gzipped |
+| **Bundle** | 186 KB ESM, 46 KB gzipped for the whole library — but see tree-shaking below |
 | **Stylesheet** | 100 KB, 17 KB gzipped |
 | **Fonts** | 20 KB fetched by an ASCII page — the family is split into `latin` and `latin-ext` subsets with `unicode-range`, so only the parts your text needs are downloaded (49 KB of woff2 total) |
-| **Published tarball** | 295 kB (901 kB unpacked, 38 files) |
+| **Published tarball** | 309 kB (932 kB unpacked) |
 | **Types** | Bundled `.d.ts` and `.d.cts` |
 
 ### Server components and `'use client'`
@@ -67,9 +67,22 @@ import '@liiift-studio/mac-os9-ui/styles';
 
 ### Tree-shaking
 
-`sideEffects` is scoped to CSS only, so an ESM bundler can drop the components
-you don't import. There are no deep subpath entry points — everything comes
-from the package root.
+Import what you need from the package root; your bundler drops the rest.
+
+```ts
+import { Button } from '@liiift-studio/mac-os9-ui';
+```
+
+That produces about **3 KB** of JavaScript, against 77 KB for the whole
+library. The package ships as preserved modules — one output file per source
+module, rather than a single flattened bundle — because a flattened bundle
+cannot be tree-shaken at all here: each component's `displayName` assignment is
+a top-level statement referencing it, so nothing could be dropped and a
+Button-only import pulled 69 KB. `sideEffects` is scoped to CSS, so only the
+stylesheet is treated as unconditional.
+
+There are no deep subpath entry points, and they would not buy anything: the
+root import already gives you only what you use.
 
 ## The demo is the library
 

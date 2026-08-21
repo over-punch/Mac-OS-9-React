@@ -16,24 +16,26 @@ export default [
 	// Main build for ESM and CJS
 	{
 		input: 'src/index.ts',
-		output: [
-			{
-				file: packageJson.module,
-				format: 'esm',
-				// Source maps are deliberately off for the published build: they
-				// leak absolute TS source paths and roughly double the tarball
-				// for no consumer benefit, since the sources aren't shipped.
-				sourcemap: false,
-				banner: '"use client";',
-			},
-			{
-				file: packageJson.main,
-				format: 'cjs',
-				sourcemap: false,
-				banner: '"use client";',
-				exports: 'named',
-			},
-		],
+		// `preserveModules` keeps the source module graph in the output instead
+		// of flattening it into one file.
+		//
+		// Bundling to a single file destroyed tree-shaking: every component's
+		// `X.displayName = 'X'` is a top-level statement referencing that
+		// component, so within one module nothing could be dropped. Importing
+		// only Button pulled 69 KB of a 74 KB library. With the modules
+		// preserved, a bundler can discard the files an app never imports.
+		output: {
+			dir: 'dist',
+			format: 'esm',
+			preserveModules: true,
+			preserveModulesRoot: 'src',
+			entryFileNames: '[name].js',
+			// Source maps are deliberately off for the published build: they
+			// leak absolute TS source paths and roughly double the tarball for
+			// no consumer benefit, since the sources aren't shipped.
+			sourcemap: false,
+			banner: '"use client";',
+		},
 		plugins: [
 			// Automatically externalize peer dependencies
 			peerDepsExternal(),
@@ -145,6 +147,58 @@ export default [
 		// `react/jsx-runtime` is a subpath of the `react` package, so the
 		// existing `react` peerDependency already covers it — it does not need
 		// its own peerDependencies entry.
+		external: ['react', 'react-dom', 'react/jsx-runtime'],
+	},
+
+	// CommonJS build.
+	//
+	// A separate config rather than a second output on the ESM one, because
+	// @rollup/plugin-typescript requires `declarationDir` to sit inside the
+	// output `dir` — and two different dirs cannot both contain it. The ESM
+	// pass owns declaration emit; this one only transpiles.
+	{
+		input: 'src/index.ts',
+		output: {
+			dir: 'dist/cjs',
+			format: 'cjs',
+			preserveModules: true,
+			preserveModulesRoot: 'src',
+			entryFileNames: '[name].cjs',
+			sourcemap: false,
+			banner: '"use client";',
+			exports: 'named',
+		},
+		plugins: [
+			peerDepsExternal(),
+			resolve({ extensions: ['.ts', '.tsx', '.js', '.jsx'] }),
+			commonjs(),
+			postcss({
+				plugins: [postcssImport()],
+				modules: { generateScopedName: '[name]_[local]' },
+				// The ESM pass writes dist/index.css; this one only needs the
+				// class-name mapping, not a second copy of the stylesheet.
+				extract: false,
+				inject: false,
+				minimize: false,
+				sourceMap: false,
+				autoModules: true,
+				test: /\.css$/,
+			}),
+			typescript({
+				tsconfig: './tsconfig.json',
+				declaration: false,
+				declarationMap: false,
+				exclude: [
+					'**/*.test.tsx',
+					'**/*.test.ts',
+					'**/*.stories.tsx',
+					'**/__readme_check__/**',
+					'src/test/**',
+					'node_modules',
+					'dist',
+				],
+			}),
+		],
 		external: ['react', 'react-dom', 'react/jsx-runtime'],
 	},
 
