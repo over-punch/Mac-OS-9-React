@@ -1,7 +1,7 @@
 # Progress: Mac OS 9 UI Component Library
 
-**Version:** 0.3.3
-**Last synced:** 2026-05-27
+**Version:** 0.3.3 (unreleased changes on `main`)
+**Last synced:** 2026-08-20
 
 ## Shipped components
 
@@ -77,3 +77,35 @@ The previous five-phase plan is largely complete. Current focus is correctness a
 4. **Token system overhaul** — single source of truth, semantic layer, component-level overrides (#17, #58–#62)
 5. **Performance pass** — rAF throttling, ref-based drag callbacks, ListView row memoization (#21–#23, #51–#54)
 6. **Pointer Events migration** — mobile-capable drag/resize/scrollbar (#11)
+
+
+## Panel-review backlog (synced 2026-08-20)
+
+92 of the 112 open review issues are closed. The 20 that remain are open
+deliberately, each with a comment on the issue explaining why:
+
+| Issue | Why it is still open |
+|-------|----------------------|
+| #41 | Standard `aria-*` done for Button only; Tabs/Scrollbar/RadioGroup/Dialog/TextField still camelCase. Implementation exists on `origin/fix/api-taxonomy`. |
+| #44 | `onChange` shapes still vary. Needs a decided convention before churning every signature. |
+| #45 | Checkbox/Radio have `error` but no message slot, unlike TextField/Select. |
+| #47 | The `classes` slot pattern is on 4 of 18 components. |
+| #55 | `useOutsideClick` / `useMenuPosition` landed; Window and Scrollbar still have inline gesture code. `origin/fix/window-gesture-hooks` extracts it. |
+| #57 | Feature list vs implemented behaviour — largely addressed by the README rewrite; re-audit before closing. |
+| #58 | Naming convention corrected in `techContext.md`; verify nothing else claims the `--mac-os9-` prefix. |
+| #61 | Theme-provider claim removed from `systemPatterns.md`; token override hooks exist. Re-check then close. |
+| #67 | CSS still hardcodes many px values rather than using the spacing scale. |
+| #69 | No deep subpath imports; the barrel always loads. Tree-shaking covers most of the cost. |
+| #76 | Public type exports still expose render-prop and slot internals. |
+| #80, #81, #82 | Addressed by the README rewrite; verify against the rendered page then close. |
+| #88 | Button and IconButton remain separate. Folding them is breaking and needs a decision on `labelPosition`. |
+| #107, #108 | Font subsetting and metric overrides need real font metrics; documented as a known limitation. |
+| #118, #119 | No `primitives/` / `compound/` layer; MenuBar folder still flat-exports three siblings. |
+| #121 | CSP guidance added to the README; verify then close. |
+
+### Verified fixed and closed in this pass
+Everything else, including the whole build pipeline (#68–#74, #101, #109,
+#112–#114), the token layer (#59–#66, #102–#106, #110, #111), Window (#21–#27,
+#54, #98), Dialog (#28–#31, #117), MenuBar (#32–#37, #40, #100), ListView
+(#48, #51–#53, #83), Tabs (#39, #50, #85, #116), Button (#90–#92, #96, #99,
+#115, #123), Select (#38, #49), and testing (#77–#79, #95).

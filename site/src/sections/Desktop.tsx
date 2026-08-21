@@ -189,7 +189,10 @@ export function Desktop() {
 						>
 							<div className="pane">
 								<p className="pane__note">
-									38 icons, drawn as pixel maps rather than traced paths, so they stay sharp.
+									{/* Counted from the registry rather than written down, so it
+									    can't go stale the way "38" did when icons were added. */}
+									{getAllIconNames().length} icons, drawn as pixel maps rather than traced paths, so
+									they stay sharp.
 								</p>
 								<div className="iconGrid">
 									{getAllIconNames().map((name) => (
