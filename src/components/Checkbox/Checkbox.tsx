@@ -7,6 +7,22 @@ import { resolveAria } from '../../utils/aria';
 import { FieldMessage, describedBy, type ErrorLiveRegion } from '../FieldMessage';
 import styles from './Checkbox.module.css';
 
+/**
+ * Classes for targeting Checkbox sub-elements.
+ */
+export interface CheckboxClasses {
+	/** Root wrapper. */
+	root?: string;
+	/** The control itself. */
+	input?: string;
+	/** The visible label. */
+	label?: string;
+	/** Helper text shown when there is no error. */
+	helperText?: string;
+	/** Error text shown while `error` is set. */
+	errorMessage?: string;
+}
+
 export interface CheckboxProps extends Omit<
 	InputHTMLAttributes<HTMLInputElement>,
 	'type' | 'size'
@@ -100,6 +116,11 @@ export interface CheckboxProps extends Omit<
 	className?: string;
 
 	/**
+	 * Classes for targeting sub-elements.
+	 */
+	classes?: CheckboxClasses;
+
+	/**
 	 * Callback when checked state changes
 	 */
 	onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void;
@@ -160,6 +181,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
 			'aria-label': ariaLabelAttr,
 			'aria-describedby': ariaDescribedByAttr,
 			className = '',
+			classes,
 			onChange,
 			id,
 			...props
@@ -188,17 +210,19 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
 			styles[`wrapper--label-${labelPosition}`],
 			disabled && styles['wrapper--disabled'],
 			error && styles['wrapper--error'],
-			className
+			className,
+			classes?.root
 		);
 
 		const checkboxClassNames = mergeClasses(
+			classes?.input,
 			styles.checkbox,
 			styles[`checkbox--${size}`],
 			indeterminate && styles['checkbox--indeterminate'],
 			error && styles['checkbox--error']
 		);
 
-		const labelClassNames = mergeClasses(styles.label, styles[`label--${size}`]);
+		const labelClassNames = mergeClasses(styles.label, styles[`label--${size}`], classes?.label);
 
 		// ARIA attributes
 		//
@@ -273,8 +297,8 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
 					errorMessage={errorMessage}
 					helperText={helperText}
 					errorLiveRegion={errorLiveRegion}
-					helperClassName={styles['helper-text']}
-					errorClassName={styles['error-message']}
+					helperClassName={mergeClasses(styles['helper-text'], classes?.helperText)}
+					errorClassName={mergeClasses(styles['error-message'], classes?.errorMessage)}
 				/>
 			</div>
 		);

@@ -26,6 +26,24 @@ type ComputedAriaAttributes = Pick<
 	'aria-label' | 'aria-describedby' | 'aria-pressed' | 'aria-disabled' | 'aria-busy'
 >;
 
+/**
+ * Classes for targeting Button sub-elements.
+ */
+export interface ButtonClasses {
+	/** Root element — the button, anchor, or asChild target. */
+	root?: string;
+	/** Wrapper around the button's text. */
+	text?: string;
+	/** Wrapper around `leftIcon`. */
+	iconLeft?: string;
+	/** Wrapper around `rightIcon`. */
+	iconRight?: string;
+	/** Wrapper used when `iconOnly` is set. */
+	iconOnly?: string;
+	/** The loading indicator. */
+	spinner?: string;
+}
+
 // Common props shared by button and link variants
 interface BaseButtonProps {
 	/**
@@ -136,6 +154,13 @@ interface BaseButtonProps {
 	 * Additional CSS class names
 	 */
 	className?: string;
+
+	/**
+	 * Classes for targeting sub-elements, so you are not guessing at hashed
+	 * CSS-module names. The keys are typed, so a misspelled slot is a compile
+	 * error rather than a class that silently does nothing.
+	 */
+	classes?: ButtonClasses;
 
 	/**
 	 * Button content
@@ -282,6 +307,7 @@ const ButtonImpl = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonProps
 		ariaDescribedBy,
 		ariaPressed,
 		className = '',
+		classes,
 		children,
 		...restProps
 	} = props;
@@ -328,7 +354,8 @@ const ButtonImpl = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonProps
 		loading && useCursorLoading && styles['button--cursor-loading'],
 		iconOnly && styles['button--icon-only'],
 		(leftIcon || rightIcon) && styles['button--with-icon'],
-		className
+		className,
+		classes?.root
 	);
 
 	// Shared ARIA. These are spread AFTER the caller's remaining props so a
@@ -363,31 +390,46 @@ const ButtonImpl = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonProps
 			return (
 				<>
 					{!useCursorLoading && (
-						<span className={styles['button__loading-spinner']} aria-hidden="true">
+						<span
+							className={mergeClasses(styles['button__loading-spinner'], classes?.spinner)}
+							aria-hidden="true"
+						>
 							⏳
 						</span>
 					)}
-					<span className={styles['button__text']}>{loadingText || children}</span>
+					<span className={mergeClasses(styles['button__text'], classes?.text)}>
+						{loadingText || children}
+					</span>
 				</>
 			);
 		}
 
 		// Icon-only button
 		if (iconOnly) {
-			return <span className={styles['button__icon-only']}>{children}</span>;
+			return (
+				<span className={mergeClasses(styles['button__icon-only'], classes?.iconOnly)}>
+					{children}
+				</span>
+			);
 		}
 
 		// Button with icons
 		return (
 			<>
 				{leftIcon && (
-					<span className={styles['button__icon-left']} aria-hidden="true">
+					<span
+						className={mergeClasses(styles['button__icon-left'], classes?.iconLeft)}
+						aria-hidden="true"
+					>
 						{leftIcon}
 					</span>
 				)}
-				<span className={styles['button__text']}>{children}</span>
+				<span className={mergeClasses(styles['button__text'], classes?.text)}>{children}</span>
 				{rightIcon && (
-					<span className={styles['button__icon-right']} aria-hidden="true">
+					<span
+						className={mergeClasses(styles['button__icon-right'], classes?.iconRight)}
+						aria-hidden="true"
+					>
 						{rightIcon}
 					</span>
 				)}

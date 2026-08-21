@@ -7,6 +7,28 @@ import { resolveAria } from '../../utils/aria';
 import { FieldMessage, describedBy, type ErrorLiveRegion } from '../FieldMessage';
 import styles from './TextField.module.css';
 
+/**
+ * Classes for targeting TextField sub-elements.
+ */
+export interface TextFieldClasses {
+	/** Root wrapper. */
+	root?: string;
+	/** The input or textarea. */
+	input?: string;
+	/** The visible label. */
+	label?: string;
+	/** Wrapper around the control and its icons. */
+	inputWrapper?: string;
+	/** Wrapper around `leftIcon`. */
+	iconLeft?: string;
+	/** Wrapper around `rightIcon`. */
+	iconRight?: string;
+	/** Helper text shown when there is no error. */
+	helperText?: string;
+	/** Error text shown while `error` is set. */
+	errorMessage?: string;
+}
+
 export interface TextFieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'size'> {
 	/**
 	 * Label text for the text field
@@ -83,8 +105,11 @@ export interface TextFieldProps extends Omit<InputHTMLAttributes<HTMLInputElemen
 	className?: string;
 
 	/**
-	 * Custom wrapper class name
+	 * Classes for targeting sub-elements.
 	 */
+	classes?: TextFieldClasses;
+
+	/** @deprecated Use `classes.root`. */
 	wrapperClassName?: string;
 
 	/**
@@ -185,6 +210,7 @@ export const TextField = forwardRef<HTMLInputElement | HTMLTextAreaElement, Text
 			'aria-label': ariaLabelAttr,
 			'aria-describedby': ariaDescribedByAttr,
 			className = '',
+			classes,
 			wrapperClassName = '',
 			type = 'text',
 			id,
@@ -241,14 +267,16 @@ export const TextField = forwardRef<HTMLInputElement | HTMLTextAreaElement, Text
 			styles[`wrapper--label-${labelPosition}`],
 			fullWidth && styles['wrapper--full-width'],
 			disabled && styles['wrapper--disabled'],
-			wrapperClassName
+			wrapperClassName,
+			classes?.root
 		);
 
 		const inputWrapperClassNames = mergeClasses(
 			styles['input-wrapper'],
 			(leftIcon || rightIcon) && styles['input-wrapper--with-icon'],
 			leftIcon && styles['input-wrapper--with-left-icon'],
-			rightIcon && styles['input-wrapper--with-right-icon']
+			rightIcon && styles['input-wrapper--with-right-icon'],
+			classes?.inputWrapper
 		);
 
 		const inputClassNames = mergeClasses(
@@ -256,10 +284,11 @@ export const TextField = forwardRef<HTMLInputElement | HTMLTextAreaElement, Text
 			styles[`input--${size}`],
 			error && styles['input--error'],
 			fullWidth && styles['input--full-width'],
-			className
+			className,
+			classes?.input
 		);
 
-		const labelClassNames = mergeClasses(styles.label, styles[`label--${size}`]);
+		const labelClassNames = mergeClasses(styles.label, styles[`label--${size}`], classes?.label);
 
 		// ARIA attributes
 		const ariaAttributes = {
@@ -278,7 +307,10 @@ export const TextField = forwardRef<HTMLInputElement | HTMLTextAreaElement, Text
 
 				<div className={inputWrapperClassNames}>
 					{leftIcon && (
-						<span className={styles['input-icon-left']} aria-hidden="true">
+						<span
+							className={mergeClasses(styles['input-icon-left'], classes?.iconLeft)}
+							aria-hidden="true"
+						>
 							{leftIcon}
 						</span>
 					)}
@@ -307,7 +339,10 @@ export const TextField = forwardRef<HTMLInputElement | HTMLTextAreaElement, Text
 					)}
 
 					{rightIcon && (
-						<span className={styles['input-icon-right']} aria-hidden="true">
+						<span
+							className={mergeClasses(styles['input-icon-right'], classes?.iconRight)}
+							aria-hidden="true"
+						>
 							{rightIcon}
 						</span>
 					)}
@@ -326,8 +361,8 @@ export const TextField = forwardRef<HTMLInputElement | HTMLTextAreaElement, Text
 					errorMessage={errorMessage}
 					helperText={helperText}
 					errorLiveRegion={errorLiveRegion}
-					helperClassName={styles['helper-text']}
-					errorClassName={styles['error-message']}
+					helperClassName={mergeClasses(styles['helper-text'], classes?.helperText)}
+					errorClassName={mergeClasses(styles['error-message'], classes?.errorMessage)}
 				/>
 			</div>
 		);

@@ -19,6 +19,7 @@
 import React, { forwardRef, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useOutsideClick } from '../../hooks/useOutsideClick';
 import { useMenuPosition } from '../../hooks/useMenuPosition';
+import { mergeClasses } from '../../utils/classNames';
 import styles from './Select.module.css';
 
 /** A single choice in the list. */
@@ -32,6 +33,28 @@ export interface SelectOption<TValue extends string | number = string> {
 	 * control.
 	 */
 	group?: string;
+}
+
+/**
+ * Classes for targeting Select sub-elements.
+ */
+export interface SelectClasses {
+	/** Root wrapper. */
+	root?: string;
+	/** The visible label. */
+	label?: string;
+	/** The button that opens the listbox. */
+	trigger?: string;
+	/** The listbox popup. */
+	listbox?: string;
+	/** An individual option. */
+	option?: string;
+	/** A group heading within the listbox. */
+	group?: string;
+	/** Helper text shown when there is no error. */
+	helperText?: string;
+	/** Error text shown while `error` is set. */
+	errorMessage?: string;
 }
 
 export interface SelectProps<TValue extends string | number = string> {
@@ -103,6 +126,9 @@ export interface SelectProps<TValue extends string | number = string> {
 
 	/** Additional CSS class names */
 	className?: string;
+
+	/** Classes for targeting sub-elements. */
+	classes?: SelectClasses;
 }
 
 /** Index of the first option that isn't disabled, searching in `step` order. */
@@ -136,6 +162,7 @@ function SelectInner<TValue extends string | number = string>(
 		name,
 		id,
 		className = '',
+		classes,
 		'aria-label': ariaLabel,
 		'aria-describedby': ariaDescribedBy,
 	}: SelectProps<TValue>,
@@ -332,26 +359,24 @@ function SelectInner<TValue extends string | number = string>(
 		.filter(Boolean)
 		.join(' ');
 
-	const wrapperClassNames = [
+	const wrapperClassNames = mergeClasses(
 		styles.wrapper,
 		styles[`wrapper--label-${labelPosition}`],
 		fullWidth && styles['wrapper--full-width'],
 		disabled && styles['wrapper--disabled'],
 		className,
-	]
-		.filter(Boolean)
-		.join(' ');
+		classes?.root
+	);
 
-	const triggerClassNames = [
+	const triggerClassNames = mergeClasses(
 		styles.select,
 		styles[`select--${size}`],
 		fullWidth && styles['select--full-width'],
 		error && styles['select--error'],
-	]
-		.filter(Boolean)
-		.join(' ');
+		classes?.trigger
+	);
 
-	const labelClassNames = [styles.label, styles[`label--${size}`]].filter(Boolean).join(' ');
+	const labelClassNames = mergeClasses(styles.label, styles[`label--${size}`], classes?.label);
 
 	const selectedOption = selectedIndex >= 0 ? options[selectedIndex] : undefined;
 
@@ -405,7 +430,7 @@ function SelectInner<TValue extends string | number = string>(
 				<div
 					ref={listboxRef}
 					id={listboxId}
-					className={styles.listbox}
+					className={mergeClasses(styles.listbox, classes?.listbox)}
 					style={popupStyle}
 					role="listbox"
 					aria-labelledby={label ? labelId : undefined}
@@ -422,21 +447,23 @@ function SelectInner<TValue extends string | number = string>(
 						return (
 							<React.Fragment key={String(option.value)}>
 								{startsGroup && (
-									<div className={styles.optionGroupLabel} role="presentation">
+									<div
+										className={mergeClasses(styles.optionGroupLabel, classes?.group)}
+										role="presentation"
+									>
 										{option.group}
 									</div>
 								)}
 								<div
 									id={`${selectId}-option-${index}`}
 									data-option-index={index}
-									className={[
+									className={mergeClasses(
 										styles.option,
 										isSelected && styles['option--selected'],
 										isActive && styles['option--active'],
 										option.disabled && styles['option--disabled'],
-									]
-										.filter(Boolean)
-										.join(' ')}
+										classes?.option
+									)}
 									role="option"
 									aria-selected={isSelected}
 									aria-disabled={option.disabled || undefined}

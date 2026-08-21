@@ -5,6 +5,26 @@ import React, { forwardRef, useCallback, useRef, useState } from 'react';
 import { mergeClasses } from '../../utils/classNames';
 import styles from './MenuItem.module.css';
 
+/**
+ * Classes for targeting MenuItem sub-elements.
+ */
+export interface MenuItemClasses {
+	/** Container wrapping the item and any submenu. */
+	root?: string;
+	/** The item button itself. */
+	item?: string;
+	/** The label text. */
+	label?: string;
+	/** The keyboard shortcut. */
+	shortcut?: string;
+	/** The checkmark slot. */
+	checkmark?: string;
+	/** Wrapper around `icon`. */
+	icon?: string;
+	/** An open submenu panel. */
+	submenu?: string;
+}
+
 export interface MenuItemProps {
 	/**
 	 * Menu item label text
@@ -78,6 +98,11 @@ export interface MenuItemProps {
 	 * Custom class name for the menu item
 	 */
 	className?: string;
+
+	/**
+	 * Classes for targeting sub-elements.
+	 */
+	classes?: MenuItemClasses;
 
 	/**
 	 * Whether the item has a submenu indicator (arrow)
@@ -180,6 +205,7 @@ export const MenuItem = forwardRef<HTMLButtonElement, MenuItemProps>(
 			onFocus,
 			onBlur,
 			className = '',
+			classes,
 			hasSubmenu = false,
 			items,
 		},
@@ -205,6 +231,7 @@ export const MenuItem = forwardRef<HTMLButtonElement, MenuItemProps>(
 
 		// Class names
 		const menuItemClassNames = mergeClasses(
+			classes?.item,
 			styles.menuItem,
 			selected ? styles['menuItem--selected'] : '',
 			disabled ? styles['menuItem--disabled'] : '',
@@ -243,7 +270,7 @@ export const MenuItem = forwardRef<HTMLButtonElement, MenuItemProps>(
 
 		return (
 			<div
-				className={styles.menuItemContainer}
+				className={mergeClasses(styles.menuItemContainer, classes?.root)}
 				onMouseEnter={() => setIsSubmenuOpen(true)}
 				onMouseLeave={() => setIsSubmenuOpen(false)}
 				style={{ position: 'relative', width: '100%' }}
@@ -268,17 +295,19 @@ export const MenuItem = forwardRef<HTMLButtonElement, MenuItemProps>(
 					aria-expanded={effectiveHasSubmenu ? isSubmenuOpen : undefined}
 				>
 					{/* Checkmark area */}
-					<span className={styles.checkmark}>{checked && '✓'}</span>
+					<span className={mergeClasses(styles.checkmark, classes?.checkmark)}>
+						{checked && '✓'}
+					</span>
 
 					{/* Icon area */}
-					{icon && <span className={styles.icon}>{icon}</span>}
+					{icon && <span className={mergeClasses(styles.icon, classes?.icon)}>{icon}</span>}
 
 					{/* Label */}
-					<span className={styles.label}>{label}</span>
+					<span className={mergeClasses(styles.label, classes?.label)}>{label}</span>
 
 					{/* Shortcut */}
 					{shortcut && (
-						<span className={styles.shortcut} aria-hidden="true">
+						<span className={mergeClasses(styles.shortcut, classes?.shortcut)} aria-hidden="true">
 							{shortcut}
 						</span>
 					)}
@@ -293,7 +322,11 @@ export const MenuItem = forwardRef<HTMLButtonElement, MenuItemProps>(
 
 				{/* Submenu */}
 				{items && isSubmenuOpen && (
-					<div ref={submenuRef} className={styles.submenu} role="menu">
+					<div
+						ref={submenuRef}
+						className={mergeClasses(styles.submenu, classes?.submenu)}
+						role="menu"
+					>
 						{items}
 					</div>
 				)}

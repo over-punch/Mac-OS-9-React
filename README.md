@@ -391,8 +391,8 @@ import { tokens, colors, spacing } from '@liiift-studio/mac-os9-ui';
 ### Targeting inner elements
 
 Tokens restyle everything of a kind. When you need to reach one part of one
-component, there are two narrower escape hatches, both on the components that
-have meaningful internal structure — `Window`, `ListView` and `FolderList`.
+component, there are two narrower escape hatches. Every component accepts
+`classes`; the ones with a list or a row structure also take render props.
 
 **`classes`** attaches your own class to a named sub-element, so you are not
 guessing at hashed CSS-module names:
@@ -408,9 +408,14 @@ guessing at hashed CSS-module names:
 />
 ```
 
-The keys are typed per component (`WindowClasses`, `ListViewClasses`,
-`FolderListClasses`), so a misspelled slot is a compile error rather than a
-class that silently does nothing.
+The keys are typed per component — `ButtonClasses`, `WindowClasses`,
+`SelectClasses`, `MenuItemClasses` and so on, all exported — so a misspelled
+slot is a compile error rather than a class that silently does nothing.
+
+A handful of single-purpose props predate this: `wrapperClassName`,
+`tabListClassName`, `panelClassName`, `dropdownClassName`, `backdropClassName`
+and `contentClassName`. They still work, and are marked deprecated in favour of
+the equivalent `classes` slot.
 
 **Render props** replace an element outright. Each receives the item, its
 state, and the props the default implementation would have used — spread those

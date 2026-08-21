@@ -152,7 +152,7 @@ var styles$e = {"button":"Button-module_button","button--sm":"Button-module_butt
  * ```
  */
 const ButtonImpl = forwardRef((props, ref) => {
-    const { variant = 'default', size = 'md', disabled = false, fullWidth = false, loading = false, loadingText, useCursorLoading = false, leftIcon, rightIcon, iconOnly = false, asChild = false, ariaLabel, ariaDescribedBy, ariaPressed, className = '', children, ...restProps } = props;
+    const { variant = 'default', size = 'md', disabled = false, fullWidth = false, loading = false, loadingText, useCursorLoading = false, leftIcon, rightIcon, iconOnly = false, asChild = false, ariaLabel, ariaDescribedBy, ariaPressed, className = '', classes, children, ...restProps } = props;
     // Standard aria-* attributes win over the deprecated camelCase aliases.
     const { 'aria-label': ariaLabelAttr, 'aria-describedby': ariaDescribedByAttr, 'aria-pressed': ariaPressedAttr, ...domProps } = restProps;
     const resolvedAriaLabel = ariaLabelAttr ?? ariaLabel;
@@ -172,7 +172,7 @@ const ButtonImpl = forwardRef((props, ref) => {
     // Determine if rendering as link
     const isLink = props.as === 'a';
     // Build class names
-    const classNames = mergeClasses(styles$e.button, styles$e[`button--${variant}`], styles$e[`button--${size}`], fullWidth && styles$e['button--full-width'], disabled && styles$e['button--disabled'], loading && styles$e['button--loading'], loading && useCursorLoading && styles$e['button--cursor-loading'], iconOnly && styles$e['button--icon-only'], (leftIcon || rightIcon) && styles$e['button--with-icon'], className);
+    const classNames = mergeClasses(styles$e.button, styles$e[`button--${variant}`], styles$e[`button--${size}`], fullWidth && styles$e['button--full-width'], disabled && styles$e['button--disabled'], loading && styles$e['button--loading'], loading && useCursorLoading && styles$e['button--cursor-loading'], iconOnly && styles$e['button--icon-only'], (leftIcon || rightIcon) && styles$e['button--with-icon'], className, classes?.root);
     // Shared ARIA. These are spread AFTER the caller's remaining props so a
     // stray `aria-disabled`/`aria-busy` in the rest props can't contradict the
     // component's own `disabled`/`loading` state.
@@ -201,14 +201,14 @@ const ButtonImpl = forwardRef((props, ref) => {
     function renderButtonContent() {
         // Show loading state
         if (loading) {
-            return (jsxs(Fragment, { children: [!useCursorLoading && (jsx("span", { className: styles$e['button__loading-spinner'], "aria-hidden": "true", children: "\u23F3" })), jsx("span", { className: styles$e['button__text'], children: loadingText || children })] }));
+            return (jsxs(Fragment, { children: [!useCursorLoading && (jsx("span", { className: mergeClasses(styles$e['button__loading-spinner'], classes?.spinner), "aria-hidden": "true", children: "\u23F3" })), jsx("span", { className: mergeClasses(styles$e['button__text'], classes?.text), children: loadingText || children })] }));
         }
         // Icon-only button
         if (iconOnly) {
-            return jsx("span", { className: styles$e['button__icon-only'], children: children });
+            return (jsx("span", { className: mergeClasses(styles$e['button__icon-only'], classes?.iconOnly), children: children }));
         }
         // Button with icons
-        return (jsxs(Fragment, { children: [leftIcon && (jsx("span", { className: styles$e['button__icon-left'], "aria-hidden": "true", children: leftIcon })), jsx("span", { className: styles$e['button__text'], children: children }), rightIcon && (jsx("span", { className: styles$e['button__icon-right'], "aria-hidden": "true", children: rightIcon }))] }));
+        return (jsxs(Fragment, { children: [leftIcon && (jsx("span", { className: mergeClasses(styles$e['button__icon-left'], classes?.iconLeft), "aria-hidden": "true", children: leftIcon })), jsx("span", { className: mergeClasses(styles$e['button__text'], classes?.text), children: children }), rightIcon && (jsx("span", { className: mergeClasses(styles$e['button__icon-right'], classes?.iconRight), "aria-hidden": "true", children: rightIcon }))] }));
     }
     // --- asChild: hand rendering to the caller's element -------------------
     //
@@ -1284,13 +1284,13 @@ function assertHasName(label, ariaLabel, title) {
  * />
  * ```
  */
-const IconButton = forwardRef(({ icon, label, labelPosition = 'right', variant = 'default', size = 'md', disabled = false, className = '', ...props }, ref) => {
+const IconButton = forwardRef(({ icon, label, labelPosition = 'right', variant = 'default', size = 'md', disabled = false, className = '', classes, ...props }, ref) => {
     if (process.env.NODE_ENV !== 'production') {
         assertHasName(label, props['aria-label'], props.title);
     }
     // Build class names
-    const classNames = mergeClasses(styles$c.iconButton, styles$c[`iconButton--${variant}`], styles$c[`iconButton--${size}`], label && styles$c['iconButton--with-label'], label && styles$c[`iconButton--label-${labelPosition}`], disabled && styles$c['iconButton--disabled'], className);
-    return (jsxs("button", { ref: ref, type: "button", className: classNames, disabled: disabled, ...props, children: [label && (labelPosition === 'left' || labelPosition === 'top') && (jsx("span", { className: styles$c.label, children: label })), jsx("span", { className: styles$c.icon, children: icon }), label && (labelPosition === 'right' || labelPosition === 'bottom') && (jsx("span", { className: styles$c.label, children: label }))] }));
+    const classNames = mergeClasses(styles$c.iconButton, styles$c[`iconButton--${variant}`], styles$c[`iconButton--${size}`], label && styles$c['iconButton--with-label'], label && styles$c[`iconButton--label-${labelPosition}`], disabled && styles$c['iconButton--disabled'], className, classes?.root);
+    return (jsxs("button", { ref: ref, type: "button", className: classNames, disabled: disabled, ...props, children: [label && (labelPosition === 'left' || labelPosition === 'top') && (jsx("span", { className: mergeClasses(styles$c.label, classes?.label), children: label })), jsx("span", { className: mergeClasses(styles$c.icon, classes?.icon), children: icon }), label && (labelPosition === 'right' || labelPosition === 'bottom') && (jsx("span", { className: mergeClasses(styles$c.label, classes?.label), children: label }))] }));
 });
 IconButton.displayName = 'IconButton';
 
@@ -1386,7 +1386,7 @@ var styles$b = {"wrapper":"Checkbox-module_wrapper","wrapper--disabled":"Checkbo
  * />
  * ```
  */
-const Checkbox = forwardRef(({ checked, defaultChecked, indeterminate = false, disabled = false, label, labelPosition = 'right', size = 'md', error = false, errorMessage, helperText, errorLiveRegion = 'polite', ariaLabel, ariaDescribedBy, 'aria-label': ariaLabelAttr, 'aria-describedby': ariaDescribedByAttr, className = '', onChange, id, ...props }, ref) => {
+const Checkbox = forwardRef(({ checked, defaultChecked, indeterminate = false, disabled = false, label, labelPosition = 'right', size = 'md', error = false, errorMessage, helperText, errorLiveRegion = 'polite', ariaLabel, ariaDescribedBy, 'aria-label': ariaLabelAttr, 'aria-describedby': ariaDescribedByAttr, className = '', classes, onChange, id, ...props }, ref) => {
     const inputRef = React.useRef(null);
     const combinedRef = ref || inputRef;
     // Set indeterminate property via ref (can't be set via HTML attribute)
@@ -1400,9 +1400,9 @@ const Checkbox = forwardRef(({ checked, defaultChecked, indeterminate = false, d
     const generatedId = React.useId();
     const checkboxId = id ?? generatedId;
     // Build class names
-    const wrapperClassNames = mergeClasses(styles$b.wrapper, styles$b[`wrapper--${size}`], styles$b[`wrapper--label-${labelPosition}`], disabled && styles$b['wrapper--disabled'], error && styles$b['wrapper--error'], className);
-    const checkboxClassNames = mergeClasses(styles$b.checkbox, styles$b[`checkbox--${size}`], indeterminate && styles$b['checkbox--indeterminate'], error && styles$b['checkbox--error']);
-    const labelClassNames = mergeClasses(styles$b.label, styles$b[`label--${size}`]);
+    const wrapperClassNames = mergeClasses(styles$b.wrapper, styles$b[`wrapper--${size}`], styles$b[`wrapper--label-${labelPosition}`], disabled && styles$b['wrapper--disabled'], error && styles$b['wrapper--error'], className, classes?.root);
+    const checkboxClassNames = mergeClasses(classes?.input, styles$b.checkbox, styles$b[`checkbox--${size}`], indeterminate && styles$b['checkbox--indeterminate'], error && styles$b['checkbox--error']);
+    const labelClassNames = mergeClasses(styles$b.label, styles$b[`label--${size}`], classes?.label);
     // ARIA attributes
     //
     // Note: we deliberately do NOT set `aria-checked`. Per ARIA 1.2,
@@ -1427,7 +1427,7 @@ const Checkbox = forwardRef(({ checked, defaultChecked, indeterminate = false, d
         }),
         'aria-invalid': error,
     };
-    return (jsxs("div", { className: wrapperClassNames, children: [label && labelPosition === 'left' && (jsx("label", { htmlFor: checkboxId, className: labelClassNames, children: label })), jsx("input", { ref: combinedRef, type: "checkbox", id: checkboxId, className: checkboxClassNames, checked: checked, defaultChecked: defaultChecked, disabled: disabled, onChange: onChange, ...ariaAttributes, ...props }), label && labelPosition === 'right' && (jsx("label", { htmlFor: checkboxId, className: labelClassNames, children: label })), jsx(FieldMessage, { helperId: helperId, errorId: errorId, error: error, errorMessage: errorMessage, helperText: helperText, errorLiveRegion: errorLiveRegion, helperClassName: styles$b['helper-text'], errorClassName: styles$b['error-message'] })] }));
+    return (jsxs("div", { className: wrapperClassNames, children: [label && labelPosition === 'left' && (jsx("label", { htmlFor: checkboxId, className: labelClassNames, children: label })), jsx("input", { ref: combinedRef, type: "checkbox", id: checkboxId, className: checkboxClassNames, checked: checked, defaultChecked: defaultChecked, disabled: disabled, onChange: onChange, ...ariaAttributes, ...props }), label && labelPosition === 'right' && (jsx("label", { htmlFor: checkboxId, className: labelClassNames, children: label })), jsx(FieldMessage, { helperId: helperId, errorId: errorId, error: error, errorMessage: errorMessage, helperText: helperText, errorLiveRegion: errorLiveRegion, helperClassName: mergeClasses(styles$b['helper-text'], classes?.helperText), errorClassName: mergeClasses(styles$b['error-message'], classes?.errorMessage) })] }));
 });
 Checkbox.displayName = 'Checkbox';
 
@@ -1455,7 +1455,7 @@ const RadioGroupContext = React.createContext(null);
  * <Radio name="color" value="red" label="Red" />
  * ```
  */
-const Radio = forwardRef(({ checked, defaultChecked, disabled = false, label, labelPosition = 'right', size = 'md', error = false, errorMessage, helperText, errorLiveRegion = 'polite', ariaLabel, ariaDescribedBy, 'aria-label': ariaLabelAttr, 'aria-describedby': ariaDescribedByAttr, className = '', value, name, onChange, id, ...props }, ref) => {
+const Radio = forwardRef(({ checked, defaultChecked, disabled = false, label, labelPosition = 'right', size = 'md', error = false, errorMessage, helperText, errorLiveRegion = 'polite', ariaLabel, ariaDescribedBy, 'aria-label': ariaLabelAttr, 'aria-describedby': ariaDescribedByAttr, className = '', classes, value, name, onChange, id, ...props }, ref) => {
     // When wrapped by <RadioGroup>, inherit name / value / onChange / disabled
     // from context. Standalone Radios fall back to their own props.
     const group = React.useContext(RadioGroupContext);
@@ -1471,9 +1471,9 @@ const Radio = forwardRef(({ checked, defaultChecked, disabled = false, label, la
     const generatedId = useId();
     const radioId = id || generatedId;
     // Build class names
-    const wrapperClassNames = mergeClasses(styles$a.wrapper, styles$a[`wrapper--${size}`], styles$a[`wrapper--label-${labelPosition}`], resolvedDisabled && styles$a['wrapper--disabled'], error && styles$a['wrapper--error'], className);
-    const radioClassNames = mergeClasses(styles$a.radio, styles$a[`radio--${size}`], error && styles$a['radio--error']);
-    const labelClassNames = mergeClasses(styles$a.label, styles$a[`label--${size}`]);
+    const wrapperClassNames = mergeClasses(styles$a.wrapper, styles$a[`wrapper--${size}`], styles$a[`wrapper--label-${labelPosition}`], resolvedDisabled && styles$a['wrapper--disabled'], error && styles$a['wrapper--error'], className, classes?.root);
+    const radioClassNames = mergeClasses(classes?.input, styles$a.radio, styles$a[`radio--${size}`], error && styles$a['radio--error']);
+    const labelClassNames = mergeClasses(styles$a.label, styles$a[`label--${size}`], classes?.label);
     // ARIA attributes
     const helperId = `${radioId}-helper`;
     const errorId = `${radioId}-error`;
@@ -1492,7 +1492,7 @@ const Radio = forwardRef(({ checked, defaultChecked, disabled = false, label, la
         }),
         'aria-invalid': error,
     };
-    return (jsxs("div", { className: wrapperClassNames, children: [label && labelPosition === 'left' && (jsx("label", { htmlFor: radioId, className: labelClassNames, children: label })), jsx("input", { ref: ref, type: "radio", id: radioId, className: radioClassNames, checked: group ? resolvedChecked : checked, defaultChecked: group ? undefined : defaultChecked, disabled: resolvedDisabled, value: value, name: resolvedName, onChange: handleInputChange, ...ariaAttributes, ...props }), label && labelPosition === 'right' && (jsx("label", { htmlFor: radioId, className: labelClassNames, children: label })), jsx(FieldMessage, { helperId: helperId, errorId: errorId, error: error, errorMessage: errorMessage, helperText: helperText, errorLiveRegion: errorLiveRegion, helperClassName: styles$a['helper-text'], errorClassName: styles$a['error-message'] })] }));
+    return (jsxs("div", { className: wrapperClassNames, children: [label && labelPosition === 'left' && (jsx("label", { htmlFor: radioId, className: labelClassNames, children: label })), jsx("input", { ref: ref, type: "radio", id: radioId, className: radioClassNames, checked: group ? resolvedChecked : checked, defaultChecked: group ? undefined : defaultChecked, disabled: resolvedDisabled, value: value, name: resolvedName, onChange: handleInputChange, ...ariaAttributes, ...props }), label && labelPosition === 'right' && (jsx("label", { htmlFor: radioId, className: labelClassNames, children: label })), jsx(FieldMessage, { helperId: helperId, errorId: errorId, error: error, errorMessage: errorMessage, helperText: helperText, errorLiveRegion: errorLiveRegion, helperClassName: mergeClasses(styles$a['helper-text'], classes?.helperText), errorClassName: mergeClasses(styles$a['error-message'], classes?.errorMessage) })] }));
 });
 Radio.displayName = 'Radio';
 /**
@@ -1633,7 +1633,7 @@ var styles$9 = {"wrapper":"TextField-module_wrapper","wrapper--full-width":"Text
  * />
  * ```
  */
-const TextField = forwardRef(({ label, labelPosition = 'top', size = 'md', fullWidth = false, error = false, errorMessage, helperText, leftIcon, rightIcon, ariaLabel, ariaDescribedBy, 'aria-label': ariaLabelAttr, 'aria-describedby': ariaDescribedByAttr, className = '', wrapperClassName = '', type = 'text', id, disabled, multiline = false, rows = 3, errorLiveRegion = 'polite', textareaProps, ...props }, ref) => {
+const TextField = forwardRef(({ label, labelPosition = 'top', size = 'md', fullWidth = false, error = false, errorMessage, helperText, leftIcon, rightIcon, ariaLabel, ariaDescribedBy, 'aria-label': ariaLabelAttr, 'aria-describedby': ariaDescribedByAttr, className = '', classes, wrapperClassName = '', type = 'text', id, disabled, multiline = false, rows = 3, errorLiveRegion = 'polite', textareaProps, ...props }, ref) => {
     // Generate ID if not provided (for label association)
     // useId must be called unconditionally. Writing `id || React.useId()`
     // short-circuits the hook away whenever `id` is supplied, so the hook
@@ -1656,17 +1656,17 @@ const TextField = forwardRef(({ label, labelPosition = 'top', size = 'md', fullW
         callerDescribedBy: resolvedDescribedBy,
     });
     // Build class names
-    const wrapperClassNames = mergeClasses(styles$9.wrapper, styles$9[`wrapper--${size}`], styles$9[`wrapper--label-${labelPosition}`], fullWidth && styles$9['wrapper--full-width'], disabled && styles$9['wrapper--disabled'], wrapperClassName);
-    const inputWrapperClassNames = mergeClasses(styles$9['input-wrapper'], (leftIcon || rightIcon) && styles$9['input-wrapper--with-icon'], leftIcon && styles$9['input-wrapper--with-left-icon'], rightIcon && styles$9['input-wrapper--with-right-icon']);
-    const inputClassNames = mergeClasses(styles$9.input, styles$9[`input--${size}`], error && styles$9['input--error'], fullWidth && styles$9['input--full-width'], className);
-    const labelClassNames = mergeClasses(styles$9.label, styles$9[`label--${size}`]);
+    const wrapperClassNames = mergeClasses(styles$9.wrapper, styles$9[`wrapper--${size}`], styles$9[`wrapper--label-${labelPosition}`], fullWidth && styles$9['wrapper--full-width'], disabled && styles$9['wrapper--disabled'], wrapperClassName, classes?.root);
+    const inputWrapperClassNames = mergeClasses(styles$9['input-wrapper'], (leftIcon || rightIcon) && styles$9['input-wrapper--with-icon'], leftIcon && styles$9['input-wrapper--with-left-icon'], rightIcon && styles$9['input-wrapper--with-right-icon'], classes?.inputWrapper);
+    const inputClassNames = mergeClasses(styles$9.input, styles$9[`input--${size}`], error && styles$9['input--error'], fullWidth && styles$9['input--full-width'], className, classes?.input);
+    const labelClassNames = mergeClasses(styles$9.label, styles$9[`label--${size}`], classes?.label);
     // ARIA attributes
     const ariaAttributes = {
         'aria-label': !label ? resolvedLabel : undefined,
         'aria-describedby': describedByIds || undefined,
         'aria-invalid': error,
     };
-    return (jsxs("div", { className: wrapperClassNames, children: [label && (labelPosition === 'top' || labelPosition === 'left') && (jsx("label", { htmlFor: inputId, className: labelClassNames, children: label })), jsxs("div", { className: inputWrapperClassNames, children: [leftIcon && (jsx("span", { className: styles$9['input-icon-left'], "aria-hidden": "true", children: leftIcon })), multiline ? (jsx("textarea", { ref: ref, id: inputId, rows: rows, className: inputClassNames, disabled: disabled, ...ariaAttributes, ...props, ...textareaProps })) : (jsx("input", { ref: ref, type: type, id: inputId, className: inputClassNames, disabled: disabled, ...ariaAttributes, ...props })), rightIcon && (jsx("span", { className: styles$9['input-icon-right'], "aria-hidden": "true", children: rightIcon }))] }), label && labelPosition === 'right' && (jsx("label", { htmlFor: inputId, className: labelClassNames, children: label })), jsx(FieldMessage, { helperId: helperId, errorId: errorId, error: error, errorMessage: errorMessage, helperText: helperText, errorLiveRegion: errorLiveRegion, helperClassName: styles$9['helper-text'], errorClassName: styles$9['error-message'] })] }));
+    return (jsxs("div", { className: wrapperClassNames, children: [label && (labelPosition === 'top' || labelPosition === 'left') && (jsx("label", { htmlFor: inputId, className: labelClassNames, children: label })), jsxs("div", { className: inputWrapperClassNames, children: [leftIcon && (jsx("span", { className: mergeClasses(styles$9['input-icon-left'], classes?.iconLeft), "aria-hidden": "true", children: leftIcon })), multiline ? (jsx("textarea", { ref: ref, id: inputId, rows: rows, className: inputClassNames, disabled: disabled, ...ariaAttributes, ...props, ...textareaProps })) : (jsx("input", { ref: ref, type: type, id: inputId, className: inputClassNames, disabled: disabled, ...ariaAttributes, ...props })), rightIcon && (jsx("span", { className: mergeClasses(styles$9['input-icon-right'], classes?.iconRight), "aria-hidden": "true", children: rightIcon }))] }), label && labelPosition === 'right' && (jsx("label", { htmlFor: inputId, className: labelClassNames, children: label })), jsx(FieldMessage, { helperId: helperId, errorId: errorId, error: error, errorMessage: errorMessage, helperText: helperText, errorLiveRegion: errorLiveRegion, helperClassName: mergeClasses(styles$9['helper-text'], classes?.helperText), errorClassName: mergeClasses(styles$9['error-message'], classes?.errorMessage) })] }));
 });
 TextField.displayName = 'TextField';
 
@@ -1810,7 +1810,7 @@ function findEnabled(options, from, step) {
     }
     return -1;
 }
-function SelectInner({ label, labelPosition = 'top', size = 'md', fullWidth = false, error = false, errorMessage, helperText, options, value: controlledValue, defaultValue, onValueChange, placeholder = 'Select…', disabled = false, required = false, name, id, className = '', 'aria-label': ariaLabel, 'aria-describedby': ariaDescribedBy, }, ref) {
+function SelectInner({ label, labelPosition = 'top', size = 'md', fullWidth = false, error = false, errorMessage, helperText, options, value: controlledValue, defaultValue, onValueChange, placeholder = 'Select…', disabled = false, required = false, name, id, className = '', classes, 'aria-label': ariaLabel, 'aria-describedby': ariaDescribedBy, }, ref) {
     const generatedId = useId();
     const selectId = id || generatedId;
     const listboxId = `${selectId}-listbox`;
@@ -1975,41 +1975,19 @@ function SelectInner({ label, labelPosition = 'top', size = 'md', fullWidth = fa
     ]
         .filter(Boolean)
         .join(' ');
-    const wrapperClassNames = [
-        styles$8.wrapper,
-        styles$8[`wrapper--label-${labelPosition}`],
-        fullWidth && styles$8['wrapper--full-width'],
-        disabled && styles$8['wrapper--disabled'],
-        className,
-    ]
-        .filter(Boolean)
-        .join(' ');
-    const triggerClassNames = [
-        styles$8.select,
-        styles$8[`select--${size}`],
-        fullWidth && styles$8['select--full-width'],
-        error && styles$8['select--error'],
-    ]
-        .filter(Boolean)
-        .join(' ');
-    const labelClassNames = [styles$8.label, styles$8[`label--${size}`]].filter(Boolean).join(' ');
+    const wrapperClassNames = mergeClasses(styles$8.wrapper, styles$8[`wrapper--label-${labelPosition}`], fullWidth && styles$8['wrapper--full-width'], disabled && styles$8['wrapper--disabled'], className, classes?.root);
+    const triggerClassNames = mergeClasses(styles$8.select, styles$8[`select--${size}`], fullWidth && styles$8['select--full-width'], error && styles$8['select--error'], classes?.trigger);
+    const labelClassNames = mergeClasses(styles$8.label, styles$8[`label--${size}`], classes?.label);
     const selectedOption = selectedIndex >= 0 ? options[selectedIndex] : undefined;
     const labelElement = label ? (jsx("span", { id: labelId, className: labelClassNames, onClick: () => triggerRef.current?.focus(), role: "presentation", children: label })) : null;
-    return (jsxs("div", { ref: containerRef, className: wrapperClassNames, children: [labelElement && (labelPosition === 'top' || labelPosition === 'left') && labelElement, name && jsx("input", { type: "hidden", name: name, value: value ?? '' }), jsxs("button", { ref: setTriggerRef, id: selectId, type: "button", className: triggerClassNames, disabled: disabled, onClick: () => (isOpen ? close(false) : open()), onKeyDown: handleKeyDown, role: "combobox", "aria-haspopup": "listbox", "aria-expanded": isOpen, "aria-controls": isOpen ? listboxId : undefined, "aria-activedescendant": isOpen && activeIndex >= 0 ? `${selectId}-option-${activeIndex}` : undefined, "aria-label": ariaLabel, "aria-labelledby": !ariaLabel && label ? labelId : undefined, "aria-invalid": error || undefined, "aria-required": required || undefined, "aria-describedby": describedByIds || undefined, children: [jsx("span", { className: selectedOption ? styles$8.value : styles$8.placeholder, children: selectedOption ? selectedOption.label : placeholder }), jsx("span", { className: styles$8.arrow, "aria-hidden": "true" })] }), isOpen && (jsx("div", { ref: listboxRef, id: listboxId, className: styles$8.listbox, style: popupStyle, role: "listbox", "aria-labelledby": label ? labelId : undefined, tabIndex: -1, children: options.map((option, index) => {
+    return (jsxs("div", { ref: containerRef, className: wrapperClassNames, children: [labelElement && (labelPosition === 'top' || labelPosition === 'left') && labelElement, name && jsx("input", { type: "hidden", name: name, value: value ?? '' }), jsxs("button", { ref: setTriggerRef, id: selectId, type: "button", className: triggerClassNames, disabled: disabled, onClick: () => (isOpen ? close(false) : open()), onKeyDown: handleKeyDown, role: "combobox", "aria-haspopup": "listbox", "aria-expanded": isOpen, "aria-controls": isOpen ? listboxId : undefined, "aria-activedescendant": isOpen && activeIndex >= 0 ? `${selectId}-option-${activeIndex}` : undefined, "aria-label": ariaLabel, "aria-labelledby": !ariaLabel && label ? labelId : undefined, "aria-invalid": error || undefined, "aria-required": required || undefined, "aria-describedby": describedByIds || undefined, children: [jsx("span", { className: selectedOption ? styles$8.value : styles$8.placeholder, children: selectedOption ? selectedOption.label : placeholder }), jsx("span", { className: styles$8.arrow, "aria-hidden": "true" })] }), isOpen && (jsx("div", { ref: listboxRef, id: listboxId, className: mergeClasses(styles$8.listbox, classes?.listbox), style: popupStyle, role: "listbox", "aria-labelledby": label ? labelId : undefined, tabIndex: -1, children: options.map((option, index) => {
                     const isSelected = index === selectedIndex;
                     const isActive = index === activeIndex;
                     // A heading is drawn whenever the group changes, so
                     // consecutive options collapse under one label.
                     const previousGroup = index > 0 ? options[index - 1]?.group : undefined;
                     const startsGroup = option.group && option.group !== previousGroup;
-                    return (jsxs(React.Fragment, { children: [startsGroup && (jsx("div", { className: styles$8.optionGroupLabel, role: "presentation", children: option.group })), jsxs("div", { id: `${selectId}-option-${index}`, "data-option-index": index, className: [
-                                    styles$8.option,
-                                    isSelected && styles$8['option--selected'],
-                                    isActive && styles$8['option--active'],
-                                    option.disabled && styles$8['option--disabled'],
-                                ]
-                                    .filter(Boolean)
-                                    .join(' '), role: "option", "aria-selected": isSelected, "aria-disabled": option.disabled || undefined, 
+                    return (jsxs(React.Fragment, { children: [startsGroup && (jsx("div", { className: mergeClasses(styles$8.optionGroupLabel, classes?.group), role: "presentation", children: option.group })), jsxs("div", { id: `${selectId}-option-${index}`, "data-option-index": index, className: mergeClasses(styles$8.option, isSelected && styles$8['option--selected'], isActive && styles$8['option--active'], option.disabled && styles$8['option--disabled'], classes?.option), role: "option", "aria-selected": isSelected, "aria-disabled": option.disabled || undefined, 
                                 // The list keeps DOM focus on the trigger and
                                 // tracks the cursor with aria-activedescendant,
                                 // so pointer hover only moves the cursor.
@@ -2082,7 +2060,7 @@ TabPanel.displayName = 'TabPanel';
  * </Tabs>
  * ```
  */
-function TabsInner({ children, defaultActiveTab = 0, activeTab: controlledActiveTab, onChange, onValueChange, size = 'md', fullWidth = false, className = '', tabListClassName = '', panelClassName = '', ariaLabel, ariaLabelledBy, 'aria-label': ariaLabelAttr, 'aria-labelledby': ariaLabelledByAttr, }, ref) {
+function TabsInner({ children, defaultActiveTab = 0, activeTab: controlledActiveTab, onChange, onValueChange, size = 'md', fullWidth = false, className = '', classes, tabListClassName = '', panelClassName = '', ariaLabel, ariaLabelledBy, 'aria-label': ariaLabelAttr, 'aria-labelledby': ariaLabelledByAttr, }, ref) {
     // Controlled vs uncontrolled state
     const [uncontrolledActiveTab, setUncontrolledActiveTab] = useState(defaultActiveTab);
     const isControlled = controlledActiveTab !== undefined;
@@ -2173,13 +2151,13 @@ function TabsInner({ children, defaultActiveTab = 0, activeTab: controlledActive
         handleTabChange(newIndex);
     }, [tabs, handleTabChange]);
     // Class names
-    const containerClassNames = mergeClasses(styles$7.container, className);
-    const tabListClassNames = mergeClasses(styles$7.tabList, styles$7[`tabList--${size}`], fullWidth && styles$7['tabList--full-width'], tabListClassName);
-    const panelContainerClassNames = mergeClasses(styles$7.panelContainer, styles$7[`panelContainer--${size}`], panelClassName);
+    const containerClassNames = mergeClasses(styles$7.container, className, classes?.root);
+    const tabListClassNames = mergeClasses(styles$7.tabList, styles$7[`tabList--${size}`], fullWidth && styles$7['tabList--full-width'], tabListClassName, classes?.tabList);
+    const panelContainerClassNames = mergeClasses(styles$7.panelContainer, styles$7[`panelContainer--${size}`], panelClassName, classes?.panel);
     return (jsxs("div", { ref: ref, className: containerClassNames, children: [jsx("div", { role: "tablist", "aria-label": resolvedAriaLabelledBy ? undefined : resolvedAriaLabel, "aria-labelledby": resolvedAriaLabelledBy, className: tabListClassNames, children: tabs.map((tab, index) => {
                     const isActive = index === activeTabIndex;
                     const isDisabled = tab.props.disabled;
-                    const tabClassNames = mergeClasses(styles$7.tab, styles$7[`tab--${size}`], isActive && styles$7['tab--active'], isDisabled && styles$7['tab--disabled'], fullWidth && styles$7['tab--full-width']);
+                    const tabClassNames = mergeClasses(styles$7.tab, styles$7[`tab--${size}`], isActive && styles$7['tab--active'], isDisabled && styles$7['tab--disabled'], fullWidth && styles$7['tab--full-width'], classes?.tab);
                     return (jsxs("button", { role: "tab", type: "button", "aria-selected": isActive, "aria-controls": `${baseId}-panel-${index}`, id: `${baseId}-tab-${index}`, tabIndex: isActive ? 0 : -1, disabled: isDisabled, className: tabClassNames, onClick: () => handleTabChange(index), onKeyDown: (e) => handleKeyDown(e, index), children: [tab.props.icon && jsx("span", { className: styles$7.tabIcon, children: tab.props.icon }), tab.props.label] }, index));
                 }) }), tabs.map((tab, index) => {
                 const isActive = index === activeTabIndex;
@@ -2967,7 +2945,7 @@ function getFocusables(root) {
  * </Dialog>
  * ```
  */
-const Dialog = forwardRef(({ open = false, onClose, closeOnBackdropClick = true, closeOnEscape = true, backdropClassName = '', trapFocus = true, initialFocus, role = 'dialog', ariaLabel, ariaLabelledBy, ariaDescribedBy, 'aria-label': ariaLabelAttr, 'aria-labelledby': ariaLabelledByAttr, 'aria-describedby': ariaDescribedByAttr, container, children, ...windowProps }, ref) => {
+const Dialog = forwardRef(({ open = false, onClose, closeOnBackdropClick = true, closeOnEscape = true, backdropClassName = '', dialogClasses, trapFocus = true, initialFocus, role = 'dialog', ariaLabel, ariaLabelledBy, ariaDescribedBy, 'aria-label': ariaLabelAttr, 'aria-labelledby': ariaLabelledByAttr, 'aria-describedby': ariaDescribedByAttr, container, children, ...windowProps }, ref) => {
     const dialogRef = useRef(null);
     const previousActiveElement = useRef(null);
     // Resolved after mount: `document` does not exist during a server
@@ -3122,8 +3100,8 @@ const Dialog = forwardRef(({ open = false, onClose, closeOnBackdropClick = true,
     }, [closeOnBackdropClick, onClose]);
     if (!open)
         return null;
-    const backdropClassNames = mergeClasses(styles$5.backdrop, backdropClassName);
-    const dialogTree = (jsx("div", { className: backdropClassNames, onClick: handleBackdropClick, children: jsx("div", { className: styles$5.dialogContainer, ref: dialogRef, role: role, "aria-modal": "true", "aria-label": labelledBy ? undefined : resolvedAriaLabel, "aria-labelledby": labelledBy, "aria-describedby": describedBy, children: jsx(Window, { ...windowProps, ref: ref, active: true, onClose: onClose, children: children }) }) }));
+    const backdropClassNames = mergeClasses(styles$5.backdrop, backdropClassName, dialogClasses?.backdrop);
+    const dialogTree = (jsx("div", { className: backdropClassNames, onClick: handleBackdropClick, children: jsx("div", { className: mergeClasses(styles$5.dialogContainer, dialogClasses?.container), ref: dialogRef, role: role, "aria-modal": "true", "aria-label": labelledBy ? undefined : resolvedAriaLabel, "aria-labelledby": labelledBy, "aria-describedby": describedBy, children: jsx(Window, { ...windowProps, ref: ref, active: true, onClose: onClose, children: children }) }) }));
     // `container === null` opts out of portalling entirely.
     if (container === null)
         return dialogTree;
@@ -3206,7 +3184,7 @@ function toAriaKeyShortcuts(shortcut) {
  * <MenuItem label="Recent Files" hasSubmenu />
  * ```
  */
-const MenuItem = forwardRef(({ label, shortcut, keyShortcut, disabled = false, selected = false, separator = false, checked = false, icon, onClick, onFocus, onBlur, className = '', hasSubmenu = false, items, }, ref) => {
+const MenuItem = forwardRef(({ label, shortcut, keyShortcut, disabled = false, selected = false, separator = false, checked = false, icon, onClick, onFocus, onBlur, className = '', classes, hasSubmenu = false, items, }, ref) => {
     const [isSubmenuOpen, setIsSubmenuOpen] = useState(false);
     const effectiveHasSubmenu = hasSubmenu || !!items;
     // Internal refs to the trigger button and submenu container, used by the
@@ -3222,7 +3200,7 @@ const MenuItem = forwardRef(({ label, shortcut, keyShortcut, disabled = false, s
             ref.current = node;
     }, [ref]);
     // Class names
-    const menuItemClassNames = mergeClasses(styles$4.menuItem, selected ? styles$4['menuItem--selected'] : '', disabled ? styles$4['menuItem--disabled'] : '', separator ? styles$4['menuItem--separator'] : '', className);
+    const menuItemClassNames = mergeClasses(classes?.item, styles$4.menuItem, selected ? styles$4['menuItem--selected'] : '', disabled ? styles$4['menuItem--disabled'] : '', separator ? styles$4['menuItem--separator'] : '', className);
     // Handle click
     const handleClick = (event) => {
         if (disabled) {
@@ -3252,11 +3230,11 @@ const MenuItem = forwardRef(({ label, shortcut, keyShortcut, disabled = false, s
             buttonRef.current?.focus();
         }
     };
-    return (jsxs("div", { className: styles$4.menuItemContainer, onMouseEnter: () => setIsSubmenuOpen(true), onMouseLeave: () => setIsSubmenuOpen(false), style: { position: 'relative', width: '100%' }, children: [jsxs("button", { ref: setButtonRef, type: "button", className: menuItemClassNames, onClick: handleClick, onKeyDown: handleKeyDown, onFocus: onFocus, onBlur: onBlur, disabled: disabled, 
+    return (jsxs("div", { className: mergeClasses(styles$4.menuItemContainer, classes?.root), onMouseEnter: () => setIsSubmenuOpen(true), onMouseLeave: () => setIsSubmenuOpen(false), style: { position: 'relative', width: '100%' }, children: [jsxs("button", { ref: setButtonRef, type: "button", className: menuItemClassNames, onClick: handleClick, onKeyDown: handleKeyDown, onFocus: onFocus, onBlur: onBlur, disabled: disabled, 
                 // aria-checked is only valid on menuitemcheckbox /
                 // menuitemradio, never on a plain menuitem, so the role
                 // follows the presence of a checked state.
-                role: checked ? 'menuitemcheckbox' : 'menuitem', "aria-disabled": disabled, "aria-checked": checked ? 'true' : undefined, "aria-keyshortcuts": keyShortcut ?? toAriaKeyShortcuts(shortcut), "aria-haspopup": effectiveHasSubmenu ? 'menu' : undefined, "aria-expanded": effectiveHasSubmenu ? isSubmenuOpen : undefined, children: [jsx("span", { className: styles$4.checkmark, children: checked && '✓' }), icon && jsx("span", { className: styles$4.icon, children: icon }), jsx("span", { className: styles$4.label, children: label }), shortcut && (jsx("span", { className: styles$4.shortcut, "aria-hidden": "true", children: shortcut })), effectiveHasSubmenu && (jsx("span", { className: styles$4.submenuArrow, "aria-hidden": "true", children: "\u25B6" }))] }), items && isSubmenuOpen && (jsx("div", { ref: submenuRef, className: styles$4.submenu, role: "menu", children: items })), separator && jsx("div", { className: styles$4.separatorLine, role: "separator" })] }));
+                role: checked ? 'menuitemcheckbox' : 'menuitem', "aria-disabled": disabled, "aria-checked": checked ? 'true' : undefined, "aria-keyshortcuts": keyShortcut ?? toAriaKeyShortcuts(shortcut), "aria-haspopup": effectiveHasSubmenu ? 'menu' : undefined, "aria-expanded": effectiveHasSubmenu ? isSubmenuOpen : undefined, children: [jsx("span", { className: mergeClasses(styles$4.checkmark, classes?.checkmark), children: checked && '✓' }), icon && jsx("span", { className: mergeClasses(styles$4.icon, classes?.icon), children: icon }), jsx("span", { className: mergeClasses(styles$4.label, classes?.label), children: label }), shortcut && (jsx("span", { className: mergeClasses(styles$4.shortcut, classes?.shortcut), "aria-hidden": "true", children: shortcut })), effectiveHasSubmenu && (jsx("span", { className: styles$4.submenuArrow, "aria-hidden": "true", children: "\u25B6" }))] }), items && isSubmenuOpen && (jsx("div", { ref: submenuRef, className: mergeClasses(styles$4.submenu, classes?.submenu), role: "menu", children: items })), separator && jsx("div", { className: styles$4.separatorLine, role: "separator" })] }));
 });
 MenuItem.displayName = 'MenuItem';
 
@@ -3320,7 +3298,7 @@ function renderMenuItemData(items) {
  * />
  * ```
  */
-const MenuBar = forwardRef(({ menus, openMenuIndex, defaultOpenMenuIndex, onMenuOpen, onMenuClose, className = '', dropdownClassName = '', leftContent, rightContent, }, ref) => {
+const MenuBar = forwardRef(({ menus, openMenuIndex, defaultOpenMenuIndex, onMenuOpen, onMenuClose, className = '', classes, dropdownClassName = '', leftContent, rightContent, }, ref) => {
     const [menuBarElement, setMenuBarElement] = useState(null);
     const [focusedIndex, setFocusedIndex] = useState(-1);
     const [internalOpenIndex, setInternalOpenIndex] = useState(defaultOpenMenuIndex);
@@ -3471,8 +3449,8 @@ const MenuBar = forwardRef(({ menus, openMenuIndex, defaultOpenMenuIndex, onMenu
         }
     };
     // Class names
-    const menuBarClassNames = mergeClasses(styles$3.menuBar, className);
-    const dropdownClassNames = mergeClasses(styles$3.dropdown, dropdownClassName);
+    const menuBarClassNames = mergeClasses(styles$3.menuBar, className, classes?.root);
+    const dropdownClassNames = mergeClasses(styles$3.dropdown, dropdownClassName, classes?.dropdown);
     // Callback ref to handle both internal state and forwarded ref
     const handleRef = useCallback((node) => {
         setMenuBarElement(node);
@@ -3491,7 +3469,7 @@ const MenuBar = forwardRef(({ menus, openMenuIndex, defaultOpenMenuIndex, onMenu
                     const isOpen = activeOpenIndex === index;
                     const isDropdown = menu.type !== 'link';
                     const id = triggerId(index);
-                    const menuButtonClassNames = mergeClasses(styles$3.menuButton, isOpen ? styles$3['menuButton--open'] : '', menu.disabled ? styles$3['menuButton--disabled'] : '');
+                    const menuButtonClassNames = mergeClasses(styles$3.menuButton, isOpen ? styles$3['menuButton--open'] : '', menu.disabled ? styles$3['menuButton--disabled'] : '', classes?.trigger);
                     // The label used to be an <h3>, which put a heading into the
                     // document outline for every menu — so a page with a menu bar
                     // announced "File, heading level 3" and polluted screen-reader
@@ -3503,7 +3481,7 @@ const MenuBar = forwardRef(({ menus, openMenuIndex, defaultOpenMenuIndex, onMenu
                     // menus from CMS or user-supplied data.
                     if (menu.type === 'link' && menu.href) {
                         const safeHref = sanitizeUrl(menu.href);
-                        return (jsx("div", { className: styles$3.menuContainer, children: jsx("a", { id: id, ref: (node) => {
+                        return (jsx("div", { className: mergeClasses(styles$3.menuContainer, classes?.menu), children: jsx("a", { id: id, ref: (node) => {
                                     triggerRefs.current[index] = node;
                                 }, href: safeHref, className: menuButtonClassNames, role: "menuitem", tabIndex: index === rovingIndex ? 0 : -1, onClick: (e) => {
                                     if (menu.onClick) {
@@ -3522,7 +3500,7 @@ const MenuBar = forwardRef(({ menus, openMenuIndex, defaultOpenMenuIndex, onMenu
                             jsx("div", { className: dropdownClassNames, role: "menu", "aria-labelledby": id, children: isMenuItemDataArray(menu.items)
                                     ? renderMenuItemData(menu.items)
                                     : menu.items }))] }, index));
-                }) }), rightContent && (jsx("div", { className: styles$3.rightContent, children: Array.isArray(rightContent)
+                }) }), rightContent && (jsx("div", { className: mergeClasses(styles$3.rightContent, classes?.rightContent), children: Array.isArray(rightContent)
                     ? rightContent.map((item, index) => (jsx(React.Fragment, { children: item }, index)))
                     : rightContent }))] }));
 });
@@ -3551,7 +3529,7 @@ const VIEWPORT_MARGIN = 4;
  * />
  * ```
  */
-const MenuDropdown = forwardRef(({ label, items, disabled = false, className = '', dropdownClassName = '', align = 'left', avoidCollisions = true, }, ref) => {
+const MenuDropdown = forwardRef(({ label, items, disabled = false, className = '', classes, dropdownClassName = '', align = 'left', avoidCollisions = true, }, ref) => {
     const [isOpen, setIsOpen] = useState(false);
     const [collisionOffset, setCollisionOffset] = useState(null);
     const containerRef = useRef(null);
@@ -3641,9 +3619,9 @@ const MenuDropdown = forwardRef(({ label, items, disabled = false, className = '
             setIsOpen((open) => !open);
         }
     };
-    const menuContainerClassNames = mergeClasses(styles$3.menuContainer, className);
-    const menuButtonClassNames = mergeClasses(styles$3.menuButton, isOpen ? styles$3['menuButton--open'] : '', disabled ? styles$3['menuButton--disabled'] : '');
-    const dropdownClassNames = mergeClasses(styles$3.dropdown, align === 'right' ? styles$3['dropdown--right'] : '', dropdownClassName);
+    const menuContainerClassNames = mergeClasses(styles$3.menuContainer, className, classes?.root);
+    const menuButtonClassNames = mergeClasses(styles$3.menuButton, isOpen ? styles$3['menuButton--open'] : '', disabled ? styles$3['menuButton--disabled'] : '', classes?.trigger);
+    const dropdownClassNames = mergeClasses(styles$3.dropdown, align === 'right' ? styles$3['dropdown--right'] : '', dropdownClassName, classes?.dropdown);
     return (jsxs("div", { ref: setContainerRef, className: menuContainerClassNames, children: [jsx("button", { id: triggerId, type: "button", className: menuButtonClassNames, onClick: handleToggle, disabled: disabled, "aria-haspopup": "menu", "aria-expanded": isOpen, "aria-disabled": disabled, children: typeof label === 'string' ? jsx("span", { className: styles$3.menuLabel, children: label }) : label }), isOpen && (jsx("div", { ref: dropdownRef, className: dropdownClassNames, role: "menu", "aria-labelledby": triggerId, style: collisionOffset
                     ? { transform: `translate(${collisionOffset.x}px, ${collisionOffset.y}px)` }
                     : undefined, onClick: () => setIsOpen(false), children: items }))] }));
@@ -3668,7 +3646,7 @@ var styles$2 = {"scrollbar":"Scrollbar-module_scrollbar","scrollbar--vertical":"
  * />
  * ```
  */
-const Scrollbar = forwardRef(({ orientation = 'vertical', value = 0, viewportRatio, onChange, onValueChange, 'aria-label': ariaLabelAttr, className = '', disabled = false, ariaLabel, controls, step = 0.1, }, ref) => {
+const Scrollbar = forwardRef(({ orientation = 'vertical', value = 0, viewportRatio, onChange, onValueChange, 'aria-label': ariaLabelAttr, className = '', classes, disabled = false, ariaLabel, controls, step = 0.1, }, ref) => {
     const trackRef = useRef(null);
     const isVertical = orientation === 'vertical';
     // Helper used by both arrow buttons and keyboard handler to clamp
@@ -3702,7 +3680,7 @@ const Scrollbar = forwardRef(({ orientation = 'vertical', value = 0, viewportRat
     const maxThumbPos = 100 - thumbSize;
     const thumbPos = value * maxThumbPos;
     // Class names
-    const classNames = mergeClasses(styles$2.scrollbar, styles$2[`scrollbar--${orientation}`], disabled && styles$2['scrollbar--disabled'], className);
+    const classNames = mergeClasses(styles$2.scrollbar, styles$2[`scrollbar--${orientation}`], disabled && styles$2['scrollbar--disabled'], className, classes?.root);
     // Handle arrow clicks
     const handleDecrement = useCallback(() => commitValue(value - step), [commitValue, step, value]);
     const handleIncrement = useCallback(() => commitValue(value + step), [commitValue, step, value]);
@@ -3788,11 +3766,11 @@ const Scrollbar = forwardRef(({ orientation = 'vertical', value = 0, viewportRat
             emitValue?.(Math.max(0, Math.min(1, dragStart.value + delta)));
         },
     });
-    return (jsxs("div", { ref: ref, className: classNames, children: [jsx("button", { type: "button", className: `${styles$2.arrow} ${styles$2['arrow--start']}`, onClick: handleDecrement, disabled: disabled, "aria-label": isVertical ? 'Scroll up' : 'Scroll left', children: jsx("div", { className: styles$2.arrowIcon }) }), jsx("div", { ref: trackRef, className: styles$2.track, onClick: handleTrackClick, onKeyDown: handleKeyDown, role: "scrollbar", tabIndex: disabled ? -1 : 0, "aria-valuenow": Math.round(value * 100), "aria-valuemin": 0, "aria-valuemax": 100, "aria-orientation": orientation, "aria-label": resolvedAriaLabel, "aria-controls": controls, "aria-disabled": disabled || undefined, children: jsx("div", { className: mergeClasses(styles$2.thumb, isDragging && styles$2['thumb--dragging']), style: {
+    return (jsxs("div", { ref: ref, className: classNames, children: [jsx("button", { type: "button", className: mergeClasses(styles$2.arrow, styles$2['arrow--start'], classes?.button), onClick: handleDecrement, disabled: disabled, "aria-label": isVertical ? 'Scroll up' : 'Scroll left', children: jsx("div", { className: styles$2.arrowIcon }) }), jsx("div", { ref: trackRef, className: mergeClasses(styles$2.track, classes?.track), onClick: handleTrackClick, onKeyDown: handleKeyDown, role: "scrollbar", tabIndex: disabled ? -1 : 0, "aria-valuenow": Math.round(value * 100), "aria-valuemin": 0, "aria-valuemax": 100, "aria-orientation": orientation, "aria-label": resolvedAriaLabel, "aria-controls": controls, "aria-disabled": disabled || undefined, children: jsx("div", { className: mergeClasses(styles$2.thumb, isDragging && styles$2['thumb--dragging'], classes?.thumb), style: {
                         [isVertical ? 'height' : 'width']: `${thumbSize}%`,
                         [isVertical ? 'top' : 'left']: `${thumbPos}%`,
                         touchAction: 'none',
-                    }, onPointerDown: startThumbDrag }) }), jsx("button", { type: "button", className: `${styles$2.arrow} ${styles$2['arrow--end']}`, onClick: handleIncrement, disabled: disabled, "aria-label": isVertical ? 'Scroll down' : 'Scroll right', children: jsx("div", { className: styles$2.arrowIcon }) })] }));
+                    }, onPointerDown: startThumbDrag }) }), jsx("button", { type: "button", className: mergeClasses(styles$2.arrow, styles$2['arrow--end'], classes?.button), onClick: handleIncrement, disabled: disabled, "aria-label": isVertical ? 'Scroll down' : 'Scroll right', children: jsx("div", { className: styles$2.arrowIcon }) })] }));
 });
 Scrollbar.displayName = 'Scrollbar';
 

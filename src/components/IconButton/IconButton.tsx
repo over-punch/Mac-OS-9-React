@@ -11,6 +11,18 @@ import { mergeClasses } from '../../utils/classNames';
 import { warnMissingProp } from '../../utils/deprecation';
 import styles from './IconButton.module.css';
 
+/**
+ * Classes for targeting IconButton sub-elements.
+ */
+export interface IconButtonClasses {
+	/** Root button. */
+	root?: string;
+	/** Wrapper around the icon. */
+	icon?: string;
+	/** Wrapper around the label. */
+	label?: string;
+}
+
 export interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 	/**
 	 * Icon element to display
@@ -50,6 +62,11 @@ export interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>
 	 * Additional CSS class names
 	 */
 	className?: string;
+
+	/**
+	 * Classes for targeting sub-elements.
+	 */
+	classes?: IconButtonClasses;
 }
 
 /**
@@ -100,6 +117,7 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
 			size = 'md',
 			disabled = false,
 			className = '',
+			classes,
 			...props
 		},
 		ref
@@ -116,17 +134,18 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
 			label && styles['iconButton--with-label'],
 			label && styles[`iconButton--label-${labelPosition}`],
 			disabled && styles['iconButton--disabled'],
-			className
+			className,
+			classes?.root
 		);
 
 		return (
 			<button ref={ref} type="button" className={classNames} disabled={disabled} {...props}>
 				{label && (labelPosition === 'left' || labelPosition === 'top') && (
-					<span className={styles.label}>{label}</span>
+					<span className={mergeClasses(styles.label, classes?.label)}>{label}</span>
 				)}
-				<span className={styles.icon}>{icon}</span>
+				<span className={mergeClasses(styles.icon, classes?.icon)}>{icon}</span>
 				{label && (labelPosition === 'right' || labelPosition === 'bottom') && (
-					<span className={styles.label}>{label}</span>
+					<span className={mergeClasses(styles.label, classes?.label)}>{label}</span>
 				)}
 			</button>
 		);

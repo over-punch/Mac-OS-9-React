@@ -1,5 +1,11 @@
 // MenuBar component exports
-export { MenuBar, type MenuBarProps, type Menu, type MenuItemData } from './MenuBar';
-export { MenuItem, type MenuItemProps } from './MenuItem';
-export { MenuDropdown, type MenuDropdownProps } from './MenuDropdown';
+export {
+	MenuBar,
+	type MenuBarProps,
+	type MenuBarClasses,
+	type Menu,
+	type MenuItemData,
+} from './MenuBar';
+export { MenuItem, type MenuItemProps, type MenuItemClasses } from './MenuItem';
+export { MenuDropdown, type MenuDropdownProps, type MenuDropdownClasses } from './MenuDropdown';
 export { default } from './MenuBar';

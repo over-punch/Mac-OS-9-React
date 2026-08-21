@@ -5,6 +5,18 @@ import React, { forwardRef, useCallback, useId, useLayoutEffect, useState, useRe
 import { mergeClasses } from '../../utils/classNames';
 import styles from './MenuBar.module.css';
 
+/**
+ * Classes for targeting MenuDropdown sub-elements.
+ */
+export interface MenuDropdownClasses {
+	/** Root container. */
+	root?: string;
+	/** The trigger button. */
+	trigger?: string;
+	/** The open dropdown panel. */
+	dropdown?: string;
+}
+
 export interface MenuDropdownProps {
 	/**
 	 * Menu label (displayed in the menu bar/button)
@@ -28,8 +40,11 @@ export interface MenuDropdownProps {
 	className?: string;
 
 	/**
-	 * Custom class name for menu dropdown
+	 * Classes for targeting sub-elements.
 	 */
+	classes?: MenuDropdownClasses;
+
+	/** @deprecated Use `classes.dropdown`. */
 	dropdownClassName?: string;
 
 	/**
@@ -84,6 +99,7 @@ export const MenuDropdown = forwardRef<HTMLDivElement, MenuDropdownProps>(
 			items,
 			disabled = false,
 			className = '',
+			classes,
 			dropdownClassName = '',
 			align = 'left',
 			avoidCollisions = true,
@@ -193,18 +209,20 @@ export const MenuDropdown = forwardRef<HTMLDivElement, MenuDropdownProps>(
 			}
 		};
 
-		const menuContainerClassNames = mergeClasses(styles.menuContainer, className);
+		const menuContainerClassNames = mergeClasses(styles.menuContainer, className, classes?.root);
 
 		const menuButtonClassNames = mergeClasses(
 			styles.menuButton,
 			isOpen ? styles['menuButton--open'] : '',
-			disabled ? styles['menuButton--disabled'] : ''
+			disabled ? styles['menuButton--disabled'] : '',
+			classes?.trigger
 		);
 
 		const dropdownClassNames = mergeClasses(
 			styles.dropdown,
 			align === 'right' ? styles['dropdown--right'] : '',
-			dropdownClassName
+			dropdownClassName,
+			classes?.dropdown
 		);
 
 		return (

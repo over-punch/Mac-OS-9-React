@@ -6,7 +6,7 @@
 import './styles/theme.css';
 
 // Export components
-export { Button, type ButtonProps } from './components/Button';
+export { Button, type ButtonProps, type ButtonClasses } from './components/Button';
 export {
 	Icon,
 	IconLibrary,
@@ -23,14 +23,36 @@ export {
 	type PixelMap,
 	type PixelIconProps,
 } from './components/Icon';
-export { IconButton, type IconButtonProps } from './components/IconButton';
-export { Checkbox, type CheckboxProps } from './components/Checkbox';
-export { Radio, RadioGroup, type RadioProps, type RadioGroupProps } from './components/Radio';
-export { TextField, type TextFieldProps } from './components/TextField';
-export { Select, type SelectProps, type SelectOption } from './components/Select';
-export { Tabs, TabPanel, type TabsProps, type TabPanelProps } from './components/Tabs';
+export { IconButton, type IconButtonProps, type IconButtonClasses } from './components/IconButton';
+export { Checkbox, type CheckboxProps, type CheckboxClasses } from './components/Checkbox';
+export {
+	Radio,
+	RadioGroup,
+	type RadioProps,
+	type RadioGroupProps,
+	type RadioClasses,
+} from './components/Radio';
+export { TextField, type TextFieldProps, type TextFieldClasses } from './components/TextField';
+export {
+	Select,
+	type SelectProps,
+	type SelectOption,
+	type SelectClasses,
+} from './components/Select';
+export {
+	Tabs,
+	TabPanel,
+	type TabsProps,
+	type TabPanelProps,
+	type TabsClasses,
+} from './components/Tabs';
 export { Window, type WindowProps, type WindowClasses } from './components/Window';
-export { Dialog, type DialogProps, type FocusableElement } from './components/Dialog';
+export {
+	Dialog,
+	type DialogProps,
+	type DialogClasses,
+	type FocusableElement,
+} from './components/Dialog';
 export {
 	WindowManagerProvider,
 	useWindowManager,
@@ -46,8 +68,11 @@ export {
 	type Menu,
 	type MenuItemData,
 	type MenuDropdownProps,
+	type MenuBarClasses,
+	type MenuItemClasses,
+	type MenuDropdownClasses,
 } from './components/MenuBar';
-export { Scrollbar, type ScrollbarProps } from './components/Scrollbar';
+export { Scrollbar, type ScrollbarProps, type ScrollbarClasses } from './components/Scrollbar';
 export {
 	ListView,
 	type ListViewProps,

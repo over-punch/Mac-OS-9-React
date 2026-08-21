@@ -31,6 +31,22 @@ interface RadioGroupContextValue {
 
 const RadioGroupContext = React.createContext<RadioGroupContextValue | null>(null);
 
+/**
+ * Classes for targeting Radio sub-elements.
+ */
+export interface RadioClasses {
+	/** Root wrapper. */
+	root?: string;
+	/** The input itself. */
+	input?: string;
+	/** The visible label. */
+	label?: string;
+	/** Helper text shown when there is no error. */
+	helperText?: string;
+	/** Error text shown while `error` is set. */
+	errorMessage?: string;
+}
+
 export interface RadioProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type' | 'size'> {
 	/**
 	 * Whether the radio is checked
@@ -111,6 +127,11 @@ export interface RadioProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 
 	className?: string;
 
 	/**
+	 * Classes for targeting sub-elements.
+	 */
+	classes?: RadioClasses;
+
+	/**
 	 * Value for the radio button (required for radio groups)
 	 */
 	value?: string | number;
@@ -166,6 +187,7 @@ export const Radio = forwardRef<HTMLInputElement, RadioProps>(
 			'aria-label': ariaLabelAttr,
 			'aria-describedby': ariaDescribedByAttr,
 			className = '',
+			classes,
 			value,
 			name,
 			onChange,
@@ -196,16 +218,18 @@ export const Radio = forwardRef<HTMLInputElement, RadioProps>(
 			styles[`wrapper--label-${labelPosition}`],
 			resolvedDisabled && styles['wrapper--disabled'],
 			error && styles['wrapper--error'],
-			className
+			className,
+			classes?.root
 		);
 
 		const radioClassNames = mergeClasses(
+			classes?.input,
 			styles.radio,
 			styles[`radio--${size}`],
 			error && styles['radio--error']
 		);
 
-		const labelClassNames = mergeClasses(styles.label, styles[`label--${size}`]);
+		const labelClassNames = mergeClasses(styles.label, styles[`label--${size}`], classes?.label);
 
 		// ARIA attributes
 		const helperId = `${radioId}-helper`;
@@ -269,8 +293,8 @@ export const Radio = forwardRef<HTMLInputElement, RadioProps>(
 					errorMessage={errorMessage}
 					helperText={helperText}
 					errorLiveRegion={errorLiveRegion}
-					helperClassName={styles['helper-text']}
-					errorClassName={styles['error-message']}
+					helperClassName={mergeClasses(styles['helper-text'], classes?.helperText)}
+					errorClassName={mergeClasses(styles['error-message'], classes?.errorMessage)}
 				/>
 			</div>
 		);

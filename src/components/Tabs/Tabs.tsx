@@ -59,6 +59,20 @@ export function TabPanel<TValue extends string = string>({
 
 TabPanel.displayName = 'TabPanel';
 
+/**
+ * Classes for targeting Tabs sub-elements.
+ */
+export interface TabsClasses {
+	/** Root container. */
+	root?: string;
+	/** The tab list strip. */
+	tabList?: string;
+	/** An individual tab button. */
+	tab?: string;
+	/** A tab panel. */
+	panel?: string;
+}
+
 export interface TabsProps<TValue extends string = string> {
 	/**
 	 * Tab panels as children.
@@ -112,13 +126,14 @@ export interface TabsProps<TValue extends string = string> {
 	className?: string;
 
 	/**
-	 * Custom class name for the tab list
+	 * Classes for targeting sub-elements.
 	 */
+	classes?: TabsClasses;
+
+	/** @deprecated Use `classes.tabList`. */
 	tabListClassName?: string;
 
-	/**
-	 * Custom class name for the tab panel container
-	 */
+	/** @deprecated Use `classes.panel`. */
 	panelClassName?: string;
 
 	/**
@@ -182,6 +197,7 @@ function TabsInner<TValue extends string = string>(
 		size = 'md',
 		fullWidth = false,
 		className = '',
+		classes,
 		tabListClassName = '',
 		panelClassName = '',
 		ariaLabel,
@@ -304,19 +320,21 @@ function TabsInner<TValue extends string = string>(
 	);
 
 	// Class names
-	const containerClassNames = mergeClasses(styles.container, className);
+	const containerClassNames = mergeClasses(styles.container, className, classes?.root);
 
 	const tabListClassNames = mergeClasses(
 		styles.tabList,
 		styles[`tabList--${size}`],
 		fullWidth && styles['tabList--full-width'],
-		tabListClassName
+		tabListClassName,
+		classes?.tabList
 	);
 
 	const panelContainerClassNames = mergeClasses(
 		styles.panelContainer,
 		styles[`panelContainer--${size}`],
-		panelClassName
+		panelClassName,
+		classes?.panel
 	);
 
 	return (
@@ -336,7 +354,8 @@ function TabsInner<TValue extends string = string>(
 						styles[`tab--${size}`],
 						isActive && styles['tab--active'],
 						isDisabled && styles['tab--disabled'],
-						fullWidth && styles['tab--full-width']
+						fullWidth && styles['tab--full-width'],
+						classes?.tab
 					);
 
 					return (

@@ -82,6 +82,24 @@ export interface Menu {
 	disabled?: boolean;
 }
 
+/**
+ * Classes for targeting MenuBar sub-elements.
+ */
+export interface MenuBarClasses {
+	/** Root menubar element. */
+	root?: string;
+	/** Container around each menu and its dropdown. */
+	menu?: string;
+	/** A top-level menu trigger. */
+	trigger?: string;
+	/** An open dropdown panel. */
+	dropdown?: string;
+	/** Left content slot. */
+	leftContent?: string;
+	/** Right content slot. */
+	rightContent?: string;
+}
+
 export interface MenuBarProps {
 	/**
 	 * Array of menus to display. Never mutated by MenuBar.
@@ -122,8 +140,11 @@ export interface MenuBarProps {
 	className?: string;
 
 	/**
-	 * Custom class name for menu dropdowns
+	 * Classes for targeting sub-elements.
 	 */
+	classes?: MenuBarClasses;
+
+	/** @deprecated Use `classes.dropdown`. */
 	dropdownClassName?: string;
 
 	/**
@@ -219,6 +240,7 @@ export const MenuBar = forwardRef<HTMLDivElement, MenuBarProps>(
 			onMenuOpen,
 			onMenuClose,
 			className = '',
+			classes,
 			dropdownClassName = '',
 			leftContent,
 			rightContent,
@@ -400,8 +422,8 @@ export const MenuBar = forwardRef<HTMLDivElement, MenuBarProps>(
 		};
 
 		// Class names
-		const menuBarClassNames = mergeClasses(styles.menuBar, className);
-		const dropdownClassNames = mergeClasses(styles.dropdown, dropdownClassName);
+		const menuBarClassNames = mergeClasses(styles.menuBar, className, classes?.root);
+		const dropdownClassNames = mergeClasses(styles.dropdown, dropdownClassName, classes?.dropdown);
 
 		// Callback ref to handle both internal state and forwarded ref
 		const handleRef = useCallback(
@@ -436,7 +458,8 @@ export const MenuBar = forwardRef<HTMLDivElement, MenuBarProps>(
 						const menuButtonClassNames = mergeClasses(
 							styles.menuButton,
 							isOpen ? styles['menuButton--open'] : '',
-							menu.disabled ? styles['menuButton--disabled'] : ''
+							menu.disabled ? styles['menuButton--disabled'] : '',
+							classes?.trigger
 						);
 
 						// The label used to be an <h3>, which put a heading into the
@@ -452,7 +475,7 @@ export const MenuBar = forwardRef<HTMLDivElement, MenuBarProps>(
 						if (menu.type === 'link' && menu.href) {
 							const safeHref = sanitizeUrl(menu.href);
 							return (
-								<div key={index} className={styles.menuContainer}>
+								<div key={index} className={mergeClasses(styles.menuContainer, classes?.menu)}>
 									<a
 										id={id}
 										ref={(node) => {
@@ -516,7 +539,7 @@ export const MenuBar = forwardRef<HTMLDivElement, MenuBarProps>(
 
 				{/* Right content (status area) */}
 				{rightContent && (
-					<div className={styles.rightContent}>
+					<div className={mergeClasses(styles.rightContent, classes?.rightContent)}>
 						{Array.isArray(rightContent)
 							? rightContent.map((item, index) => (
 									<React.Fragment key={index}>{item}</React.Fragment>

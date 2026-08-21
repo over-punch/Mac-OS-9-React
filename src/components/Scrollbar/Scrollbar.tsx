@@ -13,6 +13,20 @@ import { warnDeprecatedProp } from '../../utils/deprecation';
 import { usePointerGesture } from '../../hooks/usePointerGesture';
 import styles from './Scrollbar.module.css';
 
+/**
+ * Classes for targeting Scrollbar sub-elements.
+ */
+export interface ScrollbarClasses {
+	/** Root element carrying role="scrollbar". */
+	root?: string;
+	/** The track the thumb travels along. */
+	track?: string;
+	/** The draggable thumb. */
+	thumb?: string;
+	/** Either arrow button. */
+	button?: string;
+}
+
 export interface ScrollbarProps {
 	/**
 	 * Scrollbar orientation
@@ -59,6 +73,11 @@ export interface ScrollbarProps {
 	 * Additional CSS class names
 	 */
 	className?: string;
+
+	/**
+	 * Classes for targeting sub-elements.
+	 */
+	classes?: ScrollbarClasses;
 
 	/**
 	 * Whether scrollbar is disabled
@@ -115,6 +134,7 @@ export const Scrollbar = forwardRef<HTMLDivElement, ScrollbarProps>(
 			onValueChange,
 			'aria-label': ariaLabelAttr,
 			className = '',
+			classes,
 			disabled = false,
 			ariaLabel,
 			controls,
@@ -176,7 +196,8 @@ export const Scrollbar = forwardRef<HTMLDivElement, ScrollbarProps>(
 			styles.scrollbar,
 			styles[`scrollbar--${orientation}`],
 			disabled && styles['scrollbar--disabled'],
-			className
+			className,
+			classes?.root
 		);
 
 		// Handle arrow clicks
@@ -287,7 +308,7 @@ export const Scrollbar = forwardRef<HTMLDivElement, ScrollbarProps>(
 			<div ref={ref} className={classNames}>
 				<button
 					type="button"
-					className={`${styles.arrow} ${styles['arrow--start']}`}
+					className={mergeClasses(styles.arrow, styles['arrow--start'], classes?.button)}
 					onClick={handleDecrement}
 					disabled={disabled}
 					aria-label={isVertical ? 'Scroll up' : 'Scroll left'}
@@ -297,7 +318,7 @@ export const Scrollbar = forwardRef<HTMLDivElement, ScrollbarProps>(
 
 				<div
 					ref={trackRef}
-					className={styles.track}
+					className={mergeClasses(styles.track, classes?.track)}
 					onClick={handleTrackClick}
 					onKeyDown={handleKeyDown}
 					role="scrollbar"
@@ -311,7 +332,11 @@ export const Scrollbar = forwardRef<HTMLDivElement, ScrollbarProps>(
 					aria-disabled={disabled || undefined}
 				>
 					<div
-						className={mergeClasses(styles.thumb, isDragging && styles['thumb--dragging'])}
+						className={mergeClasses(
+							styles.thumb,
+							isDragging && styles['thumb--dragging'],
+							classes?.thumb
+						)}
 						style={{
 							[isVertical ? 'height' : 'width']: `${thumbSize}%`,
 							[isVertical ? 'top' : 'left']: `${thumbPos}%`,
@@ -323,7 +348,7 @@ export const Scrollbar = forwardRef<HTMLDivElement, ScrollbarProps>(
 
 				<button
 					type="button"
-					className={`${styles.arrow} ${styles['arrow--end']}`}
+					className={mergeClasses(styles.arrow, styles['arrow--end'], classes?.button)}
 					onClick={handleIncrement}
 					disabled={disabled}
 					aria-label={isVertical ? 'Scroll down' : 'Scroll right'}

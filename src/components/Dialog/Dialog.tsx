@@ -137,6 +137,20 @@ function getFocusables(root: HTMLElement): HTMLElement[] {
 
 // --- Props -----------------------------------------------------------------
 
+/**
+ * Classes for targeting Dialog's own sub-elements.
+ *
+ * Named `dialogClasses` on the props rather than `classes`, because Dialog
+ * extends WindowProps and `classes` there already targets the Window slots
+ * this renders inside.
+ */
+export interface DialogClasses {
+	/** The full-screen backdrop behind the dialog. */
+	backdrop?: string;
+	/** The container carrying role="dialog" and aria-modal. */
+	container?: string;
+}
+
 export interface DialogProps extends Omit<WindowProps, 'active'> {
 	/**
 	 * Whether the dialog is open
@@ -163,8 +177,12 @@ export interface DialogProps extends Omit<WindowProps, 'active'> {
 	closeOnEscape?: boolean;
 
 	/**
-	 * Custom backdrop className
+	 * Classes for targeting sub-elements. Window's own slots are reachable
+	 * through the inherited `classes` prop, which this extends.
 	 */
+	dialogClasses?: DialogClasses;
+
+	/** @deprecated Use `dialogClasses.backdrop`. */
 	backdropClassName?: string;
 
 	/**
@@ -274,6 +292,7 @@ export const Dialog = forwardRef<HTMLDivElement, DialogProps>(
 			closeOnBackdropClick = true,
 			closeOnEscape = true,
 			backdropClassName = '',
+			dialogClasses,
 			trapFocus = true,
 			initialFocus,
 			role = 'dialog',
@@ -459,12 +478,16 @@ export const Dialog = forwardRef<HTMLDivElement, DialogProps>(
 
 		if (!open) return null;
 
-		const backdropClassNames = mergeClasses(styles.backdrop, backdropClassName);
+		const backdropClassNames = mergeClasses(
+			styles.backdrop,
+			backdropClassName,
+			dialogClasses?.backdrop
+		);
 
 		const dialogTree = (
 			<div className={backdropClassNames} onClick={handleBackdropClick}>
 				<div
-					className={styles.dialogContainer}
+					className={mergeClasses(styles.dialogContainer, dialogClasses?.container)}
 					ref={dialogRef}
 					role={role}
 					aria-modal="true"
