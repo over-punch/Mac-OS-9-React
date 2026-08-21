@@ -7,6 +7,10 @@ import { IconLibrary } from '@lib/components/Icon';
 
 const PKG = '@liiift-studio/mac-os9-ui';
 
+// Injected by Vite from package.json, so the menu bar can't show a stale
+// version after a release.
+const VERSION = __PKG_VERSION__;
+
 /** The menu bar shown across the top of the desktop. */
 export function DesktopMenuBar({ compact = false }: { compact?: boolean }) {
 	const menus: Menu[] = [
@@ -48,7 +52,7 @@ export function DesktopMenuBar({ compact = false }: { compact?: boolean }) {
 			}
 			rightContent={[
 				<span key="ver" className="desktopMenuBar__status">
-					v0.3.3
+					v{VERSION}
 				</span>,
 			]}
 		/>

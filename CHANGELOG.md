@@ -1,5 +1,140 @@
 # @liiift-studio/mac-os9-ui
 
+## 1.0.0
+
+### Major Changes
+
+- First stable release.
+
+  The API is settled, and that is what this version number means. Every
+  convention the library had more than one of now has exactly one, and each is
+  stated where you would look for it:
+
+  - **ARIA** — every component takes the standard `aria-label`,
+    `aria-labelledby`, `aria-describedby` and `aria-pressed`.
+  - **Callbacks** — `onChange` is the native DOM event, on the components that
+    wrap a native input. `onValueChange` is the parsed value, on the components
+    that report one.
+  - **Styling** — every component takes a typed `classes` object naming its real
+    slots, and every value it draws with is a CSS custom property in three tiers.
+  - **Disabled** — an element with a native `disabled` attribute uses that alone;
+    one without carries `aria-disabled`.
+  - **Controlled state** — every controllable prop pairs `X` with `defaultX`.
+
+  Deprecated names from the 0.x API — `ariaLabel` and friends, the value-shaped
+  `onChange` on RadioGroup, Scrollbar and Tabs, `wrapperClassName`,
+  `dialogClasses` and the other single-purpose className props — all still work,
+  warn once in development, and will be removed in 2.0.
+
+  Beyond the conventions: `ListView` and `Select` are keyboard operable where
+  they were pointer-only, tree-shaking actually works (a single-component import
+  is 3 KB rather than 69 KB), the fonts are subset so an ASCII page fetches 38%
+  of what it did, and there are 359 tests including an axe sweep over every
+  component and WCAG contrast assertions against the palette.
+
+- 6a38916: Rebuild Select as a real listbox, make ListView keyboard operable, and add a
+  window manager.
+
+  **Breaking**
+
+  - `Select` no longer renders a native `<select>`. It is a button plus a
+    `role="listbox"` popup, so the whole control is themeable — previously the
+    open option list was drawn by the operating system. `onChange` is replaced by
+    `onValueChange`, which receives the value rather than a DOM event and is
+    generic over it. Option groups move from `<optgroup>` to a `group` field on
+    each option. A hidden input preserves native form submission and `FormData`.
+  - `ListView` rows are now listbox options. If you were spreading
+    `RowDefaultProps` onto a custom element via `renderRow`, it now carries
+    `role`, `aria-selected`, `tabIndex`, `onKeyDown` and `id` as well.
+  - `Button` no longer sets `aria-disabled` on its `<button>` branch; the native
+    `disabled` attribute is authoritative there. The anchor and `asChild`
+    branches still set it.
+
+  **Added**
+
+  - `WindowManagerProvider` coordinates z-order across several windows: they
+    raise on interaction and resolve `active` to "topmost in the stack".
+  - `Select` and `Tabs` are generic over the option value and tab id.
+  - `useOutsideClick` and `useMenuPosition` are exported.
+  - `ListView` gains `ariaLabel` / `ariaLabelledBy` and full keyboard navigation:
+    arrow keys, Home/End, Shift-extend, Enter to open, Space to select.
+  - The icon registry helpers — `getAllIconNames`, `getIcon`, `hasIcon`,
+    `iconRegistry`, `createPixelIcon` — are exported from the package root.
+
+  **Fixed**
+
+  - `ListView` was pointer-only, a WCAG 2.1.1 Level A failure. Rows and sortable
+    headers are now keyboard operable.
+  - `RadioGroup` declared `aria-orientation` but applied no layout, so its radios
+    ran together inline and `orientation` had no visible effect.
+  - The bundled Pixel Operator licence is published alongside the font files. It
+    was lost when the font directory was renamed, so the package had been
+    redistributing the typeface with no licence.
+  - 16 of the 21 documented per-component CSS custom properties were not read by
+    any component. They are all wired now, with defaults that preserve the
+    current appearance.
+
+- 48aa577: Fix the design-token layer, window interaction model, and build pipeline.
+
+  **Fixed**
+
+  - `--font-size-xs` was never defined. A missing semicolon after `--font-bold: 700`
+    swallowed the declaration that followed it, so every rule using
+    `var(--font-size-xs)` — in Button, Select, TextField, Tabs, Radio, Checkbox,
+    ListView and IconButton — silently fell back to the inherited size.
+  - Fonts were emitted twice: once content-hashed by `postcss-url`, once by the
+    copy plugin. They now ship once, at stable paths that match both the CSS
+    references and the public `./fonts/*` export subpath.
+  - The font-path rewrite plugin opened a double quote it never closed, producing
+    malformed CSS for any single-quoted or unquoted `url()`. The rewrite now
+    happens at the `postcss-url` layer and the plugin is gone.
+  - The rollup `copy` targets pointed at `src/fonts/pixelOperator`, a directory
+    that does not exist, so no fonts were copied to `dist` at all.
+  - `Window` discarded a `position` prop supplied after mount until the first drag.
+
+  **Changed**
+
+  - Window drag and resize now coalesce pointer moves into one
+    `requestAnimationFrame` tick, and the `offsetParent` rect is measured once per
+    gesture instead of on every move.
+  - Window drag and resize are keyboard operable: focus the title bar or the grow
+    box and use the arrow keys (Shift for a 10× step). Satisfies WCAG 2.1.1.
+  - New `zIndex` and `onActivate` props on `Window` for click-to-front across
+    several windows.
+  - Design tokens are reorganised into three tiers — primitives, semantics, and
+    per-component hooks such as `--button-bg`, `--window-titlebar-bg` and
+    `--menu-highlight-bg` — so a single component can be retargeted without
+    overriding the whole palette.
+  - Hardcoded colours in MenuBar, MenuItem and Window now resolve through tokens.
+  - `typography.fontFamily` in the TypeScript token export described Charcoal,
+    Geneva, Chicago and Apple Garamond — none of which the library loads. It now
+    mirrors the CSS custom properties exactly, and `fontSize` is in rem to match.
+    `typography.fontFamily.chicago` is removed; `title`, `pixel` and `pixelSmall`
+    are added.
+  - `font-display` for the bundled Pixel faces is `block` rather than `swap`,
+    which avoids a full-page reflow when a bitmap face swaps in.
+  - `-webkit-font-smoothing: antialiased` is no longer applied to `<html>` by
+    `base.css`; it blurred the pixel faces the library exists to render.
+  - Source maps are no longer published, and the intermediate `dist/types` tree is
+    removed after the declaration bundle is built.
+  - Removed the unused `tsup` dependency and config. Rollup is the build tool.
+
+  **Added**
+
+  - `@liiift-studio/mac-os9-ui/tokens` — design tokens with no `@font-face`
+    declarations and no font downloads, for consumers supplying their own faces.
+  - `@liiift-studio/mac-os9-ui/webfonts` — opt-in Google Fonts request.
+  - `./package.json` export, which modern resolvers require.
+
+  **Breaking**
+
+  - The Google Fonts `@import` has been removed from the default stylesheet. It
+    was a render-blocking third-party request on every consuming page. If your app
+    relies on `--font-body`, `--font-title` or `--font-mono` resolving to IBM Plex
+    or EB Garamond, add `import '@liiift-studio/mac-os9-ui/webfonts'`, or
+    self-host those families. The library's own components never needed them.
+  - `typography.fontFamily.chicago` is removed from the token export.
+
 ## 0.3.0
 
 ### Minor Changes

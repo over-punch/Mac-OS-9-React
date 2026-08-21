@@ -239,8 +239,7 @@ function MyForm() {
 
 			{/* Select reports through `onValueChange`, which receives the value
 			    itself rather than a DOM event — it is a listbox, not a native
-			    <select>. NOTE: unreleased; 0.3.3 still takes `onChange`. See
-			    Versioning below. */}
+			    <select>. */}
 			<Select
 				label="Choose an option"
 				value={selected}
@@ -601,16 +600,11 @@ interface FileRow extends ListItem {
 
 ## Versioning
 
-This package is pre-1.0 (currently `0.3.x`). Minor versions may contain
-breaking changes; they are listed in the [changelog](./CHANGELOG.md).
+This package follows semantic versioning. `1.0.0` is the first stable release:
+breaking changes require a major, and the deprecated names carried over from
+0.x are supported until 2.0.
 
-> **This README documents `main`, not the published version.** The latest
-> release on npm is `0.3.3`. Changes described under *Migrating to the next
-> release* below — most visibly the new `Select` — are on `main` and are not in
-> `0.3.3` yet. If you install today, `Select` is still the native control with
-> an `onChange` handler. Everything else in this README applies to both.
-
-### Migrating to the next release
+### Migrating from 0.3.x
 
 `Select` no longer renders a native `<select>`. It is a button plus a
 `role="listbox"` popup, so the whole control can be themed — previously the
@@ -629,6 +623,25 @@ form submission and `FormData` working. Two API changes:
 `onValueChange` receives the value directly and is generic, so a literal union
 survives. Option groups move from `<optgroup>` to a `group` field on each
 option.
+
+Other breaking changes in 1.0:
+
+| Change | What to do |
+|---|---|
+| Google Fonts no longer imported by `/styles` | add `import '@liiift-studio/mac-os9-ui/webfonts'` if you use `--font-body`, `--font-title` or `--font-mono` |
+| `Variant` is `'default' \| 'primary' \| 'danger'`, `Size` is `'sm' \| 'md' \| 'lg'` | they now match what the components always accepted |
+| `BaseComponentProps`, `RenderState`, `State`, `ButtonRef` and the other ref aliases removed | nothing referenced them |
+| `ComponentClasses` index signature removed | a misspelled slot is now a compile error |
+| `typography.fontFamily.chicago` removed | the library never loaded that family |
+| Font files renamed to `.latin` / `.latin-ext` subsets | only affects direct `./fonts/*` imports |
+| `IconButton` renders a `Button` internally | only affects CSS targeting its old class names |
+| Button no longer sets `aria-disabled` on a native `<button>` | the `disabled` attribute is authoritative there |
+
+Renamed props still work and warn once in development: `ariaLabel` and the
+other camelCase ARIA props, the value-shaped `onChange` on `RadioGroup`,
+`Scrollbar` and `Tabs`, and `wrapperClassName`, `tabListClassName`,
+`panelClassName`, `dropdownClassName`, `backdropClassName` and
+`dialogClasses`. They are removed in 2.0.
 
 ### Migrating to 0.3.0
 
