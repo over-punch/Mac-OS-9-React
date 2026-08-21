@@ -79,29 +79,37 @@ The previous five-phase plan is largely complete. Current focus is correctness a
 6. **Pointer Events migration** — mobile-capable drag/resize/scrollbar (#11)
 
 
-## Panel-review backlog (synced 2026-08-20)
+## Panel-review backlog — closed (2026-08-20)
 
-92 of the 112 open review issues are closed. The 20 that remain are open
-deliberately, each with a comment on the issue explaining why:
+All 124 issues from the 2026-05-27 panel review are closed.
 
-| Issue | Why it is still open |
+The last twenty were the architectural and convention-level ones. Several
+turned out to need a different fix from the one the issue proposed, and those
+are worth remembering:
+
+| Issue | What it actually was |
 |-------|----------------------|
-| #41 | Standard `aria-*` done for Button only; Tabs/Scrollbar/RadioGroup/Dialog/TextField still camelCase. Implementation exists on `origin/fix/api-taxonomy`. |
-| #44 | `onChange` shapes still vary. Needs a decided convention before churning every signature. |
-| #45 | Checkbox/Radio have `error` but no message slot, unlike TextField/Select. |
-| #47 | The `classes` slot pattern is on 4 of 18 components. |
-| #55 | `useOutsideClick` / `useMenuPosition` landed; Window and Scrollbar still have inline gesture code. `origin/fix/window-gesture-hooks` extracts it. |
-| #57 | Feature list vs implemented behaviour — largely addressed by the README rewrite; re-audit before closing. |
-| #58 | Naming convention corrected in `techContext.md`; verify nothing else claims the `--mac-os9-` prefix. |
-| #61 | Theme-provider claim removed from `systemPatterns.md`; token override hooks exist. Re-check then close. |
-| #67 | CSS still hardcodes many px values rather than using the spacing scale. |
-| #69 | No deep subpath imports; the barrel always loads. Tree-shaking covers most of the cost. |
-| #76 | Public type exports still expose render-prop and slot internals. |
-| #80, #81, #82 | Addressed by the README rewrite; verify against the rendered page then close. |
-| #88 | Button and IconButton remain separate. Folding them is breaking and needs a decision on `labelPosition`. |
-| #107, #108 | Font subsetting and metric overrides need real font metrics; documented as a known limitation. |
-| #118, #119 | No `primitives/` / `compound/` layer; MenuBar folder still flat-exports three siblings. |
-| #121 | CSP guidance added to the README; verify then close. |
+| #67 | Reported as 216+ px values bypassing the spacing scale. Categorising all 362 showed 8 were spacing; the rest is pixel-art geometry where an exact px is correct. Fixed the real ones (contrast border widths, a sub-scale font size, dead token fallbacks). |
+| #69 | Asked for deep subpath imports. The real problem was that tree-shaking did not work at all — a single-file bundle plus `displayName` assignments meant a Button-only import pulled 69 KB of 74. Preserved modules took it to 3.4 KB, which makes subpaths unnecessary. |
+| #119 | Asked for `primitives/` and `compound/` directories. The graph was already that shape and acyclic; what was missing was enforcement. `src/test/architecture.test.ts` now declares and checks the layering. |
+| #88 | Folding IconButton into Button would have meant dropping `labelPosition`. Made it a Button wrapper instead: it inherits the chrome and behaviour, its CSS drops from 207 lines to 60. |
+| #76 | No internals were leaking. Eight *unused* exported types were, which is the same footgun from the other direction. |
+
+Bugs found while fixing other things, which is where most of the real defects
+came from:
+
+- `--font-size-xs` was never defined — a missing semicolon swallowed it, and 8
+  components silently lost their font size.
+- ListView rendered rows and header cells with no React `key`.
+- RadioGroup's arrow-key selection never reached the consumer: it dispatched a
+  native `change` event, which React does not use to derive a radio's onChange.
+- Scrollbar's thumb could not be dragged at all by consumers using the new
+  `onValueChange`, and its listeners re-attached on every frame of a drag.
+- `id || useId()` short-circuited the hook in three components.
+- The bundled font shipped with no licence (lost in a directory rename).
+- `data-numControls` was invalid attribute casing, so three CSS rules never
+  matched.
+- 16 of the 21 documented component CSS custom properties were read by nothing.
 
 ### Verified fixed and closed in this pass
 Everything else, including the whole build pipeline (#68–#74, #101, #109,

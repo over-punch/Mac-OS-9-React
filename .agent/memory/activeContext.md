@@ -1,9 +1,10 @@
 # Active Context
 
 ## Current Focus
-The panel-review backlog is essentially closed, the package has a landing site,
-and the README has been rebuilt against what the library actually does. Ninety-two
-of the 112 open review issues are closed; 20 remain, all deliberately.
+The panel-review backlog is fully closed — all 124 issues. The package has a
+landing site, the README has been rebuilt against what the library actually
+does, and CI runs lint, typecheck, build, Storybook and the test suite against
+React 18 and 19.
 
 ## Recent Changes (2026-08-20)
 
@@ -56,6 +57,8 @@ branches remain unmerged; #41, #55 and #88 carry comments pointing at them.
 ## Next Steps
 1. **Release.** `main` contains a breaking change (`Select`) that is not on npm.
    The README says so explicitly. Two changesets are staged.
-2. The 20 issues left open are listed in `progress.md` with the reason each was
-   left. #55 (extract the gesture hooks) and #41 (standard `aria-*` across the
-   remaining components) have ready implementations on Colby's branches.
+2. Colby's six branches are still unmerged and now fully superseded — every
+   issue they targeted is closed, with the useful parts ported across. They can
+   be deleted once he has looked at them.
+3. 352 tests across 20 files. Coverage thresholds are a ratchet in
+   vitest.config.ts; raise them as coverage grows.
