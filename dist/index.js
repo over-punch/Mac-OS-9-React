@@ -2264,7 +2264,326 @@ function WindowManagerProvider({ children, baseZIndex = 100, }) {
     return jsx(WindowManagerContext.Provider, { value: value, children: children });
 }
 
-var styles$6 = {"window":"Window-module_window","window--active":"Window-module_window--active","window--inactive":"Window-module_window--inactive","window--draggable":"Window-module_window--draggable","titleBar":"Window-module_titleBar","titleCenter":"Window-module_titleCenter","titleBar--draggable":"Window-module_titleBar--draggable","titleBar--dragging":"Window-module_titleBar--dragging","controls":"Window-module_controls","controlButton":"Window-module_controlButton","closeBox":"Window-module_closeBox","minimizeBox":"Window-module_minimizeBox","maximizeBox":"Window-module_maximizeBox","titleText":"Window-module_titleText","content":"Window-module_content","resizeHandle":"Window-module_resizeHandle"};
+// usePointerGesture - shared pointer-drag lifecycle primitive
+//
+// Every drag-like interaction in the library follows the same shape:
+// pointerdown captures some start state, pointermove updates from it, and
+// pointerup/pointercancel tears down. Before this hook, Window, Scrollbar,
+// MenuBar and MenuDropdown each re-implemented that lifecycle with their own
+// document-level listeners (issue #55).
+//
+// Two behaviours are baked in so every consumer gets them for free:
+//  - Moves are coalesced into a single requestAnimationFrame callback, so a
+//    240Hz pointer can't drive more than one state update per frame (#21).
+//  - Listeners attach once per gesture and read callbacks through a ref, so a
+//    parent re-render mid-drag can't detach them and drop move events.
+function usePointerGesture(handlers) {
+    const [isActive, setIsActive] = useState(false);
+    // Latest-callback ref: lets the effect below depend only on `isActive`,
+    // so listeners survive parent re-renders mid-gesture.
+    const handlersRef = useRef(handlers);
+    handlersRef.current = handlers;
+    const startStateRef = useRef(null);
+    const start = useCallback((event) => {
+        // Primary button / primary contact only. Filters right-click and the
+        // secondary touches browsers report alongside the primary one.
+        if (event.button !== 0 || !event.isPrimary)
+            return;
+        const startState = handlersRef.current.onStart(event);
+        if (startState === null)
+            return;
+        startStateRef.current = startState;
+        setIsActive(true);
+    }, []);
+    useEffect(() => {
+        if (!isActive)
+            return;
+        // rAF coalescing: pointermove can fire well above display refresh
+        // rate. We keep only the newest event and flush it once per frame.
+        let frame = null;
+        let pendingEvent = null;
+        const flush = () => {
+            frame = null;
+            const event = pendingEvent;
+            pendingEvent = null;
+            const startState = startStateRef.current;
+            if (!event || startState === null)
+                return;
+            handlersRef.current.onMove(event, startState);
+        };
+        const handlePointerMove = (event) => {
+            if (!event.isPrimary)
+                return;
+            event.preventDefault();
+            pendingEvent = event;
+            if (frame === null)
+                frame = requestAnimationFrame(flush);
+        };
+        const handlePointerEnd = () => {
+            // Flush any move still queued so the gesture ends on the exact
+            // final pointer position rather than the last painted frame.
+            if (frame !== null) {
+                cancelAnimationFrame(frame);
+                flush();
+            }
+            const startState = startStateRef.current;
+            startStateRef.current = null;
+            setIsActive(false);
+            if (startState !== null)
+                handlersRef.current.onEnd?.(startState);
+        };
+        document.addEventListener('pointermove', handlePointerMove);
+        document.addEventListener('pointerup', handlePointerEnd);
+        document.addEventListener('pointercancel', handlePointerEnd);
+        return () => {
+            if (frame !== null)
+                cancelAnimationFrame(frame);
+            document.removeEventListener('pointermove', handlePointerMove);
+            document.removeEventListener('pointerup', handlePointerEnd);
+            document.removeEventListener('pointercancel', handlePointerEnd);
+        };
+    }, [isActive]);
+    return { isActive, start };
+}
+
+// Geometry helpers shared by the drag and resize hooks.
+//
+// The original drag maths read `offsetParent` and called
+// `getBoundingClientRect()` on it during every pointermove. That forced a
+// synchronous layout each frame (issue #23) and produced wrong coordinates
+// whenever an ancestor used `transform`, `filter`, `perspective`,
+// `will-change` or `contain: paint` — all of which establish the containing
+// block for `position: absolute` but are skipped by `offsetParent`, which
+// also returns `null` inside a `position: fixed` chain (issue #22).
+//
+// Both problems go away by measuring once at gesture start and then working
+// in pure pointer deltas: a delta in client coordinates is the same delta in
+// any untransformed coordinate system, so the containing block never has to
+// be identified again mid-gesture.
+/**
+ * Measure the containing block of `element` once, at gesture start.
+ *
+ * Falls back to the viewport when there is no positioned ancestor, which is
+ * what a `position: fixed` element is actually laid out against.
+ */
+function measureContainingBlock(element) {
+    const offsetParent = element.offsetParent;
+    // A scaling ancestor makes the rendered size differ from the layout size.
+    // The ratio recovers the scale without having to parse transform matrices.
+    const rect = element.getBoundingClientRect();
+    const scale = element.offsetWidth > 0 ? rect.width / element.offsetWidth : 1;
+    if (offsetParent) {
+        return {
+            width: offsetParent.clientWidth,
+            height: offsetParent.clientHeight,
+            // Guard against a degenerate 0 scale (element hidden mid-measure).
+            scale: scale > 0 ? scale : 1,
+        };
+    }
+    const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : Number.MAX_SAFE_INTEGER;
+    const viewportHeight = typeof window !== 'undefined' ? window.innerHeight : Number.MAX_SAFE_INTEGER;
+    return {
+        width: viewportWidth,
+        height: viewportHeight,
+        scale: scale > 0 ? scale : 1,
+    };
+}
+/**
+ * The element's current offset within its containing block, in local pixels.
+ *
+ * Uses `offsetLeft`/`offsetTop`, which are already expressed in the
+ * containing block's coordinate system, so this needs no rect arithmetic and
+ * stays correct under transforms.
+ */
+function measureOffset(element) {
+    return { x: element.offsetLeft, y: element.offsetTop };
+}
+/** Clamp `value` into `[min, max]`, tolerating an inverted range. */
+function clamp(value, min, max) {
+    if (max < min)
+        return min;
+    return Math.min(max, Math.max(min, value));
+}
+
+// useDraggable - drag an absolutely-positioned element by a handle
+//
+// Extracted from Window (issue #55) so Dialog, FolderList and any future
+// composite get identical drag behaviour instead of re-implementing the
+// document-listener lifecycle.
+function useDraggable(options) {
+    const { enabled = true, resolveTarget, boundary = 'parent', boundaryBuffer = 24, onDrag, onDragStart, onDragEnd, } = options;
+    // Read through a ref so the gesture never re-binds on a prop identity change.
+    const optionsRef = useRef({ boundary, boundaryBuffer, onDrag, onDragStart, onDragEnd });
+    optionsRef.current = { boundary, boundaryBuffer, onDrag, onDragStart, onDragEnd };
+    const handleStart = useCallback((event) => {
+        if (!enabled)
+            return null;
+        // Never start a drag from an interactive control inside the handle
+        // — the window's own close/minimize buttons live there.
+        if (event.target.closest('button, a[href], input, select, textarea')) {
+            return null;
+        }
+        const element = resolveTarget ? resolveTarget(event) : event.currentTarget;
+        if (!element)
+            return null;
+        event.preventDefault();
+        const origin = measureOffset(element);
+        const container = measureContainingBlock(element);
+        optionsRef.current.onDragStart?.();
+        return {
+            pointerX: event.clientX,
+            pointerY: event.clientY,
+            originX: origin.x,
+            originY: origin.y,
+            width: element.offsetWidth,
+            height: element.offsetHeight,
+            container,
+        };
+    }, [enabled, resolveTarget]);
+    const handleMove = useCallback((event, start) => {
+        const { boundary: liveBoundary, boundaryBuffer: liveBuffer, onDrag: liveOnDrag, } = optionsRef.current;
+        // Pure delta maths — no layout reads during the gesture.
+        const scale = start.container.scale;
+        let x = start.originX + (event.clientX - start.pointerX) / scale;
+        let y = start.originY + (event.clientY - start.pointerY) / scale;
+        if (liveBoundary === 'parent') {
+            // Keep `liveBuffer` px of the element inside the container on every
+            // edge. The top is clamped at 0 because a title bar dragged above
+            // the container is unreachable rather than merely clipped.
+            x = clamp(x, liveBuffer - start.width, start.container.width - liveBuffer);
+            y = clamp(y, 0, start.container.height - liveBuffer);
+        }
+        liveOnDrag({ x, y });
+    }, []);
+    const handleEnd = useCallback(() => {
+        optionsRef.current.onDragEnd?.();
+    }, []);
+    const gesture = usePointerGesture({
+        onStart: handleStart,
+        onMove: handleMove,
+        onEnd: handleEnd,
+    });
+    return {
+        isDragging: gesture.isActive,
+        handleProps: {
+            onPointerDown: gesture.start,
+            // touch-action:none stops the browser claiming the gesture for
+            // scrolling before our pointermove handler ever runs.
+            style: enabled ? { touchAction: 'none' } : undefined,
+        },
+    };
+}
+
+// useResizable - resize an element by dragging a handle
+//
+// Supports all eight edge and corner handles (issue #27). Each direction
+// contributes independently to width/height, and the two "inverse" edges
+// (north, west) also report a position delta so the caller can keep the
+// opposite edge visually anchored while the box grows toward the pointer.
+function useResizable(options) {
+    const { enabled = true, resolveTarget, minWidth = 200, minHeight = 100, maxWidth, maxHeight, onResize, onResizeStart, onResizeEnd, } = options;
+    const optionsRef = useRef({
+        minWidth,
+        minHeight,
+        maxWidth,
+        maxHeight,
+        onResize,
+        onResizeStart,
+        onResizeEnd,
+    });
+    optionsRef.current = {
+        minWidth,
+        minHeight,
+        maxWidth,
+        maxHeight,
+        onResize,
+        onResizeStart,
+        onResizeEnd,
+    };
+    // Which handle is currently held; read inside onStart, which has no other
+    // way to learn the direction from a generic pointer event.
+    const directionRef = useRef('se');
+    const clampedRef = useRef(false);
+    const handleStart = useCallback((event) => {
+        if (!enabled)
+            return null;
+        const element = resolveTarget ? resolveTarget(event) : event.currentTarget;
+        if (!element)
+            return null;
+        event.preventDefault();
+        event.stopPropagation();
+        const rect = element.getBoundingClientRect();
+        optionsRef.current.onResizeStart?.();
+        return {
+            direction: directionRef.current,
+            pointerX: event.clientX,
+            pointerY: event.clientY,
+            width: rect.width,
+            height: rect.height,
+            container: measureContainingBlock(element),
+        };
+    }, [enabled, resolveTarget]);
+    const handleMove = useCallback((event, start) => {
+        const { minWidth: liveMinW, minHeight: liveMinH, maxWidth: liveMaxW, maxHeight: liveMaxH, onResize: liveOnResize, } = optionsRef.current;
+        const scale = start.container.scale;
+        const deltaX = (event.clientX - start.pointerX) / scale;
+        const deltaY = (event.clientY - start.pointerY) / scale;
+        const { direction } = start;
+        const growsEast = direction.includes('e');
+        const growsWest = direction.includes('w');
+        const growsSouth = direction.includes('s');
+        const growsNorth = direction.includes('n');
+        let width = start.width;
+        let height = start.height;
+        if (growsEast)
+            width = start.width + deltaX;
+        if (growsWest)
+            width = start.width - deltaX;
+        if (growsSouth)
+            height = start.height + deltaY;
+        if (growsNorth)
+            height = start.height - deltaY;
+        const unclampedWidth = width;
+        const unclampedHeight = height;
+        width = Math.max(liveMinW, width);
+        height = Math.max(liveMinH, height);
+        if (liveMaxW !== undefined)
+            width = Math.min(liveMaxW, width);
+        if (liveMaxH !== undefined)
+            height = Math.min(liveMaxH, height);
+        clampedRef.current = width !== unclampedWidth || height !== unclampedHeight;
+        // A north/west drag moves the anchored edge: the box grows toward the
+        // pointer, so its origin shifts by however much the size actually
+        // changed (which is not the raw delta once clamping kicks in).
+        const dx = growsWest ? start.width - width : 0;
+        const dy = growsNorth ? start.height - height : 0;
+        liveOnResize({ width, height, dx, dy });
+    }, []);
+    const handleEnd = useCallback(() => {
+        clampedRef.current = false;
+        optionsRef.current.onResizeEnd?.();
+    }, []);
+    const gesture = usePointerGesture({
+        onStart: handleStart,
+        onMove: handleMove,
+        onEnd: handleEnd,
+    });
+    const getHandleProps = useCallback((direction) => ({
+        onPointerDown: (event) => {
+            directionRef.current = direction;
+            gesture.start(event);
+        },
+        style: { touchAction: 'none' },
+        'data-direction': direction,
+    }), [gesture]);
+    return {
+        isResizing: gesture.isActive,
+        isClamped: clampedRef.current,
+        getHandleProps,
+    };
+}
+
+var styles$6 = {"window":"Window-module_window","window--active":"Window-module_window--active","window--inactive":"Window-module_window--inactive","window--draggable":"Window-module_window--draggable","titleBar":"Window-module_titleBar","titleCenter":"Window-module_titleCenter","titleBar--draggable":"Window-module_titleBar--draggable","titleBar--dragging":"Window-module_titleBar--dragging","controls":"Window-module_controls","controlButton":"Window-module_controlButton","closeBox":"Window-module_closeBox","minimizeBox":"Window-module_minimizeBox","maximizeBox":"Window-module_maximizeBox","titleText":"Window-module_titleText","content":"Window-module_content","resizeHandle":"Window-module_resizeHandle","resizeHandle--active":"Window-module_resizeHandle--active"};
 
 /**
  * Minimum number of pixels of the title bar that must remain inside the
@@ -2294,22 +2613,6 @@ const PATTERN_STRIPE = { fill: 'var(--window-titlebar-stripe)' };
 const TitleBarPattern = React.memo(function TitleBarPattern() {
     return (jsxs("svg", { width: "132", height: "13", viewBox: "0 0 132 13", fill: "none", preserveAspectRatio: "none", "aria-hidden": "true", focusable: "false", xmlns: "http://www.w3.org/2000/svg", children: [jsx("rect", { width: "130.517", height: "13", style: PATTERN_FILL }), jsx("rect", { width: "1", height: "13", style: PATTERN_HIGHLIGHT }), jsx("rect", { x: "130", width: "1", height: "13", style: PATTERN_SHADE }), jsx("rect", { y: "1", width: "131.268", height: "1", style: PATTERN_STRIPE }), jsx("rect", { y: "5", width: "131.268", height: "1", style: PATTERN_STRIPE }), jsx("rect", { y: "9", width: "131.268", height: "1", style: PATTERN_STRIPE }), jsx("rect", { y: "3", width: "131.268", height: "1", style: PATTERN_STRIPE }), jsx("rect", { y: "7", width: "131.268", height: "1", style: PATTERN_STRIPE }), jsx("rect", { y: "11", width: "131.268", height: "1", style: PATTERN_STRIPE })] }));
 });
-/** Reads the metrics of an element's `offsetParent`, falling back to the viewport. */
-function readParentMetrics(element) {
-    const parent = element.offsetParent;
-    if (parent) {
-        const rect = parent.getBoundingClientRect();
-        return {
-            left: rect.left,
-            top: rect.top,
-            width: parent.clientWidth,
-            height: parent.clientHeight,
-        };
-    }
-    const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : Number.POSITIVE_INFINITY;
-    const viewportHeight = typeof window !== 'undefined' ? window.innerHeight : Number.POSITIVE_INFINITY;
-    return { left: 0, top: 0, width: viewportWidth, height: viewportHeight };
-}
 /**
  * Mac OS 9 style Window component
  *
@@ -2375,93 +2678,34 @@ const Window = forwardRef(({ children, title, titleBar, active = true, width = '
     // Root element, used by the keyboard handlers to measure the window
     // without a DOM query.
     const windowRef = useRef(null);
-    // Element captured at gesture start, so mousemove never queries the DOM.
-    const dragWindowRef = useRef(null);
-    // Parent metrics captured once per gesture — the positioning ancestor
-    // cannot resize mid-drag, so re-measuring on every move was pure cost.
-    const parentMetricsRef = useRef(null);
+    // Drag and resize both run on the shared gesture hooks, which own the
+    // pointer lifecycle: listeners attach once per gesture and read their
+    // callbacks through a ref, moves are coalesced into one animation frame,
+    // and the geometry is measured once at gesture start and then worked in
+    // pure pointer deltas — which is what makes it correct under ancestor
+    // transforms, where offsetParent lies about the containing block.
     // Drag state management
     const [internalPosition, setInternalPosition] = useState(defaultPosition || null);
-    const [isDragging, setIsDragging] = useState(false);
     const [hasBeenDragged, setHasBeenDragged] = useState(!!defaultPosition);
-    const dragStartRef = useRef(null);
-    // Resize state management. `hasBeenResized` flips to true on the first
-    // successful resize and stays true thereafter; from that point on
-    // `internalSize` is the canonical width/height so the user's resize
-    // persists after pointerup (issue #10).
-    const [internalSize, setInternalSize] = useState({
-        width,
-        height,
-    });
-    const [isResizing, setIsResizing] = useState(false);
+    // Resize state. `hasBeenResized` flips on the first successful resize and
+    // stays true, so the size persists after pointerup rather than snapping
+    // back to the width/height props.
+    const [internalSize, setInternalSize] = useState({ width, height });
     const [hasBeenResized, setHasBeenResized] = useState(false);
-    const resizeStartRef = useRef(null);
-    // requestAnimationFrame coalescing. Pointer devices fire moves far
-    // faster than the browser paints; without this every event triggered a
-    // React render (issue #21).
-    const rafRef = useRef(null);
-    const pendingPointerRef = useRef(null);
-    const cancelPendingFrame = useCallback(() => {
-        if (rafRef.current !== null) {
-            cancelAnimationFrame(rafRef.current);
-            rafRef.current = null;
-        }
-        pendingPointerRef.current = null;
-    }, []);
-    // Cancel any in-flight frame if the component unmounts mid-gesture.
-    useEffect(() => cancelPendingFrame, [cancelPendingFrame]);
-    // Latest-callback refs. Reading from a ref inside the document pointermove
-    // handler means we can leave callbacks out of the effect dependency
-    // arrays — otherwise the listeners would re-attach mid-drag every time
-    // the parent re-rendered (issue #9), causing dropped move events.
-    const latestRef = useRef({
-        controlledPosition,
-        onPositionChange,
-        onResize,
-        minWidth,
-        minHeight,
-        maxWidth,
-        maxHeight,
-        boundary,
-    });
+    // Latest-callback refs, so the commit helpers stay referentially stable.
+    const latestRef = useRef({ controlledPosition, onPositionChange, onResize });
     useEffect(() => {
-        latestRef.current = {
-            controlledPosition,
-            onPositionChange,
-            onResize,
-            minWidth,
-            minHeight,
-            maxWidth,
-            maxHeight,
-            boundary,
-        };
+        latestRef.current = { controlledPosition, onPositionChange, onResize };
     });
     // Use controlled position if provided, otherwise use internal state
     const currentPosition = controlledPosition || internalPosition;
-    // A window is absolutely positioned as soon as it has a position from
-    // any source. Deriving this (rather than latching it in state at mount)
-    // means a `position` prop supplied later still takes effect (issue #26).
+    // A window is absolutely positioned as soon as it has a position from any
+    // source. Deriving this — rather than latching it at mount — means a
+    // `position` prop supplied later still takes effect (issue #26).
     const isPositioned = draggable && (hasBeenDragged || currentPosition !== null);
-    // Once the user has resized, internalSize wins so the dimensions
-    // persist after pointerup. Before that we honor the width/height props.
+    // Once resized, internalSize wins so the dimensions persist.
     const currentWidth = hasBeenResized ? internalSize.width : width;
     const currentHeight = hasBeenResized ? internalSize.height : height;
-    /**
-     * Clamps a candidate position so at least DRAG_BOUNDARY_BUFFER pixels of
-     * the window stay inside the positioning ancestor.
-     */
-    const clampPosition = useCallback((x, y, element, metrics) => {
-        if (latestRef.current.boundary !== 'parent')
-            return { x, y };
-        const minX = DRAG_BOUNDARY_BUFFER - element.offsetWidth;
-        const maxX = metrics.width - DRAG_BOUNDARY_BUFFER;
-        const minY = 0;
-        const maxY = metrics.height - DRAG_BOUNDARY_BUFFER;
-        return {
-            x: Math.max(minX, Math.min(maxX, x)),
-            y: Math.max(minY, Math.min(maxY, y)),
-        };
-    }, []);
     /** Publishes a new position to whichever source of truth is in charge. */
     const commitPosition = useCallback((next) => {
         const { controlledPosition: liveControlled, onPositionChange: liveOnChange } = latestRef.current;
@@ -2474,173 +2718,30 @@ const Window = forwardRef(({ children, title, titleBar, active = true, width = '
         }
         setHasBeenDragged(true);
     }, []);
-    /** Clamps and publishes a new size. */
-    const commitSize = useCallback((rawWidth, rawHeight) => {
-        const { minWidth: liveMinWidth, minHeight: liveMinHeight, maxWidth: liveMaxWidth, maxHeight: liveMaxHeight, onResize: liveOnResize, } = latestRef.current;
-        let nextWidth = rawWidth;
-        let nextHeight = rawHeight;
-        if (nextWidth < liveMinWidth)
-            nextWidth = liveMinWidth;
-        if (nextHeight < liveMinHeight)
-            nextHeight = liveMinHeight;
-        if (liveMaxWidth && nextWidth > liveMaxWidth)
-            nextWidth = liveMaxWidth;
-        if (liveMaxHeight && nextHeight > liveMaxHeight)
-            nextHeight = liveMaxHeight;
-        setInternalSize({ width: nextWidth, height: nextHeight });
+    /** Publishes a new size. Clamping is handled by useResizable. */
+    const commitSize = useCallback((next) => {
+        setInternalSize(next);
         setHasBeenResized(true);
-        liveOnResize?.({ width: nextWidth, height: nextHeight });
+        latestRef.current.onResize?.(next);
     }, []);
-    // Pointer-down on the title bar starts a drag. Pointer Events (instead
-    // of mouse events) unify mouse, touch, and pen input so the component
-    // works on tablets and phones — previously it was mouse-only.
-    const handleTitleBarPointerDown = useCallback((event) => {
-        if (!draggable)
-            return;
-        // Only react to primary button / primary contact. Ignores
-        // right-click and secondary touches that browsers report
-        // alongside the primary one.
-        if (event.button !== 0 || !event.isPrimary)
-            return;
-        // Don't start drag if clicking on buttons
-        if (event.target.closest('button')) {
-            return;
-        }
-        event.preventDefault();
-        const windowElement = event.currentTarget.closest(`.${styles$6.window}`);
-        if (!windowElement)
-            return;
-        // Store the window element reference for use during drag
-        dragWindowRef.current = windowElement;
-        parentMetricsRef.current = readParentMetrics(windowElement);
-        const rect = windowElement.getBoundingClientRect();
-        const metrics = parentMetricsRef.current;
-        // Offset from pointer to window origin, in the parent's space.
-        dragStartRef.current = {
-            x: event.clientX - (rect.left - metrics.left),
-            y: event.clientY - (rect.top - metrics.top),
-        };
-        setIsDragging(true);
-    }, [draggable]);
-    // Pointer-down on the resize handle starts a resize gesture.
-    const handleResizePointerDown = useCallback((event) => {
-        if (!resizable)
-            return;
-        if (event.button !== 0 || !event.isPrimary)
-            return;
-        event.preventDefault();
-        event.stopPropagation();
-        const windowElement = event.currentTarget.closest(`.${styles$6.window}`);
-        if (!windowElement)
-            return;
-        const rect = windowElement.getBoundingClientRect();
-        resizeStartRef.current = {
-            width: rect.width,
-            height: rect.height,
-            pointerX: event.clientX,
-            pointerY: event.clientY,
-        };
-        setIsResizing(true);
-    }, [resizable]);
-    // Resize listeners. Depends only on `isResizing` so they attach once
-    // when the user grabs the handle and detach on pointerup, regardless
-    // of how often the parent re-renders during the gesture (issue #9).
-    // Pointer events instead of mouse events give us mouse/touch/pen
-    // uniformity (issue #11); pointercancel covers system interruptions.
-    useEffect(() => {
-        if (!isResizing)
-            return;
-        const flush = () => {
-            rafRef.current = null;
-            const pointer = pendingPointerRef.current;
-            const start = resizeStartRef.current;
-            if (!pointer || !start)
-                return;
-            commitSize(start.width + (pointer.x - start.pointerX), start.height + (pointer.y - start.pointerY));
-        };
-        const handlePointerMove = (event) => {
-            if (!event.isPrimary)
-                return;
-            event.preventDefault();
-            if (!resizeStartRef.current)
-                return;
-            pendingPointerRef.current = { x: event.clientX, y: event.clientY };
-            if (rafRef.current === null) {
-                rafRef.current = requestAnimationFrame(flush);
-            }
-        };
-        const handlePointerEnd = () => {
-            // Apply the final pointer position before tearing down, so a
-            // gesture that ends between frames isn't silently dropped.
-            if (rafRef.current !== null) {
-                cancelAnimationFrame(rafRef.current);
-                rafRef.current = null;
-                flush();
-            }
-            pendingPointerRef.current = null;
-            setIsResizing(false);
-            resizeStartRef.current = null;
-        };
-        document.addEventListener('pointermove', handlePointerMove);
-        document.addEventListener('pointerup', handlePointerEnd);
-        document.addEventListener('pointercancel', handlePointerEnd);
-        return () => {
-            document.removeEventListener('pointermove', handlePointerMove);
-            document.removeEventListener('pointerup', handlePointerEnd);
-            document.removeEventListener('pointercancel', handlePointerEnd);
-            cancelPendingFrame();
-        };
-    }, [isResizing, commitSize, cancelPendingFrame]);
-    // Drag listeners. Same effect-deps strategy as resize — attach once
-    // on drag start, detach on drag end (issue #9). The boundary clamp
-    // (issue #12) prevents the window from being lost off-screen.
-    // Pointer events for touch / pen support (issue #11).
-    useEffect(() => {
-        if (!isDragging)
-            return;
-        const flush = () => {
-            rafRef.current = null;
-            const pointer = pendingPointerRef.current;
-            const start = dragStartRef.current;
-            const windowElement = dragWindowRef.current;
-            const metrics = parentMetricsRef.current;
-            if (!pointer || !start || !windowElement || !metrics)
-                return;
-            commitPosition(clampPosition(pointer.x - metrics.left - start.x, pointer.y - metrics.top - start.y, windowElement, metrics));
-        };
-        const handlePointerMove = (event) => {
-            if (!event.isPrimary)
-                return;
-            event.preventDefault();
-            if (!dragStartRef.current)
-                return;
-            pendingPointerRef.current = { x: event.clientX, y: event.clientY };
-            if (rafRef.current === null) {
-                rafRef.current = requestAnimationFrame(flush);
-            }
-        };
-        const handlePointerEnd = () => {
-            if (rafRef.current !== null) {
-                cancelAnimationFrame(rafRef.current);
-                rafRef.current = null;
-                flush();
-            }
-            pendingPointerRef.current = null;
-            setIsDragging(false);
-            dragStartRef.current = null;
-            dragWindowRef.current = null;
-            parentMetricsRef.current = null;
-        };
-        document.addEventListener('pointermove', handlePointerMove);
-        document.addEventListener('pointerup', handlePointerEnd);
-        document.addEventListener('pointercancel', handlePointerEnd);
-        return () => {
-            document.removeEventListener('pointermove', handlePointerMove);
-            document.removeEventListener('pointerup', handlePointerEnd);
-            document.removeEventListener('pointercancel', handlePointerEnd);
-            cancelPendingFrame();
-        };
-    }, [isDragging, commitPosition, clampPosition, cancelPendingFrame]);
+    // The title bar is the handle, but the whole window is what moves.
+    const resolveWindow = useCallback((event) => event.currentTarget.closest(`.${styles$6.window}`), []);
+    const { isDragging, handleProps: dragHandleProps } = useDraggable({
+        enabled: draggable,
+        resolveTarget: resolveWindow,
+        boundary,
+        boundaryBuffer: DRAG_BOUNDARY_BUFFER,
+        onDrag: commitPosition,
+    });
+    const { isResizing, getHandleProps: getResizeHandleProps } = useResizable({
+        enabled: resizable,
+        resolveTarget: resolveWindow,
+        minWidth,
+        minHeight,
+        maxWidth,
+        maxHeight,
+        onResize: (rect) => commitSize({ width: rect.width, height: rect.height }),
+    });
     // --- Keyboard equivalents (WCAG 2.1.1, issue #25) ---------------------
     /** Maps an arrow key to a unit delta, or null for any other key. */
     const arrowDelta = (key) => {
@@ -2668,16 +2769,20 @@ const Window = forwardRef(({ children, title, titleBar, active = true, width = '
             return;
         event.preventDefault();
         const step = keyboardStep * (event.shiftKey ? KEYBOARD_COARSE_MULTIPLIER : 1);
-        const metrics = readParentMetrics(windowElement);
+        const container = measureContainingBlock(windowElement);
         // Before the first move the window is still in normal flow, so
-        // derive its current origin from the live layout rect.
-        const origin = currentPosition ??
-            (() => {
-                const rect = windowElement.getBoundingClientRect();
-                return { x: rect.left - metrics.left, y: rect.top - metrics.top };
-            })();
-        commitPosition(clampPosition(origin.x + delta.dx * step, origin.y + delta.dy * step, windowElement, metrics));
-    }, [draggable, keyboardStep, currentPosition, commitPosition, clampPosition]);
+        // derive its origin from its offset within the containing block.
+        const origin = currentPosition ?? measureOffset(windowElement);
+        let x = origin.x + delta.dx * step;
+        let y = origin.y + delta.dy * step;
+        // The pointer path clamps inside useDraggable; the keyboard path
+        // applies the same rule here.
+        if (boundary === 'parent') {
+            x = clamp(x, DRAG_BOUNDARY_BUFFER - windowElement.offsetWidth, container.width - DRAG_BOUNDARY_BUFFER);
+            y = clamp(y, 0, container.height - DRAG_BOUNDARY_BUFFER);
+        }
+        commitPosition({ x, y });
+    }, [draggable, keyboardStep, currentPosition, commitPosition, boundary]);
     const handleResizeKeyDown = useCallback((event) => {
         if (!resizable)
             return;
@@ -2690,8 +2795,11 @@ const Window = forwardRef(({ children, title, titleBar, active = true, width = '
         event.preventDefault();
         const step = keyboardStep * (event.shiftKey ? KEYBOARD_COARSE_MULTIPLIER : 1);
         const rect = windowElement.getBoundingClientRect();
-        commitSize(rect.width + delta.dx * step, rect.height + delta.dy * step);
-    }, [resizable, keyboardStep, commitSize]);
+        commitSize({
+            width: clamp(rect.width + delta.dx * step, minWidth, maxWidth ?? Number.MAX_SAFE_INTEGER),
+            height: clamp(rect.height + delta.dy * step, minHeight, maxHeight ?? Number.MAX_SAFE_INTEGER),
+        });
+    }, [resizable, keyboardStep, commitSize, minWidth, minHeight, maxWidth, maxHeight]);
     // --- Rendering --------------------------------------------------------
     // Inside a manager, "active" means "topmost in the stack"; outside one,
     // the caller's prop stands.
@@ -2735,11 +2843,11 @@ const Window = forwardRef(({ children, title, titleBar, active = true, width = '
             return titleBar;
         }
         if (title) {
-            return (jsxs("div", { className: titleBarClassNames, "data-num-controls": [onClose, onMinimize, onMaximize].filter(Boolean).length, onPointerDown: handleTitleBarPointerDown, onKeyDown: draggable ? handleTitleBarKeyDown : undefined, tabIndex: draggable ? 0 : undefined, "aria-label": draggable ? `Move ${title} window` : undefined, "aria-keyshortcuts": draggable ? 'ArrowUp ArrowDown ArrowLeft ArrowRight' : undefined, style: draggable ? { touchAction: 'none' } : undefined, children: [showControls && (jsxs("div", { className: mergeClasses(styles$6.controls, classes?.controls), children: [onClose && (jsx("button", { type: "button", className: mergeClasses(styles$6.controlButton, classes?.controlButton), onClick: onClose, "aria-label": "Close", title: "Close", children: jsx("div", { className: styles$6.closeBox }) })), onMinimize && (jsx("button", { type: "button", className: mergeClasses(styles$6.controlButton, classes?.controlButton), onClick: onMinimize, "aria-label": "Minimize", title: "Minimize", children: jsx("div", { className: styles$6.minimizeBox }) })), onMaximize && (jsx("button", { type: "button", className: mergeClasses(styles$6.controlButton, classes?.controlButton), onClick: onMaximize, "aria-label": "Maximize", title: "Maximize", children: jsx("div", { className: styles$6.maximizeBox }) }))] })), jsxs("div", { className: styles$6.titleCenter, children: [jsx(TitleBarPattern, {}), jsx("div", { className: mergeClasses(styles$6.titleText, classes?.titleText, 'bold'), children: title }), jsx(TitleBarPattern, {})] })] }));
+            return (jsxs("div", { className: titleBarClassNames, "data-num-controls": [onClose, onMinimize, onMaximize].filter(Boolean).length, ...dragHandleProps, onKeyDown: draggable ? handleTitleBarKeyDown : undefined, tabIndex: draggable ? 0 : undefined, "aria-label": draggable ? `Move ${title} window` : undefined, "aria-keyshortcuts": draggable ? 'ArrowUp ArrowDown ArrowLeft ArrowRight' : undefined, children: [showControls && (jsxs("div", { className: mergeClasses(styles$6.controls, classes?.controls), children: [onClose && (jsx("button", { type: "button", className: mergeClasses(styles$6.controlButton, classes?.controlButton), onClick: onClose, "aria-label": "Close", title: "Close", children: jsx("div", { className: styles$6.closeBox }) })), onMinimize && (jsx("button", { type: "button", className: mergeClasses(styles$6.controlButton, classes?.controlButton), onClick: onMinimize, "aria-label": "Minimize", title: "Minimize", children: jsx("div", { className: styles$6.minimizeBox }) })), onMaximize && (jsx("button", { type: "button", className: mergeClasses(styles$6.controlButton, classes?.controlButton), onClick: onMaximize, "aria-label": "Maximize", title: "Maximize", children: jsx("div", { className: styles$6.maximizeBox }) }))] })), jsxs("div", { className: styles$6.titleCenter, children: [jsx(TitleBarPattern, {}), jsx("div", { className: mergeClasses(styles$6.titleText, classes?.titleText, 'bold'), children: title }), jsx(TitleBarPattern, {})] })] }));
         }
         return null;
     };
-    return (jsxs("div", { ref: setRootRef, className: windowClassNames, style: windowStyle, onMouseEnter: onMouseEnter, onPointerDown: handleActivate, onFocusCapture: handleActivate, children: [renderTitleBar(), jsx("div", { className: contentClassNames, children: children }), resizable && (jsx("button", { type: "button", className: mergeClasses(styles$6.resizeHandle, classes?.resizeHandle), onPointerDown: handleResizePointerDown, onKeyDown: handleResizeKeyDown, "aria-label": "Resize window", "aria-keyshortcuts": "ArrowUp ArrowDown ArrowLeft ArrowRight", title: "Resize window", style: { touchAction: 'none' } }))] }));
+    return (jsxs("div", { ref: setRootRef, className: windowClassNames, style: windowStyle, onMouseEnter: onMouseEnter, onPointerDown: handleActivate, onFocusCapture: handleActivate, children: [renderTitleBar(), jsx("div", { className: contentClassNames, children: children }), resizable && (jsx("button", { type: "button", className: mergeClasses(styles$6.resizeHandle, isResizing && styles$6['resizeHandle--active'], classes?.resizeHandle), ...getResizeHandleProps('se'), onKeyDown: handleResizeKeyDown, "aria-label": "Resize window", "aria-keyshortcuts": "ArrowUp ArrowDown ArrowLeft ArrowRight", title: "Resize window" }))] }));
 });
 Window.displayName = 'Window';
 
@@ -3542,7 +3650,7 @@ const MenuDropdown = forwardRef(({ label, items, disabled = false, className = '
 });
 MenuDropdown.displayName = 'MenuDropdown';
 
-var styles$2 = {"scrollbar":"Scrollbar-module_scrollbar","scrollbar--vertical":"Scrollbar-module_scrollbar--vertical","scrollbar--horizontal":"Scrollbar-module_scrollbar--horizontal","scrollbar--disabled":"Scrollbar-module_scrollbar--disabled","arrow":"Scrollbar-module_arrow","arrowIcon":"Scrollbar-module_arrowIcon","arrow--start":"Scrollbar-module_arrow--start","arrow--end":"Scrollbar-module_arrow--end","track":"Scrollbar-module_track","thumb":"Scrollbar-module_thumb"};
+var styles$2 = {"scrollbar":"Scrollbar-module_scrollbar","scrollbar--vertical":"Scrollbar-module_scrollbar--vertical","scrollbar--horizontal":"Scrollbar-module_scrollbar--horizontal","scrollbar--disabled":"Scrollbar-module_scrollbar--disabled","arrow":"Scrollbar-module_arrow","arrowIcon":"Scrollbar-module_arrowIcon","arrow--start":"Scrollbar-module_arrow--start","arrow--end":"Scrollbar-module_arrow--end","track":"Scrollbar-module_track","thumb":"Scrollbar-module_thumb","thumb--dragging":"Scrollbar-module_thumb--dragging"};
 
 /**
  * Mac OS 9 style Scrollbar component
@@ -3562,9 +3670,6 @@ var styles$2 = {"scrollbar":"Scrollbar-module_scrollbar","scrollbar--vertical":"
  */
 const Scrollbar = forwardRef(({ orientation = 'vertical', value = 0, viewportRatio, onChange, onValueChange, 'aria-label': ariaLabelAttr, className = '', disabled = false, ariaLabel, controls, step = 0.1, }, ref) => {
     const trackRef = useRef(null);
-    const [isDragging, setIsDragging] = useState(false);
-    const [dragStartPos, setDragStartPos] = useState(0);
-    const [dragStartValue, setDragStartValue] = useState(0);
     const isVertical = orientation === 'vertical';
     // Helper used by both arrow buttons and keyboard handler to clamp
     // the next value into the valid 0-1 range before notifying.
@@ -3649,53 +3754,45 @@ const Scrollbar = forwardRef(({ orientation = 'vertical', value = 0, viewportRat
         const newValue = Math.max(0, Math.min(1, clickRatio));
         emitValue(newValue);
     }, [disabled, emitValue, isVertical]);
-    // Pointer-down on the thumb starts a drag. Pointer Events instead
-    // of mouse events give us mouse/touch/pen support — previously the
-    // thumb was un-draggable on tablets and phones (issue #11).
-    const handleThumbPointerDown = useCallback((event) => {
-        if (disabled)
-            return;
-        if (event.button !== 0 || !event.isPrimary)
-            return;
-        event.preventDefault();
-        event.stopPropagation();
-        setIsDragging(true);
-        setDragStartPos(isVertical ? event.clientY : event.clientX);
-        setDragStartValue(value);
-    }, [disabled, isVertical, value]);
-    // Handle drag move. Pointer events for touch/pen uniformity;
-    // pointercancel covers system interruptions on mobile.
-    useEffect(() => {
-        if (!isDragging || !onChange || !trackRef.current)
-            return;
-        const handlePointerMove = (event) => {
-            if (!event.isPrimary)
+    // Thumb dragging runs on the shared pointer gesture hook, which owns the
+    // lifecycle: listeners attach once per gesture rather than re-binding
+    // whenever a dependency changes mid-drag, and moves are coalesced into
+    // one animation frame.
+    //
+    // The previous effect also guarded on `onChange` specifically, so a
+    // consumer using only `onValueChange` could not drag the thumb at all.
+    const { isActive: isDragging, start: startThumbDrag } = usePointerGesture({
+        onStart: (event) => {
+            if (disabled || !emitValue)
+                return null;
+            if (event.button !== 0 || !event.isPrimary)
+                return null;
+            const track = trackRef.current;
+            if (!track)
+                return null;
+            event.preventDefault();
+            event.stopPropagation();
+            const rect = track.getBoundingClientRect();
+            return {
+                pointer: isVertical ? event.clientY : event.clientX,
+                value,
+                // Measured once: the track cannot resize mid-drag.
+                trackSize: isVertical ? rect.height : rect.width,
+            };
+        },
+        onMove: (event, dragStart) => {
+            if (dragStart.trackSize <= 0)
                 return;
-            const currentPos = isVertical ? event.clientY : event.clientX;
-            const delta = currentPos - dragStartPos;
-            const rect = trackRef.current.getBoundingClientRect();
-            const trackSize = isVertical ? rect.height : rect.width;
-            const deltaRatio = delta / trackSize;
-            const newValue = Math.max(0, Math.min(1, dragStartValue + deltaRatio));
-            onChange(newValue);
-        };
-        const handlePointerEnd = () => {
-            setIsDragging(false);
-        };
-        document.addEventListener('pointermove', handlePointerMove);
-        document.addEventListener('pointerup', handlePointerEnd);
-        document.addEventListener('pointercancel', handlePointerEnd);
-        return () => {
-            document.removeEventListener('pointermove', handlePointerMove);
-            document.removeEventListener('pointerup', handlePointerEnd);
-            document.removeEventListener('pointercancel', handlePointerEnd);
-        };
-    }, [isDragging, dragStartPos, dragStartValue, onChange, isVertical]);
-    return (jsxs("div", { ref: ref, className: classNames, children: [jsx("button", { type: "button", className: `${styles$2.arrow} ${styles$2['arrow--start']}`, onClick: handleDecrement, disabled: disabled, "aria-label": isVertical ? 'Scroll up' : 'Scroll left', children: jsx("div", { className: styles$2.arrowIcon }) }), jsx("div", { ref: trackRef, className: styles$2.track, onClick: handleTrackClick, onKeyDown: handleKeyDown, role: "scrollbar", tabIndex: disabled ? -1 : 0, "aria-valuenow": Math.round(value * 100), "aria-valuemin": 0, "aria-valuemax": 100, "aria-orientation": orientation, "aria-label": resolvedAriaLabel, "aria-controls": controls, "aria-disabled": disabled || undefined, children: jsx("div", { className: styles$2.thumb, style: {
+            const current = isVertical ? event.clientY : event.clientX;
+            const delta = (current - dragStart.pointer) / dragStart.trackSize;
+            emitValue?.(Math.max(0, Math.min(1, dragStart.value + delta)));
+        },
+    });
+    return (jsxs("div", { ref: ref, className: classNames, children: [jsx("button", { type: "button", className: `${styles$2.arrow} ${styles$2['arrow--start']}`, onClick: handleDecrement, disabled: disabled, "aria-label": isVertical ? 'Scroll up' : 'Scroll left', children: jsx("div", { className: styles$2.arrowIcon }) }), jsx("div", { ref: trackRef, className: styles$2.track, onClick: handleTrackClick, onKeyDown: handleKeyDown, role: "scrollbar", tabIndex: disabled ? -1 : 0, "aria-valuenow": Math.round(value * 100), "aria-valuemin": 0, "aria-valuemax": 100, "aria-orientation": orientation, "aria-label": resolvedAriaLabel, "aria-controls": controls, "aria-disabled": disabled || undefined, children: jsx("div", { className: mergeClasses(styles$2.thumb, isDragging && styles$2['thumb--dragging']), style: {
                         [isVertical ? 'height' : 'width']: `${thumbSize}%`,
                         [isVertical ? 'top' : 'left']: `${thumbPos}%`,
                         touchAction: 'none',
-                    }, onPointerDown: handleThumbPointerDown }) }), jsx("button", { type: "button", className: `${styles$2.arrow} ${styles$2['arrow--end']}`, onClick: handleIncrement, disabled: disabled, "aria-label": isVertical ? 'Scroll down' : 'Scroll right', children: jsx("div", { className: styles$2.arrowIcon }) })] }));
+                    }, onPointerDown: startThumbDrag }) }), jsx("button", { type: "button", className: `${styles$2.arrow} ${styles$2['arrow--end']}`, onClick: handleIncrement, disabled: disabled, "aria-label": isVertical ? 'Scroll down' : 'Scroll right', children: jsx("div", { className: styles$2.arrowIcon }) })] }));
 });
 Scrollbar.displayName = 'Scrollbar';
 
@@ -4378,4 +4475,4 @@ const tokens = {
     transitions,
 };
 
-export { AlertIcon, ApplicationIcon, ArrowDownIcon, ArrowLeftIcon, ArrowRightIcon, ArrowUpIcon, Button, CalendarIcon, CheckIcon, Checkbox, ChevronDownIcon, ChevronRightIcon, CloseIcon, CopyIcon, Dialog, DiskIcon, DividerIcon, DocumentIcon, DownloadIcon, ErrorIcon, FolderIcon, FolderList, FolderOpenIcon, GrabberIcon, HardDriveIcon, HomeIcon, Icon, IconButton, IconLibrary, ImageIcon, InfoIcon, LinkIcon, ListView, LockIcon, MailIcon, MenuBar, MenuDropdown, MenuItem, MusicIcon, PauseIcon, PlayIcon, PrintIcon, QuestionIcon, Radio, RadioGroup, ResizeHandleIcon, Scrollbar, SearchIcon, Select, StopIcon, TabPanel, Tabs, TextField, TrashIcon, UserIcon, VolumeIcon, VolumeMuteIcon, Window, WindowManagerProvider, borders, colors, createClassBuilder, createPixelIcon, getAllIconNames, getIcon, hasIcon, iconRegistry, mergeClasses, shadows, spacing, tokens, transitions, typography, useMenuPosition, useOutsideClick, useWindowManager, zIndex };
+export { AlertIcon, ApplicationIcon, ArrowDownIcon, ArrowLeftIcon, ArrowRightIcon, ArrowUpIcon, Button, CalendarIcon, CheckIcon, Checkbox, ChevronDownIcon, ChevronRightIcon, CloseIcon, CopyIcon, Dialog, DiskIcon, DividerIcon, DocumentIcon, DownloadIcon, ErrorIcon, FolderIcon, FolderList, FolderOpenIcon, GrabberIcon, HardDriveIcon, HomeIcon, Icon, IconButton, IconLibrary, ImageIcon, InfoIcon, LinkIcon, ListView, LockIcon, MailIcon, MenuBar, MenuDropdown, MenuItem, MusicIcon, PauseIcon, PlayIcon, PrintIcon, QuestionIcon, Radio, RadioGroup, ResizeHandleIcon, Scrollbar, SearchIcon, Select, StopIcon, TabPanel, Tabs, TextField, TrashIcon, UserIcon, VolumeIcon, VolumeMuteIcon, Window, WindowManagerProvider, borders, clamp, colors, createClassBuilder, createPixelIcon, getAllIconNames, getIcon, hasIcon, iconRegistry, measureContainingBlock, measureOffset, mergeClasses, shadows, spacing, tokens, transitions, typography, useDraggable, useMenuPosition, useOutsideClick, usePointerGesture, useResizable, useWindowManager, zIndex };

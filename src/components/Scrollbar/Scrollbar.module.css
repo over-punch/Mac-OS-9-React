@@ -209,3 +209,9 @@
 		border-width: 2px;
 	}
 }
+
+.thumb--dragging {
+	/* While the thumb is being dragged, keep the grabbing cursor even as the
+	 * pointer leaves the thumb — the gesture continues until pointerup. */
+	cursor: grabbing;
+}

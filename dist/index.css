@@ -3482,6 +3482,12 @@ textarea.TextField-module_input {
 	z-index: 5;
 }
 
+.Window-module_resizeHandle--active {
+	/* Hold the resize cursor for the whole gesture, even once the pointer
+	 * has travelled outside the 12px handle. */
+	cursor: nwse-resize;
+}
+
 .Window-module_resizeHandle:focus-visible {
 	/* Keyboard focus ring for the grow box */
 	outline: var(--border-width-thin) dotted var(--color-text);
@@ -4226,6 +4232,12 @@ textarea.TextField-module_input {
 	.Scrollbar-module_thumb {
 		border-width: 2px;
 	}
+}
+
+.Scrollbar-module_thumb--dragging {
+	/* While the thumb is being dragged, keep the grabbing cursor even as the
+	 * pointer leaves the thumb — the gesture continues until pointerup. */
+	cursor: grabbing;
 }
 
 /* ListView Component Styles - Mac OS 9 */

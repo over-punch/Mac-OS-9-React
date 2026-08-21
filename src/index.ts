@@ -68,13 +68,8 @@ export * from './components/Icon/categories';
 // Export design tokens
 export * from './tokens';
 
-// Export hooks
-export { useOutsideClick, type UseOutsideClickOptions } from './hooks/useOutsideClick';
-export {
-	useMenuPosition,
-	type MenuPosition,
-	type UseMenuPositionOptions,
-} from './hooks/useMenuPosition';
+// Export hooks — the primitives the components are built on
+export * from './hooks';
 
 // Export utilities
 export { mergeClasses, createClassBuilder } from './utils/classNames';

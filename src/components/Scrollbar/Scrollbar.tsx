@@ -6,10 +6,11 @@
 // so per-file directives were both inconsistent (4 of 16 components) and
 // silently dropped at bundle time.
 
-import React, { forwardRef, useRef, useState, useEffect, useCallback } from 'react';
+import React, { forwardRef, useRef, useCallback } from 'react';
 import { mergeClasses } from '../../utils/classNames';
 import { resolveAria } from '../../utils/aria';
 import { warnDeprecatedProp } from '../../utils/deprecation';
+import { usePointerGesture } from '../../hooks/usePointerGesture';
 import styles from './Scrollbar.module.css';
 
 export interface ScrollbarProps {
@@ -122,9 +123,6 @@ export const Scrollbar = forwardRef<HTMLDivElement, ScrollbarProps>(
 		ref
 	) => {
 		const trackRef = useRef<HTMLDivElement>(null);
-		const [isDragging, setIsDragging] = useState(false);
-		const [dragStartPos, setDragStartPos] = useState(0);
-		const [dragStartValue, setDragStartValue] = useState(0);
 
 		const isVertical = orientation === 'vertical';
 
@@ -247,54 +245,43 @@ export const Scrollbar = forwardRef<HTMLDivElement, ScrollbarProps>(
 			[disabled, emitValue, isVertical]
 		);
 
-		// Pointer-down on the thumb starts a drag. Pointer Events instead
-		// of mouse events give us mouse/touch/pen support — previously the
-		// thumb was un-draggable on tablets and phones (issue #11).
-		const handleThumbPointerDown = useCallback(
-			(event: React.PointerEvent) => {
-				if (disabled) return;
-				if (event.button !== 0 || !event.isPrimary) return;
+		// Thumb dragging runs on the shared pointer gesture hook, which owns the
+		// lifecycle: listeners attach once per gesture rather than re-binding
+		// whenever a dependency changes mid-drag, and moves are coalesced into
+		// one animation frame.
+		//
+		// The previous effect also guarded on `onChange` specifically, so a
+		// consumer using only `onValueChange` could not drag the thumb at all.
+		const { isActive: isDragging, start: startThumbDrag } = usePointerGesture<{
+			pointer: number;
+			value: number;
+			trackSize: number;
+		}>({
+			onStart: (event) => {
+				if (disabled || !emitValue) return null;
+				if (event.button !== 0 || !event.isPrimary) return null;
+
+				const track = trackRef.current;
+				if (!track) return null;
+
 				event.preventDefault();
 				event.stopPropagation();
-				setIsDragging(true);
-				setDragStartPos(isVertical ? event.clientY : event.clientX);
-				setDragStartValue(value);
+
+				const rect = track.getBoundingClientRect();
+				return {
+					pointer: isVertical ? event.clientY : event.clientX,
+					value,
+					// Measured once: the track cannot resize mid-drag.
+					trackSize: isVertical ? rect.height : rect.width,
+				};
 			},
-			[disabled, isVertical, value]
-		);
-
-		// Handle drag move. Pointer events for touch/pen uniformity;
-		// pointercancel covers system interruptions on mobile.
-		useEffect(() => {
-			if (!isDragging || !onChange || !trackRef.current) return;
-
-			const handlePointerMove = (event: PointerEvent) => {
-				if (!event.isPrimary) return;
-				const currentPos = isVertical ? event.clientY : event.clientX;
-				const delta = currentPos - dragStartPos;
-
-				const rect = trackRef.current!.getBoundingClientRect();
-				const trackSize = isVertical ? rect.height : rect.width;
-				const deltaRatio = delta / trackSize;
-
-				const newValue = Math.max(0, Math.min(1, dragStartValue + deltaRatio));
-				onChange(newValue);
-			};
-
-			const handlePointerEnd = () => {
-				setIsDragging(false);
-			};
-
-			document.addEventListener('pointermove', handlePointerMove);
-			document.addEventListener('pointerup', handlePointerEnd);
-			document.addEventListener('pointercancel', handlePointerEnd);
-
-			return () => {
-				document.removeEventListener('pointermove', handlePointerMove);
-				document.removeEventListener('pointerup', handlePointerEnd);
-				document.removeEventListener('pointercancel', handlePointerEnd);
-			};
-		}, [isDragging, dragStartPos, dragStartValue, onChange, isVertical]);
+			onMove: (event, dragStart) => {
+				if (dragStart.trackSize <= 0) return;
+				const current = isVertical ? event.clientY : event.clientX;
+				const delta = (current - dragStart.pointer) / dragStart.trackSize;
+				emitValue?.(Math.max(0, Math.min(1, dragStart.value + delta)));
+			},
+		});
 
 		return (
 			<div ref={ref} className={classNames}>
@@ -324,13 +311,13 @@ export const Scrollbar = forwardRef<HTMLDivElement, ScrollbarProps>(
 					aria-disabled={disabled || undefined}
 				>
 					<div
-						className={styles.thumb}
+						className={mergeClasses(styles.thumb, isDragging && styles['thumb--dragging'])}
 						style={{
 							[isVertical ? 'height' : 'width']: `${thumbSize}%`,
 							[isVertical ? 'top' : 'left']: `${thumbPos}%`,
 							touchAction: 'none',
 						}}
-						onPointerDown={handleThumbPointerDown}
+						onPointerDown={startThumbDrag}
 					/>
 				</div>
 

@@ -361,6 +361,12 @@
 	z-index: 5;
 }
 
+.resizeHandle--active {
+	/* Hold the resize cursor for the whole gesture, even once the pointer
+	 * has travelled outside the 12px handle. */
+	cursor: nwse-resize;
+}
+
 .resizeHandle:focus-visible {
 	/* Keyboard focus ring for the grow box */
 	outline: var(--border-width-thin) dotted var(--color-text);
