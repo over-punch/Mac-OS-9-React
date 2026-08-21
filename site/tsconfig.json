@@ -1,0 +1,25 @@
+{
+	// The landing site, typechecked separately from the library.
+	//
+	// It is its own program because the root config is deliberately rooted at
+	// `src` only — pulling a file outside it moves TypeScript's inferred common
+	// directory and relocates the emitted declarations, which breaks the
+	// declaration bundle. See the note in ../tsconfig.json.
+	//
+	// Until this existed the site was only ever compiled by Vite, which strips
+	// types with esbuild rather than checking them. A type error in site/src
+	// reached a deploy without anything complaining.
+	"extends": "../tsconfig.json",
+	"compilerOptions": {
+		"noEmit": true,
+		"declaration": false,
+		"declarationMap": false,
+		"types": ["vite/client"],
+		"baseUrl": "..",
+		"paths": {
+			"@lib/*": ["src/*"]
+		}
+	},
+	"include": ["src", "vite.config.ts"],
+	"exclude": ["../node_modules", "../dist"]
+}

@@ -26,6 +26,24 @@ jobs:
           node-version: '20'
           registry-url: 'https://registry.npmjs.org'
 
+      # Fail fast, and fail legibly, when the token is dead.
+      #
+      # Without this the job spends a minute on install, tests and build before
+      # npm rejects the PUT — and it rejects it with `404 Not Found`, not 403,
+      # because npm will not confirm whether a package exists to someone who
+      # cannot publish to it. Three releases failed that way and the error read
+      # like the package was missing rather than like the credential was.
+      - name: Verify the npm token
+        run: |
+          if ! WHO=$(npm whoami 2>&1); then
+            echo "::error::NPM_TOKEN is missing, expired or revoked — npm whoami failed."
+            echo "::error::Create an Automation token on npmjs.com and set it with: gh secret set NPM_TOKEN"
+            exit 1
+          fi
+          echo "Authenticated to npm as $WHO"
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
       # Whether to publish is decided by comparing the manifest version to what
       # is actually on the registry. The previous condition matched the words
       # "version" or "release" anywhere in the commit message, which would

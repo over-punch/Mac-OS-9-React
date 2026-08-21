@@ -23,6 +23,11 @@
 
 ## 2.0.0
 
+> **Never published.** The version was cut and the changes merged, but the npm
+> token had expired, and 2.1.0 shipped before it was replaced. Everything below
+> is in 2.1.0 — upgrading from 1.x goes straight there, and these are still the
+> breaking changes you are migrating across.
+
 ### Major Changes
 
 - Remove everything 1.x deprecated, and split `Menu.items` into data and JSX props.
