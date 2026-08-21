@@ -103,42 +103,46 @@
 	 * ======================================== */
 
 	/* Primary system UI font (menus, buttons, dialogs) */
-	--font-system: 'Pixel', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica, Arial,
-		sans-serif;
+	--font-system:
+		'Pixel', 'Pixel Fallback', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica,
+		Arial, sans-serif;
 
 	/* Body text and secondary UI elements.
 	 * IBM Plex Sans is only present if you opt in to /webfonts. */
-	--font-body: 'IBM Plex Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica,
-		Arial, sans-serif;
+	--font-body:
+		'IBM Plex Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica, Arial,
+		sans-serif;
 
 	/* Display / headline face, same pixel aesthetic as --font-system */
-	--font-display: 'Pixel', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica, Arial,
-		sans-serif;
+	--font-display:
+		'Pixel', 'Pixel Fallback', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica,
+		Arial, sans-serif;
 
 	/* Editorial serif. EB Garamond is only present if you opt in to /webfonts. */
 	--font-title: 'EB Garamond', Garamond, Georgia, 'Times New Roman', serif;
 
 	/* Monospace. IBM Plex Mono is only present if you opt in to /webfonts. */
-	--font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, 'Courier New',
-		monospace;
+	--font-mono:
+		'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, 'Courier New', monospace;
 
-	--font-pixel: 'Pixel', ui-sans-serif, system-ui, sans-serif;
-	--font-pixel-small: 'PixelSmall', 'Pixel', ui-sans-serif, system-ui, sans-serif;
+	--font-pixel: 'Pixel', 'Pixel Fallback', ui-sans-serif, system-ui, sans-serif;
+	--font-pixel-small:
+		'PixelSmall', 'PixelSmall Fallback', 'Pixel', ui-sans-serif, system-ui, sans-serif;
 
 	/* ========================================
 	 * Typography - Font Sizes
 	 * Mac OS 9 used smaller text (9-12pt typical)
 	 * Using rem units to enable responsive scaling
 	 * ======================================== */
-	--font-size-xs: 0.5625rem;   /* 9pt - smallest UI text (9px at 16px base) */
-	--font-size-sm: 0.625rem;    /* 10pt - small labels (10px at 16px base) */
-	--font-size-md: 0.75rem;     /* 12pt - standard UI text (12px at 16px base - Mac OS 9 default) */
-	--font-size-lg: 0.8125rem;   /* 13pt - slightly larger (13px at 16px base) */
-	--font-size-xl: 0.875rem;    /* 14pt - large UI text (14px at 16px base) */
-	--font-size-2xl: 1rem;       /* 16pt - headings (16px at 16px base) */
-	--font-size-3xl: 1.125rem;   /* 18pt - large headings (18px at 16px base) */
-	--font-size-4xl: 1.25rem;    /* 20pt - major headings (20px at 16px base) */
-	--font-size-5xl: 1.5rem;     /* 24pt - display text (24px at 16px base) */
+	--font-size-xs: 0.5625rem; /* 9pt - smallest UI text (9px at 16px base) */
+	--font-size-sm: 0.625rem; /* 10pt - small labels (10px at 16px base) */
+	--font-size-md: 0.75rem; /* 12pt - standard UI text (12px at 16px base - Mac OS 9 default) */
+	--font-size-lg: 0.8125rem; /* 13pt - slightly larger (13px at 16px base) */
+	--font-size-xl: 0.875rem; /* 14pt - large UI text (14px at 16px base) */
+	--font-size-2xl: 1rem; /* 16pt - headings (16px at 16px base) */
+	--font-size-3xl: 1.125rem; /* 18pt - large headings (18px at 16px base) */
+	--font-size-4xl: 1.25rem; /* 20pt - major headings (20px at 16px base) */
+	--font-size-5xl: 1.5rem; /* 24pt - display text (24px at 16px base) */
 
 	/* ========================================
 	 * Typography - Font Weights
@@ -151,31 +155,31 @@
 	 * Charcoal, reads as bold, and matching it is the point of the library.
 	 * Use --font-weight-regular when you want the lighter roman face.
 	 * ======================================== */
-	--font-weight-regular: 400;  /* Pixel Regular — the true 400 face */
-	--font-weight-light: 400;    /* Alias of regular; Pixel has no lighter face */
-	--font-weight-normal: 700;   /* Charcoal-like bold — Mac OS 9 UI default */
-	--font-weight-medium: 700;   /* No real 500 face; resolves to bold */
+	--font-weight-regular: 400; /* Pixel Regular — the true 400 face */
+	--font-weight-light: 400; /* Alias of regular; Pixel has no lighter face */
+	--font-weight-normal: 700; /* Charcoal-like bold — Mac OS 9 UI default */
+	--font-weight-medium: 700; /* No real 500 face; resolves to bold */
 	--font-weight-semibold: 700; /* No real 600 face; resolves to bold */
-	--font-weight-bold: 700;     /* Pixel Bold — the true 700 face */
+	--font-weight-bold: 700; /* Pixel Bold — the true 700 face */
 
 	/* ========================================
 	 * Typography - Line Heights
 	 * Mac OS 9 used tighter line heights
 	 * ======================================== */
-	--line-height-tight: 1.2;   /* Tight leading (Mac OS 9 style) */
-	--line-height-snug: 1.3;    /* Snug */
-	--line-height-normal: 1.4;  /* Normal (Mac OS 9 default) */
+	--line-height-tight: 1.2; /* Tight leading (Mac OS 9 style) */
+	--line-height-snug: 1.3; /* Snug */
+	--line-height-normal: 1.4; /* Normal (Mac OS 9 default) */
 	--line-height-relaxed: 1.5; /* Relaxed */
-	--line-height-loose: 1.6;   /* Loose */
+	--line-height-loose: 1.6; /* Loose */
 
 	/* ========================================
 	 * Typography - Letter Spacing
 	 * ======================================== */
 	--letter-spacing-tighter: -0.02em; /* Slightly tighter */
-	--letter-spacing-tight: -0.01em;   /* Tight */
-	--letter-spacing-normal: 0;        /* Normal - Mac OS 9 default */
-	--letter-spacing-wide: 0.01em;     /* Wide */
-	--letter-spacing-wider: 0.02em;    /* Wider */
+	--letter-spacing-tight: -0.01em; /* Tight */
+	--letter-spacing-normal: 0; /* Normal - Mac OS 9 default */
+	--letter-spacing-wide: 0.01em; /* Wide */
+	--letter-spacing-wider: 0.02em; /* Wider */
 
 	/* ========================================
 	 * Spacing - Scale (2px base unit)
@@ -216,12 +220,14 @@
 	 * 2. Bottom-right shadow (dark inner shadow)
 	 * 3. Hard drop shadow (creates depth)
 	 */
-	--shadow-bevel: inset 2px 2px 0 rgba(255, 255, 255, 0.6),
-		inset -2px -2px 0 rgba(38, 38, 38, 0.4), 2px 2px 0 rgba(38, 38, 38, 1);
+	--shadow-bevel:
+		inset 2px 2px 0 rgba(255, 255, 255, 0.6), inset -2px -2px 0 rgba(38, 38, 38, 0.4),
+		2px 2px 0 rgba(38, 38, 38, 1);
 
 	/* Inverted bevel for pressed/inset states */
-	--shadow-inset: inset -2px -2px 0 rgba(255, 255, 255, 0.6),
-		inset 2px 2px 0 rgba(38, 38, 38, 0.4), inset 0px 0px 0px rgba(38, 38, 38, 1);
+	--shadow-inset:
+		inset -2px -2px 0 rgba(255, 255, 255, 0.6), inset 2px 2px 0 rgba(38, 38, 38, 0.4),
+		inset 0px 0px 0px rgba(38, 38, 38, 1);
 
 	/* Individual shadow layers for custom composition */
 	--shadow-drop: 2px 2px 0 rgba(38, 38, 38, 1);

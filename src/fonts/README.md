@@ -8,10 +8,49 @@ One family, self-hosted: **Pixel Operator**, exposed to CSS as `Pixel` and
 ```
 src/fonts/Pixel/
 ├── LICENSE.txt              CC0 1.0 Universal (public domain dedication)
-├── Normal/  Pixel.woff2 · Pixel.woff · Pixel-Bold.woff2 · Pixel-Bold.woff
-├── Italic/  Pixel-Italic.* · Pixel-Bold-Italic.*
-└── Small/   Pixel-Small.* · Pixel-Bold-Small.*
+├── Normal/  Pixel · Pixel-Bold
+├── Italic/  Pixel-Italic · Pixel-Bold-Italic
+└── Small/   Pixel-Small · Pixel-Bold-Small
 ```
+
+Each face exists three times: the unsplit source (`Pixel.woff2`), and the two
+generated subsets that are actually published (`Pixel.latin.woff2`,
+`Pixel.latin-ext.woff2`, plus `.woff` for each).
+
+## Subsetting
+
+The family covers 238 code points, but almost every page using it is plain
+ASCII. Shipping one file per face meant everyone downloaded the accented
+forms, currency symbols and typographic punctuation whether the page contained
+any or not.
+
+Each face is split in two, with an accurate `unicode-range` on each
+`@font-face`, so the browser fetches only what the text needs:
+
+| | woff2 |
+|---|---|
+| `latin` — ASCII plus the punctuation an interface uses | 20 KB across all six faces |
+| `latin-ext` — accented forms, currency, the rest | 29 KB, fetched only if needed |
+| previously, one file per face | 54 KB, always |
+
+An ASCII page fetches 38% of what it used to. Regenerate after changing a
+source face:
+
+```bash
+python3 scripts/subset-fonts.py
+```
+
+## Metric-matched fallback
+
+If Pixel fails to load, text falls through to a system sans whose metrics are
+nothing like it, and the layout moves. `fonts.css` declares `Pixel Fallback`
+and `PixelSmall Fallback`, which alias a local face and override its metrics to
+Pixel's own — ascent 81.25%, descent 18.75%, line-gap 4.5%, all measured from
+the font rather than estimated. `size-adjust: 82.5%` is the ratio of Pixel's
+average lowercase advance (0.4327em) to Arial's (0.5245em).
+
+These sit in `--font-system`, `--font-display` and `--font-pixel` ahead of the
+generic stacks.
 
 | Font | Designer | License | Bundled |
 |------|----------|---------|---------|

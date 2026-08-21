@@ -47,8 +47,8 @@ import { Window, Button } from '@liiift-studio/mac-os9-ui';
 | **Module formats** | ESM (`dist/index.js`) and CommonJS (`dist/index.cjs`) |
 | **Bundle** | 186 KB ESM, 46 KB gzipped |
 | **Stylesheet** | 100 KB, 17 KB gzipped |
-| **Fonts** | 111 KB (12 files: Pixel Operator, woff2 + woff) |
-| **Published tarball** | 283 kB (830 kB unpacked, 25 files) |
+| **Fonts** | 20 KB fetched by an ASCII page — the family is split into `latin` and `latin-ext` subsets with `unicode-range`, so only the parts your text needs are downloaded (49 KB of woff2 total) |
+| **Published tarball** | 295 kB (901 kB unpacked, 38 files) |
 | **Types** | Bundled `.d.ts` and `.d.cts` |
 
 ### Server components and `'use client'`

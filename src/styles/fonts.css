@@ -1,69 +1,263 @@
 /**
  * Mac OS 9 UI — Self-hosted font faces
  *
- * Declares the bundled "Pixel" bitmap family. Imported by theme.css so the
- * default `@liiift-studio/mac-os9-ui/styles` entry point works out of the box.
+ * Declares the bundled "Pixel" bitmap family (Pixel Operator, CC0). Imported
+ * by theme.css so the default `@liiift-studio/mac-os9-ui/styles` entry point
+ * works out of the box.
  *
- * Opting out: import `@liiift-studio/mac-os9-ui/tokens` instead of
- * `/styles` to get the design tokens with no @font-face declarations and no
- * font downloads, then point --font-system / --font-pixel at your own faces.
+ * Opting out: import `@liiift-studio/mac-os9-ui/tokens` instead of `/styles`
+ * to get the design tokens with no @font-face declarations and no font
+ * downloads, then point --font-system / --font-pixel at your own faces.
  *
- * `font-display: block` (rather than `swap`) is deliberate: these are
- * bitmap-style pixel faces with metrics nothing else matches, so swapping in
- * a fallback mid-load produces a violent reflow. A brief invisible period
- * followed by the real face is the calmer trade for this specific family.
+ * ---------------------------------------------------------------------------
+ * SUBSETTING
+ * ---------------------------------------------------------------------------
+ * Each face ships as two files with a `unicode-range`: `latin` (ASCII plus the
+ * punctuation an interface actually uses) and `latin-ext` (accented forms,
+ * currency symbols, the rest). The browser fetches only the parts the page's
+ * text needs, so an ASCII page downloads 38% of what a single combined file
+ * would have cost.
+ *
+ * Regenerate after changing the source faces:
+ *   python3 scripts/subset-fonts.py
+ *
+ * ---------------------------------------------------------------------------
+ * font-display
+ * ---------------------------------------------------------------------------
+ * `block`, not `swap`, is deliberate: these are bitmap-style pixel faces whose
+ * metrics nothing else matches, so swapping a fallback in mid-load produces a
+ * violent reflow. A brief invisible period followed by the real face is the
+ * calmer trade for this specific family. The metric-matched fallback at the
+ * bottom of this file limits the damage if the download fails outright.
  */
 
+/* ==========================================================================
+ * Pixel — regular
+ * ========================================================================== */
+
 @font-face {
 	font-family: 'Pixel';
-	src: url("../fonts/Pixel/Normal/Pixel.woff2") format('woff2'),
-		url("../fonts/Pixel/Normal/Pixel.woff") format('woff');
+	src:
+		url('../fonts/Pixel/Normal/Pixel.latin.woff2') format('woff2'),
+		url('../fonts/Pixel/Normal/Pixel.latin.woff') format('woff');
 	font-style: normal;
 	font-weight: 400;
 	font-display: block;
+	unicode-range:
+		U+0020-007E, U+00A0, U+00A9, U+00AE, U+00B0, U+2013-2014, U+2018-201A, U+201C-201E, U+2020-2022,
+		U+2026, U+2122;
 }
 
 @font-face {
 	font-family: 'Pixel';
-	src: url("../fonts/Pixel/Normal/Pixel-Bold.woff2") format('woff2'),
-		url("../fonts/Pixel/Normal/Pixel-Bold.woff") format('woff');
+	src:
+		url('../fonts/Pixel/Normal/Pixel.latin-ext.woff2') format('woff2'),
+		url('../fonts/Pixel/Normal/Pixel.latin-ext.woff') format('woff');
+	font-style: normal;
+	font-weight: 400;
+	font-display: block;
+	unicode-range:
+		U+00A1-00A3, U+00A5-00A6, U+00A8, U+00AB-00AC, U+00B1, U+00B4-00B8, U+00BB, U+00BF-00FF,
+		U+0108-0109, U+010C-010F, U+011A-011D, U+0124-0125, U+0131, U+0134-0135, U+0147-0148,
+		U+0152-0153, U+0158-0159, U+015C-015D, U+0160-0161, U+0164-0165, U+016C-016F, U+0178,
+		U+017D-017E, U+02C6-02C7, U+02D8, U+02DA, U+02DC, U+2030, U+2039-203A, U+20AC, U+20B1, U+20B7,
+		U+2117;
+}
+
+/* ==========================================================================
+ * Pixel — bold
+ * ========================================================================== */
+
+@font-face {
+	font-family: 'Pixel';
+	src:
+		url('../fonts/Pixel/Normal/Pixel-Bold.latin.woff2') format('woff2'),
+		url('../fonts/Pixel/Normal/Pixel-Bold.latin.woff') format('woff');
 	font-style: normal;
 	font-weight: 700;
 	font-display: block;
+	unicode-range:
+		U+0020-007E, U+00A0, U+00A9, U+00AE, U+00B0, U+2013-2014, U+2018-201A, U+201C-201E, U+2020-2022,
+		U+2026, U+2122;
 }
 
 @font-face {
 	font-family: 'Pixel';
-	src: url("../fonts/Pixel/Italic/Pixel-Bold-Italic.woff2") format('woff2'),
-		url("../fonts/Pixel/Italic/Pixel-Bold-Italic.woff") format('woff');
-	font-style: italic;
+	src:
+		url('../fonts/Pixel/Normal/Pixel-Bold.latin-ext.woff2') format('woff2'),
+		url('../fonts/Pixel/Normal/Pixel-Bold.latin-ext.woff') format('woff');
+	font-style: normal;
 	font-weight: 700;
 	font-display: block;
+	unicode-range:
+		U+00A1-00A3, U+00A5-00A6, U+00A8, U+00AB-00AC, U+00B1, U+00B4-00B8, U+00BB, U+00BF-00FF,
+		U+0108-0109, U+010C-010F, U+011A-011D, U+0124-0125, U+0131, U+0134-0135, U+0147-0148,
+		U+0152-0153, U+0158-0159, U+015C-015D, U+0160-0161, U+0164-0165, U+016C-016F, U+0178,
+		U+017D-017E, U+02C6-02C7, U+02D8, U+02DA, U+02DC, U+2030, U+2039-203A, U+20AC, U+20B1, U+20B7,
+		U+2117;
 }
+
+/* ==========================================================================
+ * Pixel — italic
+ * ========================================================================== */
 
 @font-face {
 	font-family: 'Pixel';
-	src: url("../fonts/Pixel/Italic/Pixel-Italic.woff2") format('woff2'),
-		url("../fonts/Pixel/Italic/Pixel-Italic.woff") format('woff');
+	src:
+		url('../fonts/Pixel/Italic/Pixel-Italic.latin.woff2') format('woff2'),
+		url('../fonts/Pixel/Italic/Pixel-Italic.latin.woff') format('woff');
 	font-style: italic;
 	font-weight: 400;
 	font-display: block;
+	unicode-range:
+		U+0020-007E, U+00A0, U+00A9, U+00AE, U+00B0, U+2013-2014, U+2018-201A, U+201C-201E, U+2020-2022,
+		U+2026, U+2122;
+}
+
+@font-face {
+	font-family: 'Pixel';
+	src:
+		url('../fonts/Pixel/Italic/Pixel-Italic.latin-ext.woff2') format('woff2'),
+		url('../fonts/Pixel/Italic/Pixel-Italic.latin-ext.woff') format('woff');
+	font-style: italic;
+	font-weight: 400;
+	font-display: block;
+	unicode-range:
+		U+00A1-00A3, U+00A5-00A6, U+00A8, U+00AB-00AC, U+00B1, U+00B4-00B8, U+00BB, U+00BF-00FF,
+		U+0108-0109, U+010C-010F, U+011A-011D, U+0124-0125, U+0131, U+0134-0135, U+0147-0148,
+		U+0152-0153, U+0158-0159, U+015C-015D, U+0160-0161, U+0164-0165, U+016C-016F, U+0178,
+		U+017D-017E, U+02C6-02C7, U+02D8, U+02DA, U+02DC, U+2030, U+2039-203A, U+20AC, U+20B1, U+20B7,
+		U+2117;
+}
+
+@font-face {
+	font-family: 'Pixel';
+	src:
+		url('../fonts/Pixel/Italic/Pixel-Bold-Italic.latin.woff2') format('woff2'),
+		url('../fonts/Pixel/Italic/Pixel-Bold-Italic.latin.woff') format('woff');
+	font-style: italic;
+	font-weight: 700;
+	font-display: block;
+	unicode-range:
+		U+0020-007E, U+00A0, U+00A9, U+00AE, U+00B0, U+2013-2014, U+2018-201A, U+201C-201E, U+2020-2022,
+		U+2026, U+2122;
+}
+
+@font-face {
+	font-family: 'Pixel';
+	src:
+		url('../fonts/Pixel/Italic/Pixel-Bold-Italic.latin-ext.woff2') format('woff2'),
+		url('../fonts/Pixel/Italic/Pixel-Bold-Italic.latin-ext.woff') format('woff');
+	font-style: italic;
+	font-weight: 700;
+	font-display: block;
+	unicode-range:
+		U+00A1-00A3, U+00A5-00A6, U+00A8, U+00AB-00AC, U+00B1, U+00B4-00B8, U+00BB, U+00BF-00FF,
+		U+0108-0109, U+010C-010F, U+011A-011D, U+0124-0125, U+0131, U+0134-0135, U+0147-0148,
+		U+0152-0153, U+0158-0159, U+015C-015D, U+0160-0161, U+0164-0165, U+016C-016F, U+0178,
+		U+017D-017E, U+02C6-02C7, U+02D8, U+02DA, U+02DC, U+2030, U+2039-203A, U+20AC, U+20B1, U+20B7,
+		U+2117;
+}
+
+/* ==========================================================================
+ * PixelSmall — the small-size companion face
+ * ========================================================================== */
+
+@font-face {
+	font-family: 'PixelSmall';
+	src:
+		url('../fonts/Pixel/Small/Pixel-Small.latin.woff2') format('woff2'),
+		url('../fonts/Pixel/Small/Pixel-Small.latin.woff') format('woff');
+	font-style: normal;
+	font-weight: 400;
+	font-display: block;
+	unicode-range:
+		U+0020-007E, U+00A0, U+00A9, U+00AE, U+00B0, U+2013-2014, U+2018-201A, U+201C-201E, U+2020-2022,
+		U+2026, U+2122;
 }
 
 @font-face {
 	font-family: 'PixelSmall';
-	src: url("../fonts/Pixel/Small/Pixel-Bold-Small.woff2") format('woff2'),
-		url("../fonts/Pixel/Small/Pixel-Bold-Small.woff") format('woff');
+	src:
+		url('../fonts/Pixel/Small/Pixel-Small.latin-ext.woff2') format('woff2'),
+		url('../fonts/Pixel/Small/Pixel-Small.latin-ext.woff') format('woff');
 	font-style: normal;
-	font-weight: 700;
+	font-weight: 400;
 	font-display: block;
+	unicode-range:
+		U+00A1-00A3, U+00A5-00A6, U+00A8, U+00AB-00AC, U+00B1, U+00B4-00B8, U+00BB, U+00BF-00FF,
+		U+0108-0109, U+010C-010F, U+011A-011D, U+0124-0125, U+0131, U+0134-0135, U+0147-0148,
+		U+0152-0153, U+0158-0159, U+015C-015D, U+0160-0161, U+0164-0165, U+016C-016F, U+0178,
+		U+017D-017E, U+02C6-02C7, U+02D8, U+02DA, U+02DC, U+2030, U+2039-203A, U+20AC, U+20B1, U+20B7,
+		U+2117;
 }
 
 @font-face {
 	font-family: 'PixelSmall';
-	src: url("../fonts/Pixel/Small/Pixel-Small.woff2") format('woff2'),
-		url("../fonts/Pixel/Small/Pixel-Small.woff") format('woff');
+	src:
+		url('../fonts/Pixel/Small/Pixel-Bold-Small.latin.woff2') format('woff2'),
+		url('../fonts/Pixel/Small/Pixel-Bold-Small.latin.woff') format('woff');
 	font-style: normal;
-	font-weight: 400;
+	font-weight: 700;
 	font-display: block;
+	unicode-range:
+		U+0020-007E, U+00A0, U+00A9, U+00AE, U+00B0, U+2013-2014, U+2018-201A, U+201C-201E, U+2020-2022,
+		U+2026, U+2122;
+}
+
+@font-face {
+	font-family: 'PixelSmall';
+	src:
+		url('../fonts/Pixel/Small/Pixel-Bold-Small.latin-ext.woff2') format('woff2'),
+		url('../fonts/Pixel/Small/Pixel-Bold-Small.latin-ext.woff') format('woff');
+	font-style: normal;
+	font-weight: 700;
+	font-display: block;
+	unicode-range:
+		U+00A1-00A3, U+00A5-00A6, U+00A8, U+00AB-00AC, U+00B1, U+00B4-00B8, U+00BB, U+00BF-00FF,
+		U+0108-0109, U+010C-010F, U+011A-011D, U+0124-0125, U+0131, U+0134-0135, U+0147-0148,
+		U+0152-0153, U+0158-0159, U+015C-015D, U+0160-0161, U+0164-0165, U+016C-016F, U+0178,
+		U+017D-017E, U+02C6-02C7, U+02D8, U+02DA, U+02DC, U+2030, U+2039-203A, U+20AC, U+20B1, U+20B7,
+		U+2117;
+}
+
+/* ==========================================================================
+ * Metric-matched fallback
+ *
+ * If Pixel fails to load, text falls through to a system sans whose metrics
+ * are nothing like it — different line box, different advance widths — and
+ * the layout moves. This aliases a local face and overrides its metrics to
+ * Pixel's own, so the fallback occupies the same space.
+ *
+ * The percentages are measured from the font, not guessed:
+ *   ascent  1300/1600 = 81.25%
+ *   descent  300/1600 = 18.75%
+ *   line-gap  72/1600 =  4.5%
+ *
+ * size-adjust is the ratio of Pixel's average lowercase advance (0.4327em) to
+ * Arial's (0.5245em). Arial is the reference because it is what `sans-serif`
+ * resolves to, or close to it, on the platforms this matters on; a different
+ * local face will be approximate rather than exact.
+ *
+ * Referenced from --font-system and --font-pixel in tokens.css, ahead of the
+ * generic stacks.
+ * ========================================================================== */
+
+@font-face {
+	font-family: 'Pixel Fallback';
+	src: local('Arial'), local('Helvetica'), local('Liberation Sans'), local('Roboto');
+	ascent-override: 81.25%;
+	descent-override: 18.75%;
+	line-gap-override: 4.5%;
+	size-adjust: 82.5%;
+}
+
+@font-face {
+	font-family: 'PixelSmall Fallback';
+	src: local('Arial'), local('Helvetica'), local('Liberation Sans'), local('Roboto');
+	/* PixelSmall sits on a shorter line box: 700/1600 and 100/1600. */
+	ascent-override: 43.75%;
+	descent-override: 6.25%;
+	line-gap-override: 4.5%;
+	size-adjust: 82.5%;
 }

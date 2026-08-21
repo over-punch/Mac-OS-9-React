@@ -19,21 +19,14 @@
 .pixelated-corner-sm {
 	/* Clip the actual corners */
 	clip-path: polygon(
-		/* Top-left corner */
-		2px 0,
+		/* Top-left corner */ 2px 0,
 		0 2px,
-		/* Left edge */
-		0 100%,
-		/* Bottom-left - no clip */
-		0 100%,
-		/* Bottom edge */
-		100% 100%,
-		/* Bottom-right - no clip */
-		100% 100%,
-		/* Right edge */
-		100% 2px,
-		/* Top-right corner */
-		calc(100% - 2px) 0
+		/* Left edge */ 0 100%,
+		/* Bottom-left - no clip */ 0 100%,
+		/* Bottom edge */ 100% 100%,
+		/* Bottom-right - no clip */ 100% 100%,
+		/* Right edge */ 100% 2px,
+		/* Top-right corner */ calc(100% - 2px) 0
 	);
 }
 
@@ -43,30 +36,23 @@
  */
 .pixelated-corner-md {
 	clip-path: polygon(
-		/* Top-left corner */
-		4px 0,
+		/* Top-left corner */ 4px 0,
 		3px 1px,
 		2px 2px,
 		1px 3px,
 		0 4px,
-		/* Left edge */
-		0 calc(100% - 4px),
-		/* Bottom-left corner */
-		1px calc(100% - 3px),
+		/* Left edge */ 0 calc(100% - 4px),
+		/* Bottom-left corner */ 1px calc(100% - 3px),
 		2px calc(100% - 2px),
 		3px calc(100% - 1px),
 		4px 100%,
-		/* Bottom edge */
-		calc(100% - 4px) 100%,
-		/* Bottom-right corner */
-		calc(100% - 3px) calc(100% - 1px),
+		/* Bottom edge */ calc(100% - 4px) 100%,
+		/* Bottom-right corner */ calc(100% - 3px) calc(100% - 1px),
 		calc(100% - 2px) calc(100% - 2px),
 		calc(100% - 1px) calc(100% - 3px),
 		100% calc(100% - 4px),
-		/* Right edge */
-		100% 4px,
-		/* Top-right corner */
-		calc(100% - 1px) 3px,
+		/* Right edge */ 100% 4px,
+		/* Top-right corner */ calc(100% - 1px) 3px,
 		calc(100% - 2px) 2px,
 		calc(100% - 3px) 1px,
 		calc(100% - 4px) 0
@@ -92,8 +78,7 @@
 	height: 1px;
 	box-shadow:
 		-1px 1px 0 0 currentColor,
-		/* Left corner pixel */
-			calc(100% + 1px) 1px 0 0 currentColor; /* Right corner pixel */
+		/* Left corner pixel */ calc(100% + 1px) 1px 0 0 currentColor; /* Right corner pixel */
 }
 
 /* Bottom corners */
@@ -104,8 +89,7 @@
 	height: 1px;
 	box-shadow:
 		-1px -1px 0 0 currentColor,
-		/* Left corner pixel */
-			calc(100% + 1px) -1px 0 0 currentColor; /* Right corner pixel */
+		/* Left corner pixel */ calc(100% + 1px) -1px 0 0 currentColor; /* Right corner pixel */
 }
 
 /* ========================================
@@ -198,19 +182,14 @@
 .tab-corner {
 	position: relative;
 	clip-path: polygon(
-		/* Top-left pixelated corner */
-		3px 0,
+		/* Top-left pixelated corner */ 3px 0,
 		2px 1px,
 		1px 2px,
 		0 3px,
-		/* Left edge down */
-		0 100%,
-		/* Bottom edge (flat) */
-		100% 100%,
-		/* Right edge up */
-		100% 3px,
-		/* Top-right pixelated corner */
-		calc(100% - 1px) 2px,
+		/* Left edge down */ 0 100%,
+		/* Bottom edge (flat) */ 100% 100%,
+		/* Right edge up */ 100% 3px,
+		/* Top-right pixelated corner */ calc(100% - 1px) 2px,
 		calc(100% - 2px) 1px,
 		calc(100% - 3px) 0
 	);
@@ -221,21 +200,14 @@
  */
 .button-corner {
 	clip-path: polygon(
-		/* Top edge with corners */
-		2px 0,
+		/* Top edge with corners */ 2px 0,
 		calc(100% - 2px) 0,
-		/* Top-right corner */
-		100% 2px,
-		/* Right edge */
-		100% calc(100% - 2px),
-		/* Bottom-right corner */
-		calc(100% - 2px) 100%,
-		/* Bottom edge */
-		2px 100%,
-		/* Bottom-left corner */
-		0 calc(100% - 2px),
-		/* Left edge */
-		0 2px
+		/* Top-right corner */ 100% 2px,
+		/* Right edge */ 100% calc(100% - 2px),
+		/* Bottom-right corner */ calc(100% - 2px) 100%,
+		/* Bottom edge */ 2px 100%,
+		/* Bottom-left corner */ 0 calc(100% - 2px),
+		/* Left edge */ 0 2px
 	);
 }
 
@@ -246,30 +218,23 @@
 
 .window-corner {
 	clip-path: polygon(
-		/* Top-left stepped corner */
-		4px 0,
+		/* Top-left stepped corner */ 4px 0,
 		3px 1px,
 		2px 2px,
 		1px 3px,
 		0 4px,
-		/* Left edge */
-		0 calc(100% - 4px),
-		/* Bottom-left stepped corner */
-		1px calc(100% - 3px),
+		/* Left edge */ 0 calc(100% - 4px),
+		/* Bottom-left stepped corner */ 1px calc(100% - 3px),
 		2px calc(100% - 2px),
 		3px calc(100% - 1px),
 		4px 100%,
-		/* Bottom edge */
-		calc(100% - 4px) 100%,
-		/* Bottom-right stepped corner */
-		calc(100% - 3px) calc(100% - 1px),
+		/* Bottom edge */ calc(100% - 4px) 100%,
+		/* Bottom-right stepped corner */ calc(100% - 3px) calc(100% - 1px),
 		calc(100% - 2px) calc(100% - 2px),
 		calc(100% - 1px) calc(100% - 3px),
 		100% calc(100% - 4px),
-		/* Right edge */
-		100% 4px,
-		/* Top-right stepped corner */
-		calc(100% - 1px) 3px,
+		/* Right edge */ 100% 4px,
+		/* Top-right stepped corner */ calc(100% - 1px) 3px,
 		calc(100% - 2px) 2px,
 		calc(100% - 3px) 1px,
 		calc(100% - 4px) 0

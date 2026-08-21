@@ -113,14 +113,22 @@ export default [
 			copy({
 				targets: [
 					{
+						// Only the generated subsets are published. The unsplit
+						// source faces stay in the repo as the input to
+						// scripts/subset-fonts.py; shipping both would have doubled
+						// the font payload rather than halving it.
+						src: 'src/fonts/Pixel/**/*.latin.{woff,woff2}',
+						dest: 'dist',
+					},
+					{
+						src: 'src/fonts/Pixel/**/*.latin-ext.{woff,woff2}',
+						dest: 'dist',
+					},
+					{
 						// The licence travels with the font files, as
 						// src/fonts/README.md says it does. It was not being
 						// copied, so the published package redistributed the
 						// typeface with its licence left behind in src/.
-						src: 'src/fonts/Pixel/**/*.{woff,woff2}',
-						dest: 'dist',
-					},
-					{
 						src: 'src/fonts/Pixel/LICENSE.txt',
 						dest: 'dist',
 					},
