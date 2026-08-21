@@ -206,9 +206,23 @@ export interface ListViewProps<TItem extends ListItem = ListItem> {
 	items: readonly TItem[];
 
 	/**
-	 * Selected item IDs. Never mutated by ListView.
+	 * Selected item IDs (controlled). Never mutated by ListView.
+	 *
+	 * Pair with `onSelectionChange`. For the uncontrolled equivalent use
+	 * `defaultSelectedIds`.
 	 */
 	selectedIds?: readonly string[];
+
+	/**
+	 * Item IDs selected on first render (uncontrolled).
+	 *
+	 * Every controllable prop in the library follows the same `X` / `defaultX`
+	 * pairing — `activeTab` / `defaultActiveTab` on Tabs, `position` /
+	 * `defaultPosition` on Window, `openMenuIndex` / `defaultOpenMenuIndex` on
+	 * MenuBar. Selection was controlled-only, so a list that just needed to
+	 * remember what the user clicked had to be wired up by hand.
+	 */
+	defaultSelectedIds?: readonly string[];
 
 	/**
 	 * Callback when selection changes
@@ -531,7 +545,8 @@ function ListViewInner<TItem extends ListItem = ListItem>(
 	{
 		columns,
 		items,
-		selectedIds = [],
+		selectedIds,
+		defaultSelectedIds,
 		onSelectionChange,
 		onItemOpen,
 		onItemMouseEnter,
@@ -580,10 +595,24 @@ function ListViewInner<TItem extends ListItem = ListItem>(
 	const baseId = useId();
 	const bodyRef = useRef<HTMLDivElement>(null);
 
+	// Controlled when `selectedIds` is supplied, uncontrolled otherwise.
+	const isSelectionControlled = selectedIds !== undefined;
+	const [internalSelection, setInternalSelection] = useState<readonly string[]>(
+		defaultSelectedIds ?? []
+	);
+	const resolvedSelection = isSelectionControlled ? selectedIds : internalSelection;
+
+	// Wraps the caller's handler so uncontrolled selection updates internal
+	// state as well. Stable, so it does not defeat the row memoisation.
+	const handleSelectionChange = useCallback((ids: string[]) => {
+		if (!latestRef.current.isSelectionControlled) setInternalSelection(ids);
+		latestRef.current.onSelectionChange?.(ids);
+	}, []);
+
 	// Membership tests run once per row per render. `selectedIds.includes()`
 	// inside the row map made selection checking O(rows x selected), which on
 	// a large list with a large selection is quadratic.
-	const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
+	const selectedSet = useMemo(() => new Set(resolvedSelection), [resolvedSelection]);
 
 	// Anchor for Shift range selection, plus the selection as it stood before
 	// the current Shift sequence began. Shift+click extends that base
@@ -597,8 +626,9 @@ function ListViewInner<TItem extends ListItem = ListItem>(
 	// changed, defeating the row memoisation entirely.
 	const latestRef = useRef({
 		items,
-		selectedIds,
+		selectedIds: resolvedSelection,
 		selectedSet,
+		isSelectionControlled,
 		onSelectionChange,
 		onItemOpen,
 		onItemMouseEnter,
@@ -610,8 +640,9 @@ function ListViewInner<TItem extends ListItem = ListItem>(
 	useEffect(() => {
 		latestRef.current = {
 			items,
-			selectedIds,
+			selectedIds: resolvedSelection,
 			selectedSet,
+			isSelectionControlled,
 			onSelectionChange,
 			onItemOpen,
 			onItemMouseEnter,
@@ -649,52 +680,54 @@ function ListViewInner<TItem extends ListItem = ListItem>(
 		[sortColumn, sortDirection, onSort]
 	);
 
-	const handleRowClick = useCallback((item: ListItem, event: React.MouseEvent) => {
-		const {
-			items: liveItems,
-			selectedIds: liveSelected,
-			selectedSet: liveSelectedSet,
-			onSelectionChange: liveOnChange,
-		} = latestRef.current;
-		if (!liveOnChange) return;
+	const handleRowClick = useCallback(
+		(item: ListItem, event: React.MouseEvent) => {
+			const {
+				items: liveItems,
+				selectedIds: liveSelected,
+				selectedSet: liveSelectedSet,
+			} = latestRef.current;
+			const liveOnChange = handleSelectionChange;
 
-		const itemId = item.id;
+			const itemId = item.id;
 
-		if (event.metaKey || event.ctrlKey) {
-			// Toggle one item, and make it the anchor for a later Shift+click.
-			anchorIdRef.current = itemId;
-			baseSelectionRef.current = liveSelectedSet.has(itemId)
-				? liveSelected.filter((id) => id !== itemId)
-				: [...liveSelected, itemId];
-			liveOnChange([...baseSelectionRef.current]);
-			return;
-		}
-
-		if (event.shiftKey && (anchorIdRef.current || liveSelected.length > 0)) {
-			const anchorId = anchorIdRef.current ?? liveSelected[liveSelected.length - 1];
-			const anchorIndex = liveItems.findIndex((candidate) => candidate.id === anchorId);
-			const currentIndex = liveItems.findIndex((candidate) => candidate.id === itemId);
-
-			if (anchorIndex === -1 || currentIndex === -1) {
-				liveOnChange([itemId]);
+			if (event.metaKey || event.ctrlKey) {
+				// Toggle one item, and make it the anchor for a later Shift+click.
+				anchorIdRef.current = itemId;
+				baseSelectionRef.current = liveSelectedSet.has(itemId)
+					? liveSelected.filter((id) => id !== itemId)
+					: [...liveSelected, itemId];
+				liveOnChange([...baseSelectionRef.current]);
 				return;
 			}
 
-			const start = Math.min(anchorIndex, currentIndex);
-			const end = Math.max(anchorIndex, currentIndex);
-			const rangeIds = liveItems.slice(start, end + 1).map((candidate) => candidate.id);
+			if (event.shiftKey && (anchorIdRef.current || liveSelected.length > 0)) {
+				const anchorId = anchorIdRef.current ?? liveSelected[liveSelected.length - 1];
+				const anchorIndex = liveItems.findIndex((candidate) => candidate.id === anchorId);
+				const currentIndex = liveItems.findIndex((candidate) => candidate.id === itemId);
 
-			// Extend rather than replace: whatever was selected before this
-			// Shift sequence stays selected.
-			liveOnChange([...new Set([...baseSelectionRef.current, ...rangeIds])]);
-			return;
-		}
+				if (anchorIndex === -1 || currentIndex === -1) {
+					liveOnChange([itemId]);
+					return;
+				}
 
-		// Single select — this click becomes the anchor and the new base.
-		anchorIdRef.current = itemId;
-		baseSelectionRef.current = [itemId];
-		liveOnChange([itemId]);
-	}, []);
+				const start = Math.min(anchorIndex, currentIndex);
+				const end = Math.max(anchorIndex, currentIndex);
+				const rangeIds = liveItems.slice(start, end + 1).map((candidate) => candidate.id);
+
+				// Extend rather than replace: whatever was selected before this
+				// Shift sequence stays selected.
+				liveOnChange([...new Set([...baseSelectionRef.current, ...rangeIds])]);
+				return;
+			}
+
+			// Single select — this click becomes the anchor and the new base.
+			anchorIdRef.current = itemId;
+			baseSelectionRef.current = [itemId];
+			liveOnChange([itemId]);
+		},
+		[handleSelectionChange]
+	);
 
 	const handleRowDoubleClick = useCallback((item: ListItem) => {
 		latestRef.current.onItemOpen?.(item as TItem);
@@ -748,11 +781,9 @@ function ListViewInner<TItem extends ListItem = ListItem>(
 	 */
 	const handleRowKeyDown = useCallback(
 		(item: ListItem, index: number, event: React.KeyboardEvent) => {
-			const {
-				items: liveItems,
-				onSelectionChange: liveOnChange,
-				onItemOpen: liveOnOpen,
-			} = latestRef.current;
+			const { items: liveItems, onItemOpen: liveOnOpen } = latestRef.current;
+			// Routed through the wrapper so uncontrolled selection updates too.
+			const liveOnChange = handleSelectionChange;
 
 			const move = (nextIndex: number) => {
 				event.preventDefault();
@@ -808,7 +839,7 @@ function ListViewInner<TItem extends ListItem = ListItem>(
 					break;
 			}
 		},
-		[focusRow]
+		[focusRow, handleSelectionChange]
 	);
 
 	// Keep the tab stop in range when the list shrinks.

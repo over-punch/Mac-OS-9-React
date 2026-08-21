@@ -161,6 +161,58 @@ describe('ListView', () => {
 		});
 	});
 
+	describe('uncontrolled selection', () => {
+		it('selects without the caller wiring state back in', () => {
+			// Selection used to be controlled-only, so a list that just needed to
+			// remember what the user clicked had to be wired up by hand.
+			const { container } = render(<ListView columns={columns} items={items} />);
+
+			fireEvent.click(screen.getByText('Bravo'));
+
+			const selected = container.querySelectorAll('[data-selected="true"]');
+			expect(selected).toHaveLength(1);
+			expect(within(selected[0] as HTMLElement).getByText('Bravo')).toBeInTheDocument();
+		});
+
+		it('honours defaultSelectedIds', () => {
+			const { container } = render(
+				<ListView columns={columns} items={items} defaultSelectedIds={['c']} />
+			);
+			const selected = container.querySelector('[data-selected="true"]') as HTMLElement;
+			expect(within(selected).getByText('Charlie')).toBeInTheDocument();
+		});
+
+		it('still reports through onSelectionChange', () => {
+			const onSelectionChange = vi.fn();
+			render(<ListView columns={columns} items={items} onSelectionChange={onSelectionChange} />);
+			fireEvent.click(screen.getByText('Delta'));
+			expect(onSelectionChange).toHaveBeenCalledWith(['d']);
+		});
+
+		it('extends with Shift without a controlled harness', () => {
+			const { container } = render(
+				<ListView columns={columns} items={items} defaultSelectedIds={['a']} />
+			);
+
+			fireEvent.click(screen.getByText('Alpha'));
+			fireEvent.click(screen.getByText('Charlie'), { shiftKey: true });
+
+			expect(container.querySelectorAll('[data-selected="true"]')).toHaveLength(3);
+		});
+
+		it('defers to selectedIds when controlled', () => {
+			const { container } = render(
+				<ListView columns={columns} items={items} selectedIds={['a']} />
+			);
+
+			fireEvent.click(screen.getByText('Delta'));
+
+			// The parent owns the state, so nothing moves on its own.
+			const selected = container.querySelector('[data-selected="true"]') as HTMLElement;
+			expect(within(selected).getByText('Alpha')).toBeInTheDocument();
+		});
+	});
+
 	describe('interaction callbacks', () => {
 		it('opens an item on double click', () => {
 			const onItemOpen = vi.fn();

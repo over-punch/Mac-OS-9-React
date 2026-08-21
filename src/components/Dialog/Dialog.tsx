@@ -25,7 +25,8 @@ import React, {
 	useState,
 } from 'react';
 import { createPortal } from 'react-dom';
-import { Window, type WindowProps } from '../Window/Window';
+import { Window, type WindowProps, type WindowClasses } from '../Window/Window';
+import { warnDeprecatedProp } from '../../utils/deprecation';
 import { mergeClasses } from '../../utils/classNames';
 import { resolveAria } from '../../utils/aria';
 import styles from './Dialog.module.css';
@@ -138,20 +139,20 @@ function getFocusables(root: HTMLElement): HTMLElement[] {
 // --- Props -----------------------------------------------------------------
 
 /**
- * Classes for targeting Dialog's own sub-elements.
+ * Classes for targeting Dialog sub-elements.
  *
- * Named `dialogClasses` on the props rather than `classes`, because Dialog
- * extends WindowProps and `classes` there already targets the Window slots
- * this renders inside.
+ * Extends {@link WindowClasses}, because a Dialog renders a Window: the
+ * `root`, `titleBar`, `content` and other Window slots are reachable from
+ * here too, and are forwarded on.
  */
-export interface DialogClasses {
+export interface DialogClasses extends WindowClasses {
 	/** The full-screen backdrop behind the dialog. */
 	backdrop?: string;
 	/** The container carrying role="dialog" and aria-modal. */
 	container?: string;
 }
 
-export interface DialogProps extends Omit<WindowProps, 'active'> {
+export interface DialogProps extends Omit<WindowProps, 'active' | 'classes'> {
 	/**
 	 * Whether the dialog is open
 	 * @default false
@@ -177,12 +178,15 @@ export interface DialogProps extends Omit<WindowProps, 'active'> {
 	closeOnEscape?: boolean;
 
 	/**
-	 * Classes for targeting sub-elements. Window's own slots are reachable
-	 * through the inherited `classes` prop, which this extends.
+	 * Classes for targeting sub-elements, including the Window slots the
+	 * dialog renders inside.
 	 */
+	classes?: DialogClasses;
+
+	/** @deprecated Use `classes`. */
 	dialogClasses?: DialogClasses;
 
-	/** @deprecated Use `dialogClasses.backdrop`. */
+	/** @deprecated Use `classes.backdrop`. */
 	backdropClassName?: string;
 
 	/**
@@ -292,6 +296,7 @@ export const Dialog = forwardRef<HTMLDivElement, DialogProps>(
 			closeOnBackdropClick = true,
 			closeOnEscape = true,
 			backdropClassName = '',
+			classes,
 			dialogClasses,
 			trapFocus = true,
 			initialFocus,
@@ -478,16 +483,24 @@ export const Dialog = forwardRef<HTMLDivElement, DialogProps>(
 
 		if (!open) return null;
 
-		const backdropClassNames = mergeClasses(
-			styles.backdrop,
-			backdropClassName,
-			dialogClasses?.backdrop
-		);
+		// `classes` is the supported name; `dialogClasses` still works and warns
+		// once. It was only ever called that because Dialog extends WindowProps,
+		// where `classes` already meant the Window slots — now DialogClasses
+		// extends WindowClasses, so one prop covers both.
+		if (process.env.NODE_ENV !== 'production' && dialogClasses && !classes) {
+			warnDeprecatedProp('Dialog', 'dialogClasses', 'classes');
+		}
+		const resolvedClasses = classes ?? dialogClasses;
+
+		// Dialog owns backdrop and container; everything else belongs to Window.
+		const { backdrop, container: containerClass, ...windowClasses } = resolvedClasses ?? {};
+
+		const backdropClassNames = mergeClasses(styles.backdrop, backdropClassName, backdrop);
 
 		const dialogTree = (
 			<div className={backdropClassNames} onClick={handleBackdropClick}>
 				<div
-					className={mergeClasses(styles.dialogContainer, dialogClasses?.container)}
+					className={mergeClasses(styles.dialogContainer, containerClass)}
 					ref={dialogRef}
 					role={role}
 					aria-modal="true"
@@ -495,7 +508,13 @@ export const Dialog = forwardRef<HTMLDivElement, DialogProps>(
 					aria-labelledby={labelledBy}
 					aria-describedby={describedBy}
 				>
-					<Window {...windowProps} ref={ref} active={true} onClose={onClose}>
+					<Window
+						{...windowProps}
+						classes={windowClasses}
+						ref={ref}
+						active={true}
+						onClose={onClose}
+					>
 						{children}
 					</Window>
 				</div>

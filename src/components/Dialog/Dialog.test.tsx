@@ -11,6 +11,7 @@ import { useRef, useState } from 'react';
 import { Dialog } from './Dialog';
 import { Button } from '../Button/Button';
 import { checkA11y } from '../../test/axe';
+import { resetDeprecationWarnings } from '../../utils/deprecation';
 
 // jsdom performs no layout, so getClientRects() returns an empty list for
 // every element — including plainly visible ones. Dialog's focusable filter
@@ -362,5 +363,47 @@ describe('Dialog', () => {
 			</Dialog>
 		);
 		expect(await checkA11y(screen.getByRole('dialog'))).toHaveNoViolations();
+	});
+});
+
+describe('classes', () => {
+	it('accepts the deprecated dialogClasses, and warns once', () => {
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+		resetDeprecationWarnings();
+
+		const { rerender } = render(
+			<Dialog open title="D" dialogClasses={{ backdrop: 'legacy-backdrop' }}>
+				body
+			</Dialog>
+		);
+		expect(document.querySelector('.legacy-backdrop')).not.toBeNull();
+
+		rerender(
+			<Dialog open title="D" dialogClasses={{ backdrop: 'legacy-backdrop' }}>
+				body
+			</Dialog>
+		);
+
+		const matching = warn.mock.calls.filter((call) => String(call[0]).includes('`dialogClasses`'));
+		expect(matching).toHaveLength(1);
+		expect(String(matching[0]?.[0])).toContain('classes');
+		warn.mockRestore();
+	});
+
+	it('prefers classes when both are given', () => {
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+		render(
+			<Dialog
+				open
+				title="D"
+				dialogClasses={{ backdrop: 'legacy' }}
+				classes={{ backdrop: 'current' }}
+			>
+				body
+			</Dialog>
+		);
+		expect(document.querySelector('.current')).not.toBeNull();
+		expect(document.querySelector('.legacy')).toBeNull();
+		warn.mockRestore();
 	});
 });

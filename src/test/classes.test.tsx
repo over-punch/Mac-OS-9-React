@@ -96,14 +96,26 @@ describe('classes slots', () => {
 		expect(has(container, 'x-panel')).toBe(true);
 	});
 
-	it('Dialog', () => {
+	it('Dialog, including the Window slots it renders inside', () => {
 		render(
-			<Dialog open title="D" dialogClasses={{ backdrop: 'x-backdrop', container: 'x-container' }}>
+			<Dialog
+				open
+				title="D"
+				classes={{
+					backdrop: 'x-backdrop',
+					container: 'x-container',
+					// DialogClasses extends WindowClasses, so one prop reaches both.
+					titleBar: 'x-titlebar',
+					content: 'x-content',
+				}}
+			>
 				body
 			</Dialog>
 		);
 		expect(document.querySelector('.x-backdrop')).not.toBeNull();
 		expect(document.querySelector('.x-container')).not.toBeNull();
+		expect(document.querySelector('.x-titlebar')).not.toBeNull();
+		expect(document.querySelector('.x-content')).not.toBeNull();
 	});
 
 	it('Scrollbar', () => {
