@@ -1220,6 +1220,9 @@
 	/* Wrapper container for checkbox and label */
 	display: inline-flex;
 	align-items: center;
+	/* Wraps so helper and error text drop onto their own line beneath the
+	 * control rather than sitting inline beside it. */
+	flex-wrap: wrap;
 	gap: var(--spacing-2);
 	position: relative;
 	cursor: pointer;
@@ -1453,9 +1456,41 @@
 		transition: none;
 	}
 }
+/* ========================================
+ * Helper and error text
+ * ======================================== */
+
+.Checkbox-module_helper-text,
+.Checkbox-module_error-message {
+	/* Sits beneath the control, spanning the full wrapper so it aligns with
+	 * the label rather than the box. */
+	grid-column: 1 / -1;
+	flex-basis: 100%;
+	margin: var(--spacing-1) 0 0;
+	font-family: var(--font-system);
+	font-size: var(--font-size-xs);
+	line-height: var(--line-height-snug);
+}
+
+.Checkbox-module_helper-text {
+	color: var(--color-gray-600);
+}
+
+.Checkbox-module_error-message {
+	color: var(--color-error);
+}
+
+/* Keep the hidden live region out of the layout entirely. */
+.Checkbox-module_error-message[hidden] {
+	display: none;
+}
+
 /* Radio Component Styles - Mac OS 9 */
 
 .Radio-module_wrapper {
+	/* Wraps so helper and error text drop onto their own line beneath the
+	 * control rather than sitting inline beside it. */
+	flex-wrap: wrap;
 	/* Wrapper container for radio and label */
 	display: inline-flex;
 	align-items: center;
@@ -1690,6 +1725,31 @@
 	flex-direction: row;
 	flex-wrap: wrap;
 	align-items: center;
+}
+
+/* ========================================
+ * Helper and error text
+ * ======================================== */
+
+.Radio-module_helper-text,
+.Radio-module_error-message {
+	flex-basis: 100%;
+	margin: var(--spacing-1) 0 0;
+	font-family: var(--font-system);
+	font-size: var(--font-size-xs);
+	line-height: var(--line-height-snug);
+}
+
+.Radio-module_helper-text {
+	color: var(--color-gray-600);
+}
+
+.Radio-module_error-message {
+	color: var(--color-error);
+}
+
+.Radio-module_error-message[hidden] {
+	display: none;
 }
 
 /* TextField Component Styles - Mac OS 9 */

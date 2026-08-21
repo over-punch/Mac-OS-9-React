@@ -1322,7 +1322,33 @@ function resolveAria(component, standardName, legacyName, standard, legacy) {
     return standard ?? legacy;
 }
 
-var styles$b = {"wrapper":"Checkbox-module_wrapper","wrapper--disabled":"Checkbox-module_wrapper--disabled","wrapper--error":"Checkbox-module_wrapper--error","wrapper--label-left":"Checkbox-module_wrapper--label-left","wrapper--label-right":"Checkbox-module_wrapper--label-right","checkbox":"Checkbox-module_checkbox","checkbox--sm":"Checkbox-module_checkbox--sm","checkbox--md":"Checkbox-module_checkbox--md","checkbox--lg":"Checkbox-module_checkbox--lg","checkbox--indeterminate":"Checkbox-module_checkbox--indeterminate","checkbox--error":"Checkbox-module_checkbox--error","label":"Checkbox-module_label","label--sm":"Checkbox-module_label--sm","label--md":"Checkbox-module_label--md","label--lg":"Checkbox-module_label--lg","wrapper--sm":"Checkbox-module_wrapper--sm","wrapper--md":"Checkbox-module_wrapper--md","wrapper--lg":"Checkbox-module_wrapper--lg"};
+/**
+ * Renders the helper and error text for a form control.
+ *
+ * Returns `null` when the control has neither, so a field that never uses them
+ * costs nothing.
+ */
+function FieldMessage({ helperId, errorId, error, errorMessage, helperText, errorLiveRegion = 'polite', helperClassName, errorClassName, }) {
+    const showError = Boolean(error && errorMessage);
+    // Nothing to render, and nothing to keep mounted for announcements.
+    if (!helperText && !errorMessage)
+        return null;
+    return (jsxs(Fragment, { children: [helperText && !error ? (jsx("p", { id: helperId, className: mergeClasses(helperClassName), children: helperText })) : null, errorMessage ? (jsx("p", { id: errorId, className: mergeClasses(errorClassName), role: errorLiveRegion === 'off' ? undefined : 'status', "aria-live": errorLiveRegion === 'off' ? undefined : errorLiveRegion, hidden: !showError, children: showError ? errorMessage : null })) : null] }));
+}
+/**
+ * Builds the `aria-describedby` value for a control, merging the ids this
+ * component owns with whatever the caller supplied.
+ */
+function describedBy(options) {
+    const ids = [
+        options.helperText && !options.error ? options.helperId : undefined,
+        options.error && options.errorMessage ? options.errorId : undefined,
+        options.callerDescribedBy,
+    ].filter(Boolean);
+    return ids.length > 0 ? ids.join(' ') : undefined;
+}
+
+var styles$b = {"wrapper":"Checkbox-module_wrapper","wrapper--disabled":"Checkbox-module_wrapper--disabled","wrapper--error":"Checkbox-module_wrapper--error","wrapper--label-left":"Checkbox-module_wrapper--label-left","wrapper--label-right":"Checkbox-module_wrapper--label-right","checkbox":"Checkbox-module_checkbox","checkbox--sm":"Checkbox-module_checkbox--sm","checkbox--md":"Checkbox-module_checkbox--md","checkbox--lg":"Checkbox-module_checkbox--lg","checkbox--indeterminate":"Checkbox-module_checkbox--indeterminate","checkbox--error":"Checkbox-module_checkbox--error","label":"Checkbox-module_label","label--sm":"Checkbox-module_label--sm","label--md":"Checkbox-module_label--md","label--lg":"Checkbox-module_label--lg","wrapper--sm":"Checkbox-module_wrapper--sm","wrapper--md":"Checkbox-module_wrapper--md","wrapper--lg":"Checkbox-module_wrapper--lg","helper-text":"Checkbox-module_helper-text","error-message":"Checkbox-module_error-message"};
 
 /**
  * Mac OS 9 style Checkbox component
@@ -1360,7 +1386,7 @@ var styles$b = {"wrapper":"Checkbox-module_wrapper","wrapper--disabled":"Checkbo
  * />
  * ```
  */
-const Checkbox = forwardRef(({ checked, defaultChecked, indeterminate = false, disabled = false, label, labelPosition = 'right', size = 'md', error = false, ariaLabel, ariaDescribedBy, 'aria-label': ariaLabelAttr, 'aria-describedby': ariaDescribedByAttr, className = '', onChange, id, ...props }, ref) => {
+const Checkbox = forwardRef(({ checked, defaultChecked, indeterminate = false, disabled = false, label, labelPosition = 'right', size = 'md', error = false, errorMessage, helperText, errorLiveRegion = 'polite', ariaLabel, ariaDescribedBy, 'aria-label': ariaLabelAttr, 'aria-describedby': ariaDescribedByAttr, className = '', onChange, id, ...props }, ref) => {
     const inputRef = React.useRef(null);
     const combinedRef = ref || inputRef;
     // Set indeterminate property via ref (can't be set via HTML attribute)
@@ -1387,16 +1413,25 @@ const Checkbox = forwardRef(({ checked, defaultChecked, indeterminate = false, d
     // Standard attributes win; the camelCase aliases warn once in development.
     const resolvedLabel = resolveAria('Checkbox', 'aria-label', 'ariaLabel', ariaLabelAttr, ariaLabel);
     const resolvedDescribedBy = resolveAria('Checkbox', 'aria-describedby', 'ariaDescribedBy', ariaDescribedByAttr, ariaDescribedBy);
+    const helperId = `${checkboxId}-helper`;
+    const errorId = `${checkboxId}-error`;
     const ariaAttributes = {
         'aria-label': !label ? resolvedLabel : undefined,
-        'aria-describedby': resolvedDescribedBy,
+        'aria-describedby': describedBy({
+            helperId,
+            errorId,
+            helperText,
+            error,
+            errorMessage,
+            callerDescribedBy: resolvedDescribedBy,
+        }),
         'aria-invalid': error,
     };
-    return (jsxs("div", { className: wrapperClassNames, children: [label && labelPosition === 'left' && (jsx("label", { htmlFor: checkboxId, className: labelClassNames, children: label })), jsx("input", { ref: combinedRef, type: "checkbox", id: checkboxId, className: checkboxClassNames, checked: checked, defaultChecked: defaultChecked, disabled: disabled, onChange: onChange, ...ariaAttributes, ...props }), label && labelPosition === 'right' && (jsx("label", { htmlFor: checkboxId, className: labelClassNames, children: label }))] }));
+    return (jsxs("div", { className: wrapperClassNames, children: [label && labelPosition === 'left' && (jsx("label", { htmlFor: checkboxId, className: labelClassNames, children: label })), jsx("input", { ref: combinedRef, type: "checkbox", id: checkboxId, className: checkboxClassNames, checked: checked, defaultChecked: defaultChecked, disabled: disabled, onChange: onChange, ...ariaAttributes, ...props }), label && labelPosition === 'right' && (jsx("label", { htmlFor: checkboxId, className: labelClassNames, children: label })), jsx(FieldMessage, { helperId: helperId, errorId: errorId, error: error, errorMessage: errorMessage, helperText: helperText, errorLiveRegion: errorLiveRegion, helperClassName: styles$b['helper-text'], errorClassName: styles$b['error-message'] })] }));
 });
 Checkbox.displayName = 'Checkbox';
 
-var styles$a = {"wrapper":"Radio-module_wrapper","wrapper--disabled":"Radio-module_wrapper--disabled","wrapper--error":"Radio-module_wrapper--error","wrapper--label-left":"Radio-module_wrapper--label-left","wrapper--label-right":"Radio-module_wrapper--label-right","radio":"Radio-module_radio","radio--sm":"Radio-module_radio--sm","radio--md":"Radio-module_radio--md","radio--lg":"Radio-module_radio--lg","radio--error":"Radio-module_radio--error","label":"Radio-module_label","label--sm":"Radio-module_label--sm","label--md":"Radio-module_label--md","label--lg":"Radio-module_label--lg","wrapper--sm":"Radio-module_wrapper--sm","wrapper--md":"Radio-module_wrapper--md","wrapper--lg":"Radio-module_wrapper--lg","radioGroup":"Radio-module_radioGroup","radioGroup--vertical":"Radio-module_radioGroup--vertical","radioGroup--horizontal":"Radio-module_radioGroup--horizontal"};
+var styles$a = {"wrapper":"Radio-module_wrapper","wrapper--disabled":"Radio-module_wrapper--disabled","wrapper--error":"Radio-module_wrapper--error","wrapper--label-left":"Radio-module_wrapper--label-left","wrapper--label-right":"Radio-module_wrapper--label-right","radio":"Radio-module_radio","radio--sm":"Radio-module_radio--sm","radio--md":"Radio-module_radio--md","radio--lg":"Radio-module_radio--lg","radio--error":"Radio-module_radio--error","label":"Radio-module_label","label--sm":"Radio-module_label--sm","label--md":"Radio-module_label--md","label--lg":"Radio-module_label--lg","wrapper--sm":"Radio-module_wrapper--sm","wrapper--md":"Radio-module_wrapper--md","wrapper--lg":"Radio-module_wrapper--lg","radioGroup":"Radio-module_radioGroup","radioGroup--vertical":"Radio-module_radioGroup--vertical","radioGroup--horizontal":"Radio-module_radioGroup--horizontal","helper-text":"Radio-module_helper-text","error-message":"Radio-module_error-message"};
 
 const RadioGroupContext = React.createContext(null);
 /**
@@ -1420,7 +1455,7 @@ const RadioGroupContext = React.createContext(null);
  * <Radio name="color" value="red" label="Red" />
  * ```
  */
-const Radio = forwardRef(({ checked, defaultChecked, disabled = false, label, labelPosition = 'right', size = 'md', error = false, ariaLabel, ariaDescribedBy, 'aria-label': ariaLabelAttr, 'aria-describedby': ariaDescribedByAttr, className = '', value, name, onChange, id, ...props }, ref) => {
+const Radio = forwardRef(({ checked, defaultChecked, disabled = false, label, labelPosition = 'right', size = 'md', error = false, errorMessage, helperText, errorLiveRegion = 'polite', ariaLabel, ariaDescribedBy, 'aria-label': ariaLabelAttr, 'aria-describedby': ariaDescribedByAttr, className = '', value, name, onChange, id, ...props }, ref) => {
     // When wrapped by <RadioGroup>, inherit name / value / onChange / disabled
     // from context. Standalone Radios fall back to their own props.
     const group = React.useContext(RadioGroupContext);
@@ -1440,15 +1475,24 @@ const Radio = forwardRef(({ checked, defaultChecked, disabled = false, label, la
     const radioClassNames = mergeClasses(styles$a.radio, styles$a[`radio--${size}`], error && styles$a['radio--error']);
     const labelClassNames = mergeClasses(styles$a.label, styles$a[`label--${size}`]);
     // ARIA attributes
+    const helperId = `${radioId}-helper`;
+    const errorId = `${radioId}-error`;
     // Standard attributes win; the camelCase aliases warn once in development.
     const ariaAttributes = {
         'aria-label': !label
             ? resolveAria('Radio', 'aria-label', 'ariaLabel', ariaLabelAttr, ariaLabel)
             : undefined,
-        'aria-describedby': resolveAria('Radio', 'aria-describedby', 'ariaDescribedBy', ariaDescribedByAttr, ariaDescribedBy),
+        'aria-describedby': describedBy({
+            helperId,
+            errorId,
+            helperText,
+            error,
+            errorMessage,
+            callerDescribedBy: resolveAria('Radio', 'aria-describedby', 'ariaDescribedBy', ariaDescribedByAttr, ariaDescribedBy),
+        }),
         'aria-invalid': error,
     };
-    return (jsxs("div", { className: wrapperClassNames, children: [label && labelPosition === 'left' && (jsx("label", { htmlFor: radioId, className: labelClassNames, children: label })), jsx("input", { ref: ref, type: "radio", id: radioId, className: radioClassNames, checked: group ? resolvedChecked : checked, defaultChecked: group ? undefined : defaultChecked, disabled: resolvedDisabled, value: value, name: resolvedName, onChange: handleInputChange, ...ariaAttributes, ...props }), label && labelPosition === 'right' && (jsx("label", { htmlFor: radioId, className: labelClassNames, children: label }))] }));
+    return (jsxs("div", { className: wrapperClassNames, children: [label && labelPosition === 'left' && (jsx("label", { htmlFor: radioId, className: labelClassNames, children: label })), jsx("input", { ref: ref, type: "radio", id: radioId, className: radioClassNames, checked: group ? resolvedChecked : checked, defaultChecked: group ? undefined : defaultChecked, disabled: resolvedDisabled, value: value, name: resolvedName, onChange: handleInputChange, ...ariaAttributes, ...props }), label && labelPosition === 'right' && (jsx("label", { htmlFor: radioId, className: labelClassNames, children: label })), jsx(FieldMessage, { helperId: helperId, errorId: errorId, error: error, errorMessage: errorMessage, helperText: helperText, errorLiveRegion: errorLiveRegion, helperClassName: styles$a['helper-text'], errorClassName: styles$a['error-message'] })] }));
 });
 Radio.displayName = 'Radio';
 /**
@@ -1513,11 +1557,19 @@ const RadioGroup = forwardRef(({ name, value, defaultValue, onChange, disabled =
         if (!target)
             return;
         target.focus();
-        // Selecting on arrow move matches the WAI-ARIA radiogroup pattern
-        // for automatic activation. The synthetic ChangeEvent piggybacks
-        // onto `change` so the consumer's onChange fires once.
-        target.checked = true;
-        target.dispatchEvent(new Event('change', { bubbles: true }));
+        // Report the change through the group's own handler rather than
+        // mutating `target.checked` and dispatching a native `change`.
+        //
+        // React does not derive a radio's onChange from a native change
+        // event — it detects the change from a click — so the dispatched
+        // event notified nobody, while the imperative `checked = true`
+        // desynced the DOM from React's controlled value until the next
+        // render put it back. Arrow-key selection simply did not reach the
+        // consumer.
+        //
+        // Selecting on move is the WAI-ARIA radiogroup pattern for
+        // automatic activation, which is what this implements.
+        handleChildChange(target.value);
     };
     const contextValue = {
         name: resolvedName,
@@ -1585,10 +1637,14 @@ const TextField = forwardRef(({ label, labelPosition = 'top', size = 'md', fullW
     const helperId = `${inputId}-helper`;
     const errorId = `${inputId}-error`;
     // Combine aria-describedby
-    const describedByIds = mergeClasses(helperText && helperId, error && errorMessage && errorId, 
-    // The caller's own description is merged with the ids the component
-    // generates, rather than replacing them.
-    resolvedDescribedBy);
+    const describedByIds = describedBy({
+        helperId,
+        errorId,
+        helperText,
+        error,
+        errorMessage,
+        callerDescribedBy: resolvedDescribedBy,
+    });
     // Build class names
     const wrapperClassNames = mergeClasses(styles$9.wrapper, styles$9[`wrapper--${size}`], styles$9[`wrapper--label-${labelPosition}`], fullWidth && styles$9['wrapper--full-width'], disabled && styles$9['wrapper--disabled'], wrapperClassName);
     const inputWrapperClassNames = mergeClasses(styles$9['input-wrapper'], (leftIcon || rightIcon) && styles$9['input-wrapper--with-icon'], leftIcon && styles$9['input-wrapper--with-left-icon'], rightIcon && styles$9['input-wrapper--with-right-icon']);
@@ -1600,7 +1656,7 @@ const TextField = forwardRef(({ label, labelPosition = 'top', size = 'md', fullW
         'aria-describedby': describedByIds || undefined,
         'aria-invalid': error,
     };
-    return (jsxs("div", { className: wrapperClassNames, children: [label && (labelPosition === 'top' || labelPosition === 'left') && (jsx("label", { htmlFor: inputId, className: labelClassNames, children: label })), jsxs("div", { className: inputWrapperClassNames, children: [leftIcon && (jsx("span", { className: styles$9['input-icon-left'], "aria-hidden": "true", children: leftIcon })), multiline ? (jsx("textarea", { ref: ref, id: inputId, rows: rows, className: inputClassNames, disabled: disabled, ...ariaAttributes, ...props, ...textareaProps })) : (jsx("input", { ref: ref, type: type, id: inputId, className: inputClassNames, disabled: disabled, ...ariaAttributes, ...props })), rightIcon && (jsx("span", { className: styles$9['input-icon-right'], "aria-hidden": "true", children: rightIcon }))] }), label && labelPosition === 'right' && (jsx("label", { htmlFor: inputId, className: labelClassNames, children: label })), helperText && !error && (jsx("p", { id: helperId, className: styles$9['helper-text'], children: helperText })), jsx("p", { id: errorId, className: styles$9['error-message'], role: errorLiveRegion === 'off' ? undefined : 'status', "aria-live": errorLiveRegion === 'off' ? undefined : errorLiveRegion, hidden: !(error && errorMessage), children: error && errorMessage ? errorMessage : null })] }));
+    return (jsxs("div", { className: wrapperClassNames, children: [label && (labelPosition === 'top' || labelPosition === 'left') && (jsx("label", { htmlFor: inputId, className: labelClassNames, children: label })), jsxs("div", { className: inputWrapperClassNames, children: [leftIcon && (jsx("span", { className: styles$9['input-icon-left'], "aria-hidden": "true", children: leftIcon })), multiline ? (jsx("textarea", { ref: ref, id: inputId, rows: rows, className: inputClassNames, disabled: disabled, ...ariaAttributes, ...props, ...textareaProps })) : (jsx("input", { ref: ref, type: type, id: inputId, className: inputClassNames, disabled: disabled, ...ariaAttributes, ...props })), rightIcon && (jsx("span", { className: styles$9['input-icon-right'], "aria-hidden": "true", children: rightIcon }))] }), label && labelPosition === 'right' && (jsx("label", { htmlFor: inputId, className: labelClassNames, children: label })), jsx(FieldMessage, { helperId: helperId, errorId: errorId, error: error, errorMessage: errorMessage, helperText: helperText, errorLiveRegion: errorLiveRegion, helperClassName: styles$9['helper-text'], errorClassName: styles$9['error-message'] })] }));
 });
 TextField.displayName = 'TextField';
 

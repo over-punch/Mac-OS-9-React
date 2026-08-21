@@ -1,6 +1,9 @@
 /* Radio Component Styles - Mac OS 9 */
 
 .wrapper {
+	/* Wraps so helper and error text drop onto their own line beneath the
+	 * control rather than sitting inline beside it. */
+	flex-wrap: wrap;
 	/* Wrapper container for radio and label */
 	display: inline-flex;
 	align-items: center;
@@ -235,4 +238,29 @@
 	flex-direction: row;
 	flex-wrap: wrap;
 	align-items: center;
+}
+
+/* ========================================
+ * Helper and error text
+ * ======================================== */
+
+.helper-text,
+.error-message {
+	flex-basis: 100%;
+	margin: var(--spacing-1) 0 0;
+	font-family: var(--font-system);
+	font-size: var(--font-size-xs);
+	line-height: var(--line-height-snug);
+}
+
+.helper-text {
+	color: var(--color-gray-600);
+}
+
+.error-message {
+	color: var(--color-error);
+}
+
+.error-message[hidden] {
+	display: none;
 }

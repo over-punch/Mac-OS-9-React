@@ -4,6 +4,7 @@
 import React, { forwardRef, InputHTMLAttributes, TextareaHTMLAttributes } from 'react';
 import { mergeClasses } from '../../utils/classNames';
 import { resolveAria } from '../../utils/aria';
+import { FieldMessage, describedBy, type ErrorLiveRegion } from '../FieldMessage';
 import styles from './TextField.module.css';
 
 export interface TextFieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'size'> {
@@ -115,7 +116,7 @@ export interface TextFieldProps extends Omit<InputHTMLAttributes<HTMLInputElemen
 	 *
 	 * @default 'polite'
 	 */
-	errorLiveRegion?: 'polite' | 'assertive' | 'off';
+	errorLiveRegion?: ErrorLiveRegion;
 
 	/**
 	 * Extra props forwarded to the underlying `<textarea>` when `multiline`
@@ -224,13 +225,14 @@ export const TextField = forwardRef<HTMLInputElement | HTMLTextAreaElement, Text
 		const errorId = `${inputId}-error`;
 
 		// Combine aria-describedby
-		const describedByIds = mergeClasses(
-			helperText && helperId,
-			error && errorMessage && errorId,
-			// The caller's own description is merged with the ids the component
-			// generates, rather than replacing them.
-			resolvedDescribedBy
-		);
+		const describedByIds = describedBy({
+			helperId,
+			errorId,
+			helperText,
+			error,
+			errorMessage,
+			callerDescribedBy: resolvedDescribedBy,
+		});
 
 		// Build class names
 		const wrapperClassNames = mergeClasses(
@@ -317,25 +319,16 @@ export const TextField = forwardRef<HTMLInputElement | HTMLTextAreaElement, Text
 					</label>
 				)}
 
-				{helperText && !error && (
-					<p id={helperId} className={styles['helper-text']}>
-						{helperText}
-					</p>
-				)}
-
-				{/* The live region is always mounted, not conditionally rendered.
-		    Assistive tech only announces changes to a region that already
-		    existed — inserting the region and its text at the same moment is
-		    frequently missed entirely. */}
-				<p
-					id={errorId}
-					className={styles['error-message']}
-					role={errorLiveRegion === 'off' ? undefined : 'status'}
-					aria-live={errorLiveRegion === 'off' ? undefined : errorLiveRegion}
-					hidden={!(error && errorMessage)}
-				>
-					{error && errorMessage ? errorMessage : null}
-				</p>
+				<FieldMessage
+					helperId={helperId}
+					errorId={errorId}
+					error={error}
+					errorMessage={errorMessage}
+					helperText={helperText}
+					errorLiveRegion={errorLiveRegion}
+					helperClassName={styles['helper-text']}
+					errorClassName={styles['error-message']}
+				/>
 			</div>
 		);
 	}

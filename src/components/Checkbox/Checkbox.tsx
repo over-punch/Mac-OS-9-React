@@ -4,6 +4,7 @@
 import React, { forwardRef, InputHTMLAttributes } from 'react';
 import { mergeClasses } from '../../utils/classNames';
 import { resolveAria } from '../../utils/aria';
+import { FieldMessage, describedBy, type ErrorLiveRegion } from '../FieldMessage';
 import styles from './Checkbox.module.css';
 
 export interface CheckboxProps extends Omit<
@@ -57,6 +58,25 @@ export interface CheckboxProps extends Omit<
 	 * @default false
 	 */
 	error?: boolean;
+
+	/**
+	 * What is wrong, shown beneath the control while `error` is true.
+	 *
+	 * The control previously had an `error` flag with nowhere to explain it,
+	 * so callers rendered their own text and wired `aria-describedby` by hand.
+	 */
+	errorMessage?: React.ReactNode;
+
+	/**
+	 * Guidance shown beneath the control while there is no error.
+	 */
+	helperText?: React.ReactNode;
+
+	/**
+	 * How politely the error is announced when it appears.
+	 * @default 'polite'
+	 */
+	errorLiveRegion?: ErrorLiveRegion;
 
 	/**
 	 * Accessible name, when there is no visible `label`.
@@ -132,6 +152,9 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
 			labelPosition = 'right',
 			size = 'md',
 			error = false,
+			errorMessage,
+			helperText,
+			errorLiveRegion = 'polite',
 			ariaLabel,
 			ariaDescribedBy,
 			'aria-label': ariaLabelAttr,
@@ -200,9 +223,19 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
 			ariaDescribedBy
 		);
 
+		const helperId = `${checkboxId}-helper`;
+		const errorId = `${checkboxId}-error`;
+
 		const ariaAttributes = {
 			'aria-label': !label ? resolvedLabel : undefined,
-			'aria-describedby': resolvedDescribedBy,
+			'aria-describedby': describedBy({
+				helperId,
+				errorId,
+				helperText,
+				error,
+				errorMessage,
+				callerDescribedBy: resolvedDescribedBy,
+			}),
 			'aria-invalid': error,
 		};
 
@@ -232,6 +265,17 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
 						{label}
 					</label>
 				)}
+
+				<FieldMessage
+					helperId={helperId}
+					errorId={errorId}
+					error={error}
+					errorMessage={errorMessage}
+					helperText={helperText}
+					errorLiveRegion={errorLiveRegion}
+					helperClassName={styles['helper-text']}
+					errorClassName={styles['error-message']}
+				/>
 			</div>
 		);
 	}

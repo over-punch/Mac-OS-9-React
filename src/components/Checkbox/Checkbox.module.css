@@ -4,6 +4,9 @@
 	/* Wrapper container for checkbox and label */
 	display: inline-flex;
 	align-items: center;
+	/* Wraps so helper and error text drop onto their own line beneath the
+	 * control rather than sitting inline beside it. */
+	flex-wrap: wrap;
 	gap: var(--spacing-2);
 	position: relative;
 	cursor: pointer;
@@ -236,4 +239,32 @@
 	.checkbox {
 		transition: none;
 	}
+}
+/* ========================================
+ * Helper and error text
+ * ======================================== */
+
+.helper-text,
+.error-message {
+	/* Sits beneath the control, spanning the full wrapper so it aligns with
+	 * the label rather than the box. */
+	grid-column: 1 / -1;
+	flex-basis: 100%;
+	margin: var(--spacing-1) 0 0;
+	font-family: var(--font-system);
+	font-size: var(--font-size-xs);
+	line-height: var(--line-height-snug);
+}
+
+.helper-text {
+	color: var(--color-gray-600);
+}
+
+.error-message {
+	color: var(--color-error);
+}
+
+/* Keep the hidden live region out of the layout entirely. */
+.error-message[hidden] {
+	display: none;
 }

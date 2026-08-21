@@ -11,6 +11,7 @@ import React, {
 	useState,
 } from 'react';
 import { resolveAria } from '../../utils/aria';
+import { FieldMessage, describedBy, type ErrorLiveRegion } from '../FieldMessage';
 import { mergeClasses } from '../../utils/classNames';
 import styles from './Radio.module.css';
 
@@ -70,6 +71,22 @@ export interface RadioProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 
 	 * @default false
 	 */
 	error?: boolean;
+
+	/**
+	 * What is wrong, shown beneath the control while `error` is true.
+	 */
+	errorMessage?: React.ReactNode;
+
+	/**
+	 * Guidance shown beneath the control while there is no error.
+	 */
+	helperText?: React.ReactNode;
+
+	/**
+	 * How politely the error is announced when it appears.
+	 * @default 'polite'
+	 */
+	errorLiveRegion?: ErrorLiveRegion;
 
 	/**
 	 * Accessible name, when there is no visible `label`.
@@ -140,6 +157,9 @@ export const Radio = forwardRef<HTMLInputElement, RadioProps>(
 			labelPosition = 'right',
 			size = 'md',
 			error = false,
+			errorMessage,
+			helperText,
+			errorLiveRegion = 'polite',
 			ariaLabel,
 			ariaDescribedBy,
 			'aria-label': ariaLabelAttr,
@@ -187,18 +207,28 @@ export const Radio = forwardRef<HTMLInputElement, RadioProps>(
 		const labelClassNames = mergeClasses(styles.label, styles[`label--${size}`]);
 
 		// ARIA attributes
+		const helperId = `${radioId}-helper`;
+		const errorId = `${radioId}-error`;
+
 		// Standard attributes win; the camelCase aliases warn once in development.
 		const ariaAttributes = {
 			'aria-label': !label
 				? resolveAria('Radio', 'aria-label', 'ariaLabel', ariaLabelAttr, ariaLabel)
 				: undefined,
-			'aria-describedby': resolveAria(
-				'Radio',
-				'aria-describedby',
-				'ariaDescribedBy',
-				ariaDescribedByAttr,
-				ariaDescribedBy
-			),
+			'aria-describedby': describedBy({
+				helperId,
+				errorId,
+				helperText,
+				error,
+				errorMessage,
+				callerDescribedBy: resolveAria(
+					'Radio',
+					'aria-describedby',
+					'ariaDescribedBy',
+					ariaDescribedByAttr,
+					ariaDescribedBy
+				),
+			}),
 			'aria-invalid': error,
 		};
 
@@ -230,6 +260,17 @@ export const Radio = forwardRef<HTMLInputElement, RadioProps>(
 						{label}
 					</label>
 				)}
+
+				<FieldMessage
+					helperId={helperId}
+					errorId={errorId}
+					error={error}
+					errorMessage={errorMessage}
+					helperText={helperText}
+					errorLiveRegion={errorLiveRegion}
+					helperClassName={styles['helper-text']}
+					errorClassName={styles['error-message']}
+				/>
 			</div>
 		);
 	}
@@ -393,12 +434,22 @@ export const RadioGroup = forwardRef<HTMLDivElement, RadioGroupProps>(
 			const nextIndex = (startIndex + direction + radios.length) % radios.length;
 			const target = radios[nextIndex];
 			if (!target) return;
+
 			target.focus();
-			// Selecting on arrow move matches the WAI-ARIA radiogroup pattern
-			// for automatic activation. The synthetic ChangeEvent piggybacks
-			// onto `change` so the consumer's onChange fires once.
-			target.checked = true;
-			target.dispatchEvent(new Event('change', { bubbles: true }));
+
+			// Report the change through the group's own handler rather than
+			// mutating `target.checked` and dispatching a native `change`.
+			//
+			// React does not derive a radio's onChange from a native change
+			// event — it detects the change from a click — so the dispatched
+			// event notified nobody, while the imperative `checked = true`
+			// desynced the DOM from React's controlled value until the next
+			// render put it back. Arrow-key selection simply did not reach the
+			// consumer.
+			//
+			// Selecting on move is the WAI-ARIA radiogroup pattern for
+			// automatic activation, which is what this implements.
+			handleChildChange(target.value);
 		};
 
 		const contextValue: RadioGroupContextValue = {
