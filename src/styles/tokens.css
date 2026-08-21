@@ -134,6 +134,7 @@
 	 * Mac OS 9 used smaller text (9-12pt typical)
 	 * Using rem units to enable responsive scaling
 	 * ======================================== */
+	--font-size-2xs: 0.5rem; /* 8px - glyph-only decoration, e.g. submenu arrows */
 	--font-size-xs: 0.5625rem; /* 9pt - smallest UI text (9px at 16px base) */
 	--font-size-sm: 0.625rem; /* 10pt - small labels (10px at 16px base) */
 	--font-size-md: 0.75rem; /* 12pt - standard UI text (12px at 16px base - Mac OS 9 default) */

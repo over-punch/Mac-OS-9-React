@@ -97,6 +97,7 @@ export const typography = {
 	// Values are rem so they scale with the responsive <html> font-size set by
 	// base.css. The px comments are the rendered size at a 16px root.
 	fontSize: {
+		'2xs': '0.5rem', // 8px  - glyph-only decoration
 		xs: '0.5625rem', // 9px  - smallest UI text
 		sm: '0.625rem', // 10px - small labels
 		md: '0.75rem', // 12px - standard UI text (Mac OS 9 default)

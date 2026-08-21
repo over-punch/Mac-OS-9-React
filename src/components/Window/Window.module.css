@@ -380,11 +380,11 @@
 /* High contrast mode */
 @media (prefers-contrast: high) {
 	.window {
-		border-width: 2px;
+		border-width: var(--border-width-medium);
 	}
 	
 	.controlButton {
-		border-width: 2px;
+		border-width: var(--border-width-medium);
 	}
 }
 

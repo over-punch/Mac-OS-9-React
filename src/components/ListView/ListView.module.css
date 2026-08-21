@@ -188,7 +188,7 @@
 /* High contrast mode support */
 @media (prefers-contrast: high) {
 	.listView {
-		border-width: 2px;
+		border-width: var(--border-width-medium);
 	}
 	
 	.row.selected {

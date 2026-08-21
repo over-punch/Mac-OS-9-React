@@ -220,7 +220,7 @@
 /* High contrast mode */
 @media (prefers-contrast: high) {
 	.menuBar {
-		border-width: 2px;
+		border-width: var(--border-width-medium);
 	}
 	
 	.menuButton:hover:not(.menuButton--disabled),
@@ -230,7 +230,7 @@
 	}
 	
 	.dropdown {
-		border-width: 2px;
+		border-width: var(--border-width-medium);
 	}
 }
 

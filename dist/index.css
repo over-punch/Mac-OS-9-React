@@ -413,6 +413,7 @@
 	 * Mac OS 9 used smaller text (9-12pt typical)
 	 * Using rem units to enable responsive scaling
 	 * ======================================== */
+	--font-size-2xs: 0.5rem; /* 8px - glyph-only decoration, e.g. submenu arrows */
 	--font-size-xs: 0.5625rem; /* 9pt - smallest UI text (9px at 16px base) */
 	--font-size-sm: 0.625rem; /* 10pt - small labels (10px at 16px base) */
 	--font-size-md: 0.75rem; /* 12pt - standard UI text (12px at 16px base - Mac OS 9 default) */
@@ -1924,7 +1925,7 @@ textarea.TextField-module_input {
 	display: inline-flex;
 	align-items: center;
 	justify-content: space-between;
-	gap: var(--spacing-2, 8px);
+	gap: var(--spacing-2);
 	text-align: left;
 	font: inherit;
 	
@@ -2108,8 +2109,8 @@ textarea.TextField-module_input {
 .Select-module_option {
 	display: flex;
 	align-items: center;
-	gap: var(--spacing-1, 4px);
-	padding: 2px var(--spacing-2, 8px);
+	gap: var(--spacing-1);
+	padding: var(--spacing-0_5) var(--spacing-2);
 	cursor: pointer;
 	white-space: nowrap;
 	user-select: none;
@@ -2142,7 +2143,7 @@ textarea.TextField-module_input {
 
 /* Group heading, replacing what <optgroup> drew for the native control. */
 .Select-module_optionGroupLabel {
-	padding: 2px var(--spacing-2, 8px);
+	padding: var(--spacing-0_5) var(--spacing-2);
 	font-weight: bold;
 	color: var(--color-text-secondary, #666666);
 	user-select: none;
@@ -3207,11 +3208,11 @@ textarea.TextField-module_input {
 /* High contrast mode */
 @media (prefers-contrast: high) {
 	.Window-module_window {
-		border-width: 2px;
+		border-width: var(--border-width-medium);
 	}
 	
 	.Window-module_controlButton {
-		border-width: 2px;
+		border-width: var(--border-width-medium);
 	}
 }
 
@@ -3391,7 +3392,7 @@ textarea.TextField-module_input {
 
 .MenuItem-module_submenuArrow {
 	/* Submenu indicator */
-	font-size: 8px;
+	font-size: var(--font-size-2xs);
 	margin-left: var(--spacing-1);
 }
 
@@ -3704,7 +3705,7 @@ textarea.TextField-module_input {
 /* High contrast mode */
 @media (prefers-contrast: high) {
 	.MenuBar-module_menuBar {
-		border-width: 2px;
+		border-width: var(--border-width-medium);
 	}
 	
 	.MenuBar-module_menuButton:hover:not(.MenuBar-module_menuButton--disabled),
@@ -3714,7 +3715,7 @@ textarea.TextField-module_input {
 	}
 	
 	.MenuBar-module_dropdown {
-		border-width: 2px;
+		border-width: var(--border-width-medium);
 	}
 }
 
@@ -3932,11 +3933,11 @@ textarea.TextField-module_input {
 /* High contrast mode support */
 @media (prefers-contrast: high) {
 	.Scrollbar-module_scrollbar {
-		border-width: 2px;
+		border-width: var(--border-width-medium);
 	}
 	
 	.Scrollbar-module_thumb {
-		border-width: 2px;
+		border-width: var(--border-width-medium);
 	}
 }
 
@@ -4136,7 +4137,7 @@ textarea.TextField-module_input {
 /* High contrast mode support */
 @media (prefers-contrast: high) {
 	.ListView-module_listView {
-		border-width: 2px;
+		border-width: var(--border-width-medium);
 	}
 	
 	.ListView-module_row.ListView-module_selected {

@@ -92,7 +92,7 @@
 	display: inline-flex;
 	align-items: center;
 	justify-content: space-between;
-	gap: var(--spacing-2, 8px);
+	gap: var(--spacing-2);
 	text-align: left;
 	font: inherit;
 	
@@ -276,8 +276,8 @@
 .option {
 	display: flex;
 	align-items: center;
-	gap: var(--spacing-1, 4px);
-	padding: 2px var(--spacing-2, 8px);
+	gap: var(--spacing-1);
+	padding: var(--spacing-0_5) var(--spacing-2);
 	cursor: pointer;
 	white-space: nowrap;
 	user-select: none;
@@ -310,7 +310,7 @@
 
 /* Group heading, replacing what <optgroup> drew for the native control. */
 .optionGroupLabel {
-	padding: 2px var(--spacing-2, 8px);
+	padding: var(--spacing-0_5) var(--spacing-2);
 	font-weight: bold;
 	color: var(--color-text-secondary, #666666);
 	user-select: none;

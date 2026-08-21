@@ -79,6 +79,27 @@ describe('component boundaries (WCAG 1.4.11)', () => {
 	});
 });
 
+describe('the spacing and size scales are not bypassed', () => {
+	const css = readFileSync(join(process.cwd(), 'src/styles/tokens.css'), 'utf-8');
+
+	it('declares every font size the components reference', () => {
+		// A component reaching for a size the scale does not define is how a
+		// hardcoded px literal gets reintroduced.
+		const declared = new Set([...css.matchAll(/^\t(--font-size-[\w-]+):/gm)].map((m) => m[1]));
+
+		for (const name of ['--font-size-2xs', '--font-size-xs', '--font-size-md']) {
+			expect(declared.has(name), `${name} is missing from tokens.css`).toBe(true);
+		}
+	});
+
+	it('declares the border widths the components reference', () => {
+		const declared = new Set([...css.matchAll(/^\t(--border-width-[\w-]+):/gm)].map((m) => m[1]));
+		for (const name of ['--border-width-thin', '--border-width-medium', '--border-width-thick']) {
+			expect(declared.has(name), `${name} is missing from tokens.css`).toBe(true);
+		}
+	});
+});
+
 describe('tokens.css and the TypeScript export agree', () => {
 	// The two are maintained side by side, and have drifted before (#17, #106).
 	// Vitest transforms import.meta.url to a non-file URL, so resolve from cwd.

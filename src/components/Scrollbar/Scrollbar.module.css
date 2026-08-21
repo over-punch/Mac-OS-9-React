@@ -202,11 +202,11 @@
 /* High contrast mode support */
 @media (prefers-contrast: high) {
 	.scrollbar {
-		border-width: 2px;
+		border-width: var(--border-width-medium);
 	}
 	
 	.thumb {
-		border-width: 2px;
+		border-width: var(--border-width-medium);
 	}
 }
 
