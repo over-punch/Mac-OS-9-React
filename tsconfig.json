@@ -24,10 +24,12 @@
 		"esModuleInterop": true,
 		"forceConsistentCasingInFileNames": true
 	},
-	// vitest.setup.ts is in the program so its `import
-	// '@testing-library/jest-dom/vitest'` augments Vitest's Assertion type —
-	// without it, every toBeInTheDocument in the suite is a type error.
-	"include": ["src", "vitest.setup.ts"],
+	// Rooted at src/ only. Pulling a root-level file into the program moves
+	// TypeScript's inferred common directory to the repo root, which relocates
+	// every emitted declaration and breaks the declaration bundle. The
+	// jest-dom type augmentation lives in src/types/testing-library.d.ts for
+	// that reason.
+	"include": ["src"],
 	// Tests are type-checked; stories are not. Storybook's own Meta<typeof T>
 	// helper cannot express the polymorphic Button, so including stories here
 	// produces hundreds of errors from the story framework rather than from
