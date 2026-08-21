@@ -89,6 +89,14 @@
  * Body (List Items)
  * ======================================== */
 
+.headerCell.sortable:focus-visible {
+	/* Sortable headers are keyboard-operable buttons, so they need a visible
+	 * focus indicator like every other control in the library. They had only
+	 * the user-agent default. */
+	outline: var(--border-width-thin) dotted var(--color-focus);
+	outline-offset: -2px;
+}
+
 .body {
 	/* Layout */
 	flex: 1 1 auto;

@@ -11,9 +11,11 @@ import { axe } from 'vitest-axe';
 /**
  * Runs axe against a container using the WCAG 2.1 A + AA rule sets.
  *
- * Colour contrast is disabled: jsdom does not compute layout or resolve CSS
- * custom properties, so every contrast result would be meaningless. Contrast
- * against the palette is checked in the token tests instead.
+ * Colour contrast is disabled here: jsdom performs no layout and resolves no
+ * CSS custom properties, so every contrast result would be meaningless.
+ * Contrast is checked against the token values instead, in
+ * `src/tokens/contrast.test.ts` — which is also where a regression would
+ * originate.
  */
 export async function checkA11y(container: Element) {
 	return axe(container, {

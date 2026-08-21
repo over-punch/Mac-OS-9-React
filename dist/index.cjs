@@ -3740,7 +3740,7 @@ function ListViewInner({ columns, items, selectedIds = [], onSelectionChange, on
      * selection the same way Shift-click does.
      */
     const handleRowKeyDown = React.useCallback((item, index, event) => {
-        const { items: liveItems, onSelectionChange: liveOnChange, onItemOpen: liveOnOpen } = latestRef.current;
+        const { items: liveItems, onSelectionChange: liveOnChange, onItemOpen: liveOnOpen, } = latestRef.current;
         const move = (nextIndex) => {
             event.preventDefault();
             const clamped = Math.max(0, Math.min(liveItems.length - 1, nextIndex));
@@ -3823,10 +3823,20 @@ function ListViewInner({ columns, items, selectedIds = [], onSelectionChange, on
                         style: columnStyles[columnIndex] ?? {},
                         onClick: () => handleColumnClick(column.key, column.sortable),
                         // A sortable header is a control, so it must be reachable and
-                        // operable from the keyboard and expose its sort state.
+                        // operable from the keyboard.
+                        //
+                        // Sort state goes into the accessible name rather than
+                        // `aria-sort`: that attribute is only valid on
+                        // columnheader, rowheader and row, and these headers are
+                        // buttons in a flex strip, not table cells. On a button it
+                        // is invalid ARIA and is announced to nobody.
                         role: sortable ? 'button' : undefined,
                         tabIndex: sortable ? 0 : undefined,
-                        'aria-sort': isSorted ? (sortDirection === 'asc' ? 'ascending' : 'descending') : undefined,
+                        'aria-label': sortable
+                            ? isSorted
+                                ? `${column.label}, sorted ${sortDirection === 'asc' ? 'ascending' : 'descending'}`
+                                : `${column.label}, sortable`
+                            : undefined,
                         onKeyDown: sortable
                             ? (event) => {
                                 if (event.key !== 'Enter' && event.key !== ' ')

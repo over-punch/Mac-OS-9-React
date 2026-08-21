@@ -2,6 +2,7 @@
 
 A pixel-perfect Mac OS 9 UI component library for React and TypeScript. Bring authentic retro Mac OS 9 styling to your web applications with accessible, well-typed components.
 
+[![CI](https://github.com/Liiift-Studio/Mac-OS-9-React/actions/workflows/ci.yml/badge.svg)](https://github.com/Liiift-Studio/Mac-OS-9-React/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/@liiift-studio/mac-os9-ui.svg)](https://www.npmjs.com/package/@liiift-studio/mac-os9-ui)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![React 18 | 19](https://img.shields.io/badge/React-18%20%7C%2019-149eca.svg)](#compatibility-and-footprint)
@@ -9,7 +10,7 @@ A pixel-perfect Mac OS 9 UI component library for React and TypeScript. Bring au
 
 **[Live site](https://liiift-studio.github.io/Mac-OS-9-React/)** · **[Storybook](https://liiift-studio.github.io/Mac-OS-9-React/storybook/)** · **[npm](https://www.npmjs.com/package/@liiift-studio/mac-os9-ui)** · **[Changelog](./CHANGELOG.md)**
 
-[![The Mac OS 9 UI landing site: a beige CRT monitor on a dark background, its screen showing a Mac OS 9 desktop with a menu bar and a window](https://raw.githubusercontent.com/Liiift-Studio/Mac-OS-9-React/main/assets/hero.png?v=1)](https://liiift-studio.github.io/Mac-OS-9-React/)
+![A Preferences window with tabs, a text field, a dropdown and checkboxes, beside windows showing button variants, sizes, icon and loading states, and a radio group](https://raw.githubusercontent.com/Liiift-Studio/Mac-OS-9-React/main/assets/components.png?v=1)
 
 ```bash
 npm install @liiift-studio/mac-os9-ui
@@ -33,27 +34,21 @@ import { Window, Button } from '@liiift-studio/mac-os9-ui';
 - 🪶 **No runtime dependencies** - React and React DOM are the only peers
 - 🎚️ **Themeable** - every value is a CSS custom property, in three tiers
 - 📖 **Storybook Docs** - [browse every component](https://liiift-studio.github.io/Mac-OS-9-React/storybook/), interactively
-- 🧪 **Tested** - 220 tests, including an axe accessibility sweep over every exported component
+- 🧪 **Tested** - 247 tests, including an axe sweep over every rendering component and WCAG contrast assertions on the palette
 
 ![A Mac OS 9 menu bar with the File menu open showing New Folder, Open, Print and a checked Get Info item, beside a Macintosh HD window containing a sortable file list](https://raw.githubusercontent.com/Liiift-Studio/Mac-OS-9-React/main/assets/window.png?v=1)
-
-## Installation
-
-```bash
-npm install @liiift-studio/mac-os9-ui
-```
 
 ## Compatibility and footprint
 
 | | |
 |---|---|
-| **React** | 18 or 19 (`react` and `react-dom` are peer dependencies) |
+| **React** | 18 or 19 — both are exercised by the test matrix in CI (`react` and `react-dom` are peer dependencies) |
 | **Runtime dependencies** | None |
 | **Module formats** | ESM (`dist/index.js`) and CommonJS (`dist/index.cjs`) |
 | **Bundle** | 186 KB ESM, 46 KB gzipped |
 | **Stylesheet** | 100 KB, 17 KB gzipped |
-| **Fonts** | 148 KB (12 files: Pixel Operator, woff2 + woff) |
-| **Published tarball** | 269 KB |
+| **Fonts** | 111 KB (12 files: Pixel Operator, woff2 + woff) |
+| **Published tarball** | 283 kB (830 kB unpacked, 25 files) |
 | **Types** | Bundled `.d.ts` and `.d.cts` |
 
 ### Server components and `'use client'`
@@ -76,29 +71,16 @@ import '@liiift-studio/mac-os9-ui/styles';
 you don't import. There are no deep subpath entry points — everything comes
 from the package root.
 
-## Quick Start
+## The demo is the library
 
-Import the styles once in your application's entry point, then use the components:
+The [landing site](https://liiift-studio.github.io/Mac-OS-9-React/) is built out
+of these components — the windows are `Window`, the component index is a
+`ListView`, the controls are the real form controls. Scroll and it zooms into
+the machine.
 
-```tsx
-// In your app's main file (e.g., main.tsx, _app.tsx, app/layout.tsx)
-import '@liiift-studio/mac-os9-ui/styles';
-import { Button, Window } from '@liiift-studio/mac-os9-ui';
-
-function App() {
-	return (
-		<Window title="My Application">
-			<div style={{ padding: '16px' }}>
-				<Button variant="primary">Click Me</Button>
-			</div>
-		</Window>
-	);
-}
-```
+[![The Mac OS 9 UI landing site: a beige CRT monitor on a dark background, its screen showing a Mac OS 9 desktop with a menu bar and a window](https://raw.githubusercontent.com/Liiift-Studio/Mac-OS-9-React/main/assets/hero.png?v=1)](https://liiift-studio.github.io/Mac-OS-9-React/)
 
 ## Components
-
-![A Preferences window with tabs, a text field, a dropdown and checkboxes, beside windows showing button variants, sizes, icon and loading states, and a radio group](https://raw.githubusercontent.com/Liiift-Studio/Mac-OS-9-React/main/assets/components.png?v=1)
 
 ### Form Controls
 - **Button** - Classic Mac OS 9 buttons. Variants `default` / `primary` / `danger`, sizes `sm` / `md` / `lg`, `loading`, `leftIcon` / `rightIcon`, `iconOnly`, and polymorphism via `as="a"` or [`asChild`](#router-links-with-aschild)
@@ -122,7 +104,7 @@ function App() {
 
 ### Content
 - **Icon** - Wrapper giving any SVG consistent sizing
-- **IconLibrary** - 38 bundled icons, addressed by name
+- **IconLibrary** - 39 bundled icons, addressed by name
 - **createPixelIcon** - Build your own icons from a character map, in the same style
 
 ### Utilities and hooks
@@ -131,7 +113,7 @@ function App() {
 - **useMenuPosition** - Keep a dropdown inside the viewport
 - **tokens** - Every design token, readable from JavaScript
 
-![Thirty-eight pixel-art icons on a Mac OS 9 desktop background, each labelled with its registry name: close, trash, search, folder, document, disk, arrows, alerts, media controls and more](https://raw.githubusercontent.com/Liiift-Studio/Mac-OS-9-React/main/assets/icons.png?v=1)
+![Thirty-nine pixel-art icons on a Mac OS 9 desktop background, each labelled with its registry name: close, trash, search, folder, document, disk, arrows, alerts, media controls and more](https://raw.githubusercontent.com/Liiift-Studio/Mac-OS-9-React/main/assets/icons.png?v=1)
 
 ```tsx
 import { IconLibrary, getAllIconNames } from '@liiift-studio/mac-os9-ui';
@@ -244,7 +226,8 @@ function MyForm() {
 
 			{/* Select reports through `onValueChange`, which receives the value
 			    itself rather than a DOM event — it is a listbox, not a native
-			    <select>. */}
+			    <select>. NOTE: unreleased; 0.3.3 still takes `onChange`. See
+			    Versioning below. */}
 			<Select
 				label="Choose an option"
 				value={selected}
@@ -448,8 +431,8 @@ font-src  'self' https://fonts.gstatic.com;
 The components target WCAG 2.1 AA. Being specific about what that means here,
 because "compliant" on its own is not a checkable claim:
 
-**What is verified automatically.** Every exported component is rendered in a
-realistic configuration and scanned against the `wcag2a`, `wcag2aa`, `wcag21a`
+**What is verified automatically.** Every component that renders chrome is
+rendered in a realistic configuration and scanned against the `wcag2a`, `wcag2aa`, `wcag21a`
 and `wcag21aa` axe-core rule sets on every test run — 28 configurations in
 [`src/test/a11y.test.tsx`](./src/test/a11y.test.tsx), all clean. Dialog,
 Window, Tabs, MenuBar, ListView, TextField and Button additionally have
@@ -459,11 +442,18 @@ keyboard and focus test suites.
 criteria. This library has not had a manual audit or screen-reader testing.
 Treat the axe sweep as a floor, not a certificate.
 
-**Colour contrast is not verified.** The rule is disabled in the automated run,
-because jsdom resolves no CSS custom properties and every result would be
-meaningless. The Mac OS 9 palette is low-contrast by design — grey-on-grey
-chrome is the aesthetic. **Validate contrast against your own requirements**,
-and retarget the [tokens](#theming) if you need more.
+**Colour contrast is checked at the token level.** axe's contrast rule is
+disabled in the component sweep, because jsdom performs no layout and resolves
+no CSS custom properties, so every result there would be meaningless. Contrast
+is asserted directly against the palette instead, in
+[`src/tokens/contrast.test.ts`](./src/tokens/contrast.test.ts): every
+text-bearing pair meets AA for normal text, and borders and the focus ring meet
+the 3:1 non-text threshold. That file also pins `tokens.css` and the TypeScript
+token export to the same values, which have drifted apart before.
+
+What that does **not** cover is your own content on these surfaces, or any
+palette you retarget to. The Mac OS 9 look is low-contrast by nature, so if you
+override the [tokens](#theming), re-check the pairs you changed.
 
 **What you get.** Dialog traps focus, restores it, stacks, and locks scroll
 without layout shift. Window drags and resizes with the arrow keys
@@ -513,6 +503,12 @@ interface FileRow extends ListItem {
 
 This package is pre-1.0 (currently `0.3.x`). Minor versions may contain
 breaking changes; they are listed in the [changelog](./CHANGELOG.md).
+
+> **This README documents `main`, not the published version.** The latest
+> release on npm is `0.3.3`. Changes described under *Migrating to the next
+> release* below — most visibly the new `Select` — are on `main` and are not in
+> `0.3.3` yet. If you install today, `Select` is still the native control with
+> an `onChange` handler. Everything else in this README applies to both.
 
 ### Migrating to the next release
 

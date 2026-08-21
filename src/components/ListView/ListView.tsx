@@ -160,7 +160,8 @@ export interface HeaderCellDefaultProps {
 	/** Present on sortable columns, which behave as buttons. */
 	role?: 'button';
 	tabIndex?: number;
-	'aria-sort'?: 'ascending' | 'descending';
+	/** Column label plus sort state; aria-sort is not valid on a button. */
+	'aria-label'?: string;
 	onKeyDown?: (event: React.KeyboardEvent) => void;
 	'data-column': string;
 	'data-sortable': boolean;
@@ -843,13 +844,19 @@ function ListViewInner<TItem extends ListItem = ListItem>(
 						style: columnStyles[columnIndex] ?? {},
 						onClick: () => handleColumnClick(column.key, column.sortable),
 						// A sortable header is a control, so it must be reachable and
-						// operable from the keyboard and expose its sort state.
+						// operable from the keyboard.
+						//
+						// Sort state goes into the accessible name rather than
+						// `aria-sort`: that attribute is only valid on
+						// columnheader, rowheader and row, and these headers are
+						// buttons in a flex strip, not table cells. On a button it
+						// is invalid ARIA and is announced to nobody.
 						role: sortable ? 'button' : undefined,
 						tabIndex: sortable ? 0 : undefined,
-						'aria-sort': isSorted
-							? sortDirection === 'asc'
-								? 'ascending'
-								: 'descending'
+						'aria-label': sortable
+							? isSorted
+								? `${column.label}, sorted ${sortDirection === 'asc' ? 'ascending' : 'descending'}`
+								: `${column.label}, sortable`
 							: undefined,
 						onKeyDown: sortable
 							? (event: React.KeyboardEvent) => {

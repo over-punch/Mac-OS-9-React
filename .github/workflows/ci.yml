@@ -1,0 +1,74 @@
+name: CI
+
+# Runs on every push and pull request. Before this existed nothing verified a
+# change until it was already on main, and React 19 support was asserted in
+# package.json without ever being exercised — the matrix below is what turns
+# that peer range into a tested claim.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Lint, typecheck, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build
+
+      - name: Build landing site
+        run: npm run site:build
+
+  test:
+    name: Test on React ${{ matrix.react }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        react: ['18', '19']
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+
+      # The lockfile pins React 18 for development. This installs the other
+      # supported major over the top so the peer range in package.json is
+      # actually exercised rather than taken on trust.
+      - name: Install React ${{ matrix.react }}
+        if: matrix.react != '18'
+        run: |
+          npm install --no-save --legacy-peer-deps \
+            react@^${{ matrix.react }} \
+            react-dom@^${{ matrix.react }} \
+            @types/react@^${{ matrix.react }} \
+            @types/react-dom@^${{ matrix.react }}
+
+      - name: Test
+        run: npm test

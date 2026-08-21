@@ -2112,7 +2112,8 @@ interface HeaderCellDefaultProps {
     /** Present on sortable columns, which behave as buttons. */
     role?: 'button';
     tabIndex?: number;
-    'aria-sort'?: 'ascending' | 'descending';
+    /** Column label plus sort state; aria-sort is not valid on a button. */
+    'aria-label'?: string;
     onKeyDown?: (event: React__default.KeyboardEvent) => void;
     'data-column': string;
     'data-sortable': boolean;

@@ -113,7 +113,15 @@ export default [
 			copy({
 				targets: [
 					{
+						// The licence travels with the font files, as
+						// src/fonts/README.md says it does. It was not being
+						// copied, so the published package redistributed the
+						// typeface with its licence left behind in src/.
 						src: 'src/fonts/Pixel/**/*.{woff,woff2}',
+						dest: 'dist',
+					},
+					{
+						src: 'src/fonts/Pixel/LICENSE.txt',
 						dest: 'dist',
 					},
 					{

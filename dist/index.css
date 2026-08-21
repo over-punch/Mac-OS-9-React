@@ -4259,6 +4259,14 @@ textarea.TextField-module_input {
  * Body (List Items)
  * ======================================== */
 
+.ListView-module_headerCell.ListView-module_sortable:focus-visible {
+	/* Sortable headers are keyboard-operable buttons, so they need a visible
+	 * focus indicator like every other control in the library. They had only
+	 * the user-agent default. */
+	outline: var(--border-width-thin) dotted var(--color-focus);
+	outline-offset: -2px;
+}
+
 .ListView-module_body {
 	/* Layout */
 	flex: 1 1 auto;

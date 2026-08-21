@@ -367,15 +367,17 @@ describe('ListView', () => {
 			const onSort = vi.fn();
 			render(<ListView columns={columns} items={items} onSort={onSort} />);
 
-			const header = screen.getByRole('button', { name: /Name/ });
+			const header = screen.getByRole('button', { name: 'Name, sortable' });
 			expect(header).toHaveAttribute('tabindex', '0');
 
 			fireEvent.keyDown(header, { key: 'Enter' });
 			expect(onSort).toHaveBeenCalledWith('name', 'asc');
-			expect(screen.getByRole('button', { name: /Name/ })).toHaveAttribute(
-				'aria-sort',
-				'ascending'
-			);
+
+			// Sort state is carried by the accessible name. aria-sort is only
+			// valid on columnheader/rowheader/row, and these headers are
+			// buttons — setting it there would be invalid ARIA.
+			expect(screen.getByRole('button', { name: 'Name, sorted ascending' })).toBeInTheDocument();
+			expect(screen.getByRole('button', { name: /Name/ })).not.toHaveAttribute('aria-sort');
 		});
 
 		it('does not make an unsortable header a control', () => {
