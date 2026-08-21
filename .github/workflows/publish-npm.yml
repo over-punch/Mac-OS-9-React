@@ -11,30 +11,62 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
-    
-    # Only run if version has changed (or manual trigger)
-    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, 'version') || contains(github.event.head_commit.message, 'release')
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          # jsdom 29 requires Node 20 or newer. On 18 the test run died inside
+          # jsdom's dependency chain — a require() of an ES module — which
+          # failed this workflow for reasons that had nothing to do with the
+          # package being published.
+          node-version: '20'
           registry-url: 'https://registry.npmjs.org'
-      
+
+      # Whether to publish is decided by comparing the manifest version to what
+      # is actually on the registry. The previous condition matched the words
+      # "version" or "release" anywhere in the commit message, which would
+      # eventually publish a commit that merely mentioned them, and skip a real
+      # release whose message did not.
+      - name: Check whether this version is already published
+        id: check
+        run: |
+          NAME=$(node -p "require('./package.json').name")
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          if npm view "$NAME@$VERSION" version >/dev/null 2>&1; then
+            echo "$NAME@$VERSION is already on npm — nothing to publish."
+            echo "should_publish=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "$NAME@$VERSION is not on npm — will publish."
+            echo "should_publish=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Install dependencies
+        if: steps.check.outputs.should_publish == 'true'
         run: npm ci
-      
+
       - name: Run tests
+        if: steps.check.outputs.should_publish == 'true'
         run: npm test
-      
+
       - name: Build package
+        if: steps.check.outputs.should_publish == 'true'
         run: npm run build
-      
+
       - name: Publish to npm
+        if: steps.check.outputs.should_publish == 'true'
         run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Summary
+        run: |
+          if [ "${{ steps.check.outputs.should_publish }}" = "true" ]; then
+            echo "Published ${{ steps.check.outputs.version }}" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Skipped: ${{ steps.check.outputs.version }} is already on npm." >> "$GITHUB_STEP_SUMMARY"
+          fi
