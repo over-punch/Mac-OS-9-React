@@ -30,8 +30,6 @@ export type DesktopSection =
 	| 'whatsnew';
 
 export interface DesktopMenuBarProps {
-	/** Renders the smaller bar used inside the machine's screen. */
-	compact?: boolean;
 	/** The flavour currently applied, so the menu can tick it. */
 	flavour?: Flavour;
 	/** Called when a flavour is picked. */
@@ -46,7 +44,6 @@ export interface DesktopMenuBarProps {
 
 /** The menu bar shown across the top of the desktop. */
 export function DesktopMenuBar({
-	compact = false,
 	flavour,
 	onFlavourChange,
 	onRestoreWindows,
@@ -113,7 +110,7 @@ export function DesktopMenuBar({
 
 	return (
 		<MenuBar
-			className={compact ? 'desktopMenuBar desktopMenuBar--compact' : 'desktopMenuBar'}
+			className="desktopMenuBar"
 			menus={menus}
 			leftContent={
 				<span className="desktopMenuBar__logo" aria-hidden="true">

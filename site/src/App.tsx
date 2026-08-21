@@ -1,14 +1,15 @@
 // The site: a Mac OS 9 machine you scroll into.
 //
 // The hero frames the whole computer with copy above and below. Scrolling
-// zooms into the screen until it fills the viewport, at which point the
-// desktop section takes over — same menu bar, same wallpaper, so the seam
-// doesn't read.
+// zooms in until the screen is the viewport — at which point the desktop
+// inside it is at 1:1 and becomes interactive.
+//
+// There is exactly one desktop. It lives inside the machine's screen from the
+// first frame, so what you scroll toward is the thing itself rather than a
+// mock-up of it, and there is no second copy underneath to hand off to.
 
 import { Machine } from './components/Machine';
 import { ZoomStage } from './components/ZoomStage';
-import { DesktopMenuBar } from './components/DesktopChrome';
-import { Inert } from './components/Inert';
 import { Desktop } from './sections/Desktop';
 
 export function App() {
@@ -32,8 +33,8 @@ export function App() {
 				below={
 					<>
 						<p className="heroSub">
-							Sixteen typed, keyboard-operable components. Everything below lives inside the
-							machine.
+							Sixteen typed, keyboard-operable components. The desktop in the screen is the real
+							thing — scroll in and use it.
 						</p>
 						<p className="scrollHint" aria-hidden="true">
 							Scroll to boot
@@ -42,38 +43,14 @@ export function App() {
 				}
 			>
 				<Machine>
-					{/* A still of the desktop, so the zoom lands on something
-					    identical to the section that follows it. */}
-					<Inert className="screenPreview">
-						<DesktopMenuBar compact />
-						<div className="screenPreview__surface">
-							<div className="screenPreview__window">
-								<div className="screenPreview__titleBar">
-									<span className="screenPreview__close" />
-									<span className="screenPreview__title">About This Library</span>
-								</div>
-								<div className="screenPreview__body">
-									<span className="screenPreview__line screenPreview__line--head" />
-									<span className="screenPreview__line" />
-									<span className="screenPreview__line" />
-									<span className="screenPreview__line screenPreview__line--short" />
-									<span className="screenPreview__buttons">
-										<span className="screenPreview__button" />
-										<span className="screenPreview__button" />
-									</span>
-								</div>
-							</div>
-							<div className="screenPreview__icons">
-								<span className="screenPreview__icon" />
-								<span className="screenPreview__icon" />
-								<span className="screenPreview__icon" />
-							</div>
-						</div>
-					</Inert>
+					{/* Laid out at exactly viewport size, so when the zoom reaches
+					    scale 1 this is the page rather than a magnified copy of it.
+					    ZoomStage marks it inert until then. */}
+					<div className="machineScreen__live">
+						<Desktop />
+					</div>
 				</Machine>
 			</ZoomStage>
-
-			<Desktop />
 		</>
 	);
 }

@@ -1,21 +1,26 @@
 // Scroll-driven zoom into the machine's screen, plus a pointer-following tilt.
 //
-// The hero shows the whole computer with copy above and below it. It turns
-// slightly to face the cursor, the way a thing on a desk would if you leaned
-// to look at it. As you scroll, the tilt unwinds and the machine scales up
-// about the centre of its screen until the screen fills the viewport — at
-// which point the page hands off to the desktop section, which is styled to
-// continue seamlessly from it.
+// The screen holds the real, live desktop — not a picture of one. That decides
+// the whole design here: the machine is laid out at the size it will be when
+// the zoom finishes, so its screen is exactly viewport-sized and the desktop
+// inside it is at 1:1. The hero then scales the machine DOWN to fit, and
+// scrolling runs that scale back up to 1.
+//
+// Doing it the other way round — laying the machine out small and scaling it
+// up — is what forced the old version to show a mock-up: at hero size the
+// screen was 560px wide, so anything real inside it would have been laid out
+// for a 560px viewport and then magnified sixfold.
+//
+// Because the scale lands on exactly 1, nothing is magnified at the end. The
+// desktop is simply the page, at its natural size, and becomes interactive.
+// There is no second copy below to scroll into, and no seam.
 //
 // Implementation notes:
-//  - The scale target is computed from the real measured screen rect rather
-//    than hardcoded, so it lands exactly edge-to-edge at any viewport size.
 //  - Zoom and tilt are written by the same rAF loop, to two nested elements.
 //    Two independent writers on nested transforms is how you get jitter.
-//  - Progress and pointer are read in rAF-throttled listeners and written to
-//    transforms and CSS custom properties, so the animation runs off
-//    compositor-friendly transforms and React never re-renders during it.
-//  - `prefers-reduced-motion` skips both the zoom and the tilt.
+//  - The desktop is `inert` until the zoom completes, so a keyboard user can
+//    never land on a control inside a machine that is 30% of its final size.
+//  - `prefers-reduced-motion` skips straight to the desktop: no zoom, no tilt.
 
 import { useEffect, useRef, type ReactNode } from 'react';
 
@@ -39,120 +44,149 @@ export function ZoomStage({ above, below, children }: ZoomStageProps) {
 
 		const machine = stage.querySelector<HTMLElement>('.zoomMachine');
 		const tilt = stage.querySelector<HTMLElement>('.machine');
-		const screen = stage.querySelector<HTMLElement>('.machine__screen');
-		if (!machine || !tilt || !screen) return;
+		const live = stage.querySelector<HTMLElement>('.machineScreen__live');
+		const above = stage.querySelector<HTMLElement>('.zoomCopy--above');
+		const below = stage.querySelector<HTMLElement>('.zoomCopy--below');
+		if (!machine || !tilt || !live || !above || !below) return;
 
-		// The pending frame is local to this effect run, not a ref shared across
-		// them. Under StrictMode the effect mounts, tears down and mounts again:
-		// a shared ref still holding the first run's cancelled frame id makes
-		// the second run's scheduler think a frame is already pending, and the
-		// loop never starts again.
+		// The pending frame is local to this effect run, not a ref shared
+		// across them: under StrictMode a shared ref still holding the first
+		// run's cancelled id makes the second run think a frame is pending.
 		let frame: number | null = null;
 
 		const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
 		// Only pointers that hover — a touch "pointer" is wherever the last tap
-		// landed, so following it would snap the machine around on every tap
-		// rather than track anything.
+		// landed, so following it would snap the machine around on every tap.
 		const canHover = window.matchMedia('(hover: hover) and (pointer: fine)');
 
-		// Geometry measured at rest, re-measured only on resize. Measuring
-		// every frame would feed the element's own transform back into the
-		// calculation.
-		let natural = { width: 1, height: 1, centerX: 0, centerY: 0, originX: 0, originY: 0 };
-
-		// Tilt in degrees: where the pointer asks the machine to face, and
-		// where it is actually facing this frame. The gap between them is what
-		// makes the movement read as weight rather than as a cursor readout.
 		const target = { x: 0, y: 0 };
 		const current = { x: 0, y: 0 };
 
+		// Whether the desktop is currently reachable. `null` rather than false
+		// so the first setReleased(false) actually applies the attributes — the
+		// no-op guard below would otherwise skip it and leave the hero's
+		// desktop tabbable while it is 27% of its final size.
+		let released: boolean | null = null;
+
+		// Geometry measured at rest, re-measured only on resize.
+		let natural = {
+			originX: 0,
+			originY: 0,
+			offsetX: 0,
+			offsetY: 0,
+			heroScale: 0.27,
+			heroTop: 0,
+		};
+
 		const measure = () => {
-			// Clear the transforms so the rects describe the untransformed layout.
 			machine.style.transform = 'none';
 			tilt.style.setProperty('--tilt-x', '0deg');
 			tilt.style.setProperty('--tilt-y', '0deg');
 
-			const stageRect = stage.getBoundingClientRect();
 			const machineRect = machine.getBoundingClientRect();
-			const screenRect = screen.getBoundingClientRect();
+			const liveRect = live.getBoundingClientRect();
+
+			// Fit the machine into whatever room the copy leaves, rather than
+			// trusting a constant. A fixed hero scale looks right at one
+			// viewport and collides with the headline at another — which is
+			// exactly what happened on the 1200x630 social card.
+			const gapTop = above.getBoundingClientRect().bottom + HERO_GUTTER;
+			const gapBottom = below.getBoundingClientRect().top - HERO_GUTTER;
+			const gapHeight = Math.max(gapBottom - gapTop, 1);
+
+			const heroScale = clamp(
+				Math.min(gapHeight / machineRect.height, (window.innerWidth * 0.92) / machineRect.width),
+				HERO_SCALE_MIN,
+				HERO_SCALE_MAX
+			);
 
 			natural = {
-				width: screenRect.width,
-				height: screenRect.height,
-				// Screen centre relative to the stage, which is pinned at the top
-				// of the viewport for the whole sticky phase — so this stays valid
-				// however far the page is scrolled.
-				centerX: screenRect.left - stageRect.left + screenRect.width / 2,
-				centerY: screenRect.top - stageRect.top + screenRect.height / 2,
-				// Screen centre within the machine box, used as the scale origin so
-				// the screen stays put while everything around it grows away.
-				originX: screenRect.left - machineRect.left + screenRect.width / 2,
-				originY: screenRect.top - machineRect.top + screenRect.height / 2,
+				// Scale about the top-centre of the live desktop, so that point
+				// is the one thing that does not move as the machine grows.
+				originX: liveRect.left - machineRect.left + liveRect.width / 2,
+				originY: liveRect.top - machineRect.top,
+				// Where that point sits in the viewport at rest, which is what
+				// the translation has to cancel out at full zoom.
+				offsetX: liveRect.left + liveRect.width / 2,
+				offsetY: liveRect.top,
+				heroScale,
+				// Centre the scaled machine in the gap. The transform origin is
+				// the live desktop's top-centre, so this is where that point has
+				// to land for the machine's box to sit where we want it.
+				heroTop: gapTop + (gapHeight - machineRect.height * heroScale) / 2,
 			};
 
 			machine.style.transformOrigin = `${natural.originX}px ${natural.originY}px`;
+		};
+
+		/** Make the desktop reachable, or take it back out of reach. */
+		const setReleased = (next: boolean) => {
+			if (next === released) return;
+			released = next;
+			stage.dataset.released = next ? 'true' : 'false';
+			if (next) {
+				live.removeAttribute('inert');
+				live.removeAttribute('aria-hidden');
+			} else {
+				// Set through the DOM rather than as a JSX prop because React 18
+				// does not recognise `inert` as a known attribute.
+				live.setAttribute('inert', '');
+				live.setAttribute('aria-hidden', 'true');
+			}
 		};
 
 		const apply = () => {
 			frame = null;
 
 			if (reduceMotion.matches) {
-				stage.style.setProperty('--zoom-progress', '0');
+				stage.style.setProperty('--zoom-progress', '1');
 				machine.style.transform = 'none';
 				tilt.style.setProperty('--tilt-x', '0deg');
 				tilt.style.setProperty('--tilt-y', '0deg');
+				setReleased(true);
 				return;
 			}
 
 			const rect = track.getBoundingClientRect();
 			const scrollable = rect.height - window.innerHeight;
 			const raw = scrollable <= 0 ? 0 : clamp(-rect.top / scrollable, 0, 1);
-
-			// The zoom finishes before the track does, leaving the last stretch
-			// fully zoomed. Without that dwell the screen only reaches full
-			// bleed at exactly progress 1, which a real scroll rarely lands on —
-			// so a sliver of bezel stayed visible at the handoff.
 			const progress = clamp(raw / ZOOM_COMPLETE_AT, 0, 1);
 
-			// Ease so the zoom starts gently and accelerates into the screen.
+			// Ease so the zoom starts gently and accelerates in.
 			const eased = progress * progress;
 
-			// Scale at which the screen covers the viewport in both axes, with a
-			// little overscan so no seam shows at the edges.
-			const fill =
-				Math.max(window.innerWidth / natural.width, window.innerHeight / natural.height) * OVERSCAN;
-			const scale = 1 + eased * (fill - 1);
+			// The machine is laid out at full size and shrunk to fit the hero,
+			// so the scale runs heroScale -> 1 rather than 1 -> something.
+			const scale = natural.heroScale + eased * (1 - natural.heroScale);
 
-			// Scaling is about the screen's own centre, so that point stays put.
-			// Horizontally the screen eases to the middle of the viewport;
-			// vertically its TOP edge eases to the top of the viewport rather
-			// than its centre — the screen ends up taller than the viewport, and
-			// cropping the bottom keeps the menu bar visible and lines the screen
-			// up with the desktop section that follows.
-			const scaledHeight = natural.height * scale;
-			const dx = (window.innerWidth / 2 - natural.centerX) * eased;
-			const dy = (scaledHeight / 2 - natural.centerY) * eased;
+			// The machine is out of flow, so both ends of the journey are set
+			// here. The live desktop's top-centre starts at the hero anchor and
+			// finishes at the top centre of the viewport — where, at scale 1,
+			// the desktop is exactly the page.
+			const heroY = natural.heroTop + natural.originY * natural.heroScale;
+			const dx = window.innerWidth / 2 - natural.offsetX;
+			const dy = heroY - natural.offsetY - heroY * eased;
 
 			stage.style.setProperty('--zoom-progress', String(progress));
 			machine.style.transform = `translate(${dx}px, ${dy}px) scale(${scale})`;
 
-			// The tilt is a hero-only flourish: it unwinds over the first part
-			// of the scroll so the machine is square to the viewer well before
-			// the screen reaches the edges of the viewport. A perspective
-			// rotation still applied at 6x would shear the whole desktop.
+			// Hand over only once the desktop is genuinely at full size. Any
+			// earlier and clicks land on a target that is still moving.
+			setReleased(progress >= RELEASE_AT);
+
+			// The tilt is a hero flourish: it unwinds early, so the machine is
+			// square to the viewer well before the screen fills the viewport.
+			// A perspective rotation still applied at the end would shear the
+			// whole desktop.
 			const strength = clamp(1 - progress / TILT_GONE_AT, 0, 1);
 
-			// Ease towards the pointer rather than snapping to it.
 			current.x += (target.x - current.x) * TILT_EASE;
 			current.y += (target.y - current.y) * TILT_EASE;
 
 			tilt.style.setProperty('--tilt-x', `${current.x * strength}deg`);
 			tilt.style.setProperty('--tilt-y', `${current.y * strength}deg`);
 
-			// Keep the loop alive only while the tilt is still visibly moving.
-			// Scroll and pointer events restart it; otherwise it stops, so an
-			// idle hero costs nothing.
 			const settled =
 				Math.abs(target.x - current.x) < TILT_SETTLED &&
 				Math.abs(target.y - current.y) < TILT_SETTLED;
@@ -167,15 +201,11 @@ export function ZoomStage({ above, below, children }: ZoomStageProps) {
 		const onPointerMove = (event: PointerEvent) => {
 			if (!canHover.matches || reduceMotion.matches) return;
 
-			// Measured against the viewport rather than the machine's own box,
-			// so the machine faces where you are on the page, and the far
-			// corners of a wide window still reach the full tilt.
 			const nx = clamp((event.clientX / window.innerWidth) * 2 - 1, -1, 1);
 			const ny = clamp((event.clientY / window.innerHeight) * 2 - 1, -1, 1);
 
-			// Positive rotateY turns the right edge away, so the machine faces
-			// a pointer to its right. rotateX is inverted for the same reason:
-			// a pointer above should tip the top of the case towards it.
+			// Positive rotateY sends the right edge away, so the machine faces
+			// a pointer to its right; rotateX is inverted for the same reason.
 			target.y = nx * MAX_TILT;
 			target.x = -ny * MAX_TILT;
 			schedule();
@@ -192,6 +222,7 @@ export function ZoomStage({ above, below, children }: ZoomStageProps) {
 			apply();
 		};
 
+		setReleased(false);
 		measure();
 		apply();
 
@@ -213,7 +244,7 @@ export function ZoomStage({ above, below, children }: ZoomStageProps) {
 
 	return (
 		<div className="zoomTrack" ref={trackRef}>
-			<div className="zoomStage" ref={stageRef}>
+			<div className="zoomStage" ref={stageRef} data-released="false">
 				<div className="zoomCopy zoomCopy--above">{above}</div>
 				<div className="zoomMachine">{children}</div>
 				<div className="zoomCopy zoomCopy--below">{below}</div>
@@ -223,16 +254,28 @@ export function ZoomStage({ above, below, children }: ZoomStageProps) {
 }
 
 /** Fraction of the scroll track over which the zoom completes. */
-const ZOOM_COMPLETE_AT = 0.82;
+const ZOOM_COMPLETE_AT = 0.8;
 
-/** Slight overshoot so no bezel seam shows at the edges of the landing frame. */
-const OVERSCAN = 1.02;
+/** Clear space kept between the machine and the copy above and below it. */
+const HERO_GUTTER = 20;
 
 /**
- * Degrees of rotation at the far edge of the viewport. Small on purpose: the
- * machine should look like it noticed you, not like it is being waved around.
+ * Bounds on the fitted hero scale. The floor stops the machine becoming a
+ * postage stamp in a very short window; the ceiling stops it filling the hero
+ * on a tall one, where the point is that you are looking at a whole computer.
  */
-const MAX_TILT = 6;
+const HERO_SCALE_MIN = 0.14;
+const HERO_SCALE_MAX = 0.34;
+
+/** Progress past which the desktop becomes interactive. */
+const RELEASE_AT = 0.995;
+
+/**
+ * Degrees of rotation at the far edge of the viewport. Enough that the case
+ * flanks come into view and the layers shift against each other, without the
+ * machine looking like it is being waved around.
+ */
+const MAX_TILT = 11;
 
 /** Fraction of the zoom over which the tilt returns to square. */
 const TILT_GONE_AT = 0.35;

@@ -88,8 +88,13 @@ const browser = await chromium.launch();
 	await page.screenshot({ path: join(OUT, 'hero.png') });
 	console.log('captured assets/hero.png');
 
-	await page.evaluate(() => document.getElementById('desktop').scrollIntoView());
-	await page.waitForTimeout(600);
+	// The desktop is inside the machine now, reached by finishing the zoom
+	// rather than by scrolling to a separate section.
+	await page.evaluate(() => {
+		const track = document.querySelector('.zoomTrack');
+		window.scrollTo({ top: track.offsetHeight - window.innerHeight, behavior: 'instant' });
+	});
+	await page.waitForTimeout(900);
 	await page.screenshot({ path: join(OUT, 'desktop.png') });
 	console.log('captured assets/desktop.png');
 	await page.close();

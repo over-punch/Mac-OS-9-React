@@ -69,12 +69,6 @@ a {
 	height: 100vh;
 	overflow: hidden;
 
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-	gap: clamp(12px, 2.4vh, 28px);
-
 	background:
 		radial-gradient(120% 90% at 50% 40%, #2b2f38 0%, #16181c 62%, #0d0e11 100%);
 
@@ -85,16 +79,31 @@ a {
 
 /* Hero copy retreats as the zoom starts, so it never collides with the
  * growing machine. It is aria-hidden to nothing — it stays in the DOM and
- * readable to assistive tech, only visually faded. */
+ * readable to assistive tech, only visually faded.
+ *
+ * Positioned rather than laid out in a column with the machine: the machine
+ * is laid out at full size (its screen is the viewport) and only transformed
+ * down, and transforms do not affect layout — so in a flex column it would
+ * reserve several screens of height and shove the copy out of the stage. */
 .zoomCopy {
-	max-width: min(760px, 88vw);
+	position: absolute;
+	left: 50%;
+	transform: translateX(-50%);
+	width: min(760px, 88vw);
 	text-align: center;
 	color: #f2f3f5;
 	opacity: calc(1 - var(--zoom-progress) * 3);
-	transform: translateY(calc(var(--zoom-progress) * -40px));
 	transition: opacity 80ms linear;
 	pointer-events: none;
 	z-index: 2;
+}
+
+.zoomCopy--above {
+	top: clamp(24px, 7vh, 84px);
+}
+
+.zoomCopy--below {
+	bottom: clamp(24px, 7vh, 76px);
 }
 
 .kicker {
@@ -156,8 +165,15 @@ a {
 
 .zoomMachine {
 	/* transform and transform-origin are written by ZoomStage on each frame:
-	 * it scales about the screen's own centre and slides that centre to the
-	 * middle of the viewport, so the screen lands exactly edge-to-edge. */
+	 * it scales about the live desktop's top-centre and slides that point to
+	 * the top centre of the viewport, so at scale 1 the desktop IS the page.
+	 *
+	 * Out of flow for the same reason the copy is: the machine's laid-out size
+	 * is the full-zoom size, and a transform does not shrink the box it
+	 * reserves. */
+	position: absolute;
+	top: 0;
+	left: 0;
 	will-change: transform;
 	z-index: 1;
 
@@ -182,10 +198,18 @@ a {
 	flex-direction: column;
 	align-items: center;
 
-	/* Sized off the viewport so the whole computer is visible in the hero on
-	 * any screen, with the screen itself in a 4:3 CRT ratio. */
-	--screen-w: min(46vw, 46vh, 560px);
+	/* The machine is laid out at the size it will be when the zoom finishes,
+	 * not at hero size: its screen is a 4:3 aperture large enough to contain a
+	 * viewport-sized desktop, and ZoomStage scales the whole thing down to fit
+	 * the hero. Laying it out small and scaling UP is what forced the old
+	 * version to show a mock-up — a real desktop would have been laid out for
+	 * a 560px viewport and then magnified. */
+	--screen-w: max(100vw, calc(100vh * 4 / 3));
 	--screen-h: calc(var(--screen-w) * 0.75);
+
+	/* How far the case stands off the front panel. The real machine is nearly
+	 * as deep as it is wide; this is a readable fraction of that. */
+	--case-depth: calc(var(--screen-w) * 0.11);
 
 	/* Bondi blue: the translucent shell, lit from the top left. */
 	--imac-glint: #7fd8e8;
@@ -202,17 +226,97 @@ a {
 	--ice-mid: #d6dee1;
 	--ice-lo: #bdc8cc;
 
-	/* Tilt written by ZoomStage from the pointer position. Left flat rather
-	 * than preserve-3d: the machine turns as one plane, so the screen's
-	 * contents stay on the pixel grid and crisp. */
+	/* Tilt written by ZoomStage from the pointer position. */
 	transform: rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
+	transform-style: preserve-3d;
 	will-change: transform;
+}
+
+/* The case as a solid: a front face, a body set back in Z, and flanks
+ * standing perpendicular between them. Head-on the flanks are edge-on and
+ * invisible; they swing into view as the machine turns, which is what makes
+ * the depth read as depth rather than as a skewed photograph. */
+.machine__solid {
+	position: relative;
+	transform-style: preserve-3d;
+}
+
+/* The mass behind the front panel. Inset and set back, which is the taper. */
+.machine__body {
+	position: absolute;
+	inset: 4% 6% 2%;
+	transform: translateZ(calc(var(--case-depth) * -1));
+	border-radius:
+		calc(var(--screen-w) * 0.2) calc(var(--screen-w) * 0.2)
+		calc(var(--screen-w) * 0.08) calc(var(--screen-w) * 0.08);
+	background: linear-gradient(
+		100deg,
+		var(--imac-shadow) 0%,
+		var(--imac-deep) 30%,
+		var(--imac-mid) 62%,
+		var(--imac-shadow) 100%
+	);
+	box-shadow: 0 calc(var(--screen-w) * 0.02) calc(var(--screen-w) * 0.06) rgba(0, 0, 0, 0.5);
+}
+
+/* The sides and top, each a quad hinged at its edge of the front face. */
+.machine__flank {
+	position: absolute;
+	background: linear-gradient(
+		180deg,
+		var(--imac-light) 0%,
+		var(--imac-mid) 45%,
+		var(--imac-deep) 100%
+	);
+}
+
+.machine__flank--left,
+.machine__flank--right {
+	/* Kept clear of the shell's very large top radius. A full-height rectangle
+	 * pokes out past the rounded corners as a fin, because there is no shell
+	 * in front of it to hide behind up there. */
+	top: 22%;
+	bottom: 9%;
+	width: var(--case-depth);
+	border-radius: calc(var(--screen-w) * 0.02);
+}
+
+.machine__flank--left {
+	left: 0;
+	transform-origin: left center;
+	transform: rotateY(90deg);
+	filter: brightness(1.08);
+}
+
+.machine__flank--right {
+	right: 0;
+	transform-origin: right center;
+	transform: rotateY(-90deg);
+	filter: brightness(0.72);
+}
+
+.machine__flank--top {
+	/* Inset past the corner radius for the same reason as the side flanks. */
+	left: 22%;
+	right: 22%;
+	top: 0;
+	height: var(--case-depth);
+	transform-origin: center top;
+	transform: rotateX(-90deg);
+	background: linear-gradient(
+		180deg,
+		var(--imac-glint) 0%,
+		var(--imac-light) 40%,
+		var(--imac-mid) 100%
+	);
+	border-radius: calc(var(--screen-w) * 0.06) calc(var(--screen-w) * 0.06) 0 0;
 }
 
 /* The coloured shell. It shows as a rim around the ice front and, at the
  * sides, as the flank of the case flaring away behind it. */
 .machine__shell {
 	position: relative;
+	transform-style: preserve-3d;
 	padding: calc(var(--screen-w) * 0.055) calc(var(--screen-w) * 0.05)
 		calc(var(--screen-w) * 0.055);
 
@@ -316,6 +420,10 @@ a {
 	position: relative;
 	width: var(--screen-w);
 	height: var(--screen-h);
+	/* Set back behind the bezel so the two shift against each other as the
+	 * machine turns. This parallax is the cheapest and most convincing 3D cue
+	 * on the whole object. */
+	transform: translateZ(calc(var(--screen-w) * -0.018));
 	overflow: hidden;
 	border-radius: calc(var(--screen-w) * 0.02);
 	background: #08131a;
@@ -510,6 +618,48 @@ a {
 }
 
 /* ==========================================================================
+ * The live desktop inside the screen
+ *
+ * Laid out at exactly viewport size, anchored to the top of the 4:3 aperture.
+ * At the end of the zoom the machine is at scale 1 and this element is the
+ * page — not a magnified copy of it, which is why it can simply be used.
+ *
+ * The aperture is taller than the viewport, so there is desktop-coloured space
+ * below this element in the hero. That reads as more desktop rather than as a
+ * letterbox, because it is the same colour.
+ * ========================================================================== */
+
+.machineScreen__live {
+	position: absolute;
+	top: 0;
+	left: 50%;
+	width: 100vw;
+	height: 100vh;
+	transform: translateX(-50%);
+	overflow: hidden;
+	background: var(--desktop-bg);
+}
+
+/* Once the zoom has finished, the desktop is the thing you are using: it
+ * takes pointer events and scrolls its own content. Before that it is scenery,
+ * and ZoomStage has it marked inert so it is out of the tab order too. */
+.zoomStage[data-released='false'] .machineScreen__live {
+	pointer-events: none;
+}
+
+.zoomStage[data-released='true'] .machineScreen__live {
+	overflow-y: auto;
+	overscroll-behavior-y: contain;
+}
+
+/* The scanlines and glare sit over the live desktop, so they must not eat
+ * its clicks once it is live. */
+.machine__scanlines,
+.machine__glare {
+	pointer-events: none;
+}
+
+/* ==========================================================================
  * Desktop
  * ========================================================================== */
 
@@ -528,126 +678,6 @@ a {
 	background-size: 4px 4px;
 }
 
-.screenPreview {
-	/* Flat, deliberately: the desktop's 4px pattern is magnified along with
-	 * everything else during the zoom, and at 8x it reads as large triangles
-	 * rather than texture. A flat fill matches the desktop section's base
-	 * colour exactly, so the handoff at the end of the zoom is invisible. */
-	background-color: var(--desktop-bg);
-}
-
-.screenPreview {
-	display: flex;
-	flex-direction: column;
-	width: 100%;
-	height: 100%;
-
-	/* Retarget the library's own tokens against the screen's width, so the
-	 * mock scales as one piece rather than the text staying at page size
-	 * while the machine shrinks. This is the component token layer being
-	 * used exactly as a consumer would use it. */
-	--font-size-xs: 1.5cqw;
-	--font-size-sm: 1.7cqw;
-	--font-size-md: 2cqw;
-	--font-size-lg: 2.2cqw;
-	--spacing-1: 0.55cqw;
-	--spacing-2: 1.1cqw;
-	--spacing-3: 1.7cqw;
-	--spacing-4: 2.2cqw;
-}
-
-.screenPreview__surface {
-	flex: 1 1 auto;
-	padding: 6%;
-}
-
-.screenPreview__surface {
-	position: relative;
-}
-
-.screenPreview__window {
-	width: 66%;
-	background: var(--color-gray-300);
-	border: var(--border-width-thin) solid var(--color-border);
-	box-shadow: var(--shadow-float);
-}
-
-.screenPreview__titleBar {
-	display: flex;
-	align-items: center;
-	gap: 0.9cqw;
-	padding: 0.5cqw 0.8cqw;
-	background: var(--window-titlebar-bg);
-	border-bottom: var(--border-width-thin) solid var(--color-border);
-}
-
-.screenPreview__close {
-	width: 1.3cqw;
-	height: 1.3cqw;
-	background: var(--color-gray-200);
-	border: var(--border-width-thin) solid var(--color-border);
-}
-
-.screenPreview__title {
-	font-family: var(--font-system);
-	font-size: 1.6cqw;
-	font-weight: var(--font-weight-bold);
-	color: var(--color-text);
-}
-
-.screenPreview__body {
-	display: flex;
-	flex-direction: column;
-	gap: 1cqw;
-	padding: 1.7cqw;
-}
-
-.screenPreview__line {
-	display: block;
-	height: 0.85cqw;
-	background: var(--color-gray-500);
-}
-
-.screenPreview__line--head {
-	height: 1.5cqw;
-	width: 58%;
-	background: var(--color-gray-600);
-}
-
-.screenPreview__line--short {
-	width: 42%;
-}
-
-.screenPreview__buttons {
-	display: flex;
-	gap: 0.9cqw;
-	margin-top: 0.7cqw;
-}
-
-.screenPreview__button {
-	width: 7cqw;
-	height: 2.1cqw;
-	background: var(--color-surface);
-	border: var(--border-width-thin) solid var(--color-border);
-	box-shadow: var(--shadow-drop);
-}
-
-.screenPreview__icons {
-	position: absolute;
-	top: 0;
-	right: 0;
-	display: flex;
-	flex-direction: column;
-	gap: 1.7cqw;
-}
-
-.screenPreview__icon {
-	width: 3.4cqw;
-	height: 2.7cqw;
-	background: var(--color-gray-200);
-	border: var(--border-width-thin) solid var(--color-border);
-	box-shadow: var(--shadow-drop);
-}
 
 .desktop {
 	position: relative;
@@ -662,9 +692,6 @@ a {
 	z-index: 60;
 }
 
-.desktopMenuBar--compact {
-	position: static;
-}
 
 .desktopMenuBar__logo {
 	display: inline-flex;

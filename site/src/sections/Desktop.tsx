@@ -268,6 +268,7 @@ export function Desktop() {
 						{isOpen('about') && (
 							<Window
 								id="about"
+								maxWidth={940}
 								title="About This Library"
 								className="deskWindow deskWindow--about"
 								draggable
@@ -313,6 +314,7 @@ export function Desktop() {
 						{isOpen('start') && (
 							<Window
 								id="start"
+								maxWidth={1180}
 								title="Getting Started"
 								className="deskWindow deskWindow--start"
 								draggable
@@ -348,6 +350,7 @@ export function Desktop() {
 						{isOpen('components') && (
 							<Window
 								id="components"
+								maxWidth={600}
 								title="Components"
 								className="deskWindow deskWindow--components"
 								draggable
@@ -374,6 +377,7 @@ export function Desktop() {
 						{isOpen('why') && (
 							<Window
 								id="why"
+								maxWidth={600}
 								title="Why This One"
 								className="deskWindow deskWindow--why"
 								draggable
@@ -461,6 +465,7 @@ export function Desktop() {
 						{isOpen('whatsnew') && (
 							<Window
 								id="whatsnew"
+								maxWidth={600}
 								title="Upgrading to 2.0"
 								className="deskWindow deskWindow--whatsnew"
 								draggable
@@ -506,6 +511,7 @@ export function Desktop() {
 						{isOpen('icons') && (
 							<Window
 								id="icons"
+								maxWidth={560}
 								title="Icons"
 								className="deskWindow deskWindow--icons"
 								draggable
@@ -544,6 +550,7 @@ export function Desktop() {
 						{isOpen('controls') && (
 							<Window
 								id="controls"
+								maxWidth={520}
 								title="Controls"
 								className="deskWindow deskWindow--controls"
 								draggable
