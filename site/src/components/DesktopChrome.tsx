@@ -4,6 +4,7 @@
 
 import { MenuBar, type Menu } from '@lib/components/MenuBar';
 import { IconLibrary } from '@lib/components/Icon';
+import { FLAVOURS, FLAVOUR_LABELS, applyFlavour, type Flavour } from '../flavours';
 
 const PKG = '@liiift-studio/mac-os9-ui';
 
@@ -11,8 +12,48 @@ const PKG = '@liiift-studio/mac-os9-ui';
 // version after a release.
 const VERSION = __PKG_VERSION__;
 
+/**
+ * A place on the desktop a menu item can send you.
+ *
+ * The menu used to jump to element ids with `scrollIntoView`. Three of those
+ * ids — `tokens`, `a11y`, `footprint` — are props on `TabPanel`, which does
+ * not forward them to the DOM, and an inactive panel's children aren't
+ * rendered at all. So those items silently did nothing. Naming destinations
+ * instead lets the desktop reopen the right window and select the right tab.
+ */
+export type DesktopSection =
+	| 'start'
+	| 'components'
+	| 'tokens'
+	| 'footprint'
+	| 'a11y'
+	| 'whatsnew';
+
+export interface DesktopMenuBarProps {
+	/** Renders the smaller bar used inside the machine's screen. */
+	compact?: boolean;
+	/** The flavour currently applied, so the menu can tick it. */
+	flavour?: Flavour;
+	/** Called when a flavour is picked. */
+	onFlavourChange?: (flavour: Flavour) => void;
+	/** Called to bring closed windows back. Omitted inside the machine. */
+	onRestoreWindows?: () => void;
+	/** How many windows are currently closed, for the menu label. */
+	closedWindowCount?: number;
+	/** Reveal a part of the desktop — reopening and scrolling as needed. */
+	onShowSection?: (section: DesktopSection) => void;
+}
+
 /** The menu bar shown across the top of the desktop. */
-export function DesktopMenuBar({ compact = false }: { compact?: boolean }) {
+export function DesktopMenuBar({
+	compact = false,
+	flavour,
+	onFlavourChange,
+	onRestoreWindows,
+	closedWindowCount = 0,
+	onShowSection,
+}: DesktopMenuBarProps) {
+	const show = (section: DesktopSection) => () => onShowSection?.(section);
 	const menus: Menu[] = [
 		{
 			label: 'File',
@@ -28,15 +69,44 @@ export function DesktopMenuBar({ compact = false }: { compact?: boolean }) {
 			label: 'Components',
 			items: [
 				{ label: 'Storybook', shortcut: '⌘S', onClick: () => open(STORYBOOK) },
-				{ label: 'All components', onClick: () => jump('components') },
-				{ label: 'Design tokens', onClick: () => jump('tokens') },
+				{ label: 'All components', onClick: show('components') },
+				{ label: 'Design tokens', onClick: show('tokens') },
+			],
+		},
+		{
+			label: 'View',
+			items: [
+				// Each entry retargets the same custom properties a consumer
+				// would override, which is the claim the menu exists to prove.
+				...FLAVOURS.map((name, index) => ({
+					label: FLAVOUR_LABELS[name],
+					checked: flavour === name,
+					// Exactly one flavour is on, so these are radios: checkbox
+					// semantics would tell a screen-reader user they can switch
+					// several on at once.
+					selection: 'radio' as const,
+					// `separator` draws the divider AFTER its item, so it belongs
+					// on the last flavour rather than on what follows them.
+					separator: index === FLAVOURS.length - 1,
+					onClick: () => onFlavourChange?.(name),
+				})),
+				{
+					label:
+						closedWindowCount > 0
+							? `Restore ${closedWindowCount} window${closedWindowCount > 1 ? 's' : ''}`
+							: 'Restore windows',
+					disabled: closedWindowCount === 0,
+					onClick: () => onRestoreWindows?.(),
+				},
 			],
 		},
 		{
 			label: 'Help',
 			items: [
-				{ label: 'Getting started', onClick: () => jump('start') },
-				{ label: 'Accessibility', onClick: () => jump('a11y') },
+				{ label: 'Getting started', shortcut: '⌘G', onClick: show('start') },
+				{ label: 'Upgrading to 2.0', separator: true, onClick: show('whatsnew') },
+				{ label: 'Footprint', onClick: show('footprint') },
+				{ label: 'Accessibility', onClick: show('a11y') },
 			],
 		},
 	];
@@ -90,10 +160,6 @@ export const PACKAGE = PKG;
 
 function open(url: string) {
 	window.open(url, '_blank', 'noreferrer,noopener');
-}
-
-function jump(id: string) {
-	document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 export function copy(text: string) {

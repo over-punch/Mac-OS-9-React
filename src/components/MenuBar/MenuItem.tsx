@@ -69,10 +69,25 @@ export interface MenuItemProps {
 	separator?: boolean;
 
 	/**
-	 * Whether the menu item has a checkmark (for toggle items)
-	 * @default false
+	 * Whether the item is currently checked.
+	 *
+	 * Setting this at all — to `false` included — makes the item a checkable
+	 * one, which is what tells assistive technology it is an option rather
+	 * than a command. Leave it `undefined` for a plain command item.
 	 */
 	checked?: boolean;
+
+	/**
+	 * How a checkable item relates to its neighbours: an independent toggle
+	 * (`'checkbox'`) or one option in a mutually exclusive set (`'radio'`).
+	 *
+	 * Only meaningful alongside `checked`. A set of flavours, view modes or
+	 * sort orders — where exactly one is on — is `'radio'`; announcing those
+	 * as checkboxes tells a screen-reader user they can turn on several.
+	 *
+	 * @default 'checkbox'
+	 */
+	selection?: 'checkbox' | 'radio';
 
 	/**
 	 * Optional icon to display before the label
@@ -202,7 +217,8 @@ export const MenuItem = forwardRef<HTMLButtonElement, MenuItemProps>(
 			disabled = false,
 			selected = false,
 			separator = false,
-			checked = false,
+			checked,
+			selection = 'checkbox',
 			icon,
 			onClick,
 			onFocus,
@@ -288,18 +304,29 @@ export const MenuItem = forwardRef<HTMLButtonElement, MenuItemProps>(
 					onBlur={onBlur}
 					disabled={disabled}
 					// aria-checked is only valid on menuitemcheckbox /
-					// menuitemradio, never on a plain menuitem, so the role
-					// follows the presence of a checked state.
-					role={checked ? 'menuitemcheckbox' : 'menuitem'}
+					// menuitemradio, never on a plain menuitem — so the role
+					// follows whether the item is checkABLE, not whether it
+					// currently happens to be checked. Deriving it from the
+					// value instead meant an unchecked option announced as a
+					// plain command, so a screen-reader user could not tell it
+					// was one of a set, and the role changed under them each
+					// time they toggled it.
+					role={
+						checked === undefined
+							? 'menuitem'
+							: selection === 'radio'
+								? 'menuitemradio'
+								: 'menuitemcheckbox'
+					}
 					aria-disabled={disabled}
-					aria-checked={checked ? 'true' : undefined}
+					aria-checked={checked === undefined ? undefined : checked}
 					aria-keyshortcuts={keyShortcut ?? toAriaKeyShortcuts(shortcut)}
 					aria-haspopup={effectiveHasSubmenu ? 'menu' : undefined}
 					aria-expanded={effectiveHasSubmenu ? isSubmenuOpen : undefined}
 				>
 					{/* Checkmark area */}
 					<span className={mergeClasses(styles.checkmark, classes?.checkmark)}>
-						{checked && '✓'}
+						{checked ? '✓' : ''}
 					</span>
 
 					{/* Icon area */}

@@ -25,8 +25,18 @@ export interface MenuItemData {
 	/** Whether the item is disabled */
 	disabled?: boolean;
 
-	/** Whether the item shows a checkmark */
+	/**
+	 * Whether the item is currently checked. Setting it at all — `false`
+	 * included — makes the item a checkable one.
+	 */
 	checked?: boolean;
+
+	/**
+	 * Whether a checkable item is an independent toggle or one option in a
+	 * mutually exclusive set.
+	 * @default 'checkbox'
+	 */
+	selection?: 'checkbox' | 'radio';
 
 	/** Whether a separator line follows this item */
 	separator?: boolean;
@@ -179,6 +189,7 @@ function renderMenuItemData(items: readonly MenuItemData[]): React.ReactNode {
 			shortcut={item.shortcut}
 			disabled={item.disabled}
 			checked={item.checked}
+			selection={item.selection}
 			separator={item.separator}
 			icon={item.icon}
 			onClick={item.onClick}

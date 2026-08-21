@@ -281,6 +281,91 @@ describe('MenuBar', () => {
 		});
 	});
 
+	describe('checkable items', () => {
+		// The role used to be derived from the *value* of `checked`, so an
+		// unchecked option announced as a plain command and the role changed
+		// under the user every time they toggled it. It now follows whether
+		// the item is checkABLE at all.
+		it('marks an unchecked option as checkable, not as a command', () => {
+			render(
+				<MenuBar
+					menus={[{ label: 'View', items: [{ label: 'Show Grid', checked: false }] }]}
+					defaultOpenMenuIndex={0}
+				/>
+			);
+
+			const item = screen.getByRole('menuitemcheckbox', { name: /Show Grid/ });
+			expect(item).toHaveAttribute('aria-checked', 'false');
+		});
+
+		it('keeps the same role when the item is checked', () => {
+			render(
+				<MenuBar
+					menus={[{ label: 'View', items: [{ label: 'Show Grid', checked: true }] }]}
+					defaultOpenMenuIndex={0}
+				/>
+			);
+
+			expect(screen.getByRole('menuitemcheckbox', { name: /Show Grid/ })).toHaveAttribute(
+				'aria-checked',
+				'true'
+			);
+		});
+
+		it('leaves an item with no checked state a plain menuitem', () => {
+			render(
+				<MenuBar
+					menus={[{ label: 'View', items: [{ label: 'Zoom In' }] }]}
+					defaultOpenMenuIndex={0}
+				/>
+			);
+
+			const item = screen.getByRole('menuitem', { name: /Zoom In/ });
+			expect(item).not.toHaveAttribute('aria-checked');
+		});
+
+		it('announces a mutually exclusive set as radios', () => {
+			// Exactly one flavour can be on, so checkbox semantics would tell a
+			// screen-reader user they may switch several on at once.
+			render(
+				<MenuBar
+					menus={[
+						{
+							label: 'View',
+							items: [
+								{ label: 'Bondi', checked: true, selection: 'radio' as const },
+								{ label: 'Grape', checked: false, selection: 'radio' as const },
+							],
+						},
+					]}
+					defaultOpenMenuIndex={0}
+				/>
+			);
+
+			const radios = screen.getAllByRole('menuitemradio');
+			expect(radios).toHaveLength(2);
+			expect(radios.filter((r) => r.getAttribute('aria-checked') === 'true')).toHaveLength(1);
+		});
+
+		it('has no automatically detectable violations with a radio set', async () => {
+			const { container } = render(
+				<MenuBar
+					menus={[
+						{
+							label: 'View',
+							items: [
+								{ label: 'Bondi', checked: true, selection: 'radio' as const },
+								{ label: 'Grape', checked: false, selection: 'radio' as const },
+							],
+						},
+					]}
+					defaultOpenMenuIndex={0}
+				/>
+			);
+			expect(await checkA11y(container)).toHaveNoViolations();
+		});
+	});
+
 	describe('link menus', () => {
 		it('renders as an anchor with a safe href', () => {
 			render(<MenuBar menus={menus} />);

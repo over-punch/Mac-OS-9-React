@@ -1,5 +1,26 @@
 # @liiift-studio/mac-os9-ui
 
+## 2.1.0
+
+### Minor Changes
+
+- Fix `MenuItem`'s role for checkable items, and add `selection` for mutually exclusive sets.
+
+  `role` was derived from the _value_ of `checked`, so an item with
+  `checked={false}` announced as a plain `menuitem` — indistinguishable from a
+  command — and its role changed under the user each time they toggled it. The
+  role now follows whether the item is checkable at all: setting `checked` to
+  anything, `false` included, makes it a `menuitemcheckbox`, and `aria-checked`
+  is always present. Leaving `checked` undefined still gives a plain `menuitem`.
+
+  New `selection?: 'checkbox' | 'radio'` on `MenuItem` and `MenuItemData`. A set
+  of flavours, view modes or sort orders — where exactly one is on — should be
+  `'radio'`, so it announces as `menuitemradio` rather than telling a
+  screen-reader user they can switch several on at once.
+
+  This is a behaviour change for anyone matching on `getByRole('menuitem')` for
+  an item that passes `checked={false}`; it is now `menuitemcheckbox`.
+
 ## 2.0.0
 
 ### Major Changes

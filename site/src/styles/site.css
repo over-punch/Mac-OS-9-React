@@ -717,6 +717,22 @@ a {
 	}
 }
 
+/* The quickstart is the window the integrator came for and it holds a code
+ * block with a 57-character import line. In a one-column cell that line is
+ * clipped on arrival, which is a poor look for the snippet you most want
+ * people to read — so it gets the full row. */
+.deskWindow--start {
+	grid-column: 1 / -1;
+}
+
+/* Four tabs do not fit across a one-column window, and the fourth was
+ * Accessibility — unreachable by click, on the tab about accessibility. The
+ * library's tab list is a plain flex row; letting it wrap is a layout
+ * decision that belongs to the page, not the component. */
+.deskWindow--why [role='tablist'] {
+	flex-wrap: wrap;
+}
+
 .desktopIcons {
 	position: absolute;
 	top: clamp(16px, 3vw, 44px);
@@ -838,13 +854,59 @@ a {
 	gap: var(--spacing-1);
 }
 
+/* A real button, because the only thing anyone wants to do with an icon here
+ * is take its name away with them — which needs a click target and a tab
+ * stop, not a `title` attribute. */
 .iconGrid__cell {
+	position: relative;
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	aspect-ratio: 1;
+	padding: 0;
+	font: inherit;
+	cursor: pointer;
 	background: var(--color-surface-inset);
 	border: var(--border-width-thin) solid var(--color-gray-400);
+}
+
+.iconGrid__cell:hover {
+	background: var(--color-surface);
+	border-color: var(--color-text);
+}
+
+.iconGrid__cell:focus-visible {
+	outline: var(--border-width-medium) solid var(--color-text);
+	outline-offset: 1px;
+}
+
+.iconGrid__cell:active {
+	background: var(--color-gray-400);
+}
+
+/* The name rides under the cursor rather than in the grid, so 38 cells stay
+ * a grid of icons instead of becoming a table of labels. */
+.iconGrid__name {
+	position: absolute;
+	bottom: calc(100% + 4px);
+	left: 50%;
+	transform: translateX(-50%);
+	z-index: 5;
+	padding: 1px var(--spacing-1);
+	font-family: var(--font-mono);
+	font-size: 10px;
+	line-height: 1.5;
+	white-space: nowrap;
+	color: var(--color-text);
+	background: var(--color-surface);
+	border: var(--border-width-thin) solid var(--color-text);
+	opacity: 0;
+	pointer-events: none;
+}
+
+.iconGrid__cell:hover .iconGrid__name,
+.iconGrid__cell:focus-visible .iconGrid__name {
+	opacity: 1;
 }
 
 .desktop__footer {
@@ -861,4 +923,142 @@ a {
 
 .desktop__footer a {
 	color: #ffffff;
+}
+
+
+/* ==========================================================================
+ * Getting started, footprint, and what's new
+ * ========================================================================== */
+
+.code {
+	margin: 0;
+	padding: var(--spacing-3);
+	overflow-x: auto;
+	font-family: var(--font-mono);
+	font-size: var(--font-size-xs);
+	line-height: 1.65;
+	tab-size: 2;
+	color: var(--color-text);
+	background: var(--color-surface-inset);
+	border: var(--border-width-thin) solid var(--color-gray-400);
+	box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.16);
+}
+
+.code:focus-visible {
+	outline: var(--border-width-medium) solid var(--color-text);
+	outline-offset: 1px;
+}
+
+.pane__note--footer {
+	padding: var(--spacing-2) var(--spacing-3);
+	border-top: var(--border-width-thin) solid var(--color-gray-400);
+}
+
+/* The footprint table. A definition list rather than a <table>: these are
+ * label/value pairs, not a grid with meaningful columns. */
+.facts {
+	display: grid;
+	gap: 0;
+	margin: 0;
+	border: var(--border-width-thin) solid var(--color-gray-400);
+	background: var(--color-surface);
+}
+
+.facts > div {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: var(--spacing-2);
+	padding: var(--spacing-2) var(--spacing-3);
+	border-bottom: var(--border-width-thin) solid var(--color-gray-400);
+}
+
+.facts > div:last-child {
+	border-bottom: none;
+}
+
+.facts dt {
+	font-size: var(--font-size-sm);
+	color: var(--color-gray-600);
+}
+
+.facts dd {
+	margin: 0;
+	font-family: var(--font-mono);
+	font-size: var(--font-size-sm);
+	font-variant-numeric: tabular-nums;
+	text-align: right;
+}
+
+.facts__aside {
+	color: var(--color-gray-600);
+}
+
+.changes {
+	margin: 0;
+	padding-left: var(--spacing-4);
+	display: grid;
+	gap: var(--spacing-2);
+	font-size: var(--font-size-sm);
+	line-height: 1.55;
+}
+
+/* Shown only when every window has been closed, so the desktop is never a
+ * blank field with the way back buried in a menu. */
+.desktop__empty {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: center;
+	gap: var(--spacing-3);
+	margin: clamp(40px, 10vh, 120px) auto 0;
+	padding: 0 var(--spacing-4);
+	color: #ffffff;
+	text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+}
+
+/* ==========================================================================
+ * Flavours
+ *
+ * The View menu stamps data-flavour on <html>. Each block below redefines
+ * exactly the custom properties a consumer would override — nothing is
+ * recompiled and no component is aware it happened, which is the claim the
+ * menu exists to demonstrate.
+ * ========================================================================== */
+
+:root[data-flavour='blueberry'] {
+	--imac-glint: #9fb4f2;
+	--imac-light: #5c72c8;
+	--imac-mid: #3c4d9e;
+	--imac-deep: #26327a;
+	--imac-shadow: #171f52;
+	--desktop-bg: #6f7ba6;
+}
+
+:root[data-flavour='grape'] {
+	--imac-glint: #cfa5e6;
+	--imac-light: #9a5cc2;
+	--imac-mid: #74359c;
+	--imac-deep: #532473;
+	--imac-shadow: #35164b;
+	--desktop-bg: #8a7a9c;
+}
+
+:root[data-flavour='tangerine'] {
+	--imac-glint: #ffc08a;
+	--imac-light: #f08b3c;
+	--imac-mid: #cf6415;
+	--imac-deep: #9c4708;
+	--imac-shadow: #642c04;
+	--desktop-bg: #a8896f;
+}
+
+:root[data-flavour='lime'] {
+	--imac-glint: #cbe98a;
+	--imac-light: #8fc23c;
+	--imac-mid: #679616;
+	--imac-deep: #486c08;
+	--imac-shadow: #2d4504;
+	--desktop-bg: #8a9a72;
 }
