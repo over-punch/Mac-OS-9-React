@@ -481,6 +481,33 @@ style-src 'self' https://fonts.googleapis.com;
 font-src  'self' https://fonts.gstatic.com;
 ```
 
+## Callback conventions
+
+Two names, one rule, so you never have to check which shape a component uses:
+
+| Name | Receives | On |
+|---|---|---|
+| `onChange` | the native DOM event | components wrapping a native input: `TextField`, `Checkbox`, `Radio` |
+| `onValueChange` | the value itself | components reporting a value: `Select`, `RadioGroup`, `Scrollbar`, `Tabs` |
+
+```tsx
+// Wraps an input, so onChange is the DOM handler you already know.
+<TextField value={name} onChange={(event) => setName(event.target.value)} />
+
+// Reports a value, so you get the value.
+<Select value={sort} onValueChange={setSort} options={options} />
+<RadioGroup name="view" value={view} onValueChange={setView}>…</RadioGroup>
+```
+
+Anything reporting something other than a single value names what it reports:
+`onSelectionChange` on ListView, `onPositionChange` and `onResize` on Window,
+`onMenuOpen` / `onMenuClose` on MenuBar.
+
+`RadioGroup`, `Scrollbar` and `Tabs` previously used `onChange` for a value.
+Those still work and warn once in development; `Tabs.onChange` keeps its
+original `(index, value)` order, while `onValueChange` leads with the value
+like every other one.
+
 ## Accessibility
 
 The components target WCAG 2.1 AA. Being specific about what that means here,

@@ -9,6 +9,7 @@
 import React, { forwardRef, useRef, useState, useEffect, useCallback } from 'react';
 import { mergeClasses } from '../../utils/classNames';
 import { resolveAria } from '../../utils/aria';
+import { warnDeprecatedProp } from '../../utils/deprecation';
 import styles from './Scrollbar.module.css';
 
 export interface ScrollbarProps {
@@ -41,8 +42,16 @@ export interface ScrollbarProps {
 	viewportRatio?: number;
 
 	/**
-	 * Callback when scroll position changes
+	 * Called with the new scroll position, 0 to 1.
+	 *
+	 * Named `onValueChange` because it reports a value rather than a DOM
+	 * event. Across the library, `onChange` is always the native change
+	 * handler of a wrapped input, and `onValueChange` is always the parsed
+	 * value — Scrollbar wraps no input, so it only has the latter.
 	 */
+	onValueChange?: (value: number) => void;
+
+	/** @deprecated Use `onValueChange`. */
 	onChange?: (value: number) => void;
 
 	/**
@@ -91,7 +100,7 @@ export interface ScrollbarProps {
  *   orientation="vertical"
  *   value={0.5}
  *   viewportRatio={0.3}
- *   onChange={(value) => console.log('Scroll position:', value)}
+ *   onValueChange={(value) => console.log('Scroll position:', value)}
  * />
  * ```
  */
@@ -102,6 +111,7 @@ export const Scrollbar = forwardRef<HTMLDivElement, ScrollbarProps>(
 			value = 0,
 			viewportRatio,
 			onChange,
+			onValueChange,
 			'aria-label': ariaLabelAttr,
 			className = '',
 			disabled = false,
@@ -120,13 +130,20 @@ export const Scrollbar = forwardRef<HTMLDivElement, ScrollbarProps>(
 
 		// Helper used by both arrow buttons and keyboard handler to clamp
 		// the next value into the valid 0-1 range before notifying.
+		// `onValueChange` is the supported name; `onChange` still works and
+		// warns once in development.
+		if (process.env.NODE_ENV !== 'production' && onChange && !onValueChange) {
+			warnDeprecatedProp('Scrollbar', 'onChange', 'onValueChange');
+		}
+		const emitValue = onValueChange ?? onChange;
+
 		const commitValue = useCallback(
 			(next: number) => {
-				if (disabled || !onChange) return;
+				if (disabled || !emitValue) return;
 				const clamped = Math.max(0, Math.min(1, next));
-				if (clamped !== value) onChange(clamped);
+				if (clamped !== value) emitValue(clamped);
 			},
-			[disabled, onChange, value]
+			[disabled, emitValue, value]
 		);
 
 		// Calculate thumb size based on viewport ratio
@@ -216,7 +233,7 @@ export const Scrollbar = forwardRef<HTMLDivElement, ScrollbarProps>(
 		// Handle track clicks
 		const handleTrackClick = useCallback(
 			(event: React.MouseEvent<HTMLDivElement>) => {
-				if (disabled || !onChange || !trackRef.current) return;
+				if (disabled || !emitValue || !trackRef.current) return;
 
 				const rect = trackRef.current.getBoundingClientRect();
 				const clickPos = isVertical ? event.clientY - rect.top : event.clientX - rect.left;
@@ -225,9 +242,9 @@ export const Scrollbar = forwardRef<HTMLDivElement, ScrollbarProps>(
 				// Convert click position to scroll value (0-1)
 				const clickRatio = clickPos / trackSize;
 				const newValue = Math.max(0, Math.min(1, clickRatio));
-				onChange(newValue);
+				emitValue(newValue);
 			},
-			[disabled, onChange, isVertical]
+			[disabled, emitValue, isVertical]
 		);
 
 		// Pointer-down on the thumb starts a drag. Pointer Events instead

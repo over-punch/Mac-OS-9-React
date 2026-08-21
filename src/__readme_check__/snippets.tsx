@@ -10,6 +10,8 @@
 import { useState } from 'react';
 import Link from './fake-next-link';
 import {
+	Radio,
+	RadioGroup,
 	Window,
 	Button,
 	Checkbox,
@@ -236,5 +238,27 @@ export function RenderProps() {
 				column.key === 'size' ? <code>{String(value)}</code> : String(value)
 			}
 		/>
+	);
+}
+
+export function CallbackConventions() {
+	const [name, setName] = useState('');
+	const [sort, setSort] = useState('name');
+	const [view, setView] = useState('icon');
+	return (
+		<>
+			<TextField value={name} onChange={(event) => setName(event.target.value)} />
+			<Select
+				value={sort}
+				onValueChange={setSort}
+				options={[
+					{ value: 'name', label: 'Name' },
+					{ value: 'date', label: 'Date' },
+				]}
+			/>
+			<RadioGroup name="view" value={view} onValueChange={setView}>
+				<Radio value="icon" label="Icons" />
+			</RadioGroup>
+		</>
 	);
 }

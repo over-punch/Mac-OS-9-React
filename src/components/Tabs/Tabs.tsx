@@ -13,6 +13,7 @@ import React, {
 } from 'react';
 import { mergeClasses } from '../../utils/classNames';
 import { resolveAria } from '../../utils/aria';
+import { warnDeprecatedProp } from '../../utils/deprecation';
 import styles from './Tabs.module.css';
 
 export interface TabPanelProps<TValue extends string = string> {
@@ -82,8 +83,15 @@ export interface TabsProps<TValue extends string = string> {
 	activeTab?: number;
 
 	/**
-	 * Callback when tab changes
+	 * Called with the newly selected tab's `value`, and its index.
+	 *
+	 * Value first, matching every other `onValueChange` in the library. The
+	 * value is `undefined` when the TabPanel has no `value` prop, in which
+	 * case the index is the identity.
 	 */
+	onValueChange?: (value: TValue | undefined, index: number) => void;
+
+	/** @deprecated Use `onValueChange`, which leads with the value. */
 	onChange?: (index: number, value?: TValue) => void;
 
 	/**
@@ -158,7 +166,7 @@ export interface TabsProps<TValue extends string = string> {
  * </Tabs>
  *
  * // Controlled
- * <Tabs activeTab={activeIndex} onChange={setActiveIndex}>
+ * <Tabs activeTab={activeIndex} onValueChange={(value, index) => setActiveIndex(index)}>
  *   <TabPanel label="Tab 1">Content 1</TabPanel>
  *   <TabPanel label="Tab 2">Content 2</TabPanel>
  * </Tabs>
@@ -170,6 +178,7 @@ function TabsInner<TValue extends string = string>(
 		defaultActiveTab = 0,
 		activeTab: controlledActiveTab,
 		onChange,
+		onValueChange,
 		size = 'md',
 		fullWidth = false,
 		className = '',
@@ -197,6 +206,12 @@ function TabsInner<TValue extends string = string>(
 		ariaLabelledByAttr,
 		ariaLabelledBy
 	);
+
+	// `onValueChange` is the supported name; `onChange` still works and warns
+	// once in development.
+	if (process.env.NODE_ENV !== 'production' && onChange && !onValueChange) {
+		warnDeprecatedProp('Tabs', 'onChange', 'onValueChange');
+	}
 
 	// Unique per Tabs instance. The ids used to be `tab-0` / `panel-0`, which
 	// collided the moment a page rendered two Tabs — duplicate DOM ids, and
@@ -226,9 +241,13 @@ function TabsInner<TValue extends string = string>(
 			if (!isControlled) {
 				setUncontrolledActiveTab(index);
 			}
-			onChange?.(index, tab.props.value);
+			if (onValueChange) {
+				onValueChange(tab.props.value, index);
+			} else if (onChange) {
+				onChange(index, tab.props.value);
+			}
 		},
-		[tabs, isControlled, onChange]
+		[tabs, isControlled, onValueChange, onChange]
 	);
 
 	// Keyboard navigation
@@ -372,7 +391,7 @@ function TabsInner<TValue extends string = string>(
  * exported. This is what makes a literal union survive into `onChange`:
  *
  * ```tsx
- * <Tabs<'general' | 'advanced'> onChange={(index, value) => …}>
+ * <Tabs<'general' | 'advanced'> onValueChange={(value, index) => …}>
  *   <TabPanel label="General" value="general">…</TabPanel>
  *   <TabPanel label="Advanced" value="advanced">…</TabPanel>
  * </Tabs>

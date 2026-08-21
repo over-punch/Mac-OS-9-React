@@ -11,6 +11,7 @@ import React, {
 	useState,
 } from 'react';
 import { resolveAria } from '../../utils/aria';
+import { warnDeprecatedProp } from '../../utils/deprecation';
 import { FieldMessage, describedBy, type ErrorLiveRegion } from '../FieldMessage';
 import { mergeClasses } from '../../utils/classNames';
 import styles from './Radio.module.css';
@@ -137,7 +138,7 @@ export interface RadioProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 
  * @example
  * ```tsx
  * // Recommended: with RadioGroup
- * <RadioGroup name="size" value={size} onChange={setSize}>
+ * <RadioGroup name="size" value={size} onValueChange={setSize}>
  *   <Radio value="small" label="Small" />
  *   <Radio value="medium" label="Medium" />
  *   <Radio value="large" label="Large" />
@@ -281,7 +282,7 @@ Radio.displayName = 'Radio';
 /**
  * Props accepted by <RadioGroup>.
  */
-export interface RadioGroupProps {
+export interface RadioGroupProps<TValue extends string | number = string> {
 	/**
 	 * Shared name for every <Radio> in the group. When omitted, a stable
 	 * auto-generated id is used so radios in the same group are linked.
@@ -289,19 +290,30 @@ export interface RadioGroupProps {
 	name?: string;
 
 	/**
-	 * Controlled selected value. Pair with `onChange`.
+	 * Controlled selected value. Pair with `onValueChange`.
+	 *
+	 * Generic, so a literal union or a plain `string` survives into the
+	 * callback instead of widening to `string | number`.
 	 */
-	value?: string | number;
+	value?: TValue;
 
 	/**
 	 * Uncontrolled initial value.
 	 */
-	defaultValue?: string | number;
+	defaultValue?: TValue;
 
 	/**
-	 * Fires when the user picks a different option.
+	 * Called with the newly selected value.
+	 *
+	 * Named `onValueChange` because it reports a value rather than a DOM
+	 * event. Across the library `onChange` always means the native change
+	 * handler of a wrapped input — which is what the individual `Radio` has —
+	 * and `onValueChange` always means the parsed value.
 	 */
-	onChange?: (value: string | number) => void;
+	onValueChange?: (value: TValue) => void;
+
+	/** @deprecated Use `onValueChange`. */
+	onChange?: (value: TValue) => void;
 
 	/**
 	 * Disable every radio in the group at once.
@@ -351,20 +363,21 @@ export interface RadioGroupProps {
  * @example
  * ```tsx
  * const [size, setSize] = useState('medium');
- * <RadioGroup name="size" value={size} onChange={setSize} ariaLabel="T-shirt size">
+ * <RadioGroup name="size" value={size} onValueChange={setSize} aria-label="T-shirt size">
  *   <Radio value="small" label="Small" />
  *   <Radio value="medium" label="Medium" />
  *   <Radio value="large" label="Large" />
  * </RadioGroup>
  * ```
  */
-export const RadioGroup = forwardRef<HTMLDivElement, RadioGroupProps>(
+const RadioGroupImpl = forwardRef<HTMLDivElement, RadioGroupProps<string | number>>(
 	(
 		{
 			name,
 			value,
 			defaultValue,
 			onChange,
+			onValueChange,
 			disabled = false,
 			orientation = 'vertical',
 			ariaLabel,
@@ -383,12 +396,18 @@ export const RadioGroup = forwardRef<HTMLDivElement, RadioGroupProps>(
 		const [internalValue, setInternalValue] = useState<string | number | undefined>(defaultValue);
 		const currentValue = isControlled ? value : internalValue;
 
+		// `onValueChange` is the supported name; `onChange` still works and
+		// warns once in development.
+		if (process.env.NODE_ENV !== 'production' && onChange && !onValueChange) {
+			warnDeprecatedProp('RadioGroup', 'onChange', 'onValueChange');
+		}
+
 		const handleChildChange = useCallback(
 			(nextValue: string | number) => {
 				if (!isControlled) setInternalValue(nextValue);
-				onChange?.(nextValue);
+				(onValueChange ?? onChange)?.(nextValue);
 			},
-			[isControlled, onChange]
+			[isControlled, onValueChange, onChange]
 		);
 
 		// Arrow-key navigation. We scope the listener to the group root and
@@ -482,6 +501,14 @@ export const RadioGroup = forwardRef<HTMLDivElement, RadioGroupProps>(
 	}
 );
 
-RadioGroup.displayName = 'RadioGroup';
+RadioGroupImpl.displayName = 'RadioGroup';
+
+/**
+ * `forwardRef` erases generics, so the forwarded component is re-cast to a
+ * signature that keeps `TValue` — matching Select, Tabs and ListView.
+ */
+export const RadioGroup = RadioGroupImpl as <TValue extends string | number = string>(
+	props: RadioGroupProps<TValue> & { ref?: React.Ref<HTMLDivElement> }
+) => React.ReactElement | null;
 
 export default Radio;

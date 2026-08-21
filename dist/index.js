@@ -1445,7 +1445,7 @@ const RadioGroupContext = React.createContext(null);
  * @example
  * ```tsx
  * // Recommended: with RadioGroup
- * <RadioGroup name="size" value={size} onChange={setSize}>
+ * <RadioGroup name="size" value={size} onValueChange={setSize}>
  *   <Radio value="small" label="Small" />
  *   <Radio value="medium" label="Medium" />
  *   <Radio value="large" label="Large" />
@@ -1503,24 +1503,29 @@ Radio.displayName = 'Radio';
  * @example
  * ```tsx
  * const [size, setSize] = useState('medium');
- * <RadioGroup name="size" value={size} onChange={setSize} ariaLabel="T-shirt size">
+ * <RadioGroup name="size" value={size} onValueChange={setSize} aria-label="T-shirt size">
  *   <Radio value="small" label="Small" />
  *   <Radio value="medium" label="Medium" />
  *   <Radio value="large" label="Large" />
  * </RadioGroup>
  * ```
  */
-const RadioGroup = forwardRef(({ name, value, defaultValue, onChange, disabled = false, orientation = 'vertical', ariaLabel, ariaLabelledBy, 'aria-label': ariaLabelAttr, 'aria-labelledby': ariaLabelledByAttr, className = '', children, }, ref) => {
+const RadioGroupImpl = forwardRef(({ name, value, defaultValue, onChange, onValueChange, disabled = false, orientation = 'vertical', ariaLabel, ariaLabelledBy, 'aria-label': ariaLabelAttr, 'aria-labelledby': ariaLabelledByAttr, className = '', children, }, ref) => {
     const generatedName = useId();
     const resolvedName = name ?? `radio-group-${generatedName}`;
     const isControlled = value !== undefined;
     const [internalValue, setInternalValue] = useState(defaultValue);
     const currentValue = isControlled ? value : internalValue;
+    // `onValueChange` is the supported name; `onChange` still works and
+    // warns once in development.
+    if (process.env.NODE_ENV !== 'production' && onChange && !onValueChange) {
+        warnDeprecatedProp('RadioGroup', 'onChange', 'onValueChange');
+    }
     const handleChildChange = useCallback((nextValue) => {
         if (!isControlled)
             setInternalValue(nextValue);
-        onChange?.(nextValue);
-    }, [isControlled, onChange]);
+        (onValueChange ?? onChange)?.(nextValue);
+    }, [isControlled, onValueChange, onChange]);
     // Arrow-key navigation. We scope the listener to the group root and
     // query enabled radios on demand so consumers can render any structure
     // inside (Radio wrapped in extra divs is fine).
@@ -1579,7 +1584,12 @@ const RadioGroup = forwardRef(({ name, value, defaultValue, onChange, disabled =
     };
     return (jsx("div", { ref: setGroupRef, role: "radiogroup", "aria-label": resolveAria('RadioGroup', 'aria-label', 'ariaLabel', ariaLabelAttr, ariaLabel), "aria-labelledby": resolveAria('RadioGroup', 'aria-labelledby', 'ariaLabelledBy', ariaLabelledByAttr, ariaLabelledBy), "aria-orientation": orientation, "aria-disabled": disabled || undefined, onKeyDown: handleKeyDown, className: mergeClasses(styles$a.radioGroup, styles$a[`radioGroup--${orientation}`], className), children: jsx(RadioGroupContext.Provider, { value: contextValue, children: children }) }));
 });
-RadioGroup.displayName = 'RadioGroup';
+RadioGroupImpl.displayName = 'RadioGroup';
+/**
+ * `forwardRef` erases generics, so the forwarded component is re-cast to a
+ * signature that keeps `TValue` — matching Select, Tabs and ListView.
+ */
+const RadioGroup = RadioGroupImpl;
 
 var styles$9 = {"wrapper":"TextField-module_wrapper","wrapper--full-width":"TextField-module_wrapper--full-width","wrapper--disabled":"TextField-module_wrapper--disabled","wrapper--label-top":"TextField-module_wrapper--label-top","wrapper--label-left":"TextField-module_wrapper--label-left","wrapper--label-right":"TextField-module_wrapper--label-right","label":"TextField-module_label","label--sm":"TextField-module_label--sm","label--md":"TextField-module_label--md","label--lg":"TextField-module_label--lg","input-wrapper":"TextField-module_input-wrapper","input":"TextField-module_input","input--sm":"TextField-module_input--sm","input--md":"TextField-module_input--md","input--lg":"TextField-module_input--lg","input--full-width":"TextField-module_input--full-width","input-icon-left":"TextField-module_input-icon-left","input-icon-right":"TextField-module_input-icon-right","input-wrapper--with-left-icon":"TextField-module_input-wrapper--with-left-icon","input-wrapper--with-right-icon":"TextField-module_input-wrapper--with-right-icon","input--error":"TextField-module_input--error","helper-text":"TextField-module_helper-text","error-message":"TextField-module_error-message","wrapper--sm":"TextField-module_wrapper--sm","wrapper--md":"TextField-module_wrapper--md","wrapper--lg":"TextField-module_wrapper--lg"};
 
@@ -2066,13 +2076,13 @@ TabPanel.displayName = 'TabPanel';
  * </Tabs>
  *
  * // Controlled
- * <Tabs activeTab={activeIndex} onChange={setActiveIndex}>
+ * <Tabs activeTab={activeIndex} onValueChange={(value, index) => setActiveIndex(index)}>
  *   <TabPanel label="Tab 1">Content 1</TabPanel>
  *   <TabPanel label="Tab 2">Content 2</TabPanel>
  * </Tabs>
  * ```
  */
-function TabsInner({ children, defaultActiveTab = 0, activeTab: controlledActiveTab, onChange, size = 'md', fullWidth = false, className = '', tabListClassName = '', panelClassName = '', ariaLabel, ariaLabelledBy, 'aria-label': ariaLabelAttr, 'aria-labelledby': ariaLabelledByAttr, }, ref) {
+function TabsInner({ children, defaultActiveTab = 0, activeTab: controlledActiveTab, onChange, onValueChange, size = 'md', fullWidth = false, className = '', tabListClassName = '', panelClassName = '', ariaLabel, ariaLabelledBy, 'aria-label': ariaLabelAttr, 'aria-labelledby': ariaLabelledByAttr, }, ref) {
     // Controlled vs uncontrolled state
     const [uncontrolledActiveTab, setUncontrolledActiveTab] = useState(defaultActiveTab);
     const isControlled = controlledActiveTab !== undefined;
@@ -2080,6 +2090,11 @@ function TabsInner({ children, defaultActiveTab = 0, activeTab: controlledActive
     // Standard attributes win; the camelCase aliases warn once in development.
     const resolvedAriaLabel = resolveAria('Tabs', 'aria-label', 'ariaLabel', ariaLabelAttr, ariaLabel) ?? 'Tabs';
     const resolvedAriaLabelledBy = resolveAria('Tabs', 'aria-labelledby', 'ariaLabelledBy', ariaLabelledByAttr, ariaLabelledBy);
+    // `onValueChange` is the supported name; `onChange` still works and warns
+    // once in development.
+    if (process.env.NODE_ENV !== 'production' && onChange && !onValueChange) {
+        warnDeprecatedProp('Tabs', 'onChange', 'onValueChange');
+    }
     // Unique per Tabs instance. The ids used to be `tab-0` / `panel-0`, which
     // collided the moment a page rendered two Tabs — duplicate DOM ids, and
     // aria-controls on the second set pointing at the first set's panels.
@@ -2099,8 +2114,13 @@ function TabsInner({ children, defaultActiveTab = 0, activeTab: controlledActive
         if (!isControlled) {
             setUncontrolledActiveTab(index);
         }
-        onChange?.(index, tab.props.value);
-    }, [tabs, isControlled, onChange]);
+        if (onValueChange) {
+            onValueChange(tab.props.value, index);
+        }
+        else if (onChange) {
+            onChange(index, tab.props.value);
+        }
+    }, [tabs, isControlled, onValueChange, onChange]);
     // Keyboard navigation
     const handleKeyDown = useCallback((event, currentIndex) => {
         let newIndex;
@@ -2178,7 +2198,7 @@ function TabsInner({ children, defaultActiveTab = 0, activeTab: controlledActive
  * exported. This is what makes a literal union survive into `onChange`:
  *
  * ```tsx
- * <Tabs<'general' | 'advanced'> onChange={(index, value) => …}>
+ * <Tabs<'general' | 'advanced'> onValueChange={(value, index) => …}>
  *   <TabPanel label="General" value="general">…</TabPanel>
  *   <TabPanel label="Advanced" value="advanced">…</TabPanel>
  * </Tabs>
@@ -3536,11 +3556,11 @@ var styles$2 = {"scrollbar":"Scrollbar-module_scrollbar","scrollbar--vertical":"
  *   orientation="vertical"
  *   value={0.5}
  *   viewportRatio={0.3}
- *   onChange={(value) => console.log('Scroll position:', value)}
+ *   onValueChange={(value) => console.log('Scroll position:', value)}
  * />
  * ```
  */
-const Scrollbar = forwardRef(({ orientation = 'vertical', value = 0, viewportRatio, onChange, 'aria-label': ariaLabelAttr, className = '', disabled = false, ariaLabel, controls, step = 0.1, }, ref) => {
+const Scrollbar = forwardRef(({ orientation = 'vertical', value = 0, viewportRatio, onChange, onValueChange, 'aria-label': ariaLabelAttr, className = '', disabled = false, ariaLabel, controls, step = 0.1, }, ref) => {
     const trackRef = useRef(null);
     const [isDragging, setIsDragging] = useState(false);
     const [dragStartPos, setDragStartPos] = useState(0);
@@ -3548,13 +3568,19 @@ const Scrollbar = forwardRef(({ orientation = 'vertical', value = 0, viewportRat
     const isVertical = orientation === 'vertical';
     // Helper used by both arrow buttons and keyboard handler to clamp
     // the next value into the valid 0-1 range before notifying.
+    // `onValueChange` is the supported name; `onChange` still works and
+    // warns once in development.
+    if (process.env.NODE_ENV !== 'production' && onChange && !onValueChange) {
+        warnDeprecatedProp('Scrollbar', 'onChange', 'onValueChange');
+    }
+    const emitValue = onValueChange ?? onChange;
     const commitValue = useCallback((next) => {
-        if (disabled || !onChange)
+        if (disabled || !emitValue)
             return;
         const clamped = Math.max(0, Math.min(1, next));
         if (clamped !== value)
-            onChange(clamped);
-    }, [disabled, onChange, value]);
+            emitValue(clamped);
+    }, [disabled, emitValue, value]);
     // Calculate thumb size based on viewport ratio
     // Omitting viewportRatio is a wiring mistake, not a styling choice, so
     // say so in development and fall back to a full-length thumb — the
@@ -3613,7 +3639,7 @@ const Scrollbar = forwardRef(({ orientation = 'vertical', value = 0, viewportRat
     }, [commitValue, disabled, isVertical, step, value, effectiveViewportRatio]);
     // Handle track clicks
     const handleTrackClick = useCallback((event) => {
-        if (disabled || !onChange || !trackRef.current)
+        if (disabled || !emitValue || !trackRef.current)
             return;
         const rect = trackRef.current.getBoundingClientRect();
         const clickPos = isVertical ? event.clientY - rect.top : event.clientX - rect.left;
@@ -3621,8 +3647,8 @@ const Scrollbar = forwardRef(({ orientation = 'vertical', value = 0, viewportRat
         // Convert click position to scroll value (0-1)
         const clickRatio = clickPos / trackSize;
         const newValue = Math.max(0, Math.min(1, clickRatio));
-        onChange(newValue);
-    }, [disabled, onChange, isVertical]);
+        emitValue(newValue);
+    }, [disabled, emitValue, isVertical]);
     // Pointer-down on the thumb starts a drag. Pointer Events instead
     // of mouse events give us mouse/touch/pen support — previously the
     // thumb was un-draggable on tablets and phones (issue #11).
