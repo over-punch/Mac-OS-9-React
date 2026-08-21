@@ -1249,50 +1249,42 @@ function warnMissingProp(component, message) {
     console.warn(`[mac-os9-ui] ${component}: ${message}`);
 }
 
-var styles$c = {"pixelated-corner-sm":"IconButton-module_pixelated-corner-sm","pixelated-corner-md":"IconButton-module_pixelated-corner-md","pixelated-corner-pseudo":"IconButton-module_pixelated-corner-pseudo","mac-corner":"IconButton-module_mac-corner","chamfered-sm":"IconButton-module_chamfered-sm","chamfered-md":"IconButton-module_chamfered-md","tab-corner":"IconButton-module_tab-corner","button-corner":"IconButton-module_button-corner","window-corner":"IconButton-module_window-corner","iconButton":"IconButton-module_iconButton","icon":"IconButton-module_icon","label":"IconButton-module_label","iconButton--label-top":"IconButton-module_iconButton--label-top","iconButton--label-bottom":"IconButton-module_iconButton--label-bottom","iconButton--label-left":"IconButton-module_iconButton--label-left","iconButton--label-right":"IconButton-module_iconButton--label-right","iconButton--sm":"IconButton-module_iconButton--sm","iconButton--with-label":"IconButton-module_iconButton--with-label","iconButton--md":"IconButton-module_iconButton--md","iconButton--lg":"IconButton-module_iconButton--lg","iconButton--default":"IconButton-module_iconButton--default","iconButton--primary":"IconButton-module_iconButton--primary","iconButton--danger":"IconButton-module_iconButton--danger","iconButton--disabled":"IconButton-module_iconButton--disabled"};
+var styles$c = {"iconButton":"IconButton-module_iconButton","iconButton--with-label":"IconButton-module_iconButton--with-label","content":"IconButton-module_content","content--right":"IconButton-module_content--right","content--left":"IconButton-module_content--left","content--bottom":"IconButton-module_content--bottom","content--top":"IconButton-module_content--top","icon":"IconButton-module_icon","label":"IconButton-module_label"};
 
-/**
- * An icon with no visible label has no accessible name, so a screen reader
- * announces it as just "button". Warn in development rather than shipping one.
- */
-function assertHasName(label, ariaLabel, title) {
-    if (label || ariaLabel || title)
-        return;
-    warnMissingProp('IconButton', 'no accessible name. Pass `label`, `aria-label`, or `title` — an icon alone announces as "button".');
-}
 /**
  * IconButton component for Mac OS 9 UI
  *
- * Button with an icon, optionally with a text label.
- * Supports all button variants and sizes.
+ * A Button whose content is an icon, optionally with a text label. Inherits
+ * Button's variants, sizes, states and accessibility behaviour.
+ *
+ * With no `label`, this is an icon-only control and needs an accessible name:
+ * pass `aria-label` or `title`. Development builds warn when neither is there.
  *
  * @example
  * ```tsx
  * // Icon-only button
- * <IconButton icon={<SaveIcon />} />
+ * <IconButton icon={<SaveIcon />} aria-label="Save" />
  *
  * // Icon with label
- * <IconButton
- *   icon={<FolderIcon />}
- *   label="New Folder"
- *   variant="primary"
- * />
+ * <IconButton icon={<FolderIcon />} label="New Folder" variant="primary" />
  *
- * // Icon with label on different sides
- * <IconButton
- *   icon={<SearchIcon />}
- *   label="Search"
- *   labelPosition="right"
- * />
+ * // Label above the icon
+ * <IconButton icon={<SearchIcon />} label="Search" labelPosition="top" />
  * ```
  */
 const IconButton = React.forwardRef(({ icon, label, labelPosition = 'right', variant = 'default', size = 'md', disabled = false, className = '', classes, ...props }, ref) => {
-    if (process.env.NODE_ENV !== 'production') {
-        assertHasName(label, props['aria-label'], props.title);
+    // An icon with no visible label has no accessible name, so a screen
+    // reader announces it as just "button".
+    if (process.env.NODE_ENV !== 'production' && !label && !props['aria-label'] && !props.title) {
+        warnMissingProp('IconButton', 'no accessible name. Pass `label`, `aria-label`, or `title` — an icon alone announces as "button".');
     }
-    // Build class names
-    const classNames = mergeClasses(styles$c.iconButton, styles$c[`iconButton--${variant}`], styles$c[`iconButton--${size}`], label && styles$c['iconButton--with-label'], label && styles$c[`iconButton--label-${labelPosition}`], disabled && styles$c['iconButton--disabled'], className, classes?.root);
-    return (jsxRuntime.jsxs("button", { ref: ref, type: "button", className: classNames, disabled: disabled, ...props, children: [label && (labelPosition === 'left' || labelPosition === 'top') && (jsxRuntime.jsx("span", { className: mergeClasses(styles$c.label, classes?.label), children: label })), jsxRuntime.jsx("span", { className: mergeClasses(styles$c.icon, classes?.icon), children: icon }), label && (labelPosition === 'right' || labelPosition === 'bottom') && (jsxRuntime.jsx("span", { className: mergeClasses(styles$c.label, classes?.label), children: label }))] }));
+    return (jsxRuntime.jsxs(Button, { ref: ref, variant: variant, size: size, disabled: disabled, className: mergeClasses(styles$c.iconButton, label && styles$c['iconButton--with-label'], className), classes: {
+            root: classes?.root,
+            // Button wraps non-iconOnly children in its text span; that is
+            // the element that has to lay the icon and label out.
+            text: mergeClasses(styles$c.content, styles$c[`content--${labelPosition}`], classes?.content),
+            iconOnly: mergeClasses(styles$c.content, classes?.content),
+        }, iconOnly: !label, ...props, children: [jsxRuntime.jsx("span", { className: mergeClasses(styles$c.icon, classes?.icon), children: icon }), label ? jsxRuntime.jsx("span", { className: mergeClasses(styles$c.label, classes?.label), children: label }) : null] }));
 });
 IconButton.displayName = 'IconButton';
 

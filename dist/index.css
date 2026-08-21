@@ -729,489 +729,65 @@
 	width: 24px;
 	height: 24px;
 }
-/* IconButton Component Styles - Mac OS 9 */
-
-/* Import pixelated corners utility */
-
-/**
- * Pixelated Corner Effects for Mac OS 9
- * 
- * Mac OS 9 didn't use modern border-radius. Instead, rounded corners were 
- * achieved through pixelated/stepped edges that created a retro aesthetic.
- * 
- * This is implemented using box-shadow technique to create pixel-perfect
- * corner effects without relying on border-radius.
+/* IconButton Component Styles - Mac OS 9
+ *
+ * IconButton renders a Button, so the bevel, variants, sizes, hover, active,
+ * focus and disabled states all come from Button.module.css. This file holds
+ * only what IconButton adds on top: the layout of an icon next to a label.
+ *
+ * It previously carried a full parallel copy of Button's chrome — 207 lines
+ * of variant, size and state rules that had to be kept in step with Button by
+ * hand (issue #88).
  */
-
-/* ========================================
- * Pixelated Corner Utilities
- * ======================================== */
-
-/**
- * Small pixelated corner (1-2px chamfer)
- * Used for buttons, checkboxes, and small UI elements
- */
-.IconButton-module_pixelated-corner-sm {
-	/* Clip the actual corners */
-	clip-path: polygon(
-		/* Top-left corner */
-		2px 0,
-		0 2px,
-		/* Left edge */
-		0 100%,
-		/* Bottom-left - no clip */
-		0 100%,
-		/* Bottom edge */
-		100% 100%,
-		/* Bottom-right - no clip */
-		100% 100%,
-		/* Right edge */
-		100% 2px,
-		/* Top-right corner */
-		calc(100% - 2px) 0
-	);
-}
-
-/**
- * Medium pixelated corner (3-4px chamfer)
- * Used for dialog boxes, windows, larger UI elements
- */
-.IconButton-module_pixelated-corner-md {
-	clip-path: polygon(
-		/* Top-left corner */
-		4px 0,
-		3px 1px,
-		2px 2px,
-		1px 3px,
-		0 4px,
-		/* Left edge */
-		0 calc(100% - 4px),
-		/* Bottom-left corner */
-		1px calc(100% - 3px),
-		2px calc(100% - 2px),
-		3px calc(100% - 1px),
-		4px 100%,
-		/* Bottom edge */
-		calc(100% - 4px) 100%,
-		/* Bottom-right corner */
-		calc(100% - 3px) calc(100% - 1px),
-		calc(100% - 2px) calc(100% - 2px),
-		calc(100% - 1px) calc(100% - 3px),
-		100% calc(100% - 4px),
-		/* Right edge */
-		100% 4px,
-		/* Top-right corner */
-		calc(100% - 1px) 3px,
-		calc(100% - 2px) 2px,
-		calc(100% - 3px) 1px,
-		calc(100% - 4px) 0
-	);
-}
-
-/**
- * Alternative technique using pseudo-elements
- * Better browser compatibility but more complex
-  */
-.IconButton-module_pixelated-corner-pseudo::before,
-.IconButton-module_pixelated-corner-pseudo::after {
-	content: '';
-	position: absolute;
-	background-color: inherit;
-}
-
-/* Top corners */
-.IconButton-module_pixelated-corner-pseudo::before {
-	top: 0;
-	left: 2px;
-	right: 2px;
-	height: 1px;
-	box-shadow:
-		-1px 1px 0 0 currentColor,
-		/* Left corner pixel */
-			calc(100% + 1px) 1px 0 0 currentColor; /* Right corner pixel */
-}
-
-/* Bottom corners */
-.IconButton-module_pixelated-corner-pseudo::after {
-	bottom: 0;
-	left: 2px;
-	right: 2px;
-	height: 1px;
-	box-shadow:
-		-1px -1px 0 0 currentColor,
-		/* Left corner pixel */
-			calc(100% + 1px) -1px 0 0 currentColor; /* Right corner pixel */
-}
-
-/* ========================================
- * Box-Shadow Technique (Most Authentic)
- * ======================================== */
-
-/**
- * Creates pixelated corners using box-shadow layering
- * This is the most authentic Mac OS 9 appearance
- * 
- * Usage: Apply to element with background color
- */
-.IconButton-module_mac-corner {
-	position: relative;
-	/* Create notched corners effect */
-	background-clip: padding-box;
-}
-
-/* Top-left notch */
-.IconButton-module_mac-corner::before {
-	content: '';
-	position: absolute;
-	top: 0;
-	left: 0;
-	width: 2px;
-	height: 2px;
-	background: transparent;
-	box-shadow:
-		0 0 0 1px var(--color-background, #eeeeee),
-		1px 1px 0 0 var(--color-border, #262626);
-}
-
-/* Top-right notch */
-.IconButton-module_mac-corner::after {
-	content: '';
-	position: absolute;
-	top: 0;
-	right: 0;
-	width: 2px;
-	height: 2px;
-	background: transparent;
-	box-shadow:
-		0 0 0 1px var(--color-background, #eeeeee),
-		-1px 1px 0 0 var(--color-border, #262626);
-}
-
-/* ========================================
- * Simple Chamfered Corners (CSS-only)
- * ======================================== */
-
-/**
- * Creates simple chamfered (cut) corners
- * Lightweight alternative to full pixelated effect
- */
-.IconButton-module_chamfered-sm {
-	clip-path: polygon(
-		2px 0,
-		calc(100% - 2px) 0,
-		100% 2px,
-		100% calc(100% - 2px),
-		calc(100% - 2px) 100%,
-		2px 100%,
-		0 calc(100% - 2px),
-		0 2px
-	);
-}
-
-.IconButton-module_chamfered-md {
-	clip-path: polygon(
-		3px 0,
-		calc(100% - 3px) 0,
-		100% 3px,
-		100% calc(100% - 3px),
-		calc(100% - 3px) 100%,
-		3px 100%,
-		0 calc(100% - 3px),
-		0 3px
-	);
-}
-
-/* ========================================
- * Tab-specific Pixelated Corners
- * Used for tab components
- * ======================================== */
-
-/**
- * Tab with pixelated top corners only
- * Bottom remains flat for connection to content
- */
-.IconButton-module_tab-corner {
-	position: relative;
-	clip-path: polygon(
-		/* Top-left pixelated corner */
-		3px 0,
-		2px 1px,
-		1px 2px,
-		0 3px,
-		/* Left edge down */
-		0 100%,
-		/* Bottom edge (flat) */
-		100% 100%,
-		/* Right edge up */
-		100% 3px,
-		/* Top-right pixelated corner */
-		calc(100% - 1px) 2px,
-		calc(100% - 2px) 1px,
-		calc(100% - 3px) 0
-	);
-}
-
-/**
- * Button with all rounded pixelated corners
- */
-.IconButton-module_button-corner {
-	clip-path: polygon(
-		/* Top edge with corners */
-		2px 0,
-		calc(100% - 2px) 0,
-		/* Top-right corner */
-		100% 2px,
-		/* Right edge */
-		100% calc(100% - 2px),
-		/* Bottom-right corner */
-		calc(100% - 2px) 100%,
-		/* Bottom edge */
-		2px 100%,
-		/* Bottom-left corner */
-		0 calc(100% - 2px),
-		/* Left edge */
-		0 2px
-	);
-}
-
-/* ========================================
- * Window-specific Corners
- * Larger radius for window chrome
- * ======================================== */
-
-.IconButton-module_window-corner {
-	clip-path: polygon(
-		/* Top-left stepped corner */
-		4px 0,
-		3px 1px,
-		2px 2px,
-		1px 3px,
-		0 4px,
-		/* Left edge */
-		0 calc(100% - 4px),
-		/* Bottom-left stepped corner */
-		1px calc(100% - 3px),
-		2px calc(100% - 2px),
-		3px calc(100% - 1px),
-		4px 100%,
-		/* Bottom edge */
-		calc(100% - 4px) 100%,
-		/* Bottom-right stepped corner */
-		calc(100% - 3px) calc(100% - 1px),
-		calc(100% - 2px) calc(100% - 2px),
-		calc(100% - 1px) calc(100% - 3px),
-		100% calc(100% - 4px),
-		/* Right edge */
-		100% 4px,
-		/* Top-right stepped corner */
-		calc(100% - 1px) 3px,
-		calc(100% - 2px) 2px,
-		calc(100% - 3px) 1px,
-		calc(100% - 4px) 0
-	);
-}
-
-/* ========================================
- * Base IconButton Styles
- * ======================================== */
 
 .IconButton-module_iconButton {
-	/* Base styling */
-	font-family: var(--font-system);
-	font-weight: var(--font-weight-bold);
-	color: var(--color-text);
-	
-	/* Box styling */
-	background: var(--color-gray-400);
-	border: var(--border-width-thin) solid var(--color-border);
-	border-radius: var(--border-radius-none);
-	box-shadow: var(--shadow-raised);
-	
-	/* Layout */
+	/* Square-ish padding for an icon, rather than Button's text padding. */
+	padding: var(--spacing-1) var(--spacing-2);
+}
+
+.IconButton-module_iconButton--with-label {
+	/* With a label, fall back to Button's more generous horizontal padding. */
+	padding: var(--spacing-1) var(--spacing-3);
+}
+
+/* ========================================
+ * Icon and label layout
+ * ======================================== */
+
+.IconButton-module_content {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	gap: var(--spacing-2);
-	
-	/* Cursor */
-	cursor: pointer;
-	
-	/* Remove button defaults */
-	-webkit-appearance: none;
-	-moz-appearance: none;
-	appearance: none;
-	
-	/* No transitions */
-	transition: none;
-	
-	/* Text */
-	white-space: nowrap;
-	user-select: none;
-	
-	/* Pixelated corners for authentic Mac OS 9 appearance */
-	clip-path: polygon(
-		/* Top-left pixelated corner */
-		4px 0,
-		3px 1px,
-		2px 2px,
-		1px 3px,
-		0 4px,
-		/* Left edge down */
-		0 calc(100% - 4px),
-		/* Bottom-left pixelated corner */
-		1px calc(100% - 3px),
-		2px calc(100% - 2px),
-		3px calc(100% - 1px),
-		4px 100%,
-		/* Bottom edge right */
-		calc(100% - 4px) 100%,
-		/* Bottom-right pixelated corner */
-		calc(100% - 3px) calc(100% - 1px),
-		calc(100% - 2px) calc(100% - 2px),
-		calc(100% - 1px) calc(100% - 3px),
-		100% calc(100% - 4px),
-		/* Right edge up */
-		100% 4px,
-		/* Top-right pixelated corner */
-		calc(100% - 1px) 3px,
-		calc(100% - 2px) 2px,
-		calc(100% - 3px) 1px,
-		calc(100% - 4px) 0
-	);
+	gap: var(--spacing-1);
 }
 
-/* ========================================
- * Icon and Label Layout
- * ======================================== */
+.IconButton-module_content--right {
+	flex-direction: row;
+}
+
+.IconButton-module_content--left {
+	flex-direction: row-reverse;
+}
+
+.IconButton-module_content--bottom {
+	flex-direction: column;
+}
+
+.IconButton-module_content--top {
+	flex-direction: column-reverse;
+}
 
 .IconButton-module_icon {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
 	flex-shrink: 0;
+	line-height: 0;
 }
 
 .IconButton-module_label {
-	display: inline-flex;
-	align-items: center;
-}
-
-/* Layout direction variants */
-.IconButton-module_iconButton--label-top,
-.IconButton-module_iconButton--label-bottom {
-	flex-direction: column;
-}
-
-.IconButton-module_iconButton--label-left {
-	flex-direction: row-reverse;
-}
-
-.IconButton-module_iconButton--label-right {
-	flex-direction: row;
-}
-
-/* ========================================
- * Size Variants
- * ======================================== */
-
-.IconButton-module_iconButton--sm {
-	padding: var(--spacing-1);
-	font-size: var(--font-size-xs);
-	line-height: var(--line-height-tight);
-	min-width: 24px;
-	min-height: 24px;
-}
-
-.IconButton-module_iconButton--sm.IconButton-module_iconButton--with-label {
-	padding: var(--spacing-1) var(--spacing-2);
-}
-
-.IconButton-module_iconButton--md {
-	padding: var(--spacing-1_5);
-	font-size: var(--font-size-md);
 	line-height: var(--line-height-snug);
-	min-width: 32px;
-	min-height: 32px;
-}
-
-.IconButton-module_iconButton--md.IconButton-module_iconButton--with-label {
-	padding: var(--spacing-1_5) var(--spacing-3);
-}
-
-.IconButton-module_iconButton--lg {
-	padding: var(--spacing-2);
-	font-size: var(--font-size-lg);
-	line-height: var(--line-height-normal);
-	min-width: 40px;
-	min-height: 40px;
-}
-
-.IconButton-module_iconButton--lg.IconButton-module_iconButton--with-label {
-	padding: var(--spacing-2) var(--spacing-4);
-}
-
-/* ========================================
- * Variant Styles
- * ======================================== */
-
-.IconButton-module_iconButton--default {
-	background: var(--color-gray-400);
-}
-
-.IconButton-module_iconButton--primary {
-	background: var(--color-gray-300);
-}
-
-.IconButton-module_iconButton--danger {
-	background: var(--color-gray-400);
-	color: var(--color-text);
-}
-
-/* ========================================
- * Interactive States
- * ======================================== */
-
-/* Hover state */
-.IconButton-module_iconButton:hover:not(:disabled) {
-	background: var(--color-gray-300);
-}
-
-/* Active/pressed state */
-.IconButton-module_iconButton:active:not(:disabled) {
-	box-shadow: var(--shadow-inset);
-	background: var(--color-gray-500);
-}
-
-/* Focus state */
-.IconButton-module_iconButton:focus-visible {
-	outline: 1px dotted var(--color-focus);
-	outline-offset: -3px;
-}
-
-/* Disabled state */
-.IconButton-module_iconButton--disabled,
-.IconButton-module_iconButton:disabled {
-	opacity: 0.5;
-	cursor: not-allowed;
-	pointer-events: none;
-}
-
-/* ========================================
- * Accessibility
- * ======================================== */
-
-/* Reduced motion support */
-@media (prefers-reduced-motion: reduce) {
-	.IconButton-module_iconButton {
-		transition: none;
-	}
-}
-
-/* High contrast mode support */
-@media (prefers-contrast: high) {
-	.IconButton-module_iconButton {
-		border-width: 2px;
-	}
+	white-space: nowrap;
 }
 
 /* Checkbox Component Styles - Mac OS 9 */

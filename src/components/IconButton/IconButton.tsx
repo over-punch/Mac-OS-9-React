@@ -1,12 +1,19 @@
 // IconButton component - Mac OS 9 style button with icon
-// Button variant that includes an icon, with optional label
-
-// Note: no per-file 'use client' directive. The library ships as a single
-// bundle and Rollup applies the "use client" banner to the whole output,
-// so per-file directives were both inconsistent (4 of 16 components) and
-// silently dropped at bundle time.
+// A Button whose content is an icon, with an optional label in any of four
+// positions.
+//
+// This is a thin wrapper over Button rather than a parallel implementation.
+// The two used to be wholly independent (issue #88): IconButton had its own
+// copy of the variant, size, hover, active, focus and disabled styling, and
+// none of Button's behaviour — no polymorphism, no `asChild`, no loading
+// state, no accessible-name check, and its own take on the disabled
+// convention. Anything fixed in one had to be fixed twice.
+//
+// What IconButton keeps is the part Button has no equivalent for: an icon
+// with a label placed above, below, before or after it.
 
 import React, { forwardRef, ButtonHTMLAttributes } from 'react';
+import { Button } from '../Button/Button';
 import { mergeClasses } from '../../utils/classNames';
 import { warnMissingProp } from '../../utils/deprecation';
 import styles from './IconButton.module.css';
@@ -17,13 +24,22 @@ import styles from './IconButton.module.css';
 export interface IconButtonClasses {
 	/** Root button. */
 	root?: string;
+	/** Layout wrapper around the icon and label. */
+	content?: string;
 	/** Wrapper around the icon. */
 	icon?: string;
 	/** Wrapper around the label. */
 	label?: string;
 }
 
-export interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+export interface IconButtonProps
+	// `formMethod` is omitted and re-declared because the DOM lib types it as
+	// a plain string while Button narrows it to the two values a form can
+	// actually use.
+	extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'children' | 'formMethod'> {
+	/** Override the form method. */
+	formMethod?: 'get' | 'post';
+
 	/**
 	 * Icon element to display
 	 */
@@ -70,41 +86,24 @@ export interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>
 }
 
 /**
- * An icon with no visible label has no accessible name, so a screen reader
- * announces it as just "button". Warn in development rather than shipping one.
- */
-function assertHasName(label: string | undefined, ariaLabel: unknown, title: unknown): void {
-	if (label || ariaLabel || title) return;
-	warnMissingProp(
-		'IconButton',
-		'no accessible name. Pass `label`, `aria-label`, or `title` — an icon alone announces as "button".'
-	);
-}
-
-/**
  * IconButton component for Mac OS 9 UI
  *
- * Button with an icon, optionally with a text label.
- * Supports all button variants and sizes.
+ * A Button whose content is an icon, optionally with a text label. Inherits
+ * Button's variants, sizes, states and accessibility behaviour.
+ *
+ * With no `label`, this is an icon-only control and needs an accessible name:
+ * pass `aria-label` or `title`. Development builds warn when neither is there.
  *
  * @example
  * ```tsx
  * // Icon-only button
- * <IconButton icon={<SaveIcon />} />
+ * <IconButton icon={<SaveIcon />} aria-label="Save" />
  *
  * // Icon with label
- * <IconButton
- *   icon={<FolderIcon />}
- *   label="New Folder"
- *   variant="primary"
- * />
+ * <IconButton icon={<FolderIcon />} label="New Folder" variant="primary" />
  *
- * // Icon with label on different sides
- * <IconButton
- *   icon={<SearchIcon />}
- *   label="Search"
- *   labelPosition="right"
- * />
+ * // Label above the icon
+ * <IconButton icon={<SearchIcon />} label="Search" labelPosition="top" />
  * ```
  */
 export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
@@ -122,32 +121,39 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
 		},
 		ref
 	) => {
-		if (process.env.NODE_ENV !== 'production') {
-			assertHasName(label, props['aria-label'], props.title);
+		// An icon with no visible label has no accessible name, so a screen
+		// reader announces it as just "button".
+		if (process.env.NODE_ENV !== 'production' && !label && !props['aria-label'] && !props.title) {
+			warnMissingProp(
+				'IconButton',
+				'no accessible name. Pass `label`, `aria-label`, or `title` — an icon alone announces as "button".'
+			);
 		}
 
-		// Build class names
-		const classNames = mergeClasses(
-			styles.iconButton,
-			styles[`iconButton--${variant}`],
-			styles[`iconButton--${size}`],
-			label && styles['iconButton--with-label'],
-			label && styles[`iconButton--label-${labelPosition}`],
-			disabled && styles['iconButton--disabled'],
-			className,
-			classes?.root
-		);
-
 		return (
-			<button ref={ref} type="button" className={classNames} disabled={disabled} {...props}>
-				{label && (labelPosition === 'left' || labelPosition === 'top') && (
-					<span className={mergeClasses(styles.label, classes?.label)}>{label}</span>
+			<Button
+				ref={ref}
+				variant={variant}
+				size={size}
+				disabled={disabled}
+				className={mergeClasses(
+					styles.iconButton,
+					label && styles['iconButton--with-label'],
+					className
 				)}
+				classes={{
+					root: classes?.root,
+					// Button wraps non-iconOnly children in its text span; that is
+					// the element that has to lay the icon and label out.
+					text: mergeClasses(styles.content, styles[`content--${labelPosition}`], classes?.content),
+					iconOnly: mergeClasses(styles.content, classes?.content),
+				}}
+				iconOnly={!label}
+				{...props}
+			>
 				<span className={mergeClasses(styles.icon, classes?.icon)}>{icon}</span>
-				{label && (labelPosition === 'right' || labelPosition === 'bottom') && (
-					<span className={mergeClasses(styles.label, classes?.label)}>{label}</span>
-				)}
-			</button>
+				{label ? <span className={mergeClasses(styles.label, classes?.label)}>{label}</span> : null}
+			</Button>
 		);
 	}
 );

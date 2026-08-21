@@ -10,6 +10,7 @@ import { createRoot } from 'react-dom/client';
 import { Window } from '@lib/components/Window';
 import { Dialog } from '@lib/components/Dialog';
 import { Button } from '@lib/components/Button';
+import { IconButton } from '@lib/components/IconButton';
 import { Checkbox } from '@lib/components/Checkbox';
 import { Radio, RadioGroup } from '@lib/components/Radio';
 import { TextField } from '@lib/components/TextField';
@@ -118,6 +119,78 @@ function Capture() {
 						</Window>
 					</div>
 				</div>
+			</Scene>
+
+			{/* ---------- IconButton ---------- */}
+			<Scene id="iconbutton" wide>
+				<Window title="Toolbar" width={620}>
+					<div className="stack">
+						<div className="row">
+							<IconButton
+								icon={<IconLibrary icon="folder" size="sm" label={null} />}
+								label="Open"
+							/>
+							<IconButton
+								icon={<IconLibrary icon="disk" size="sm" label={null} />}
+								label="Save"
+								variant="primary"
+							/>
+							<IconButton
+								icon={<IconLibrary icon="trash" size="sm" label={null} />}
+								label="Delete"
+								variant="danger"
+							/>
+							<IconButton
+								icon={<IconLibrary icon="print" size="sm" label={null} />}
+								aria-label="Print"
+							/>
+							<IconButton
+								icon={<IconLibrary icon="search" size="sm" label={null} />}
+								aria-label="Find"
+								disabled
+							/>
+						</div>
+						<div className="row">
+							<IconButton
+								icon={<IconLibrary icon="arrowUp" size="md" label={null} />}
+								label="Top"
+								labelPosition="bottom"
+							/>
+							<IconButton
+								icon={<IconLibrary icon="arrowDown" size="md" label={null} />}
+								label="Bottom"
+								labelPosition="top"
+							/>
+							<IconButton
+								icon={<IconLibrary icon="arrowLeft" size="md" label={null} />}
+								label="Back"
+								labelPosition="right"
+							/>
+							<IconButton
+								icon={<IconLibrary icon="arrowRight" size="md" label={null} />}
+								label="Forward"
+								labelPosition="left"
+							/>
+						</div>
+						<div className="row">
+							<IconButton
+								icon={<IconLibrary icon="check" size="sm" label={null} />}
+								label="Small"
+								size="sm"
+							/>
+							<IconButton
+								icon={<IconLibrary icon="check" size="md" label={null} />}
+								label="Medium"
+								size="md"
+							/>
+							<IconButton
+								icon={<IconLibrary icon="check" size="lg" label={null} />}
+								label="Large"
+								size="lg"
+							/>
+						</div>
+					</div>
+				</Window>
 			</Scene>
 
 			{/* ---------- Window + menus ---------- */}
