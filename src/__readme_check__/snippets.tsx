@@ -197,3 +197,44 @@ export function Generics() {
 
 export const readTokens = [tokens, colors.gray500, spacing['2']];
 export type Props = [ButtonProps, WindowProps];
+
+export function Slots() {
+	return (
+		<Window
+			title="Finder"
+			classes={{
+				titleBar: 'my-title-bar',
+				content: 'my-content',
+				resizeHandle: 'my-grow-box',
+			}}
+		>
+			content
+		</Window>
+	);
+}
+
+interface TaskRow extends ListItem {
+	name: string;
+	overdue: boolean;
+}
+const tasks: TaskRow[] = [{ id: '1', name: 'a', overdue: true }];
+
+export function RenderProps() {
+	return (
+		<ListView<TaskRow>
+			columns={columns}
+			items={tasks}
+			renderRow={(item, state, defaultProps) => {
+				const { key, ...rowProps } = defaultProps;
+				return (
+					<div key={key} {...rowProps} data-overdue={item.overdue}>
+						{item.name}
+					</div>
+				);
+			}}
+			renderCell={(value, item, column, state) =>
+				column.key === 'size' ? <code>{String(value)}</code> : String(value)
+			}
+		/>
+	);
+}

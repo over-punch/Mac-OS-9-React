@@ -388,6 +388,61 @@ from JavaScript:
 import { tokens, colors, spacing } from '@liiift-studio/mac-os9-ui';
 ```
 
+### Targeting inner elements
+
+Tokens restyle everything of a kind. When you need to reach one part of one
+component, there are two narrower escape hatches, both on the components that
+have meaningful internal structure — `Window`, `ListView` and `FolderList`.
+
+**`classes`** attaches your own class to a named sub-element, so you are not
+guessing at hashed CSS-module names:
+
+```tsx
+<Window
+	title="Finder"
+	classes={{
+		titleBar: 'my-title-bar',
+		content: 'my-content',
+		resizeHandle: 'my-grow-box',
+	}}
+/>
+```
+
+The keys are typed per component (`WindowClasses`, `ListViewClasses`,
+`FolderListClasses`), so a misspelled slot is a compile error rather than a
+class that silently does nothing.
+
+**Render props** replace an element outright. Each receives the item, its
+state, and the props the default implementation would have used — spread those
+to keep the behaviour and accessibility that come with them:
+
+```tsx
+<ListView
+	columns={columns}
+	items={items}
+	renderRow={(item, state, defaultProps) => {
+		const { key, ...rowProps } = defaultProps;
+		return (
+			<div key={key} {...rowProps} data-overdue={item.overdue}>
+				{item.name}
+			</div>
+		);
+	}}
+	renderCell={(value, item, column, state) =>
+		column.key === 'size' ? <code>{String(value)}</code> : String(value)
+	}
+/>
+```
+
+`defaultProps` carries the row's `role="option"`, `aria-selected`, roving
+`tabIndex` and key handlers. Dropping them makes the list pointer-only again.
+
+Rows and cells also expose `data-selected`, `data-index`, `data-item-id`,
+`data-column` and `data-hovered`, so a lot of this can be done from CSS alone.
+
+The [custom styling guide](./docs/custom-styling-guide.md) covers all three
+approaches with worked examples.
+
 ### Optional Global Styles
 
 If you want the **full Mac OS 9 experience** with global styles applied to your entire application (body background, typography, box-sizing reset), you can optionally import the base styles:
