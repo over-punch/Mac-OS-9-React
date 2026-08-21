@@ -27,6 +27,7 @@ import React, {
 import { createPortal } from 'react-dom';
 import { Window, type WindowProps } from '../Window/Window';
 import { mergeClasses } from '../../utils/classNames';
+import { resolveAria } from '../../utils/aria';
 import styles from './Dialog.module.css';
 
 /**
@@ -196,17 +197,26 @@ export interface DialogProps extends Omit<WindowProps, 'active'> {
 	 * prop is a string, the title is used as the accessible name. Provide
 	 * this explicitly when `title` is a React node.
 	 */
-	ariaLabel?: string;
+	'aria-label'?: string;
 
 	/**
 	 * ID of a visible element that labels the dialog. Takes precedence over
-	 * `ariaLabel` if both are provided.
+	 * `aria-label` if both are provided.
 	 */
-	ariaLabelledBy?: string;
+	'aria-labelledby'?: string;
 
 	/**
 	 * ID of a visible element that describes the dialog body.
 	 */
+	'aria-describedby'?: string;
+
+	/** @deprecated Use `aria-label`. */
+	ariaLabel?: string;
+
+	/** @deprecated Use `aria-labelledby`. */
+	ariaLabelledBy?: string;
+
+	/** @deprecated Use `aria-describedby`. */
 	ariaDescribedBy?: string;
 
 	/**
@@ -270,6 +280,9 @@ export const Dialog = forwardRef<HTMLDivElement, DialogProps>(
 			ariaLabel,
 			ariaLabelledBy,
 			ariaDescribedBy,
+			'aria-label': ariaLabelAttr,
+			'aria-labelledby': ariaLabelledByAttr,
+			'aria-describedby': ariaDescribedByAttr,
 			container,
 			children,
 			...windowProps
@@ -287,10 +300,27 @@ export const Dialog = forwardRef<HTMLDivElement, DialogProps>(
 			setPortalTarget(container ?? document.body);
 		}, [container]);
 
-		// Derive an accessible name. Prefer explicit ariaLabelledBy → ariaLabel
+		// Standard attributes win; the camelCase aliases warn once in development.
+		const label = resolveAria('Dialog', 'aria-label', 'ariaLabel', ariaLabelAttr, ariaLabel);
+		const labelledBy = resolveAria(
+			'Dialog',
+			'aria-labelledby',
+			'ariaLabelledBy',
+			ariaLabelledByAttr,
+			ariaLabelledBy
+		);
+		const describedBy = resolveAria(
+			'Dialog',
+			'aria-describedby',
+			'ariaDescribedBy',
+			ariaDescribedByAttr,
+			ariaDescribedBy
+		);
+
+		// Derive an accessible name. Prefer an explicit labelledby → label
 		// → the Window title if it happens to be a plain string.
 		const titleProp = (windowProps as { title?: React.ReactNode }).title;
-		const resolvedAriaLabel = ariaLabel ?? (typeof titleProp === 'string' ? titleProp : undefined);
+		const resolvedAriaLabel = label ?? (typeof titleProp === 'string' ? titleProp : undefined);
 
 		// Push/pop the dialog onto the stack and lock body scroll while open.
 		// Combining these into one effect ensures they unwind in the right
@@ -438,9 +468,9 @@ export const Dialog = forwardRef<HTMLDivElement, DialogProps>(
 					ref={dialogRef}
 					role={role}
 					aria-modal="true"
-					aria-label={ariaLabelledBy ? undefined : resolvedAriaLabel}
-					aria-labelledby={ariaLabelledBy}
-					aria-describedby={ariaDescribedBy}
+					aria-label={labelledBy ? undefined : resolvedAriaLabel}
+					aria-labelledby={labelledBy}
+					aria-describedby={describedBy}
 				>
 					<Window {...windowProps} ref={ref} active={true} onClose={onClose}>
 						{children}

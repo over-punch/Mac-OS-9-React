@@ -224,7 +224,7 @@ export function RenderProps() {
 		<ListView<TaskRow>
 			columns={columns}
 			items={tasks}
-			renderRow={(item, state, defaultProps) => {
+			renderRow={(item, _state, defaultProps) => {
 				const { key, ...rowProps } = defaultProps;
 				return (
 					<div key={key} {...rowProps} data-overdue={item.overdue}>
@@ -232,7 +232,7 @@ export function RenderProps() {
 					</div>
 				);
 			}}
-			renderCell={(value, item, column, state) =>
+			renderCell={(value, item, column, _state) =>
 				column.key === 'size' ? <code>{String(value)}</code> : String(value)
 			}
 		/>

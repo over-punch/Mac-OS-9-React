@@ -3,6 +3,7 @@
 
 import React, { forwardRef, InputHTMLAttributes, TextareaHTMLAttributes } from 'react';
 import { mergeClasses } from '../../utils/classNames';
+import { resolveAria } from '../../utils/aria';
 import styles from './TextField.module.css';
 
 export interface TextFieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'size'> {
@@ -56,13 +57,23 @@ export interface TextFieldProps extends Omit<InputHTMLAttributes<HTMLInputElemen
 	rightIcon?: React.ReactNode;
 
 	/**
-	 * Override aria-label
+	 * Accessible name, when there is no visible `label`.
+	 *
+	 * This is the standard attribute; it is already accepted through the
+	 * inherited input props and is listed here for discoverability.
 	 */
-	ariaLabel?: string;
+	'aria-label'?: string;
 
 	/**
-	 * ID of element that describes this text field
+	 * ID of an element describing this field. Merged with the ids the
+	 * component generates for its helper and error text.
 	 */
+	'aria-describedby'?: string;
+
+	/** @deprecated Use `aria-label`. */
+	ariaLabel?: string;
+
+	/** @deprecated Use `aria-describedby`. */
 	ariaDescribedBy?: string;
 
 	/**
@@ -170,6 +181,8 @@ export const TextField = forwardRef<HTMLInputElement | HTMLTextAreaElement, Text
 			rightIcon,
 			ariaLabel,
 			ariaDescribedBy,
+			'aria-label': ariaLabelAttr,
+			'aria-describedby': ariaDescribedByAttr,
 			className = '',
 			wrapperClassName = '',
 			type = 'text',
@@ -190,6 +203,22 @@ export const TextField = forwardRef<HTMLInputElement | HTMLTextAreaElement, Text
 		const generatedId = React.useId();
 		const inputId = id ?? generatedId;
 
+		// Standard attributes win; the camelCase aliases warn once in development.
+		const resolvedLabel = resolveAria(
+			'TextField',
+			'aria-label',
+			'ariaLabel',
+			ariaLabelAttr,
+			ariaLabel
+		);
+		const resolvedDescribedBy = resolveAria(
+			'TextField',
+			'aria-describedby',
+			'ariaDescribedBy',
+			ariaDescribedByAttr,
+			ariaDescribedBy
+		);
+
 		// Generate helper/error text ID for aria-describedby
 		const helperId = `${inputId}-helper`;
 		const errorId = `${inputId}-error`;
@@ -198,7 +227,9 @@ export const TextField = forwardRef<HTMLInputElement | HTMLTextAreaElement, Text
 		const describedByIds = mergeClasses(
 			helperText && helperId,
 			error && errorMessage && errorId,
-			ariaDescribedBy
+			// The caller's own description is merged with the ids the component
+			// generates, rather than replacing them.
+			resolvedDescribedBy
 		);
 
 		// Build class names
@@ -230,7 +261,7 @@ export const TextField = forwardRef<HTMLInputElement | HTMLTextAreaElement, Text
 
 		// ARIA attributes
 		const ariaAttributes = {
-			'aria-label': !label ? ariaLabel : undefined,
+			'aria-label': !label ? resolvedLabel : undefined,
 			'aria-describedby': describedByIds || undefined,
 			'aria-invalid': error,
 		};

@@ -8,6 +8,7 @@
 
 import React, { forwardRef, useRef, useState, useEffect, useCallback } from 'react';
 import { mergeClasses } from '../../utils/classNames';
+import { resolveAria } from '../../utils/aria';
 import styles from './Scrollbar.module.css';
 
 export interface ScrollbarProps {
@@ -59,6 +60,9 @@ export interface ScrollbarProps {
 	 * Accessible label for the scrollbar track. Required for AT users
 	 * unless `controls` points at an element with a known accessible name.
 	 */
+	'aria-label'?: string;
+
+	/** @deprecated Use `aria-label`. */
 	ariaLabel?: string;
 
 	/**
@@ -98,6 +102,7 @@ export const Scrollbar = forwardRef<HTMLDivElement, ScrollbarProps>(
 			value = 0,
 			viewportRatio,
 			onChange,
+			'aria-label': ariaLabelAttr,
 			className = '',
 			disabled = false,
 			ariaLabel,
@@ -135,6 +140,15 @@ export const Scrollbar = forwardRef<HTMLDivElement, ScrollbarProps>(
 			);
 		}
 		const effectiveViewportRatio = viewportRatio ?? 1;
+
+		// Standard attribute wins; the camelCase alias warns once in development.
+		const resolvedAriaLabel = resolveAria(
+			'Scrollbar',
+			'aria-label',
+			'ariaLabel',
+			ariaLabelAttr,
+			ariaLabel
+		);
 
 		const thumbSize = Math.max(effectiveViewportRatio * 100, 10); // Minimum 10% size
 
@@ -288,7 +302,7 @@ export const Scrollbar = forwardRef<HTMLDivElement, ScrollbarProps>(
 					aria-valuemin={0}
 					aria-valuemax={100}
 					aria-orientation={orientation}
-					aria-label={ariaLabel}
+					aria-label={resolvedAriaLabel}
 					aria-controls={controls}
 					aria-disabled={disabled || undefined}
 				>

@@ -12,6 +12,7 @@ import React, {
 	ReactElement,
 } from 'react';
 import { mergeClasses } from '../../utils/classNames';
+import { resolveAria } from '../../utils/aria';
 import styles from './Tabs.module.css';
 
 export interface TabPanelProps<TValue extends string = string> {
@@ -113,15 +114,21 @@ export interface TabsProps<TValue extends string = string> {
 	panelClassName?: string;
 
 	/**
-	 * ARIA label for the tab list
+	 * Accessible name for the tab list.
 	 * @default 'Tabs'
 	 */
-	ariaLabel?: string;
+	'aria-label'?: string;
 
 	/**
 	 * ID of an element that labels the tab list. Takes precedence over
-	 * `ariaLabel`.
+	 * `aria-label`.
 	 */
+	'aria-labelledby'?: string;
+
+	/** @deprecated Use `aria-label`. */
+	ariaLabel?: string;
+
+	/** @deprecated Use `aria-labelledby`. */
 	ariaLabelledBy?: string;
 }
 
@@ -168,8 +175,10 @@ function TabsInner<TValue extends string = string>(
 		className = '',
 		tabListClassName = '',
 		panelClassName = '',
-		ariaLabel = 'Tabs',
+		ariaLabel,
 		ariaLabelledBy,
+		'aria-label': ariaLabelAttr,
+		'aria-labelledby': ariaLabelledByAttr,
 	}: TabsProps<TValue>,
 	ref: React.ForwardedRef<HTMLDivElement>
 ) {
@@ -177,6 +186,17 @@ function TabsInner<TValue extends string = string>(
 	const [uncontrolledActiveTab, setUncontrolledActiveTab] = useState(defaultActiveTab);
 	const isControlled = controlledActiveTab !== undefined;
 	const activeTabIndex = isControlled ? controlledActiveTab : uncontrolledActiveTab;
+
+	// Standard attributes win; the camelCase aliases warn once in development.
+	const resolvedAriaLabel =
+		resolveAria('Tabs', 'aria-label', 'ariaLabel', ariaLabelAttr, ariaLabel) ?? 'Tabs';
+	const resolvedAriaLabelledBy = resolveAria(
+		'Tabs',
+		'aria-labelledby',
+		'ariaLabelledBy',
+		ariaLabelledByAttr,
+		ariaLabelledBy
+	);
 
 	// Unique per Tabs instance. The ids used to be `tab-0` / `panel-0`, which
 	// collided the moment a page rendered two Tabs — duplicate DOM ids, and
@@ -284,8 +304,8 @@ function TabsInner<TValue extends string = string>(
 		<div ref={ref} className={containerClassNames}>
 			<div
 				role="tablist"
-				aria-label={ariaLabelledBy ? undefined : ariaLabel}
-				aria-labelledby={ariaLabelledBy}
+				aria-label={resolvedAriaLabelledBy ? undefined : resolvedAriaLabel}
+				aria-labelledby={resolvedAriaLabelledBy}
 				className={tabListClassNames}
 			>
 				{tabs.map((tab, index) => {

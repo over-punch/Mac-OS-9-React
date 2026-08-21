@@ -1199,8 +1199,65 @@ const IconLibrary = ({ icon, ...props }) => {
 };
 IconLibrary.displayName = 'IconLibrary';
 
+// Development-only deprecation warnings.
+//
+// The 1.0 API renames several props (camelCase ARIA → hyphenated, onChange →
+// onValueChange, errorMessage → error, and so on). The old names still work
+// for one major version, but silently accepting them would leave consumers
+// unaware they are on a removal path — so each use warns once in development
+// and costs nothing in production.
+/** Names already warned about, so a re-rendering component warns only once. */
+const warned = new Set();
+/**
+ * Warn that `oldName` is deprecated in favour of `newName`.
+ *
+ * No-ops in production builds and after the first warning for a given pair.
+ *
+ * @param component - Component the prop belongs to, e.g. 'Button'
+ * @param oldName - The deprecated prop name
+ * @param newName - The replacement prop name
+ */
+function warnDeprecatedProp(component, oldName, newName) {
+    if (process.env.NODE_ENV === 'production')
+        return;
+    const key = `${component}.${oldName}`;
+    if (warned.has(key))
+        return;
+    warned.add(key);
+    console.warn(`[mac-os9-ui] ${component}: \`${oldName}\` is deprecated and will be removed in 2.0. ` +
+        `Use \`${newName}\` instead.`);
+}
+/**
+ * Warn about a missing prop that the component needs to behave correctly.
+ *
+ * Used where a silently-wrong default is worse than a loud complaint, e.g.
+ * an icon-only button with no accessible name (issue #123) or a Scrollbar
+ * with no real viewport ratio (issue #122).
+ *
+ * @param component - Component reporting the problem
+ * @param message - What is wrong and how to fix it
+ */
+function warnMissingProp(component, message) {
+    if (process.env.NODE_ENV === 'production')
+        return;
+    const key = `${component}:${message}`;
+    if (warned.has(key))
+        return;
+    warned.add(key);
+    console.warn(`[mac-os9-ui] ${component}: ${message}`);
+}
+
 var styles$c = {"pixelated-corner-sm":"IconButton-module_pixelated-corner-sm","pixelated-corner-md":"IconButton-module_pixelated-corner-md","pixelated-corner-pseudo":"IconButton-module_pixelated-corner-pseudo","mac-corner":"IconButton-module_mac-corner","chamfered-sm":"IconButton-module_chamfered-sm","chamfered-md":"IconButton-module_chamfered-md","tab-corner":"IconButton-module_tab-corner","button-corner":"IconButton-module_button-corner","window-corner":"IconButton-module_window-corner","iconButton":"IconButton-module_iconButton","icon":"IconButton-module_icon","label":"IconButton-module_label","iconButton--label-top":"IconButton-module_iconButton--label-top","iconButton--label-bottom":"IconButton-module_iconButton--label-bottom","iconButton--label-left":"IconButton-module_iconButton--label-left","iconButton--label-right":"IconButton-module_iconButton--label-right","iconButton--sm":"IconButton-module_iconButton--sm","iconButton--with-label":"IconButton-module_iconButton--with-label","iconButton--md":"IconButton-module_iconButton--md","iconButton--lg":"IconButton-module_iconButton--lg","iconButton--default":"IconButton-module_iconButton--default","iconButton--primary":"IconButton-module_iconButton--primary","iconButton--danger":"IconButton-module_iconButton--danger","iconButton--disabled":"IconButton-module_iconButton--disabled"};
 
+/**
+ * An icon with no visible label has no accessible name, so a screen reader
+ * announces it as just "button". Warn in development rather than shipping one.
+ */
+function assertHasName(label, ariaLabel, title) {
+    if (label || ariaLabel || title)
+        return;
+    warnMissingProp('IconButton', 'no accessible name. Pass `label`, `aria-label`, or `title` — an icon alone announces as "button".');
+}
 /**
  * IconButton component for Mac OS 9 UI
  *
@@ -1228,11 +1285,42 @@ var styles$c = {"pixelated-corner-sm":"IconButton-module_pixelated-corner-sm","p
  * ```
  */
 const IconButton = forwardRef(({ icon, label, labelPosition = 'right', variant = 'default', size = 'md', disabled = false, className = '', ...props }, ref) => {
+    if (process.env.NODE_ENV !== 'production') {
+        assertHasName(label, props['aria-label'], props.title);
+    }
     // Build class names
     const classNames = mergeClasses(styles$c.iconButton, styles$c[`iconButton--${variant}`], styles$c[`iconButton--${size}`], label && styles$c['iconButton--with-label'], label && styles$c[`iconButton--label-${labelPosition}`], disabled && styles$c['iconButton--disabled'], className);
     return (jsxs("button", { ref: ref, type: "button", className: classNames, disabled: disabled, ...props, children: [label && (labelPosition === 'left' || labelPosition === 'top') && (jsx("span", { className: styles$c.label, children: label })), jsx("span", { className: styles$c.icon, children: icon }), label && (labelPosition === 'right' || labelPosition === 'bottom') && (jsx("span", { className: styles$c.label, children: label }))] }));
 });
 IconButton.displayName = 'IconButton';
+
+// Resolving the standard aria-* props against their deprecated camelCase aliases.
+//
+// The library originally exposed `ariaLabel`, `ariaLabelledBy`,
+// `ariaDescribedBy` and `ariaPressed` instead of the attributes React already
+// understands. That meant consumers had to learn a second spelling for
+// something standard, and a component spreading `...props` could receive both
+// forms with no defined precedence.
+//
+// Every component now accepts the standard attribute. The camelCase names
+// still work — they were public API — but they warn once in development and
+// lose to the standard form when both are given.
+/**
+ * Picks between a standard `aria-*` prop and its deprecated camelCase alias.
+ *
+ * @param component - Component name, for the warning
+ * @param standardName - e.g. `'aria-label'`
+ * @param legacyName - e.g. `'ariaLabel'`
+ * @param standard - Value of the standard prop
+ * @param legacy - Value of the deprecated prop
+ * @returns The standard value when present, otherwise the legacy one
+ */
+function resolveAria(component, standardName, legacyName, standard, legacy) {
+    if (legacy !== undefined) {
+        warnDeprecatedProp(component, legacyName, standardName);
+    }
+    return standard ?? legacy;
+}
 
 var styles$b = {"wrapper":"Checkbox-module_wrapper","wrapper--disabled":"Checkbox-module_wrapper--disabled","wrapper--error":"Checkbox-module_wrapper--error","wrapper--label-left":"Checkbox-module_wrapper--label-left","wrapper--label-right":"Checkbox-module_wrapper--label-right","checkbox":"Checkbox-module_checkbox","checkbox--sm":"Checkbox-module_checkbox--sm","checkbox--md":"Checkbox-module_checkbox--md","checkbox--lg":"Checkbox-module_checkbox--lg","checkbox--indeterminate":"Checkbox-module_checkbox--indeterminate","checkbox--error":"Checkbox-module_checkbox--error","label":"Checkbox-module_label","label--sm":"Checkbox-module_label--sm","label--md":"Checkbox-module_label--md","label--lg":"Checkbox-module_label--lg","wrapper--sm":"Checkbox-module_wrapper--sm","wrapper--md":"Checkbox-module_wrapper--md","wrapper--lg":"Checkbox-module_wrapper--lg"};
 
@@ -1272,7 +1360,7 @@ var styles$b = {"wrapper":"Checkbox-module_wrapper","wrapper--disabled":"Checkbo
  * />
  * ```
  */
-const Checkbox = forwardRef(({ checked, defaultChecked, indeterminate = false, disabled = false, label, labelPosition = 'right', size = 'md', error = false, ariaLabel, ariaDescribedBy, className = '', onChange, id, ...props }, ref) => {
+const Checkbox = forwardRef(({ checked, defaultChecked, indeterminate = false, disabled = false, label, labelPosition = 'right', size = 'md', error = false, ariaLabel, ariaDescribedBy, 'aria-label': ariaLabelAttr, 'aria-describedby': ariaDescribedByAttr, className = '', onChange, id, ...props }, ref) => {
     const inputRef = React.useRef(null);
     const combinedRef = ref || inputRef;
     // Set indeterminate property via ref (can't be set via HTML attribute)
@@ -1296,9 +1384,12 @@ const Checkbox = forwardRef(({ checked, defaultChecked, indeterminate = false, d
     // — the host language already exposes the checked state. The
     // tri-state ("mixed") indicator is the DOM `indeterminate` property,
     // which the effect above sets on the input via ref.
+    // Standard attributes win; the camelCase aliases warn once in development.
+    const resolvedLabel = resolveAria('Checkbox', 'aria-label', 'ariaLabel', ariaLabelAttr, ariaLabel);
+    const resolvedDescribedBy = resolveAria('Checkbox', 'aria-describedby', 'ariaDescribedBy', ariaDescribedByAttr, ariaDescribedBy);
     const ariaAttributes = {
-        'aria-label': !label ? ariaLabel : undefined,
-        'aria-describedby': ariaDescribedBy,
+        'aria-label': !label ? resolvedLabel : undefined,
+        'aria-describedby': resolvedDescribedBy,
         'aria-invalid': error,
     };
     return (jsxs("div", { className: wrapperClassNames, children: [label && labelPosition === 'left' && (jsx("label", { htmlFor: checkboxId, className: labelClassNames, children: label })), jsx("input", { ref: combinedRef, type: "checkbox", id: checkboxId, className: checkboxClassNames, checked: checked, defaultChecked: defaultChecked, disabled: disabled, onChange: onChange, ...ariaAttributes, ...props }), label && labelPosition === 'right' && (jsx("label", { htmlFor: checkboxId, className: labelClassNames, children: label }))] }));
@@ -1329,7 +1420,7 @@ const RadioGroupContext = React.createContext(null);
  * <Radio name="color" value="red" label="Red" />
  * ```
  */
-const Radio = forwardRef(({ checked, defaultChecked, disabled = false, label, labelPosition = 'right', size = 'md', error = false, ariaLabel, ariaDescribedBy, className = '', value, name, onChange, id, ...props }, ref) => {
+const Radio = forwardRef(({ checked, defaultChecked, disabled = false, label, labelPosition = 'right', size = 'md', error = false, ariaLabel, ariaDescribedBy, 'aria-label': ariaLabelAttr, 'aria-describedby': ariaDescribedByAttr, className = '', value, name, onChange, id, ...props }, ref) => {
     // When wrapped by <RadioGroup>, inherit name / value / onChange / disabled
     // from context. Standalone Radios fall back to their own props.
     const group = React.useContext(RadioGroupContext);
@@ -1349,9 +1440,12 @@ const Radio = forwardRef(({ checked, defaultChecked, disabled = false, label, la
     const radioClassNames = mergeClasses(styles$a.radio, styles$a[`radio--${size}`], error && styles$a['radio--error']);
     const labelClassNames = mergeClasses(styles$a.label, styles$a[`label--${size}`]);
     // ARIA attributes
+    // Standard attributes win; the camelCase aliases warn once in development.
     const ariaAttributes = {
-        'aria-label': !label ? ariaLabel : undefined,
-        'aria-describedby': ariaDescribedBy,
+        'aria-label': !label
+            ? resolveAria('Radio', 'aria-label', 'ariaLabel', ariaLabelAttr, ariaLabel)
+            : undefined,
+        'aria-describedby': resolveAria('Radio', 'aria-describedby', 'ariaDescribedBy', ariaDescribedByAttr, ariaDescribedBy),
         'aria-invalid': error,
     };
     return (jsxs("div", { className: wrapperClassNames, children: [label && labelPosition === 'left' && (jsx("label", { htmlFor: radioId, className: labelClassNames, children: label })), jsx("input", { ref: ref, type: "radio", id: radioId, className: radioClassNames, checked: group ? resolvedChecked : checked, defaultChecked: group ? undefined : defaultChecked, disabled: resolvedDisabled, value: value, name: resolvedName, onChange: handleInputChange, ...ariaAttributes, ...props }), label && labelPosition === 'right' && (jsx("label", { htmlFor: radioId, className: labelClassNames, children: label }))] }));
@@ -1372,7 +1466,7 @@ Radio.displayName = 'Radio';
  * </RadioGroup>
  * ```
  */
-const RadioGroup = forwardRef(({ name, value, defaultValue, onChange, disabled = false, orientation = 'vertical', ariaLabel, ariaLabelledBy, className = '', children, }, ref) => {
+const RadioGroup = forwardRef(({ name, value, defaultValue, onChange, disabled = false, orientation = 'vertical', ariaLabel, ariaLabelledBy, 'aria-label': ariaLabelAttr, 'aria-labelledby': ariaLabelledByAttr, className = '', children, }, ref) => {
     const generatedName = useId();
     const resolvedName = name ?? `radio-group-${generatedName}`;
     const isControlled = value !== undefined;
@@ -1431,7 +1525,7 @@ const RadioGroup = forwardRef(({ name, value, defaultValue, onChange, disabled =
         disabled,
         onChange: (nextValue) => handleChildChange(nextValue),
     };
-    return (jsx("div", { ref: setGroupRef, role: "radiogroup", "aria-label": ariaLabel, "aria-labelledby": ariaLabelledBy, "aria-orientation": orientation, "aria-disabled": disabled || undefined, onKeyDown: handleKeyDown, className: mergeClasses(styles$a.radioGroup, styles$a[`radioGroup--${orientation}`], className), children: jsx(RadioGroupContext.Provider, { value: contextValue, children: children }) }));
+    return (jsx("div", { ref: setGroupRef, role: "radiogroup", "aria-label": resolveAria('RadioGroup', 'aria-label', 'ariaLabel', ariaLabelAttr, ariaLabel), "aria-labelledby": resolveAria('RadioGroup', 'aria-labelledby', 'ariaLabelledBy', ariaLabelledByAttr, ariaLabelledBy), "aria-orientation": orientation, "aria-disabled": disabled || undefined, onKeyDown: handleKeyDown, className: mergeClasses(styles$a.radioGroup, styles$a[`radioGroup--${orientation}`], className), children: jsx(RadioGroupContext.Provider, { value: contextValue, children: children }) }));
 });
 RadioGroup.displayName = 'RadioGroup';
 
@@ -1477,18 +1571,24 @@ var styles$9 = {"wrapper":"TextField-module_wrapper","wrapper--full-width":"Text
  * />
  * ```
  */
-const TextField = forwardRef(({ label, labelPosition = 'top', size = 'md', fullWidth = false, error = false, errorMessage, helperText, leftIcon, rightIcon, ariaLabel, ariaDescribedBy, className = '', wrapperClassName = '', type = 'text', id, disabled, multiline = false, rows = 3, errorLiveRegion = 'polite', textareaProps, ...props }, ref) => {
+const TextField = forwardRef(({ label, labelPosition = 'top', size = 'md', fullWidth = false, error = false, errorMessage, helperText, leftIcon, rightIcon, ariaLabel, ariaDescribedBy, 'aria-label': ariaLabelAttr, 'aria-describedby': ariaDescribedByAttr, className = '', wrapperClassName = '', type = 'text', id, disabled, multiline = false, rows = 3, errorLiveRegion = 'polite', textareaProps, ...props }, ref) => {
     // Generate ID if not provided (for label association)
     // useId must be called unconditionally. Writing `id || React.useId()`
     // short-circuits the hook away whenever `id` is supplied, so the hook
     // order changes if `id` ever goes from defined to undefined.
     const generatedId = React.useId();
     const inputId = id ?? generatedId;
+    // Standard attributes win; the camelCase aliases warn once in development.
+    const resolvedLabel = resolveAria('TextField', 'aria-label', 'ariaLabel', ariaLabelAttr, ariaLabel);
+    const resolvedDescribedBy = resolveAria('TextField', 'aria-describedby', 'ariaDescribedBy', ariaDescribedByAttr, ariaDescribedBy);
     // Generate helper/error text ID for aria-describedby
     const helperId = `${inputId}-helper`;
     const errorId = `${inputId}-error`;
     // Combine aria-describedby
-    const describedByIds = mergeClasses(helperText && helperId, error && errorMessage && errorId, ariaDescribedBy);
+    const describedByIds = mergeClasses(helperText && helperId, error && errorMessage && errorId, 
+    // The caller's own description is merged with the ids the component
+    // generates, rather than replacing them.
+    resolvedDescribedBy);
     // Build class names
     const wrapperClassNames = mergeClasses(styles$9.wrapper, styles$9[`wrapper--${size}`], styles$9[`wrapper--label-${labelPosition}`], fullWidth && styles$9['wrapper--full-width'], disabled && styles$9['wrapper--disabled'], wrapperClassName);
     const inputWrapperClassNames = mergeClasses(styles$9['input-wrapper'], (leftIcon || rightIcon) && styles$9['input-wrapper--with-icon'], leftIcon && styles$9['input-wrapper--with-left-icon'], rightIcon && styles$9['input-wrapper--with-right-icon']);
@@ -1496,7 +1596,7 @@ const TextField = forwardRef(({ label, labelPosition = 'top', size = 'md', fullW
     const labelClassNames = mergeClasses(styles$9.label, styles$9[`label--${size}`]);
     // ARIA attributes
     const ariaAttributes = {
-        'aria-label': !label ? ariaLabel : undefined,
+        'aria-label': !label ? resolvedLabel : undefined,
         'aria-describedby': describedByIds || undefined,
         'aria-invalid': error,
     };
@@ -1916,11 +2016,14 @@ TabPanel.displayName = 'TabPanel';
  * </Tabs>
  * ```
  */
-function TabsInner({ children, defaultActiveTab = 0, activeTab: controlledActiveTab, onChange, size = 'md', fullWidth = false, className = '', tabListClassName = '', panelClassName = '', ariaLabel = 'Tabs', ariaLabelledBy, }, ref) {
+function TabsInner({ children, defaultActiveTab = 0, activeTab: controlledActiveTab, onChange, size = 'md', fullWidth = false, className = '', tabListClassName = '', panelClassName = '', ariaLabel, ariaLabelledBy, 'aria-label': ariaLabelAttr, 'aria-labelledby': ariaLabelledByAttr, }, ref) {
     // Controlled vs uncontrolled state
     const [uncontrolledActiveTab, setUncontrolledActiveTab] = useState(defaultActiveTab);
     const isControlled = controlledActiveTab !== undefined;
     const activeTabIndex = isControlled ? controlledActiveTab : uncontrolledActiveTab;
+    // Standard attributes win; the camelCase aliases warn once in development.
+    const resolvedAriaLabel = resolveAria('Tabs', 'aria-label', 'ariaLabel', ariaLabelAttr, ariaLabel) ?? 'Tabs';
+    const resolvedAriaLabelledBy = resolveAria('Tabs', 'aria-labelledby', 'ariaLabelledBy', ariaLabelledByAttr, ariaLabelledBy);
     // Unique per Tabs instance. The ids used to be `tab-0` / `panel-0`, which
     // collided the moment a page rendered two Tabs — duplicate DOM ids, and
     // aria-controls on the second set pointing at the first set's panels.
@@ -1997,7 +2100,7 @@ function TabsInner({ children, defaultActiveTab = 0, activeTab: controlledActive
     const containerClassNames = mergeClasses(styles$7.container, className);
     const tabListClassNames = mergeClasses(styles$7.tabList, styles$7[`tabList--${size}`], fullWidth && styles$7['tabList--full-width'], tabListClassName);
     const panelContainerClassNames = mergeClasses(styles$7.panelContainer, styles$7[`panelContainer--${size}`], panelClassName);
-    return (jsxs("div", { ref: ref, className: containerClassNames, children: [jsx("div", { role: "tablist", "aria-label": ariaLabelledBy ? undefined : ariaLabel, "aria-labelledby": ariaLabelledBy, className: tabListClassNames, children: tabs.map((tab, index) => {
+    return (jsxs("div", { ref: ref, className: containerClassNames, children: [jsx("div", { role: "tablist", "aria-label": resolvedAriaLabelledBy ? undefined : resolvedAriaLabel, "aria-labelledby": resolvedAriaLabelledBy, className: tabListClassNames, children: tabs.map((tab, index) => {
                     const isActive = index === activeTabIndex;
                     const isDisabled = tab.props.disabled;
                     const tabClassNames = mergeClasses(styles$7.tab, styles$7[`tab--${size}`], isActive && styles$7['tab--active'], isDisabled && styles$7['tab--disabled'], fullWidth && styles$7['tab--full-width']);
@@ -2680,7 +2783,7 @@ function getFocusables(root) {
  * </Dialog>
  * ```
  */
-const Dialog = forwardRef(({ open = false, onClose, closeOnBackdropClick = true, closeOnEscape = true, backdropClassName = '', trapFocus = true, initialFocus, role = 'dialog', ariaLabel, ariaLabelledBy, ariaDescribedBy, container, children, ...windowProps }, ref) => {
+const Dialog = forwardRef(({ open = false, onClose, closeOnBackdropClick = true, closeOnEscape = true, backdropClassName = '', trapFocus = true, initialFocus, role = 'dialog', ariaLabel, ariaLabelledBy, ariaDescribedBy, 'aria-label': ariaLabelAttr, 'aria-labelledby': ariaLabelledByAttr, 'aria-describedby': ariaDescribedByAttr, container, children, ...windowProps }, ref) => {
     const dialogRef = useRef(null);
     const previousActiveElement = useRef(null);
     // Resolved after mount: `document` does not exist during a server
@@ -2691,10 +2794,14 @@ const Dialog = forwardRef(({ open = false, onClose, closeOnBackdropClick = true,
             return;
         setPortalTarget(container ?? document.body);
     }, [container]);
-    // Derive an accessible name. Prefer explicit ariaLabelledBy → ariaLabel
+    // Standard attributes win; the camelCase aliases warn once in development.
+    const label = resolveAria('Dialog', 'aria-label', 'ariaLabel', ariaLabelAttr, ariaLabel);
+    const labelledBy = resolveAria('Dialog', 'aria-labelledby', 'ariaLabelledBy', ariaLabelledByAttr, ariaLabelledBy);
+    const describedBy = resolveAria('Dialog', 'aria-describedby', 'ariaDescribedBy', ariaDescribedByAttr, ariaDescribedBy);
+    // Derive an accessible name. Prefer an explicit labelledby → label
     // → the Window title if it happens to be a plain string.
     const titleProp = windowProps.title;
-    const resolvedAriaLabel = ariaLabel ?? (typeof titleProp === 'string' ? titleProp : undefined);
+    const resolvedAriaLabel = label ?? (typeof titleProp === 'string' ? titleProp : undefined);
     // Push/pop the dialog onto the stack and lock body scroll while open.
     // Combining these into one effect ensures they unwind in the right
     // order on close and avoids races with the other effects below.
@@ -2832,7 +2939,7 @@ const Dialog = forwardRef(({ open = false, onClose, closeOnBackdropClick = true,
     if (!open)
         return null;
     const backdropClassNames = mergeClasses(styles$5.backdrop, backdropClassName);
-    const dialogTree = (jsx("div", { className: backdropClassNames, onClick: handleBackdropClick, children: jsx("div", { className: styles$5.dialogContainer, ref: dialogRef, role: role, "aria-modal": "true", "aria-label": ariaLabelledBy ? undefined : resolvedAriaLabel, "aria-labelledby": ariaLabelledBy, "aria-describedby": ariaDescribedBy, children: jsx(Window, { ...windowProps, ref: ref, active: true, onClose: onClose, children: children }) }) }));
+    const dialogTree = (jsx("div", { className: backdropClassNames, onClick: handleBackdropClick, children: jsx("div", { className: styles$5.dialogContainer, ref: dialogRef, role: role, "aria-modal": "true", "aria-label": labelledBy ? undefined : resolvedAriaLabel, "aria-labelledby": labelledBy, "aria-describedby": describedBy, children: jsx(Window, { ...windowProps, ref: ref, active: true, onClose: onClose, children: children }) }) }));
     // `container === null` opts out of portalling entirely.
     if (container === null)
         return dialogTree;
@@ -3377,7 +3484,7 @@ var styles$2 = {"scrollbar":"Scrollbar-module_scrollbar","scrollbar--vertical":"
  * />
  * ```
  */
-const Scrollbar = forwardRef(({ orientation = 'vertical', value = 0, viewportRatio, onChange, className = '', disabled = false, ariaLabel, controls, step = 0.1, }, ref) => {
+const Scrollbar = forwardRef(({ orientation = 'vertical', value = 0, viewportRatio, onChange, 'aria-label': ariaLabelAttr, className = '', disabled = false, ariaLabel, controls, step = 0.1, }, ref) => {
     const trackRef = useRef(null);
     const [isDragging, setIsDragging] = useState(false);
     const [dragStartPos, setDragStartPos] = useState(0);
@@ -3401,6 +3508,8 @@ const Scrollbar = forwardRef(({ orientation = 'vertical', value = 0, viewportRat
             'Pass clientHeight / scrollHeight (or the width equivalent) for the scrolled region.');
     }
     const effectiveViewportRatio = viewportRatio ?? 1;
+    // Standard attribute wins; the camelCase alias warns once in development.
+    const resolvedAriaLabel = resolveAria('Scrollbar', 'aria-label', 'ariaLabel', ariaLabelAttr, ariaLabel);
     const thumbSize = Math.max(effectiveViewportRatio * 100, 10); // Minimum 10% size
     // Calculate thumb position
     const maxThumbPos = 100 - thumbSize;
@@ -3500,7 +3609,7 @@ const Scrollbar = forwardRef(({ orientation = 'vertical', value = 0, viewportRat
             document.removeEventListener('pointercancel', handlePointerEnd);
         };
     }, [isDragging, dragStartPos, dragStartValue, onChange, isVertical]);
-    return (jsxs("div", { ref: ref, className: classNames, children: [jsx("button", { type: "button", className: `${styles$2.arrow} ${styles$2['arrow--start']}`, onClick: handleDecrement, disabled: disabled, "aria-label": isVertical ? 'Scroll up' : 'Scroll left', children: jsx("div", { className: styles$2.arrowIcon }) }), jsx("div", { ref: trackRef, className: styles$2.track, onClick: handleTrackClick, onKeyDown: handleKeyDown, role: "scrollbar", tabIndex: disabled ? -1 : 0, "aria-valuenow": Math.round(value * 100), "aria-valuemin": 0, "aria-valuemax": 100, "aria-orientation": orientation, "aria-label": ariaLabel, "aria-controls": controls, "aria-disabled": disabled || undefined, children: jsx("div", { className: styles$2.thumb, style: {
+    return (jsxs("div", { ref: ref, className: classNames, children: [jsx("button", { type: "button", className: `${styles$2.arrow} ${styles$2['arrow--start']}`, onClick: handleDecrement, disabled: disabled, "aria-label": isVertical ? 'Scroll up' : 'Scroll left', children: jsx("div", { className: styles$2.arrowIcon }) }), jsx("div", { ref: trackRef, className: styles$2.track, onClick: handleTrackClick, onKeyDown: handleKeyDown, role: "scrollbar", tabIndex: disabled ? -1 : 0, "aria-valuenow": Math.round(value * 100), "aria-valuemin": 0, "aria-valuemax": 100, "aria-orientation": orientation, "aria-label": resolvedAriaLabel, "aria-controls": controls, "aria-disabled": disabled || undefined, children: jsx("div", { className: styles$2.thumb, style: {
                         [isVertical ? 'height' : 'width']: `${thumbSize}%`,
                         [isVertical ? 'top' : 'left']: `${thumbPos}%`,
                         touchAction: 'none',
@@ -3598,11 +3707,14 @@ const ListViewRow = React.memo(ListViewRowInner);
  * <ListView<FileRow> items={files} columns={columns} />
  * ```
  */
-function ListViewInner({ columns, items, selectedIds = [], onSelectionChange, onItemOpen, onItemMouseEnter, onItemMouseLeave, onSort, className = '', height = 'auto', classes, ariaLabel = 'List', ariaLabelledBy, emptyState = 'No items', loading = false, loadingState = 'Loading…', renderRow, renderCell, renderHeaderCell, onCellClick, onCellMouseEnter, onCellMouseLeave, }, ref) {
+function ListViewInner({ columns, items, selectedIds = [], onSelectionChange, onItemOpen, onItemMouseEnter, onItemMouseLeave, onSort, className = '', height = 'auto', classes, ariaLabel, ariaLabelledBy, 'aria-label': ariaLabelAttr, 'aria-labelledby': ariaLabelledByAttr, emptyState = 'No items', loading = false, loadingState = 'Loading…', renderRow, renderCell, renderHeaderCell, onCellClick, onCellMouseEnter, onCellMouseLeave, }, ref) {
     const [sortColumn, setSortColumn] = useState(null);
     const [sortDirection, setSortDirection] = useState('asc');
     const [hoveredRow, setHoveredRow] = useState(null);
     const [hoveredColumnKey, setHoveredColumnKey] = useState(null);
+    // Standard attributes win; the camelCase aliases warn once in development.
+    const resolvedAriaLabel = resolveAria('ListView', 'aria-label', 'ariaLabel', ariaLabelAttr, ariaLabel) ?? 'List';
+    const resolvedAriaLabelledBy = resolveAria('ListView', 'aria-labelledby', 'ariaLabelledBy', ariaLabelledByAttr, ariaLabelledBy);
     // Index of the row holding the list's single tab stop. Kept in state so the
     // roving tabindex follows the user's focus.
     const [focusedIndex, setFocusedIndex] = useState(0);
@@ -3865,7 +3977,7 @@ function ListViewInner({ columns, items, selectedIds = [], onSelectionChange, on
                 // The role is dropped while the list is empty or loading: a
                 // listbox is required to contain options, and applying it to a
                 // box holding only a placeholder is invalid ARIA.
-                role: hasRows ? 'listbox' : undefined, "aria-multiselectable": hasRows ? true : undefined, "aria-label": hasRows && !ariaLabelledBy ? ariaLabel : undefined, "aria-labelledby": hasRows ? ariaLabelledBy : undefined, "aria-busy": loading || undefined, children: renderBody() })] }));
+                role: hasRows ? 'listbox' : undefined, "aria-multiselectable": hasRows ? true : undefined, "aria-label": hasRows && !resolvedAriaLabelledBy ? resolvedAriaLabel : undefined, "aria-labelledby": hasRows ? resolvedAriaLabelledBy : undefined, "aria-busy": loading || undefined, children: renderBody() })] }));
 }
 /**
  * `forwardRef` erases generics, so the forwarded component is re-cast to a

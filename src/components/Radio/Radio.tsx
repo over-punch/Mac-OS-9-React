@@ -10,6 +10,7 @@ import React, {
 	useRef,
 	useState,
 } from 'react';
+import { resolveAria } from '../../utils/aria';
 import { mergeClasses } from '../../utils/classNames';
 import styles from './Radio.module.css';
 
@@ -71,13 +72,19 @@ export interface RadioProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 
 	error?: boolean;
 
 	/**
-	 * Override aria-label (for radios without visible labels)
+	 * Accessible name, when there is no visible `label`.
 	 */
-	ariaLabel?: string;
+	'aria-label'?: string;
 
 	/**
-	 * ID of element that describes this radio
+	 * ID of an element describing this radio.
 	 */
+	'aria-describedby'?: string;
+
+	/** @deprecated Use `aria-label`. */
+	ariaLabel?: string;
+
+	/** @deprecated Use `aria-describedby`. */
 	ariaDescribedBy?: string;
 
 	/**
@@ -135,6 +142,8 @@ export const Radio = forwardRef<HTMLInputElement, RadioProps>(
 			error = false,
 			ariaLabel,
 			ariaDescribedBy,
+			'aria-label': ariaLabelAttr,
+			'aria-describedby': ariaDescribedByAttr,
 			className = '',
 			value,
 			name,
@@ -178,9 +187,18 @@ export const Radio = forwardRef<HTMLInputElement, RadioProps>(
 		const labelClassNames = mergeClasses(styles.label, styles[`label--${size}`]);
 
 		// ARIA attributes
+		// Standard attributes win; the camelCase aliases warn once in development.
 		const ariaAttributes = {
-			'aria-label': !label ? ariaLabel : undefined,
-			'aria-describedby': ariaDescribedBy,
+			'aria-label': !label
+				? resolveAria('Radio', 'aria-label', 'ariaLabel', ariaLabelAttr, ariaLabel)
+				: undefined,
+			'aria-describedby': resolveAria(
+				'Radio',
+				'aria-describedby',
+				'ariaDescribedBy',
+				ariaDescribedByAttr,
+				ariaDescribedBy
+			),
 			'aria-invalid': error,
 		};
 
@@ -258,13 +276,19 @@ export interface RadioGroupProps {
 
 	/**
 	 * Accessible name for the group. Provide this unless you wire
-	 * `ariaLabelledBy` to a visible heading.
+	 * `aria-labelledby` to a visible heading.
 	 */
-	ariaLabel?: string;
+	'aria-label'?: string;
 
 	/**
 	 * ID of a visible label element for the group.
 	 */
+	'aria-labelledby'?: string;
+
+	/** @deprecated Use `aria-label`. */
+	ariaLabel?: string;
+
+	/** @deprecated Use `aria-labelledby`. */
 	ariaLabelledBy?: string;
 
 	/**
@@ -304,6 +328,8 @@ export const RadioGroup = forwardRef<HTMLDivElement, RadioGroupProps>(
 			orientation = 'vertical',
 			ariaLabel,
 			ariaLabelledBy,
+			'aria-label': ariaLabelAttr,
+			'aria-labelledby': ariaLabelledByAttr,
 			className = '',
 			children,
 		},
@@ -386,8 +412,14 @@ export const RadioGroup = forwardRef<HTMLDivElement, RadioGroupProps>(
 			<div
 				ref={setGroupRef}
 				role="radiogroup"
-				aria-label={ariaLabel}
-				aria-labelledby={ariaLabelledBy}
+				aria-label={resolveAria('RadioGroup', 'aria-label', 'ariaLabel', ariaLabelAttr, ariaLabel)}
+				aria-labelledby={resolveAria(
+					'RadioGroup',
+					'aria-labelledby',
+					'ariaLabelledBy',
+					ariaLabelledByAttr,
+					ariaLabelledBy
+				)}
 				aria-orientation={orientation}
 				aria-disabled={disabled || undefined}
 				onKeyDown={handleKeyDown}

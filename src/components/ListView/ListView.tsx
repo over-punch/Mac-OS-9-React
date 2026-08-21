@@ -8,6 +8,7 @@
 
 import React, { forwardRef, useState, useCallback, useEffect, useId, useMemo, useRef } from 'react';
 import { mergeClasses } from '../../utils/classNames';
+import { resolveAria } from '../../utils/aria';
 import styles from './ListView.module.css';
 
 export interface ListColumn {
@@ -237,12 +238,18 @@ export interface ListViewProps<TItem extends ListItem = ListItem> {
 	 *
 	 * @default 'List'
 	 */
-	ariaLabel?: string;
+	'aria-label'?: string;
 
 	/**
 	 * ID of a visible element naming the list. Takes precedence over
-	 * `ariaLabel`.
+	 * `aria-label`.
 	 */
+	'aria-labelledby'?: string;
+
+	/** @deprecated Use `aria-label`. */
+	ariaLabel?: string;
+
+	/** @deprecated Use `aria-labelledby`. */
 	ariaLabelledBy?: string;
 
 	/**
@@ -512,8 +519,10 @@ function ListViewInner<TItem extends ListItem = ListItem>(
 		className = '',
 		height = 'auto',
 		classes,
-		ariaLabel = 'List',
+		ariaLabel,
 		ariaLabelledBy,
+		'aria-label': ariaLabelAttr,
+		'aria-labelledby': ariaLabelledByAttr,
 		emptyState = 'No items',
 		loading = false,
 		loadingState = 'Loading…',
@@ -530,6 +539,17 @@ function ListViewInner<TItem extends ListItem = ListItem>(
 	const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 	const [hoveredRow, setHoveredRow] = useState<string | null>(null);
 	const [hoveredColumnKey, setHoveredColumnKey] = useState<string | null>(null);
+
+	// Standard attributes win; the camelCase aliases warn once in development.
+	const resolvedAriaLabel =
+		resolveAria('ListView', 'aria-label', 'ariaLabel', ariaLabelAttr, ariaLabel) ?? 'List';
+	const resolvedAriaLabelledBy = resolveAria(
+		'ListView',
+		'aria-labelledby',
+		'ariaLabelledBy',
+		ariaLabelledByAttr,
+		ariaLabelledBy
+	);
 
 	// Index of the row holding the list's single tab stop. Kept in state so the
 	// roving tabindex follows the user's focus.
@@ -909,8 +929,8 @@ function ListViewInner<TItem extends ListItem = ListItem>(
 				// box holding only a placeholder is invalid ARIA.
 				role={hasRows ? 'listbox' : undefined}
 				aria-multiselectable={hasRows ? true : undefined}
-				aria-label={hasRows && !ariaLabelledBy ? ariaLabel : undefined}
-				aria-labelledby={hasRows ? ariaLabelledBy : undefined}
+				aria-label={hasRows && !resolvedAriaLabelledBy ? resolvedAriaLabel : undefined}
+				aria-labelledby={hasRows ? resolvedAriaLabelledBy : undefined}
 				aria-busy={loading || undefined}
 			>
 				{renderBody()}

@@ -306,13 +306,13 @@ export const WithRightIcon: Story = {
 export const IconOnly: Story = {
 	render: () => (
 		<div style={{ display: 'flex', gap: '8px' }}>
-			<Button iconOnly ariaLabel="Close">
+			<Button iconOnly aria-label="Close">
 				<CloseIcon />
 			</Button>
-			<Button iconOnly ariaLabel="Save" variant="primary">
+			<Button iconOnly aria-label="Save" variant="primary">
 				<DiskIcon />
 			</Button>
-			<Button iconOnly ariaLabel="Delete" variant="danger">
+			<Button iconOnly aria-label="Delete" variant="danger">
 				<TrashIcon />
 			</Button>
 		</div>
@@ -483,16 +483,16 @@ export const Toolbar: Story = {
 				border: '1px solid #262626',
 			}}
 		>
-			<Button size="sm" iconOnly ariaLabel="New">
+			<Button size="sm" iconOnly aria-label="New">
 				<FolderIcon />
 			</Button>
-			<Button size="sm" iconOnly ariaLabel="Save">
+			<Button size="sm" iconOnly aria-label="Save">
 				<DiskIcon />
 			</Button>
-			<Button size="sm" iconOnly ariaLabel="Download">
+			<Button size="sm" iconOnly aria-label="Download">
 				<DownloadIcon />
 			</Button>
-			<Button size="sm" iconOnly ariaLabel="Print" disabled>
+			<Button size="sm" iconOnly aria-label="Print" disabled>
 				📄
 			</Button>
 		</div>

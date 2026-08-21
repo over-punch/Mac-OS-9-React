@@ -8,6 +8,7 @@
 
 import React, { forwardRef, ButtonHTMLAttributes } from 'react';
 import { mergeClasses } from '../../utils/classNames';
+import { warnMissingProp } from '../../utils/deprecation';
 import styles from './IconButton.module.css';
 
 export interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -52,6 +53,18 @@ export interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>
 }
 
 /**
+ * An icon with no visible label has no accessible name, so a screen reader
+ * announces it as just "button". Warn in development rather than shipping one.
+ */
+function assertHasName(label: string | undefined, ariaLabel: unknown, title: unknown): void {
+	if (label || ariaLabel || title) return;
+	warnMissingProp(
+		'IconButton',
+		'no accessible name. Pass `label`, `aria-label`, or `title` — an icon alone announces as "button".'
+	);
+}
+
+/**
  * IconButton component for Mac OS 9 UI
  *
  * Button with an icon, optionally with a text label.
@@ -91,6 +104,10 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
 		},
 		ref
 	) => {
+		if (process.env.NODE_ENV !== 'production') {
+			assertHasName(label, props['aria-label'], props.title);
+		}
+
 		// Build class names
 		const classNames = mergeClasses(
 			styles.iconButton,
