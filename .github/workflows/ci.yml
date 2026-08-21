@@ -41,6 +41,12 @@ jobs:
       - name: Build landing site
         run: npm run site:build
 
+      # Stories are not type-checked (Storybook's Meta<typeof T> cannot express
+      # the polymorphic Button), so building Storybook is what catches a broken
+      # story. A duplicate import reached main because nothing did this.
+      - name: Build Storybook
+        run: npm run build:storybook
+
   test:
     name: Test on React ${{ matrix.react }}
     runs-on: ubuntu-latest

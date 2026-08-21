@@ -3,7 +3,7 @@
 
 import type { Meta, StoryObj } from '@storybook/react';
 import { FolderList } from './FolderList';
-import { FolderIcon, DocumentIcon, DocumentIcon, ImageIcon, MusicIcon } from '../Icon/categories';
+import { FolderIcon, DocumentIcon, ImageIcon, MusicIcon } from '../Icon/categories';
 
 const meta: Meta<typeof FolderList> = {
 	title: 'Components/FolderList',

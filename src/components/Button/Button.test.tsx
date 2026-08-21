@@ -6,6 +6,20 @@ import userEvent from '@testing-library/user-event';
 import { Button } from './Button';
 import styles from './Button.module.css';
 
+/**
+ * Looks up a CSS module class, failing if it isn't there.
+ *
+ * `styles[...]` is `string | undefined` under noUncheckedIndexedAccess, and
+ * passing undefined to toHaveClass would have asserted nothing — so renaming a
+ * class in Button.module.css could have silently hollowed out these tests
+ * rather than failing them.
+ */
+const cls = (key: string): string => {
+	const value = styles[key];
+	if (!value) throw new Error(`Button.module.css has no class "${key}"`);
+	return value;
+};
+
 describe('Button', () => {
 	// ========================================
 	// Rendering Tests
@@ -19,19 +33,19 @@ describe('Button', () => {
 	it('renders with default variant', () => {
 		const { container } = render(<Button>Default</Button>);
 		const button = container.querySelector('button');
-		expect(button).toHaveClass(styles['button--default']);
+		expect(button).toHaveClass(cls('button--default'));
 	});
 
 	it('renders with primary variant', () => {
 		const { container } = render(<Button variant="primary">Primary</Button>);
 		const button = container.querySelector('button');
-		expect(button).toHaveClass(styles['button--primary']);
+		expect(button).toHaveClass(cls('button--primary'));
 	});
 
 	it('renders with danger variant', () => {
 		const { container } = render(<Button variant="danger">Danger</Button>);
 		const button = container.querySelector('button');
-		expect(button).toHaveClass(styles['button--danger']);
+		expect(button).toHaveClass(cls('button--danger'));
 	});
 
 	// ========================================
@@ -41,19 +55,19 @@ describe('Button', () => {
 	it('renders with small size', () => {
 		const { container } = render(<Button size="sm">Small</Button>);
 		const button = container.querySelector('button');
-		expect(button).toHaveClass(styles['button--sm']);
+		expect(button).toHaveClass(cls('button--sm'));
 	});
 
 	it('renders with medium size (default)', () => {
 		const { container } = render(<Button>Medium</Button>);
 		const button = container.querySelector('button');
-		expect(button).toHaveClass(styles['button--md']);
+		expect(button).toHaveClass(cls('button--md'));
 	});
 
 	it('renders with large size', () => {
 		const { container } = render(<Button size="lg">Large</Button>);
 		const button = container.querySelector('button');
-		expect(button).toHaveClass(styles['button--lg']);
+		expect(button).toHaveClass(cls('button--lg'));
 	});
 
 	// ========================================
@@ -69,7 +83,7 @@ describe('Button', () => {
 	it('renders with full width', () => {
 		const { container } = render(<Button fullWidth>Full Width</Button>);
 		const button = container.querySelector('button');
-		expect(button).toHaveClass(styles['button--full-width']);
+		expect(button).toHaveClass(cls('button--full-width'));
 	});
 
 	// ========================================
@@ -257,10 +271,10 @@ describe('Button', () => {
 		);
 
 		const button = container.querySelector('button');
-		expect(button).toHaveClass(styles['button--primary']);
-		expect(button).toHaveClass(styles['button--lg']);
-		expect(button).toHaveClass(styles['button--full-width']);
-		expect(button).toHaveClass(styles['button--disabled']);
+		expect(button).toHaveClass(cls('button--primary'));
+		expect(button).toHaveClass(cls('button--lg'));
+		expect(button).toHaveClass(cls('button--full-width'));
+		expect(button).toHaveClass(cls('button--disabled'));
 		expect(button).toHaveClass('custom');
 		expect(button).toBeDisabled();
 	});

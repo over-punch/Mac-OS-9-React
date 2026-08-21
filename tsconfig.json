@@ -24,15 +24,13 @@
 		"esModuleInterop": true,
 		"forceConsistentCasingInFileNames": true
 	},
-	"include": ["src"],
-	"exclude": [
-		"node_modules",
-		"dist",
-		"storybook-static",
-		"**/*.test.tsx",
-		"**/*.test.ts",
-		"**/*.stories.tsx",
-		"**/*.stories.ts",
-		"vitest.setup.ts"
-	]
+	// vitest.setup.ts is in the program so its `import
+	// '@testing-library/jest-dom/vitest'` augments Vitest's Assertion type —
+	// without it, every toBeInTheDocument in the suite is a type error.
+	"include": ["src", "vitest.setup.ts"],
+	// Tests are type-checked; stories are not. Storybook's own Meta<typeof T>
+	// helper cannot express the polymorphic Button, so including stories here
+	// produces hundreds of errors from the story framework rather than from
+	// this code. Story breakage is caught by building Storybook in CI instead.
+	"exclude": ["node_modules", "dist", "storybook-static", "**/*.stories.tsx", "**/*.stories.ts"]
 }

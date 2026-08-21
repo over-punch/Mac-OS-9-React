@@ -8,6 +8,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { MenuBar, type Menu } from './MenuBar';
 import { MenuItem } from './MenuItem';
 import { checkA11y } from '../../test/axe';
+import { nth } from '../../test/nth';
 
 const menus: Menu[] = [
 	{ label: 'File', items: <MenuItem label="Open…" shortcut="⌘O" /> },
@@ -43,7 +44,9 @@ describe('MenuBar', () => {
 
 		it('moves the tab stop as focus moves', () => {
 			render(<MenuBar menus={menus} />);
-			const [file, edit] = screen.getAllByRole('menuitem');
+			const items = screen.getAllByRole('menuitem');
+			const file = nth(items, 0);
+			const edit = nth(items, 1);
 
 			expect(file).toHaveAttribute('tabindex', '0');
 

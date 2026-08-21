@@ -8,6 +8,7 @@ import { render, screen, fireEvent, within } from '@testing-library/react';
 import { useState } from 'react';
 import { ListView, type ListColumn, type ListItem } from './ListView';
 import { checkA11y } from '../../test/axe';
+import { nth } from '../../test/nth';
 
 const columns: ListColumn[] = [
 	{ key: 'name', label: 'Name' },
@@ -304,8 +305,8 @@ describe('ListView', () => {
 			render(<ControlledList onChange={onChange} />);
 
 			const rows = screen.getAllByRole('option');
-			rows[0].focus();
-			fireEvent.keyDown(rows[0], { key: 'ArrowDown' });
+			nth(rows, 0).focus();
+			fireEvent.keyDown(nth(rows, 0), { key: 'ArrowDown' });
 
 			expect(onChange).toHaveBeenLastCalledWith(['b']);
 			expect(screen.getAllByRole('option')[1]).toHaveFocus();
@@ -316,12 +317,12 @@ describe('ListView', () => {
 			render(<ControlledList onChange={onChange} />);
 
 			const rows = screen.getAllByRole('option');
-			rows[0].focus();
+			nth(rows, 0).focus();
 
-			fireEvent.keyDown(rows[0], { key: 'End' });
+			fireEvent.keyDown(nth(rows, 0), { key: 'End' });
 			expect(onChange).toHaveBeenLastCalledWith(['d']);
 
-			fireEvent.keyDown(screen.getAllByRole('option')[3], { key: 'Home' });
+			fireEvent.keyDown(nth(screen.getAllByRole('option'), 3), { key: 'Home' });
 			expect(onChange).toHaveBeenLastCalledWith(['a']);
 		});
 
@@ -331,7 +332,7 @@ describe('ListView', () => {
 
 			const rows = screen.getAllByRole('option');
 			fireEvent.click(screen.getByText('Alpha'));
-			fireEvent.keyDown(rows[0], { key: 'ArrowDown', shiftKey: true });
+			fireEvent.keyDown(nth(rows, 0), { key: 'ArrowDown', shiftKey: true });
 
 			expect(onChange).toHaveBeenLastCalledWith(['a', 'b']);
 		});
@@ -340,7 +341,7 @@ describe('ListView', () => {
 			const onItemOpen = vi.fn();
 			render(<ListView columns={columns} items={items} onItemOpen={onItemOpen} />);
 
-			fireEvent.keyDown(screen.getAllByRole('option')[2], { key: 'Enter' });
+			fireEvent.keyDown(nth(screen.getAllByRole('option'), 2), { key: 'Enter' });
 
 			expect(onItemOpen).toHaveBeenCalledWith(expect.objectContaining({ id: 'c' }));
 		});
@@ -357,7 +358,7 @@ describe('ListView', () => {
 				/>
 			);
 
-			fireEvent.keyDown(screen.getAllByRole('option')[1], { key: ' ' });
+			fireEvent.keyDown(nth(screen.getAllByRole('option'), 1), { key: ' ' });
 
 			expect(onSelectionChange).toHaveBeenCalledWith(['b']);
 			expect(onItemOpen).not.toHaveBeenCalled();

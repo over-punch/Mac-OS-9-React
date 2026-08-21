@@ -7,6 +7,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { Tabs, TabPanel } from './Tabs';
 import { checkA11y } from '../../test/axe';
+import { nth } from '../../test/nth';
 
 describe('Tabs', () => {
 	it('renders a tab per panel and shows the first by default', () => {
@@ -123,7 +124,9 @@ describe('Tabs', () => {
 				</>
 			);
 
-			const [first, second] = screen.getAllByRole('tab');
+			const tabs = screen.getAllByRole('tab');
+			const first = nth(tabs, 0);
+			const second = nth(tabs, 1);
 			expect(first.id).not.toBe(second.id);
 			expect(first.getAttribute('aria-controls')).not.toBe(second.getAttribute('aria-controls'));
 		});
@@ -145,7 +148,9 @@ describe('Tabs', () => {
 				</Tabs>
 			);
 
-			const [one, two] = screen.getAllByRole('tab');
+			const allTabs = screen.getAllByRole('tab');
+			const one = nth(allTabs, 0);
+			const two = nth(allTabs, 1);
 			expect(one).toHaveAttribute('tabindex', '0');
 			expect(two).toHaveAttribute('tabindex', '-1');
 		});
