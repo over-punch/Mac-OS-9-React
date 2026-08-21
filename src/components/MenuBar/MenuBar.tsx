@@ -4,6 +4,7 @@
 import React, { forwardRef, useRef, useState, useEffect, useCallback, useId } from 'react';
 import { sanitizeUrl } from '../../utils/url';
 import { MenuItem } from './MenuItem';
+import { MenuDropdown } from './MenuDropdown';
 import { mergeClasses } from '../../utils/classNames';
 import styles from './MenuBar.module.css';
 
@@ -231,7 +232,7 @@ function renderMenuItemData(items: readonly MenuItemData[]): React.ReactNode {
  * />
  * ```
  */
-export const MenuBar = forwardRef<HTMLDivElement, MenuBarProps>(
+const MenuBarRoot = forwardRef<HTMLDivElement, MenuBarProps>(
 	(
 		{
 			menus,
@@ -552,6 +553,30 @@ export const MenuBar = forwardRef<HTMLDivElement, MenuBarProps>(
 	}
 );
 
-MenuBar.displayName = 'MenuBar';
+MenuBarRoot.displayName = 'MenuBar';
+
+/**
+ * MenuBar, with its companions attached.
+ *
+ * The three components in this folder are flat-exported siblings, which reads
+ * as a compound API that was never actually assembled (issue #118). Attaching
+ * them makes the relationship real:
+ *
+ * ```tsx
+ * <MenuBar menus={[{ label: 'File', items: <MenuBar.Item label="Open…" /> }]} />
+ * ```
+ *
+ * The flat exports remain — `import { MenuItem }` still works, and is the
+ * better choice when you are only reaching for one of them. This is not a
+ * children-based compound API in the Radix sense: MenuBar is driven by its
+ * `menus` prop, and adding a second way to declare the same structure would
+ * be a worse API, not a richer one.
+ */
+export const MenuBar = Object.assign(MenuBarRoot, {
+	/** The MenuItem component, for a menu's `items`. */
+	Item: MenuItem,
+	/** The standalone MenuDropdown, for menus outside the bar. */
+	Dropdown: MenuDropdown,
+});
 
 export default MenuBar;

@@ -170,6 +170,35 @@ scoped wherever you want it to reach:
 The one context provider the library does ship is `WindowManagerProvider`,
 which coordinates z-order across several `Window`s — not theming.
 
+## Component Layering
+
+Components sit in two layers, and the split is enforced by
+`src/test/architecture.test.ts` rather than left as a convention:
+
+**Primitives** — depend on no other component, safe to use anywhere:
+Button, Checkbox, Icon, ListView, MenuBar, Radio, Scrollbar, Select, Tabs,
+TextField, WindowManager.
+
+**Compounds** — assembled from primitives, with their allowed dependencies
+declared:
+
+| Component | May depend on |
+|---|---|
+| Window | WindowManager |
+| Dialog | Window |
+| FolderList | ListView, Window |
+| IconButton | Button |
+
+The test fails if a primitive grows a component dependency, if a compound
+imports something it hasn't declared, if a cycle appears, or if a new
+component isn't assigned to a layer. `src/utils` and `src/hooks` sit below
+both layers and must never import a component — that is how a cycle would
+start.
+
+The directories are deliberately not split into `primitives/` and `compound/`.
+Moving every file would encode in paths what the test already checks, and
+would churn imports for no behavioural gain.
+
 ## Accessibility Patterns
 
 ### Keyboard Navigation

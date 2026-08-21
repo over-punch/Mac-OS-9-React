@@ -255,3 +255,32 @@ describe('MenuBar', () => {
 		expect(await checkA11y(container)).toHaveNoViolations();
 	});
 });
+
+describe('compound API', () => {
+	it('exposes its companions as static properties', () => {
+		// The folder holds three flat-exported siblings, which reads as a
+		// compound API; attaching them makes that relationship real.
+		expect(MenuBar.Item).toBe(MenuItem);
+		expect(MenuBar.Dropdown).toBeDefined();
+	});
+
+	it('renders a menu declared through MenuBar.Item', () => {
+		render(
+			<MenuBar
+				defaultOpenMenuIndex={0}
+				menus={[{ label: 'File', items: <MenuBar.Item label="Open…" shortcut="⌘O" /> }]}
+			/>
+		);
+		expect(screen.getByRole('menuitem', { name: /Open/ })).toBeInTheDocument();
+	});
+
+	it('still works as a flat import', () => {
+		render(
+			<MenuBar
+				defaultOpenMenuIndex={0}
+				menus={[{ label: 'File', items: <MenuItem label="Save" /> }]}
+			/>
+		);
+		expect(screen.getByRole('menuitem', { name: 'Save' })).toBeInTheDocument();
+	});
+});
