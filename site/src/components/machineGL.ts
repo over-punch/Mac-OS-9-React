@@ -39,8 +39,8 @@ const ICE_COLOUR = 0xdfe7ea;
 /** Field of view, degrees. Long-ish, so the machine reads as a product shot. */
 const FOV = 32;
 
-/** Fraction of the viewport the machine fills in the hero. */
-const HERO_FILL = 0.66;
+/** Fraction of the free band the machine fills in the hero. */
+const HERO_FILL = 0.88;
 
 export interface MachineGLOptions {
 	/** Element the two renderers are appended to. */
@@ -252,19 +252,29 @@ export async function createMachineGL(options: MachineGLOptions): Promise<Machin
 	const machine = new THREE.Group();
 	scene.add(machine);
 
-	// Deliberately not `transmission`. A transmissive material is drawn in the
-	// transparent pass, after the cutout has written its hole — so it blends
-	// straight over the desktop and washes the whole screen cyan. Clearcoat
-	// over a saturated base gives the same wet-plastic read, renders in the
-	// opaque pass where the cutout can occlude it, and costs far less.
+	// The shell is translucent, because that is the whole point of the machine:
+	// you could see into it.
+	//
+	// This is only safe now that the aperture is cut out of the shell as well
+	// as the front panel. A transmissive material is drawn in the transparent
+	// pass, after the cutout has written its hole — so while the shell was a
+	// solid slab it blended straight over the desktop and washed the entire
+	// screen cyan. With no shell geometry over the aperture there is nothing
+	// left to wash it with.
 	const shellMaterial = new THREE.MeshPhysicalMaterial({
 		color: SHELL_COLOUR,
-		roughness: 0.18,
+		roughness: 0.14,
 		metalness: 0,
 		clearcoat: 1,
-		clearcoatRoughness: 0.05,
+		clearcoatRoughness: 0.04,
+		transmission: 0.55,
+		// Thickness drives how much the colour deepens through the material,
+		// which is what makes a moulded edge read thicker than a flat face.
+		thickness: 260,
+		attenuationDistance: 900,
+		attenuationColor: new THREE.Color(0x0a5568),
 		ior: 1.52,
-		envMapIntensity: 1.15,
+		envMapIntensity: 1.2,
 	});
 
 	// Frosted polycarbonate: a soft, slightly blue body under a hard gloss
@@ -276,6 +286,10 @@ export async function createMachineGL(options: MachineGLOptions): Promise<Machin
 		metalness: 0,
 		clearcoat: 1,
 		clearcoatRoughness: 0.12,
+		// Frosted rather than clear: a little transmission through a rough
+		// surface is what diffusing polycarbonate does.
+		transmission: 0.22,
+		thickness: 90,
 		sheen: 0.6,
 		sheenRoughness: 0.5,
 		sheenColor: new THREE.Color(0xbfd6dd),
@@ -559,9 +573,13 @@ export async function createMachineGL(options: MachineGLOptions): Promise<Machin
 
 		// Centre the machine in that band rather than in the viewport. The
 		// band's midpoint in pixels, converted to world units at hero distance.
+		// The camera looks at (0, heroCentreY, 0), and a world point at y = 0
+		// lands BELOW the viewport centre when that target is positive — so the
+		// sign follows the band rather than opposing it. It was negated, which
+		// pushed the machine up by exactly the amount it should have come down.
 		const bandCentrePx = (heroBand.top + heroBand.bottom) / 2 - viewH / 2;
 		const worldPerPixel = (2 * heroDistance * halfFov) / viewH;
-		heroCentreY = -bandCentrePx * worldPerPixel;
+		heroCentreY = bandCentrePx * worldPerPixel;
 	};
 
 	const resize = () => {

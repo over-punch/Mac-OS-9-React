@@ -201,14 +201,14 @@ a {
 	z-index: 3;
 }
 
-/* Released back into plain layout. The aperture is larger than the viewport,
- * so it is centred and top-aligned — which is what puts the page inside it at
- * exactly 0, 0. */
-.machineRelease > .machineScreen__live {
-	position: absolute;
-	top: 0;
-	left: 50%;
-	transform: translateX(-50%);
+/* Released back into plain layout: the page leaves the aperture entirely and
+ * becomes the viewport. The aperture itself never moves — it belongs to
+ * CSS3DRenderer, and anything cleared off it is never restored, because the
+ * renderer caches the transform it wrote and skips rewriting an unchanged
+ * one. */
+.machineRelease > .machineScreen__page {
+	left: 0;
+	transform: none;
 }
 
 .zoomStage[data-released='true'] .machineScreen__page {
@@ -253,7 +253,7 @@ a {
 /* Once the zoom has finished, the desktop is the thing you are using: it
  * takes pointer events and scrolls its own content. Before that it is scenery,
  * and MachineStage has it marked inert so it is out of the tab order too. */
-.zoomStage[data-released='false'] .machineScreen__live {
+.zoomStage[data-released='false'] .machineScreen__page {
 	pointer-events: none;
 }
 
@@ -289,7 +289,10 @@ a {
 .desktopMenuBar {
 	position: sticky;
 	top: 0;
-	z-index: 60;
+	/* Above the window stack. WindowManager hands out `baseZIndex + position`
+	 * from a default base of 100, bounded by the number of windows — so at 60
+	 * every window scrolled straight over the menu bar instead of under it. */
+	z-index: 200;
 }
 
 

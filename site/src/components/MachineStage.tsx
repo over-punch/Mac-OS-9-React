@@ -1,12 +1,21 @@
 // Chooses how the machine is drawn, and owns the handoff to the live desktop.
 //
-// The desktop lives in one detached host element for the whole session, and
-// that element is *moved* between three homes: the CSS3D layer while the WebGL
-// machine has it, a plain full-viewport wrapper once the zoom completes, and
-// the CSS machine's screen when WebGL is unavailable. Moving the node rather
-// than re-parenting it in React is what keeps the desktop's state — open
-// windows, chosen flavour, selected rows — across the handoff. React renders
-// into the host through a portal and never has to care where it currently is.
+// Two detached elements, created once and never re-created. `host` is the 4:3
+// aperture and belongs to CSS3DRenderer for the whole session — nothing else
+// ever writes to its style. `page` is the viewport-sized desktop inside it,
+// and *that* is what moves: into a plain full-viewport wrapper once the zoom
+// completes, and back into the aperture when you scroll away again.
+//
+// Moving the page rather than the host is deliberate. CSS3DRenderer caches the
+// transform it wrote per object and skips rewriting an unchanged one, so any
+// inline style cleared off the host is never restored — the aperture ends up
+// stranded without its transform and the desktop spills out beside the case.
+// Leaving the host alone means there is nothing to strand.
+//
+// Moving a node rather than re-parenting it in React is what keeps the
+// desktop's state — open windows, chosen flavour, selected rows — across the
+// handoff. React renders into `page` through a portal and never has to care
+// where it currently is.
 //
 // WebGL is loaded on demand and is never on the critical path: if it fails, is
 // unsupported, or the visitor prefers reduced motion, the desktop is simply
@@ -116,25 +125,18 @@ export function MachineStage({ children, above, below }: MachineStageProps) {
 			stage.dataset.released = next ? 'true' : 'false';
 
 			if (next) {
-				release.appendChild(host);
-				// CSS3DRenderer writes position and a matrix3d straight onto the
-				// element it owns. Those survive the move, so they have to be
-				// replaced rather than merely cleared — the aperture is wider
-				// and taller than the viewport, and the page inside it only
-				// lands at 0,0 if the host is centred and top-aligned.
-				host.style.position = 'absolute';
-				host.style.top = '0';
-				host.style.left = '50%';
-				host.style.transform = 'translateX(-50%)';
-				host.style.willChange = '';
-				host.removeAttribute('inert');
-				host.removeAttribute('aria-hidden');
+				// Only the page moves. Where it sits in each home is decided by
+				// CSS on the parent, so no inline style is written here at all.
+				release.appendChild(page);
+				page.removeAttribute('inert');
+				page.removeAttribute('aria-hidden');
 				handle?.setVisible(false);
 			} else {
+				host.appendChild(page);
 				// `inert` is set through the DOM rather than as a JSX prop
 				// because React 18 does not recognise it as a known attribute.
-				host.setAttribute('inert', '');
-				host.setAttribute('aria-hidden', 'true');
+				page.setAttribute('inert', '');
+				page.setAttribute('aria-hidden', 'true');
 				handle?.setVisible(true);
 			}
 		};
@@ -148,9 +150,9 @@ export function MachineStage({ children, above, below }: MachineStageProps) {
 
 		// --- Flat fallback: no machine, just the desktop ---------------------
 		const runFlat = () => {
-			release.appendChild(host);
-			host.removeAttribute('inert');
-			host.removeAttribute('aria-hidden');
+			release.appendChild(page);
+			page.removeAttribute('inert');
+			page.removeAttribute('aria-hidden');
 			stage.dataset.released = 'true';
 			released = true;
 			setMode('flat');

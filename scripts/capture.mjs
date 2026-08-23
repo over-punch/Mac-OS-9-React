@@ -114,12 +114,13 @@ const browser = await chromium.launch();
 	// Hold the machine at the tilt it reaches with the pointer up and to the
 	// right — square-on reads as a flat product shot, and the whole point of
 	// the card is that the thing has dimension.
-	await page.evaluate(() => {
-		const machine = document.querySelector('.machine');
-		machine.style.setProperty('--tilt-x', '-3deg');
-		machine.style.setProperty('--tilt-y', '5deg');
-	});
-	await page.waitForTimeout(600);
+	//
+	// Driven by moving the pointer rather than by setting a custom property:
+	// the machine is WebGL now, and the tilt is a camera orbit rather than a
+	// CSS transform. Nudging the real input is also the only way to be sure
+	// the card shows what a visitor would actually see.
+	await page.mouse.move(1140, 150);
+	await page.waitForTimeout(900);
 	await page.screenshot({ path: join(PUBLIC, 'og.png') });
 	console.log('captured site/public/og.png');
 	await page.close();
