@@ -2,6 +2,8 @@
 
 A pixel-perfect Mac OS 9 UI component library for React and TypeScript. Bring authentic retro Mac OS 9 styling to your web applications with accessible, well-typed components.
 
+TypeScript · Zero runtime dependencies · ~3 kB for a single component · React 18 & 19
+
 [![CI](https://github.com/Liiift-Studio/Mac-OS-9-React/actions/workflows/ci.yml/badge.svg)](https://github.com/Liiift-Studio/Mac-OS-9-React/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/@liiift-studio/mac-os9-ui.svg)](https://www.npmjs.com/package/@liiift-studio/mac-os9-ui)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
@@ -40,16 +42,16 @@ import { Window, Button } from '@liiift-studio/mac-os9-ui';
 
 ## Compatibility and footprint
 
-| | |
-|---|---|
-| **React** | 18 or 19 — both are exercised by the test matrix in CI (`react` and `react-dom` are peer dependencies) |
-| **Runtime dependencies** | None |
-| **Module formats** | ESM (`dist/index.js`) and CommonJS (`dist/index.cjs`) |
-| **Bundle** | 186 KB ESM, 46 KB gzipped for the whole library — but see tree-shaking below |
-| **Stylesheet** | 100 KB, 17 KB gzipped |
-| **Fonts** | 20 KB fetched by an ASCII page — the family is split into `latin` and `latin-ext` subsets with `unicode-range`, so only the parts your text needs are downloaded (49 KB of woff2 total) |
-| **Published tarball** | 309 kB (932 kB unpacked) |
-| **Types** | Bundled `.d.ts` and `.d.cts` |
+|                          |                                                                                                                                                                                         |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **React**                | 18 or 19 — both are exercised by the test matrix in CI (`react` and `react-dom` are peer dependencies)                                                                                  |
+| **Runtime dependencies** | None                                                                                                                                                                                    |
+| **Module formats**       | ESM (`dist/index.js`) and CommonJS (`dist/index.cjs`)                                                                                                                                   |
+| **Bundle**               | 186 KB ESM, 46 KB gzipped for the whole library — but see tree-shaking below                                                                                                            |
+| **Stylesheet**           | 100 KB, 17 KB gzipped                                                                                                                                                                   |
+| **Fonts**                | 20 KB fetched by an ASCII page — the family is split into `latin` and `latin-ext` subsets with `unicode-range`, so only the parts your text needs are downloaded (49 KB of woff2 total) |
+| **Published tarball**    | 309 kB (932 kB unpacked)                                                                                                                                                                |
+| **Types**                | Bundled `.d.ts` and `.d.cts`                                                                                                                                                            |
 
 ### Server components and `'use client'`
 
@@ -96,6 +98,7 @@ the machine.
 ## Components
 
 ### Form Controls
+
 - **Button** - Classic Mac OS 9 buttons. Variants `default` / `primary` / `danger`, sizes `sm` / `md` / `lg`, `loading`, `leftIcon` / `rightIcon`, `iconOnly`, and polymorphism via `as="a"` or [`asChild`](#router-links-with-aschild)
 - **IconButton** - Icon button with an optional label in any of four positions
 - **Checkbox** - Mac OS 9 style checkboxes, including an indeterminate state
@@ -104,6 +107,7 @@ the machine.
 - **Select** - A real `role="listbox"` popup with type-ahead, option groups, and a hidden input so native form submission still works
 
 ### Layout & Chrome
+
 - **Window** - Classic Mac OS 9 window container. Optionally `draggable` and `resizable`, by pointer or arrow keys
 - **WindowManagerProvider** - z-order and focus coordination for several windows at once
 - **MenuBar** / **MenuItem** / **MenuDropdown** - Application menu bar with dropdowns, submenus and keyboard shortcuts
@@ -111,20 +115,35 @@ the machine.
 - **Dialog** - Modal dialog, portalled to the body, with a focus trap
 
 ### Lists & Navigation
+
 - **ListView** - Multi-column list with sortable headers and selection, generic over the row type
 - **FolderList** - A Window with a ListView inside it, for file browsing
 - **Scrollbar** - Custom Mac OS 9 styled scrollbars
 
 ### Content
+
 - **Icon** - Wrapper giving any SVG consistent sizing
 - **IconLibrary** - 39 bundled icons, addressed by name
 - **createPixelIcon** - Build your own icons from a character map, in the same style
 
 ### Utilities and hooks
+
 - **mergeClasses** / **createClassBuilder** - Class name helpers
 - **useOutsideClick** - Dismiss on interaction outside a set of elements
 - **useMenuPosition** - Keep a dropdown inside the viewport
 - **tokens** - Every design token, readable from JavaScript
+
+### Recommended starting points
+
+Every component works with defaults alone. These are the four where the useful
+setting is not the default, because it depends on something only you know.
+
+| Component   | Start with                                    | Then tune                                                                                                                            |
+| ----------- | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `Window`    | `draggable` on its own                        | Add `resizable` once the content can reflow; `boundary="none"` only if the window may leave its container                            |
+| `Scrollbar` | `viewportRatio={clientHeight / scrollHeight}` | There is deliberately **no default** — it sets both the thumb length and the Page Up/Down step, and omitting it warns in development |
+| `ListView`  | `columns` + `items` + `height`                | Add `onSelectionChange` for controlled selection, `onSort` once you have more rows than fit                                          |
+| `Tabs`      | `aria-label` + a `value` on each `TabPanel`   | The value is what makes the literal union survive into `onValueChange`; without it the index is the identity                         |
 
 ![Thirty-nine pixel-art icons on a Mac OS 9 desktop background, each labelled with its registry name: close, trash, search, folder, document, disk, arrows, alerts, media controls and more](https://raw.githubusercontent.com/Liiift-Studio/Mac-OS-9-React/main/assets/icons.png?v=1)
 
@@ -171,7 +190,12 @@ function MyApp() {
 								<MenuItem label="New" shortcut="⌘N" onClick={() => console.log('New')} />
 								{/* `separator` draws a divider AFTER this item — it is not a
 								    standalone divider element. */}
-								<MenuItem label="Open..." shortcut="⌘O" separator onClick={() => console.log('Open')} />
+								<MenuItem
+									label="Open..."
+									shortcut="⌘O"
+									separator
+									onClick={() => console.log('Open')}
+								/>
 								<MenuItem label="Quit" shortcut="⌘Q" onClick={() => console.log('Quit')} />
 							</>
 						),
@@ -224,11 +248,7 @@ function MyForm() {
 
 	return (
 		<div>
-			<TextField
-				label="Name"
-				value={text}
-				onChange={(e) => setText(e.target.value)}
-			/>
+			<TextField label="Name" value={text} onChange={(e) => setText(e.target.value)} />
 
 			<TextField label="Notes" multiline rows={4} />
 
@@ -324,8 +344,12 @@ Wrap them in a `WindowManagerProvider` and clicking a window brings it forward:
 import { WindowManagerProvider, Window } from '@liiift-studio/mac-os9-ui';
 
 <WindowManagerProvider>
-	<Window id="finder" title="Finder" draggable>…</Window>
-	<Window id="notes" title="Notes" draggable>…</Window>
+	<Window id="finder" title="Finder" draggable>
+		…
+	</Window>
+	<Window id="notes" title="Notes" draggable>
+		…
+	</Window>
 </WindowManagerProvider>;
 ```
 
@@ -344,6 +368,7 @@ import '@liiift-studio/mac-os9-ui/styles';
 ```
 
 This provides:
+
 - CSS custom properties (design tokens/variables)
 - Font declarations (the bundled Pixel family)
 - Component styles
@@ -353,13 +378,30 @@ This needs to be done only once at the root of your application. All components 
 
 ### Entry points
 
-| Import | What you get |
-|---|---|
-| `@liiift-studio/mac-os9-ui/styles` | Everything: tokens, `@font-face`, component styles, utilities |
-| `@liiift-studio/mac-os9-ui/tokens` | Design tokens only — no `@font-face`, no font downloads |
-| `@liiift-studio/mac-os9-ui/base` | Optional global `html` / `body` / box-sizing styles |
-| `@liiift-studio/mac-os9-ui/webfonts` | Opt-in Google Fonts for IBM Plex and EB Garamond |
-| `@liiift-studio/mac-os9-ui/fonts/*` | The raw font files |
+| Import                               | What you get                                                  |
+| ------------------------------------ | ------------------------------------------------------------- |
+| `@liiift-studio/mac-os9-ui/styles`   | Everything: tokens, `@font-face`, component styles, utilities |
+| `@liiift-studio/mac-os9-ui/tokens`   | Design tokens only — no `@font-face`, no font downloads       |
+| `@liiift-studio/mac-os9-ui/base`     | Optional global `html` / `body` / box-sizing styles           |
+| `@liiift-studio/mac-os9-ui/webfonts` | Opt-in Google Fonts for IBM Plex and EB Garamond              |
+| `@liiift-studio/mac-os9-ui/fonts/*`  | The raw font files                                            |
+
+**Using the look without React.** The token entry point is framework-neutral and
+supported: `/tokens` is plain custom properties, and `/base` and `/webfonts` are
+plain CSS. Build a button in Vue, Svelte or hand-written HTML against
+`--color-surface`, `--border-width-thin` and the rest, and it will match.
+
+The component _class names_ are not a public API. They come from CSS Modules and
+are content-hashed, so they change between builds — targeting them will break on
+any release. That is deliberate rather than an oversight: what this library
+actually provides is the behaviour, not the paint. A CSS-only button is a div
+that looks right; `Button` is a control that stays a real `<button>`, resolves
+its accessible name, blocks clicks while loading, and refuses to become a link
+without an `href`. Shipping the paint alone would hand you the half we think
+matters least while implying you had both.
+
+If you want the look in another framework, take the tokens and write the twenty
+lines of CSS yourself — you will end up with something you can maintain.
 
 ### Theming
 
@@ -469,11 +511,12 @@ If you want the **full Mac OS 9 experience** with global styles applied to your 
 
 ```tsx
 // In your app's main file
-import '@liiift-studio/mac-os9-ui/styles';  // Required
-import '@liiift-studio/mac-os9-ui/base';    // Optional global styles
+import '@liiift-studio/mac-os9-ui/styles'; // Required
+import '@liiift-studio/mac-os9-ui/base'; // Optional global styles
 ```
 
 The optional base styles include:
+
 - Universal `box-sizing: border-box` reset
 - Responsive typography scaling on `<html>`
 - Body styles (margin, padding, font-family, colors)
@@ -505,10 +548,10 @@ font-src  'self' https://fonts.gstatic.com;
 
 Two names, one rule, so you never have to check which shape a component uses:
 
-| Name | Receives | On |
-|---|---|---|
-| `onChange` | the native DOM event | components wrapping a native input: `TextField`, `Checkbox`, `Radio` |
-| `onValueChange` | the value itself | components reporting a value: `Select`, `RadioGroup`, `Scrollbar`, `Tabs` |
+| Name            | Receives             | On                                                                        |
+| --------------- | -------------------- | ------------------------------------------------------------------------- |
+| `onChange`      | the native DOM event | components wrapping a native input: `TextField`, `Checkbox`, `Radio`      |
+| `onValueChange` | the value itself     | components reporting a value: `Select`, `RadioGroup`, `Scrollbar`, `Tabs` |
 
 ```tsx
 // Wraps an input, so onChange is the DOM handler you already know.
@@ -573,6 +616,15 @@ accessible name: `aria-label` on an `iconOnly` Button, on IconButton, and on
 Tabs, Scrollbar, RadioGroup and ListView; `aria-describedby` on Dialog. These
 are the standard hyphenated attributes — 2.0 removed the camelCase aliases.
 Development builds log an error when Button can't resolve a name.
+
+**Touch targets are small, on purpose.** Mac OS 9 controls were drawn for a
+mouse, and this library reproduces their metrics: a `md` Button is 24px tall,
+`sm` is 20px, and a Checkbox is 14–16px square. All of those are below the 44px
+[WCAG 2.5.5 Target Size](https://www.w3.org/WAI/WCAG21/Understand/target-size.html)
+guideline. Growing them would break the one thing the library exists to get
+right, so it does not — but if you are shipping to touch, use `size="lg"` (32px)
+and give controls a padded hit area of your own rather than assuming the
+defaults are finger-friendly.
 
 Accessibility bugs are worth reporting — [open an issue](https://github.com/Liiift-Studio/Mac-OS-9-React/issues).
 
@@ -643,15 +695,15 @@ argument order, so check the callback body and not just the name:
 
 **Single-purpose `*ClassName` props → `classes` slots.**
 
-| Removed | Use |
-|---|---|
-| `TextField.wrapperClassName` | `classes.root` |
-| `Tabs.tabListClassName` | `classes.tabList` |
-| `Tabs.panelClassName` | `classes.panel` |
-| `MenuBar.dropdownClassName` | `classes.dropdown` |
+| Removed                          | Use                |
+| -------------------------------- | ------------------ |
+| `TextField.wrapperClassName`     | `classes.root`     |
+| `Tabs.tabListClassName`          | `classes.tabList`  |
+| `Tabs.panelClassName`            | `classes.panel`    |
+| `MenuBar.dropdownClassName`      | `classes.dropdown` |
 | `MenuDropdown.dropdownClassName` | `classes.dropdown` |
-| `Dialog.backdropClassName` | `classes.backdrop` |
-| `Dialog.dialogClasses` | `classes` |
+| `Dialog.backdropClassName`       | `classes.backdrop` |
+| `Dialog.dialogClasses`           | `classes`          |
 
 `Window.contentClassName` still works. It was never marked deprecated in `1.x`,
 so removing it here would have broken code that had no warning — it warns
@@ -707,16 +759,16 @@ option.
 
 Other breaking changes in 1.0:
 
-| Change | What to do |
-|---|---|
-| Google Fonts no longer imported by `/styles` | add `import '@liiift-studio/mac-os9-ui/webfonts'` if you use `--font-body`, `--font-title` or `--font-mono` |
-| `Variant` is `'default' \| 'primary' \| 'danger'`, `Size` is `'sm' \| 'md' \| 'lg'` | they now match what the components always accepted |
-| `BaseComponentProps`, `RenderState`, `State`, `ButtonRef` and the other ref aliases removed | nothing referenced them |
-| `ComponentClasses` index signature removed | a misspelled slot is now a compile error |
-| `typography.fontFamily.chicago` removed | the library never loaded that family |
-| Font files renamed to `.latin` / `.latin-ext` subsets | only affects direct `./fonts/*` imports |
-| `IconButton` renders a `Button` internally | only affects CSS targeting its old class names |
-| Button no longer sets `aria-disabled` on a native `<button>` | the `disabled` attribute is authoritative there |
+| Change                                                                                      | What to do                                                                                                  |
+| ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Google Fonts no longer imported by `/styles`                                                | add `import '@liiift-studio/mac-os9-ui/webfonts'` if you use `--font-body`, `--font-title` or `--font-mono` |
+| `Variant` is `'default' \| 'primary' \| 'danger'`, `Size` is `'sm' \| 'md' \| 'lg'`         | they now match what the components always accepted                                                          |
+| `BaseComponentProps`, `RenderState`, `State`, `ButtonRef` and the other ref aliases removed | nothing referenced them                                                                                     |
+| `ComponentClasses` index signature removed                                                  | a misspelled slot is now a compile error                                                                    |
+| `typography.fontFamily.chicago` removed                                                     | the library never loaded that family                                                                        |
+| Font files renamed to `.latin` / `.latin-ext` subsets                                       | only affects direct `./fonts/*` imports                                                                     |
+| `IconButton` renders a `Button` internally                                                  | only affects CSS targeting its old class names                                                              |
+| Button no longer sets `aria-disabled` on a native `<button>`                                | the `disabled` attribute is authoritative there                                                             |
 
 Those renamed props warned through 1.x and were removed in 2.0 — see
 [Migrating to 2.0](#migrating-to-20).
@@ -734,6 +786,14 @@ import '@liiift-studio/mac-os9-ui/base'; // restores the previous global styles
 ```
 
 ## Development
+
+Two files are worth reading before you change anything:
+
+- [`PITFALLS.md`](./PITFALLS.md) — every bug that shipped once, and what to do
+  instead. Add a row when you fix something that was invisible until you looked
+  at the right thing.
+- [`RELEASING.md`](./RELEASING.md) — the pre-ship checklist, including the
+  manual accessibility gate that automated scanning cannot cover.
 
 ```bash
 # Install dependencies
