@@ -163,460 +163,62 @@ a {
 	}
 }
 
-.zoomMachine {
-	/* transform and transform-origin are written by ZoomStage on each frame:
-	 * it scales about the live desktop's top-centre and slides that point to
-	 * the top centre of the viewport, so at scale 1 the desktop IS the page.
-	 *
-	 * Out of flow for the same reason the copy is: the machine's laid-out size
-	 * is the full-zoom size, and a transform does not shrink the box it
-	 * reserves. */
-	position: absolute;
-	top: 0;
-	left: 0;
-	will-change: transform;
-	z-index: 1;
-
-	/* The viewing distance for the machine's tilt. Deep enough that a few
-	 * degrees read as a turn rather than as a fisheye. It scales with the
-	 * element, so the tilt keeps its proportion as the zoom grows. */
-	perspective: calc(var(--screen-w, 560px) * 4);
-	perspective-origin: 50% 42%;
-}
-
 /* ==========================================================================
- * The machine — a Bondi blue iMac G3
+ * The machine
  *
- * Every part is sized from --screen-w, so the whole computer scales as one
- * object and the proportions hold at any viewport. Colours live in the
- * --imac-* custom properties: swapping the five flavours is a palette change,
- * not a rewrite.
+ * The case is WebGL now — real geometry, real lights — so there is very little
+ * CSS left for it. What remains is where the two renderers sit and how they
+ * stack: CSS3D underneath holding the live desktop, the WebGL canvas over the
+ * top drawing the case around it, with a hole punched through at the screen.
+ *
+ * The canvas takes no pointer events, so once the desktop is released it is
+ * the DOM that receives the clicks.
  * ========================================================================== */
 
-.machine {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-
-	/* The machine is laid out at the size it will be when the zoom finishes,
-	 * not at hero size: its screen is a 4:3 aperture large enough to contain a
-	 * viewport-sized desktop, and ZoomStage scales the whole thing down to fit
-	 * the hero. Laying it out small and scaling UP is what forced the old
-	 * version to show a mock-up — a real desktop would have been laid out for
-	 * a 560px viewport and then magnified. */
-	--screen-w: max(100vw, calc(100vh * 4 / 3));
-	--screen-h: calc(var(--screen-w) * 0.75);
-
-	/* How far the case stands off the front panel. The real machine is nearly
-	 * as deep as it is wide; this is a readable fraction of that. */
-	--case-depth: calc(var(--screen-w) * 0.11);
-
-	/* Bondi blue: the translucent shell, lit from the top left. */
-	--imac-glint: #7fd8e8;
-	--imac-light: #35a9c2;
-	--imac-mid: #12798f;
-	--imac-deep: #08556a;
-	--imac-shadow: #04384a;
-
-	/* The "ice" front plastic — white, but never pure white: it is frosted
-	 * polycarbonate over a light grey, which is what keeps it from reading as
-	 * a flat card. */
-	--ice-hi: #fbfcfc;
-	--ice: #e9eef0;
-	--ice-mid: #d6dee1;
-	--ice-lo: #bdc8cc;
-
-	/* Tilt written by ZoomStage from the pointer position. */
-	transform: rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
-	transform-style: preserve-3d;
-	will-change: transform;
-}
-
-/* The case as a solid: a front face, a body set back in Z, and flanks
- * standing perpendicular between them. Head-on the flanks are edge-on and
- * invisible; they swing into view as the machine turns, which is what makes
- * the depth read as depth rather than as a skewed photograph. */
-.machine__solid {
-	position: relative;
-	transform-style: preserve-3d;
-}
-
-/* The mass behind the front panel. Inset and set back, which is the taper. */
-.machine__body {
+.machineGL {
 	position: absolute;
-	inset: 4% 6% 2%;
-	transform: translateZ(calc(var(--case-depth) * -1));
-	border-radius:
-		calc(var(--screen-w) * 0.2) calc(var(--screen-w) * 0.2)
-		calc(var(--screen-w) * 0.08) calc(var(--screen-w) * 0.08);
-	background: linear-gradient(
-		100deg,
-		var(--imac-shadow) 0%,
-		var(--imac-deep) 30%,
-		var(--imac-mid) 62%,
-		var(--imac-shadow) 100%
-	);
-	box-shadow: 0 calc(var(--screen-w) * 0.02) calc(var(--screen-w) * 0.06) rgba(0, 0, 0, 0.5);
+	inset: 0;
+	z-index: 1;
 }
 
-/* The sides and top, each a quad hinged at its edge of the front face. */
-.machine__flank {
+.machineGL__css,
+.machineGL__canvas {
 	position: absolute;
-	background: linear-gradient(
-		180deg,
-		var(--imac-light) 0%,
-		var(--imac-mid) 45%,
-		var(--imac-deep) 100%
-	);
-}
-
-.machine__flank--left,
-.machine__flank--right {
-	/* Kept clear of the shell's very large top radius. A full-height rectangle
-	 * pokes out past the rounded corners as a fin, because there is no shell
-	 * in front of it to hide behind up there. */
-	top: 22%;
-	bottom: 9%;
-	width: var(--case-depth);
-	border-radius: calc(var(--screen-w) * 0.02);
-}
-
-.machine__flank--left {
-	left: 0;
-	transform-origin: left center;
-	transform: rotateY(90deg);
-	filter: brightness(1.08);
-}
-
-.machine__flank--right {
-	right: 0;
-	transform-origin: right center;
-	transform: rotateY(-90deg);
-	filter: brightness(0.72);
-}
-
-.machine__flank--top {
-	/* Inset past the corner radius for the same reason as the side flanks. */
-	left: 22%;
-	right: 22%;
 	top: 0;
-	height: var(--case-depth);
-	transform-origin: center top;
-	transform: rotateX(-90deg);
-	background: linear-gradient(
-		180deg,
-		var(--imac-glint) 0%,
-		var(--imac-light) 40%,
-		var(--imac-mid) 100%
-	);
-	border-radius: calc(var(--screen-w) * 0.06) calc(var(--screen-w) * 0.06) 0 0;
+	left: 0;
 }
 
-/* The coloured shell. It shows as a rim around the ice front and, at the
- * sides, as the flank of the case flaring away behind it. */
-.machine__shell {
-	position: relative;
-	transform-style: preserve-3d;
-	padding: calc(var(--screen-w) * 0.055) calc(var(--screen-w) * 0.05)
-		calc(var(--screen-w) * 0.055);
-
-	/* Tall, soft dome at the top; a tighter radius at the bottom where the
-	 * case meets the foot. */
-	border-radius:
-		calc(var(--screen-w) * 0.24) calc(var(--screen-w) * 0.24)
-		calc(var(--screen-w) * 0.09) calc(var(--screen-w) * 0.09);
-
-	background:
-		/* The flanks, darker where the shell curves away from the viewer */
-		linear-gradient(
-			100deg,
-			var(--imac-deep) 0%,
-			var(--imac-mid) 9%,
-			var(--imac-light) 20%,
-			var(--imac-light) 80%,
-			var(--imac-mid) 91%,
-			var(--imac-shadow) 100%
-		);
-
-	box-shadow:
-		/* Translucent plastic reads as a bright inner edge over a dark core */
-		inset 0 calc(var(--screen-w) * 0.004) 0 rgba(255, 255, 255, 0.55),
-		inset 0 calc(var(--screen-w) * -0.006) calc(var(--screen-w) * 0.02) rgba(0, 0, 0, 0.4),
-		0 calc(var(--screen-w) * 0.07) calc(var(--screen-w) * 0.14) rgba(0, 0, 0, 0.55),
-		0 calc(var(--screen-w) * 0.012) calc(var(--screen-w) * 0.04) rgba(0, 0, 0, 0.42);
-}
-
-/* The recessed carry handle at the crown, seen edge-on from the front as a
- * darker dimple in the dome. */
-.machine__handle {
-	position: absolute;
-	top: calc(var(--screen-w) * 0.012);
-	left: 50%;
-	width: calc(var(--screen-w) * 0.17);
-	height: calc(var(--screen-w) * 0.016);
-	transform: translateX(-50%);
-	border-radius: 50%;
-	background: radial-gradient(
-		ellipse at 50% 30%,
-		rgba(3, 40, 52, 0.75) 0%,
-		rgba(3, 40, 52, 0.25) 60%,
-		rgba(3, 40, 52, 0) 100%
-	);
-}
-
-/* The ice white front panel, finely ribbed like the real mouldings. */
-.machine__front {
-	position: relative;
-	padding: calc(var(--screen-w) * 0.115) calc(var(--screen-w) * 0.085)
-		calc(var(--screen-w) * 0.038);
-	border-radius:
-		calc(var(--screen-w) * 0.19) calc(var(--screen-w) * 0.19)
-		calc(var(--screen-w) * 0.06) calc(var(--screen-w) * 0.06);
-
-	background:
-		/* Vertical ribbing */
-		repeating-linear-gradient(
-			90deg,
-			rgba(255, 255, 255, 0.5) 0,
-			rgba(255, 255, 255, 0.5) calc(var(--screen-w) * 0.0018),
-			rgba(120, 140, 148, 0.14) calc(var(--screen-w) * 0.0018),
-			rgba(120, 140, 148, 0.14) calc(var(--screen-w) * 0.0038)
-		),
-		/* Body, lit from the top left */
-		linear-gradient(158deg, var(--ice-hi) 0%, var(--ice) 34%, var(--ice-mid) 72%, var(--ice-lo) 100%);
-
-	box-shadow:
-		inset 0 calc(var(--screen-w) * 0.003) 0 rgba(255, 255, 255, 0.95),
-		inset calc(var(--screen-w) * 0.002) 0 0 rgba(255, 255, 255, 0.6),
-		inset calc(var(--screen-w) * -0.002) 0 0 rgba(0, 0, 0, 0.08),
-		0 calc(var(--screen-w) * 0.004) calc(var(--screen-w) * 0.012) rgba(0, 0, 0, 0.22);
-}
-
-/* The logo at the crown of the front panel. */
-.machine__apple {
-	position: absolute;
-	top: calc(var(--screen-w) * 0.045);
-	left: 50%;
-	width: calc(var(--screen-w) * 0.03);
-	height: calc(var(--screen-w) * 0.03);
-	transform: translateX(-50%);
-	border-radius: 50%;
-	background: linear-gradient(150deg, rgba(255, 255, 255, 0.95), rgba(150, 168, 175, 0.7));
-	box-shadow:
-		inset 0 calc(var(--screen-w) * -0.0012) 0 rgba(255, 255, 255, 0.9),
-		0 calc(var(--screen-w) * 0.0012) 0 rgba(0, 0, 0, 0.18);
-}
-
-.machine__bezel {
-	padding: calc(var(--screen-w) * 0.026);
-	border-radius: calc(var(--screen-w) * 0.035);
-	background: linear-gradient(160deg, var(--ice-lo) 0%, var(--ice-mid) 42%, #aab6ba 100%);
-	box-shadow:
-		inset 0 calc(var(--screen-w) * 0.004) calc(var(--screen-w) * 0.012) rgba(0, 0, 0, 0.5),
-		inset 0 calc(var(--screen-w) * -0.002) 0 rgba(255, 255, 255, 0.6);
-}
-
-.machine__screen {
-	position: relative;
-	width: var(--screen-w);
-	height: var(--screen-h);
-	/* Set back behind the bezel so the two shift against each other as the
-	 * machine turns. This parallax is the cheapest and most convincing 3D cue
-	 * on the whole object. */
-	transform: translateZ(calc(var(--screen-w) * -0.018));
-	overflow: hidden;
-	border-radius: calc(var(--screen-w) * 0.02);
-	background: #08131a;
-	box-shadow: inset 0 0 calc(var(--screen-w) * 0.06) rgba(0, 0, 0, 0.8);
-}
-
-.machine__screenInner {
-	position: absolute;
-	inset: 0;
-	display: flex;
-	flex-direction: column;
-	background: var(--desktop-bg);
-
-	/* Makes the screen a query container, so everything inside can be sized
-	 * in cqw and stay proportional at any machine size. */
-	container-type: size;
-	container-name: screen;
-}
-
-.machine__scanlines {
-	position: absolute;
-	inset: 0;
+.machineGL__canvas {
 	pointer-events: none;
-	background: repeating-linear-gradient(
-		to bottom,
-		rgba(0, 0, 0, 0.16) 0px,
-		rgba(0, 0, 0, 0.16) 1px,
-		transparent 1px,
-		transparent 3px
-	);
-	/* Fades out as the zoom proceeds — scanlines at 6x would be fat stripes. */
-	opacity: calc(0.55 - var(--zoom-progress, 0) * 0.55);
-	mix-blend-mode: multiply;
 }
 
-.machine__glare {
+/* Where the desktop goes once the zoom is finished: plain, full-viewport, and
+ * out of the 3D scene entirely, so its text renders natively rather than
+ * through a matrix3d. */
+.machineRelease {
 	position: absolute;
 	inset: 0;
+	z-index: 3;
+}
+
+/* Released back into plain layout. The aperture is larger than the viewport,
+ * so it is centred and top-aligned — which is what puts the page inside it at
+ * exactly 0, 0. */
+.machineRelease > .machineScreen__live {
+	position: absolute;
+	top: 0;
+	left: 50%;
+	transform: translateX(-50%);
+}
+
+.zoomStage[data-released='true'] .machineScreen__page {
+	overflow-y: auto;
+	overscroll-behavior-y: contain;
+}
+
+.zoomStage[data-released='false'] .machineRelease {
 	pointer-events: none;
-	/* The glare slides across the glass as the machine turns — a fixed
-	 * highlight on a rotating object reads as a decal. */
-	background: linear-gradient(
-		calc(145deg + var(--tilt-y, 0deg) * 2.5),
-		rgba(255, 255, 255, 0.16) 0%,
-		rgba(255, 255, 255, 0.05) 26%,
-		transparent 52%
-	);
-	opacity: calc(1 - var(--zoom-progress, 0));
 }
-
-/* The wordmark sits directly under the screen, centred, in the light roman
- * the original used. */
-.machine__wordmark {
-	margin: calc(var(--screen-w) * 0.028) 0 0;
-	text-align: center;
-	font-family: Georgia, 'Times New Roman', var(--font-display), serif;
-	font-size: calc(var(--screen-w) * 0.05);
-	font-weight: 400;
-	letter-spacing: 0.01em;
-	line-height: 1;
-	color: #8d9aa0;
-	text-shadow: 0 calc(var(--screen-w) * 0.0015) 0 rgba(255, 255, 255, 0.9);
-}
-
-.machine__chin {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: calc(var(--screen-w) * 0.02);
-	margin-top: calc(var(--screen-w) * 0.026);
-}
-
-/* The two round grilles, translucent in the case colour with a dot mesh. */
-.machine__speaker {
-	flex: 0 0 auto;
-	width: calc(var(--screen-w) * 0.135);
-	height: calc(var(--screen-w) * 0.135);
-	border-radius: 50%;
-
-	background:
-		/* Perforations */
-		radial-gradient(
-			circle at 50% 50%,
-			rgba(0, 0, 0, 0.55) 0 26%,
-			transparent 28%
-		)
-		0 0 / calc(var(--screen-w) * 0.0105) calc(var(--screen-w) * 0.0105),
-		radial-gradient(circle at 38% 32%, var(--imac-glint) 0%, var(--imac-light) 40%, var(--imac-deep) 100%);
-
-	box-shadow:
-		inset 0 calc(var(--screen-w) * 0.003) calc(var(--screen-w) * 0.008) rgba(0, 0, 0, 0.55),
-		inset 0 calc(var(--screen-w) * -0.002) 0 rgba(255, 255, 255, 0.45),
-		0 0 0 calc(var(--screen-w) * 0.006) var(--ice-mid),
-		0 calc(var(--screen-w) * 0.002) calc(var(--screen-w) * 0.006) rgba(0, 0, 0, 0.25);
-}
-
-/* The slot-loading drive between the speakers. */
-.machine__drive {
-	position: relative;
-	flex: 1 1 auto;
-	max-width: calc(var(--screen-w) * 0.44);
-	height: calc(var(--screen-w) * 0.05);
-	border-radius: calc(var(--screen-w) * 0.012);
-	background: linear-gradient(180deg, var(--ice-mid) 0%, var(--ice-lo) 100%);
-	box-shadow:
-		inset 0 calc(var(--screen-w) * 0.002) 0 rgba(255, 255, 255, 0.85),
-		inset 0 calc(var(--screen-w) * -0.002) calc(var(--screen-w) * 0.004) rgba(0, 0, 0, 0.2);
-}
-
-.machine__driveSlot {
-	position: absolute;
-	top: 50%;
-	left: 8%;
-	right: 8%;
-	height: calc(var(--screen-w) * 0.007);
-	transform: translateY(-50%);
-	border-radius: calc(var(--screen-w) * 0.004);
-	background: linear-gradient(180deg, #4b5459 0%, #1d2326 60%, #3a4247 100%);
-	box-shadow: 0 calc(var(--screen-w) * 0.0015) 0 rgba(255, 255, 255, 0.7);
-}
-
-.machine__driveEject {
-	position: absolute;
-	right: calc(var(--screen-w) * 0.018);
-	bottom: calc(var(--screen-w) * 0.006);
-	width: calc(var(--screen-w) * 0.024);
-	height: calc(var(--screen-w) * 0.0035);
-	border-radius: calc(var(--screen-w) * 0.002);
-	background: rgba(110, 130, 138, 0.5);
-	box-shadow: 0 calc(var(--screen-w) * 0.001) 0 rgba(255, 255, 255, 0.7);
-}
-
-.machine__controls {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	gap: calc(var(--screen-w) * 0.008);
-	flex: 0 0 auto;
-}
-
-/* Power button: a translucent dome inside a ring, lit green when on. */
-.machine__power {
-	width: calc(var(--screen-w) * 0.032);
-	height: calc(var(--screen-w) * 0.032);
-	border-radius: 50%;
-	background: radial-gradient(circle at 38% 32%, var(--ice-hi) 0%, var(--ice-mid) 62%, var(--ice-lo) 100%);
-	box-shadow:
-		inset 0 calc(var(--screen-w) * 0.001) 0 rgba(255, 255, 255, 0.9),
-		0 0 0 calc(var(--screen-w) * 0.0035) rgba(120, 138, 145, 0.45),
-		0 calc(var(--screen-w) * 0.0015) calc(var(--screen-w) * 0.004) rgba(0, 0, 0, 0.28);
-}
-
-.machine[data-on] .machine__power {
-	box-shadow:
-		inset 0 calc(var(--screen-w) * 0.001) 0 rgba(255, 255, 255, 0.9),
-		0 0 0 calc(var(--screen-w) * 0.0035) rgba(111, 212, 138, 0.9),
-		0 0 calc(var(--screen-w) * 0.02) rgba(111, 212, 138, 0.75),
-		0 calc(var(--screen-w) * 0.0015) calc(var(--screen-w) * 0.004) rgba(0, 0, 0, 0.28);
-}
-
-/* The pair of headphone jacks below the power button. */
-.machine__ports {
-	display: flex;
-	gap: calc(var(--screen-w) * 0.008);
-}
-
-.machine__ports span {
-	width: calc(var(--screen-w) * 0.014);
-	height: calc(var(--screen-w) * 0.014);
-	border-radius: 50%;
-	background: radial-gradient(circle at 50% 40%, #1c2226 0%, #0b0e10 70%);
-	box-shadow:
-		inset 0 calc(var(--screen-w) * 0.001) calc(var(--screen-w) * 0.002) rgba(0, 0, 0, 0.8),
-		0 calc(var(--screen-w) * 0.001) 0 rgba(255, 255, 255, 0.75);
-}
-
-/* The moulded foot, in the case colour, with the contact shadow under it. */
-.machine__foot {
-	width: calc(var(--screen-w) * 0.46);
-	height: calc(var(--screen-w) * 0.038);
-	margin-top: calc(var(--screen-w) * -0.022);
-	border-radius: 0 0 calc(var(--screen-w) * 0.07) calc(var(--screen-w) * 0.07);
-	background: linear-gradient(
-		180deg,
-		var(--imac-light) 0%,
-		var(--imac-mid) 45%,
-		var(--imac-deep) 100%
-	);
-	box-shadow:
-		inset 0 calc(var(--screen-w) * 0.002) 0 rgba(255, 255, 255, 0.3),
-		0 calc(var(--screen-w) * 0.04) calc(var(--screen-w) * 0.07) rgba(0, 0, 0, 0.55);
-}
-
 /* ==========================================================================
  * The live desktop inside the screen
  *
@@ -629,35 +231,33 @@ a {
  * letterbox, because it is the same colour.
  * ========================================================================== */
 
+/* The whole 4:3 aperture. Its pixel size is written by machineGL, because it
+ * is derived from the same numbers the geometry uses. */
 .machineScreen__live {
+	overflow: hidden;
+	background: var(--desktop-bg);
+}
+
+/* The viewport-sized region inside the aperture, anchored to its top so the
+ * menu bar sits at the top of the screen. At the end of the zoom this is
+ * exactly the page. */
+.machineScreen__page {
 	position: absolute;
 	top: 0;
 	left: 50%;
 	width: 100vw;
 	height: 100vh;
 	transform: translateX(-50%);
-	overflow: hidden;
-	background: var(--desktop-bg);
 }
 
 /* Once the zoom has finished, the desktop is the thing you are using: it
  * takes pointer events and scrolls its own content. Before that it is scenery,
- * and ZoomStage has it marked inert so it is out of the tab order too. */
+ * and MachineStage has it marked inert so it is out of the tab order too. */
 .zoomStage[data-released='false'] .machineScreen__live {
 	pointer-events: none;
 }
 
-.zoomStage[data-released='true'] .machineScreen__live {
-	overflow-y: auto;
-	overscroll-behavior-y: contain;
-}
 
-/* The scanlines and glare sit over the live desktop, so they must not eat
- * its clicks once it is live. */
-.machine__scanlines,
-.machine__glare {
-	pointer-events: none;
-}
 
 /* ==========================================================================
  * Desktop
