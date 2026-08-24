@@ -50,7 +50,7 @@ import { Window, Button } from '@liiift-studio/mac-os9-ui';
 | **Bundle**               | 288 kB ESM, 71 kB gzipped for the whole library — but see tree-shaking below                                                                                                            |
 | **Stylesheet**           | 138 kB, 25 kB gzipped                                                                                                                                                                   |
 | **Fonts**                | 20 KB fetched by an ASCII page — the family is split into `latin` and `latin-ext` subsets with `unicode-range`, so only the parts your text needs are downloaded (49 KB of woff2 total) |
-| **Published tarball**    | 382 kB (1224 kB unpacked)                                                                                                                                                               |
+| **Published tarball**    | 387 kB (1234 kB unpacked)                                                                                                                                                               |
 | **Types**                | Bundled `.d.ts` and `.d.cts`                                                                                                                                                            |
 
 ### Server components and `'use client'`
