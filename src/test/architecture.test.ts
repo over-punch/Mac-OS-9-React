@@ -28,6 +28,10 @@ const PRIMITIVES = [
 	'WindowHeader',
 	'Slider',
 	'LittleArrows',
+	'Placard',
+	'ImageWell',
+	'ChasingArrows',
+	'BevelButton',
 	'Icon',
 	'ListView',
 	'MenuBar',
@@ -50,6 +54,7 @@ const COMPOUNDS: Record<string, readonly string[]> = {
 	Dialog: ['Window'],
 	// Alert is the Mac OS 9 alert arrangement over Dialog — icon, message,
 	// buttons bottom-right — not a second modal implementation.
+	ClockControl: ['LittleArrows'],
 	Alert: ['Dialog', 'Button', 'Icon'],
 	FolderList: ['ListView', 'Window'],
 	IconButton: ['Button'],

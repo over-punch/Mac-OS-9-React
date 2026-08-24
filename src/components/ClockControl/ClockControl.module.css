@@ -1,0 +1,85 @@
+/* ClockControl Component Styles - Mac OS 9 */
+
+.clock {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-1);
+	font-family: var(--font-system);
+	color: var(--color-text);
+}
+
+.label {
+	font-size: var(--font-size-sm);
+}
+
+.row {
+	display: flex;
+	align-items: stretch;
+	gap: var(--spacing-1);
+}
+
+/* A sunken field, the same well TextField uses — the arrows sit outside it,
+ * which is how Mac OS 9 attached them. */
+.field {
+	display: flex;
+	align-items: center;
+	padding: var(--spacing-px) var(--spacing-1);
+	background-color: var(--color-field-bg, var(--color-surface-inset));
+	border: var(--border-width-thin) solid var(--color-border-inset);
+	box-shadow: var(--shadow-inset);
+	font-size: var(--font-size-md);
+	/* Digits change under a fixed caret; proportional figures would shuffle
+	 * the colon left and right as the numbers ticked. */
+	font-variant-numeric: tabular-nums;
+}
+
+.segmentWrap {
+	display: inline-flex;
+	align-items: center;
+}
+
+.segment {
+	padding: 0 var(--spacing-px);
+	cursor: default;
+}
+
+.segment:focus {
+	outline: none;
+}
+
+/* The selected segment is highlighted rather than outlined, which is what
+ * showed you which one the arrows would move. */
+.segment--active {
+	background-color: var(--color-highlight);
+	color: var(--color-highlight-text, var(--color-gray-100));
+}
+
+.colon {
+	padding: 0 var(--spacing-px);
+}
+
+.meridiem {
+	margin-left: var(--spacing-1);
+	font-size: var(--font-size-sm);
+}
+
+.clock--disabled {
+	opacity: 0.5;
+}
+
+.clock--disabled .segment {
+	cursor: not-allowed;
+}
+
+@media (prefers-contrast: high) {
+	.field {
+		box-shadow: none;
+		border-width: var(--border-width-medium);
+		border-color: var(--color-foreground);
+	}
+
+	.segment--active {
+		background-color: var(--color-foreground);
+		color: var(--color-background);
+	}
+}

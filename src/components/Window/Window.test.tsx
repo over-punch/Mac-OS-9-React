@@ -76,13 +76,69 @@ describe('Window', () => {
 		expect(screen.queryByRole('button', { name: 'Close' })).not.toBeInTheDocument();
 
 		rerender(
-			<Window title="W" onClose={() => {}} onMinimize={() => {}}>
+			<Window title="W" onClose={() => {}} onCollapse={() => {}}>
 				c
 			</Window>
 		);
 		expect(screen.getByRole('button', { name: 'Close' })).toBeInTheDocument();
-		expect(screen.getByRole('button', { name: 'Minimize' })).toBeInTheDocument();
-		expect(screen.queryByRole('button', { name: 'Maximize' })).not.toBeInTheDocument();
+		expect(screen.getByRole('button', { name: 'Collapse' })).toBeInTheDocument();
+		expect(screen.queryByRole('button', { name: 'Zoom' })).not.toBeInTheDocument();
+	});
+
+	describe('collapse and zoom', () => {
+		it('names the boxes what Mac OS 9 called them', () => {
+			render(
+				<Window title="W" onCollapse={() => {}} onZoom={() => {}}>
+					c
+				</Window>
+			);
+			// Mac OS 9 had no dock and no taskbar, so nothing was ever
+			// minimised: the collapse box rolled a window into its own title
+			// bar, and the zoom box fitted it to its contents. A screen reader
+			// announcing "Minimize" was describing behaviour that never existed.
+			expect(screen.getByRole('button', { name: 'Collapse' })).toBeInTheDocument();
+			expect(screen.getByRole('button', { name: 'Zoom' })).toBeInTheDocument();
+			expect(screen.queryByRole('button', { name: 'Minimize' })).not.toBeInTheDocument();
+			expect(screen.queryByRole('button', { name: 'Maximize' })).not.toBeInTheDocument();
+		});
+
+		it('still accepts the old names, and warns', () => {
+			const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+			const onMinimize = vi.fn();
+			const onMaximize = vi.fn();
+
+			render(
+				<Window title="W" onMinimize={onMinimize} onMaximize={onMaximize}>
+					c
+				</Window>
+			);
+
+			// The buttons appear under the corrected names but keep calling
+			// the handlers that were passed.
+			fireEvent.click(screen.getByRole('button', { name: 'Collapse' }));
+			fireEvent.click(screen.getByRole('button', { name: 'Zoom' }));
+			expect(onMinimize).toHaveBeenCalled();
+			expect(onMaximize).toHaveBeenCalled();
+			expect(warn).toHaveBeenCalledWith(expect.stringContaining('onCollapse'));
+			expect(warn).toHaveBeenCalledWith(expect.stringContaining('onZoom'));
+			warn.mockRestore();
+		});
+
+		it('prefers the new name when both are given', () => {
+			const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+			const onCollapse = vi.fn();
+			const onMinimize = vi.fn();
+
+			render(
+				<Window title="W" onCollapse={onCollapse} onMinimize={onMinimize}>
+					c
+				</Window>
+			);
+			fireEvent.click(screen.getByRole('button', { name: 'Collapse' }));
+			expect(onCollapse).toHaveBeenCalled();
+			expect(onMinimize).not.toHaveBeenCalled();
+			warn.mockRestore();
+		});
 	});
 
 	describe('keyboard drag (WCAG 2.1.1)', () => {

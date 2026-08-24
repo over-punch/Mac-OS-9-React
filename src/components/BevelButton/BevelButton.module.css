@@ -1,0 +1,98 @@
+/* BevelButton Component Styles - Mac OS 9 */
+
+.bevel {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--spacing-1);
+	background-color: var(--color-background);
+	border: var(--border-width-thin) solid var(--color-border);
+	box-shadow: var(--shadow-bevel);
+	font-family: var(--font-system);
+	font-size: var(--font-size-md);
+	color: var(--color-text);
+	cursor: pointer;
+}
+
+/* The bevel depth is the control's character, so the sizes differ in edge
+ * weight rather than only in padding. */
+.bevel--sm {
+	min-width: 20px;
+	min-height: 20px;
+	padding: var(--spacing-px) var(--spacing-1);
+	box-shadow:
+		inset -1px -1px 0 0 var(--color-gray-550),
+		inset 1px 1px 0 0 var(--color-gray-100);
+}
+
+.bevel--md {
+	min-width: 26px;
+	min-height: 26px;
+	padding: var(--spacing-1) var(--spacing-2);
+	box-shadow: var(--shadow-bevel);
+}
+
+.bevel--lg {
+	min-width: 34px;
+	min-height: 34px;
+	padding: var(--spacing-2) var(--spacing-3);
+	box-shadow:
+		inset -2px -2px 0 0 var(--color-gray-550),
+		inset 2px 2px 0 0 var(--color-gray-100);
+}
+
+/* Pressing inverts the bevel, which is the whole illusion: the light and dark
+ * edges swap so the surface appears to go in. */
+.bevel:active:not(:disabled) {
+	box-shadow: var(--shadow-inset);
+	background-color: var(--color-gray-300);
+}
+
+/* A sticky behaviour stays in. Only toggle and radio get this — a push button
+ * that stayed down would misreport its own state. */
+.bevel--selected {
+	box-shadow: var(--shadow-inset);
+	background-color: var(--color-gray-300);
+}
+
+.bevel:focus-visible {
+	outline: var(--border-width-medium) solid var(--color-focus);
+	outline-offset: 1px;
+}
+
+.bevel:disabled {
+	cursor: not-allowed;
+	opacity: 0.5;
+}
+
+.content {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--spacing-1);
+	line-height: 1;
+}
+
+/* The pop-up arrow sat in the bottom-right corner rather than beside the
+ * label, which is what distinguished a bevel pop-up from a plain menu button. */
+.arrow {
+	align-self: flex-end;
+	width: 0;
+	height: 0;
+	border-style: solid;
+	border-width: 4px 3px 0 3px;
+	border-color: var(--color-foreground) transparent transparent transparent;
+	margin-left: var(--spacing-px);
+}
+
+@media (prefers-contrast: high) {
+	.bevel {
+		box-shadow: none;
+		border-width: var(--border-width-medium);
+		border-color: var(--color-foreground);
+	}
+
+	.bevel--selected {
+		background-color: var(--color-foreground);
+		color: var(--color-background);
+	}
+}

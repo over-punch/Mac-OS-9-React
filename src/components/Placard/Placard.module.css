@@ -1,0 +1,46 @@
+/* Placard Component Styles - Mac OS 9 */
+
+/* Sunken, not raised: a placard is set into the window frame beside the
+ * scroll bar, which is what distinguishes it from a button sitting on top. */
+.placard {
+	display: inline-flex;
+	align-items: center;
+	min-height: 15px;
+	padding: 0 var(--spacing-2);
+	background-color: var(--color-background);
+	border: var(--border-width-thin) solid var(--color-border);
+	box-shadow: var(--shadow-inset);
+	font-family: var(--font-system);
+	font-size: var(--font-size-xs);
+	color: var(--color-text);
+	/* Page counts and zoom levels change in place; lining the digits up stops
+	 * the placard twitching as they do. */
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+}
+
+.placard--pressable {
+	cursor: pointer;
+}
+
+.placard--pressable:active:not(:disabled) {
+	background-color: var(--color-gray-300);
+}
+
+.placard--pressable:focus-visible {
+	outline: var(--border-width-thin) dotted var(--color-focus);
+	outline-offset: 1px;
+}
+
+.placard--pressable:disabled {
+	cursor: not-allowed;
+	opacity: 0.5;
+}
+
+@media (prefers-contrast: high) {
+	.placard {
+		box-shadow: none;
+		border-width: var(--border-width-medium);
+		border-color: var(--color-foreground);
+	}
+}

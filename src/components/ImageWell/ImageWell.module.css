@@ -1,0 +1,64 @@
+/* ImageWell Component Styles - Mac OS 9 */
+
+/* A well, not a button: the image sits down inside the surface. The bevel is
+ * inset for that reason, even though this is a <button> element. */
+.well {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	overflow: hidden;
+	width: 96px;
+	height: 72px;
+	padding: 0;
+	background-color: var(--color-surface-inset);
+	border: var(--border-width-thin) solid var(--color-border-inset);
+	box-shadow: var(--shadow-inset);
+	cursor: pointer;
+}
+
+.well:focus-visible {
+	outline: var(--border-width-medium) solid var(--color-focus);
+	outline-offset: 1px;
+}
+
+/* Mac OS 9 marked a drop target by highlighting its border rather than by
+ * tinting the whole area. */
+.well--dragging {
+	border-color: var(--color-highlight);
+	box-shadow:
+		var(--shadow-inset),
+		inset 0 0 0 1px var(--color-highlight);
+}
+
+.well:disabled {
+	cursor: not-allowed;
+	opacity: 0.5;
+}
+
+.image {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	/* Pixel art scaled up should stay pixel art. */
+	image-rendering: pixelated;
+}
+
+.empty {
+	font-family: var(--font-system);
+	font-size: var(--font-size-xs);
+	color: var(--color-gray-600);
+	text-align: center;
+	padding: var(--spacing-1);
+}
+
+@media (prefers-contrast: high) {
+	.well {
+		box-shadow: none;
+		border-width: var(--border-width-medium);
+		border-color: var(--color-foreground);
+	}
+
+	.empty {
+		color: var(--color-foreground);
+	}
+}

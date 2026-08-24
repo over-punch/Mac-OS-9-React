@@ -24,6 +24,25 @@ export {
 	type PixelIconProps,
 } from './components/Icon';
 export { IconButton, type IconButtonProps, type IconButtonClasses } from './components/IconButton';
+export { BevelButton } from './components/BevelButton';
+export type {
+	BevelButtonProps,
+	BevelButtonClasses,
+	BevelButtonBehaviour,
+} from './components/BevelButton';
+
+export { ClockControl } from './components/ClockControl';
+export type { ClockControlProps, ClockControlClasses } from './components/ClockControl';
+
+export { Placard } from './components/Placard';
+export type { PlacardProps } from './components/Placard';
+
+export { ImageWell } from './components/ImageWell';
+export type { ImageWellProps, ImageWellClasses } from './components/ImageWell';
+
+export { ChasingArrows } from './components/ChasingArrows';
+export type { ChasingArrowsProps } from './components/ChasingArrows';
+
 export { GroupBox } from './components/GroupBox';
 export type { GroupBoxProps, GroupBoxClasses } from './components/GroupBox';
 

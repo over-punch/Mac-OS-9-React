@@ -106,7 +106,7 @@ export interface WindowProps {
 	classes?: WindowClasses;
 
 	/**
-	 * Whether to show window controls (close, minimize, maximize)
+	 * Whether to show the window controls (close, collapse, zoom)
 	 * @default true
 	 */
 	showControls?: boolean;
@@ -117,12 +117,33 @@ export interface WindowProps {
 	onClose?: () => void;
 
 	/**
-	 * Callback when minimize button is clicked
+	 * Called when the collapse box is clicked.
+	 *
+	 * Mac OS 9 called this windowshade: the window rolls up into its own title
+	 * bar and stays where it is. It is not minimising — nothing moves to a
+	 * dock or a taskbar, because there was neither.
+	 */
+	onCollapse?: () => void;
+
+	/**
+	 * Called when the zoom box is clicked.
+	 *
+	 * Zooming toggles between the size you chose and the size that fits the
+	 * window's contents. It is not maximising: it does not fill the screen
+	 * unless the contents happen to need it.
+	 */
+	onZoom?: () => void;
+
+	/**
+	 * @deprecated Use `onCollapse`. Mac OS 9 had a collapse box, not a
+	 * minimise button — the window rolls into its title bar rather than going
+	 * anywhere. Removed in 3.0.
 	 */
 	onMinimize?: () => void;
 
 	/**
-	 * Callback when maximize button is clicked
+	 * @deprecated Use `onZoom`. Mac OS 9 had a zoom box, which fits the window
+	 * to its contents rather than filling the screen. Removed in 3.0.
 	 */
 	onMaximize?: () => void;
 
@@ -378,6 +399,8 @@ export const Window = forwardRef<HTMLDivElement, WindowProps>(
 			classes,
 			showControls = true,
 			onClose,
+			onCollapse,
+			onZoom,
 			onMinimize,
 			onMaximize,
 			onMouseEnter,
@@ -405,6 +428,14 @@ export const Window = forwardRef<HTMLDivElement, WindowProps>(
 		const manager = useWindowManager();
 		const generatedId = useId();
 		const windowId = id ?? generatedId;
+
+		// The old names still work for one major version. Mac OS 9 had a
+		// collapse box and a zoom box; "minimize" and "maximize" name
+		// behaviours it did not have — and the buttons were announcing them.
+		if (onMinimize) warnDeprecatedProp('Window', 'onMinimize', 'onCollapse');
+		if (onMaximize) warnDeprecatedProp('Window', 'onMaximize', 'onZoom');
+		const collapse = onCollapse ?? onMinimize;
+		const zoom = onZoom ?? onMaximize;
 
 		useEffect(() => {
 			if (!manager) return;
@@ -689,7 +720,7 @@ export const Window = forwardRef<HTMLDivElement, WindowProps>(
 				return (
 					<div
 						className={titleBarClassNames}
-						data-num-controls={[onClose, onMinimize, onMaximize].filter(Boolean).length}
+						data-num-controls={[onClose, collapse, zoom].filter(Boolean).length}
 						{...dragHandleProps}
 						onKeyDown={draggable ? handleTitleBarKeyDown : undefined}
 						tabIndex={draggable ? 0 : undefined}
@@ -709,24 +740,24 @@ export const Window = forwardRef<HTMLDivElement, WindowProps>(
 										<div className={styles.closeBox} />
 									</button>
 								)}
-								{onMinimize && (
+								{collapse && (
 									<button
 										type="button"
 										className={mergeClasses(styles.controlButton, classes?.controlButton)}
-										onClick={onMinimize}
-										aria-label="Minimize"
-										title="Minimize"
+										onClick={collapse}
+										aria-label="Collapse"
+										title="Collapse"
 									>
 										<div className={styles.minimizeBox} />
 									</button>
 								)}
-								{onMaximize && (
+								{zoom && (
 									<button
 										type="button"
 										className={mergeClasses(styles.controlButton, classes?.controlButton)}
-										onClick={onMaximize}
-										aria-label="Maximize"
-										title="Maximize"
+										onClick={zoom}
+										aria-label="Zoom"
+										title="Zoom"
 									>
 										<div className={styles.maximizeBox} />
 									</button>

@@ -1,0 +1,96 @@
+/* ChasingArrows Component Styles - Mac OS 9 */
+
+.arrows {
+	display: inline-flex;
+	flex: 0 0 auto;
+	line-height: 0;
+}
+
+.wheel {
+	position: relative;
+	display: block;
+	/* Stepped, not smooth. The original was a handful of frames swapped in
+	 * sequence, and an eased rotation reads as a modern spinner instead. */
+	animation: chase 0.8s steps(8) infinite;
+}
+
+.arrow {
+	position: absolute;
+	inset: 0;
+	/* Each arrow is a wedge of the wheel, rotated into its quadrant by an
+	 * inline transform. */
+	clip-path: polygon(50% 0, 100% 38%, 68% 38%, 68% 62%, 32% 62%, 32% 38%, 0 38%);
+	background-color: currentColor;
+	opacity: 0.25;
+}
+
+.arrow:nth-child(1) {
+	opacity: 1;
+}
+.arrow:nth-child(2) {
+	opacity: 0.7;
+}
+.arrow:nth-child(3) {
+	opacity: 0.45;
+}
+
+.arrows--sm .wheel {
+	width: 12px;
+	height: 12px;
+}
+.arrows--md .wheel {
+	width: 16px;
+	height: 16px;
+}
+.arrows--lg .wheel {
+	width: 20px;
+	height: 20px;
+}
+
+@keyframes chase {
+	from {
+		transform: rotate(0deg);
+	}
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+/* The animation IS the control, so it cannot simply be removed — a frozen
+ * wheel reads as work that has stalled. Pulse the opacity instead: still a
+ * sign of life, no rotation, and nothing that moves across the screen. */
+@media (prefers-reduced-motion: reduce) {
+	.wheel {
+		animation: none;
+	}
+
+	.arrow {
+		animation: breathe 1.6s ease-in-out infinite;
+	}
+
+	.arrow:nth-child(2) {
+		animation-delay: 0.4s;
+	}
+	.arrow:nth-child(3) {
+		animation-delay: 0.8s;
+	}
+	.arrow:nth-child(4) {
+		animation-delay: 1.2s;
+	}
+
+	@keyframes breathe {
+		0%,
+		100% {
+			opacity: 0.25;
+		}
+		50% {
+			opacity: 1;
+		}
+	}
+}
+
+@media (prefers-contrast: high) {
+	.arrow {
+		opacity: 1;
+	}
+}

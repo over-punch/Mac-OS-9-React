@@ -7,24 +7,23 @@
 	/* Base window styling */
 	display: flex;
 	flex-direction: column;
-	
+
 	/* Mac OS 9 window appearance */
 	background-color: var(--window-bg);
 	border: var(--border-width-thin) solid var(--window-border);
-	
+
 	/* Authentic Mac OS 9 drop shadow: sharp 2px offset, no blur */
 	filter: drop-shadow(var(--shadow-float));
-	
+
 	/* Layout */
 	position: relative;
 	overflow: hidden;
-	
+
 	/* Default dimensions */
 	width: auto;
 	height: auto;
 	min-width: 200px;
 	min-height: 100px;
-	
 }
 
 /* ========================================
@@ -55,44 +54,43 @@
 	/* Title bar container */
 	display: flex;
 	align-items: center;
-	
+
 	/* Styling - authentic Mac OS 9 header color */
 	background-color: var(--window-titlebar-bg);
 	border-bottom: var(--border-width-thin) solid var(--color-black);
-	
+
 	/* Padding */
 	padding: var(--spacing-1_5) var(--spacing-2);
-	
+
 	/* Height */
 	min-height: 22px;
-	
+
 	/* Prevent selection */
 	user-select: none;
-	
+
 	/* Position for pseudo-elements */
 	position: relative;
-
 }
-.titleBar[data-num-controls="3"] .titleCenter > :first-child{
+.titleBar[data-num-controls='3'] .titleCenter > :first-child {
 	width: calc(100% - (48px + var(--spacing-2)));
 	margin-left: calc(48px + var(--spacing-2));
 }
-.titleBar[data-num-controls="2"] .titleCenter> :first-child {
+.titleBar[data-num-controls='2'] .titleCenter > :first-child {
 	width: calc(100% - (36px + var(--spacing-2)));
 	margin-left: calc(36px + var(--spacing-2));
 }
-.titleBar[data-num-controls="1"] .titleCenter> :first-child {
+.titleBar[data-num-controls='1'] .titleCenter > :first-child {
 	width: calc(100% - (24px));
 	margin-left: calc(24px);
-	}
+}
 
-.titleCenter{	
+.titleCenter {
 	display: grid;
 	align-items: center;
 	width: 100%;
 	grid-template-columns: 1fr max-content 1fr;
 }
-.titleCenter svg{
+.titleCenter svg {
 	width: 100%;
 }
 /* Header striped lines - left side */
@@ -100,7 +98,7 @@
 	content: '';
 	left: 60px;
 	top: 50%;
-	flex-grow: 1;	
+	flex-grow: 1;
 	/* Responsive width - fills from after controls to center, with padding for title */
 	height: 12px;
 	/* 6 horizontal lines pattern */
@@ -113,7 +111,7 @@
 		transparent 2px,
 		transparent 3px
 	); */
-	
+
 	/* Prevent interaction */
 	pointer-events: none;
 }
@@ -122,13 +120,13 @@
 .titleBar::after {
 	content: '';
 	right: 8px;
-	top: 50%;	
+	top: 50%;
 	flex-grow: 1;
 	/* Responsive width - extends from right edge to center, with padding for title */
 	flex: 1 1 auto;
 	/* max-width: 100px; */
 	height: 12px;
-	
+
 	/* 6 horizontal lines pattern */
 	/* background: repeating-linear-gradient(
 		to bottom,
@@ -171,7 +169,7 @@
 	display: flex;
 	gap: var(--spacing-1);
 	align-items: center;
-	
+
 	/* Ensure controls are above pseudo-elements */
 	position: absolute;
 	left: 12px;
@@ -184,18 +182,18 @@
 	height: 12px;
 	padding: 0;
 	margin: 0;
-	
+
 	/* Remove button defaults */
 	background: transparent;
 	border: var(--border-width-thin) solid var(--color-border);
 	cursor: pointer;
-	
+
 	/* Box shadow for depth */
 	box-shadow: var(--shadow-inset);
-	
+
 	/* Transitions */
 	transition: none;
-	
+
 	/* Ensure controls are clickable */
 	position: relative;
 	z-index: 2;
@@ -278,18 +276,18 @@
 	font-weight: var(--font-weight-bold);
 	line-height: var(--line-height-snug);
 	color: var(--window-titlebar-text);
-	
+
 	/* Absolute positioning for true centering regardless of controls */
-	
+
 	/* Max width to prevent overlap with lines - centered with padding */
 	/* max-width: calc(100% - 160px); */
 	padding: 0 var(--spacing-2);
-	
+
 	/* Truncate long titles */
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
-	
+
 	/* Ensure text is above pseudo-elements */
 	z-index: 1;
 }
@@ -302,16 +300,16 @@
 	/* Content area */
 	flex: 1 1 auto;
 	overflow: auto;
-	
+
 	/* Background - white content area like authentic Mac OS 9 */
 	background-color: var(--color-gray-100);
-	
+
 	/* Padding */
 	padding: var(--spacing-4);
-	
+
 	/* Position for scrolling */
 	position: relative;
-	
+
 	/* Authentic inset border */
 	margin: var(--spacing-2);
 	border: var(--border-width-thin) solid var(--color-border-inset);
@@ -338,7 +336,7 @@
 	right: 0;
 	width: 12px;
 	height: 12px;
-	
+
 	/* Visual indicator (diagonal lines) */
 	background-image: linear-gradient(
 		135deg,
@@ -352,11 +350,11 @@
 		var(--color-border) 60%,
 		transparent 60%
 	);
-	
+
 	/* Cursor. nwse-resize is the correct cursor for a bottom-right corner
 	 * handle: Mac OS 9 windows only resize from the grow box. */
 	cursor: nwse-resize;
-	
+
 	/* Layering */
 	z-index: 5;
 }
@@ -382,7 +380,7 @@
 	.window {
 		border-width: var(--border-width-medium);
 	}
-	
+
 	.controlButton {
 		border-width: var(--border-width-medium);
 	}
