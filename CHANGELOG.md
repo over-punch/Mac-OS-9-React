@@ -1,5 +1,33 @@
 # @liiift-studio/mac-os9-ui
 
+## 2.5.2
+
+### Patch Changes
+
+- Test and documentation work. No API or behaviour changes.
+
+  **Coverage on the three files where a bug would have shipped unnoticed.**
+  `useResizable` went from 21% to 98% — it owns every `Window` resize and was the
+  least-tested code in the package. The new cases are the ones pointer maths gets
+  wrong: dragging from an anchored edge, where the origin must move by however
+  much the box actually changed rather than by the raw pointer delta; the same
+  once clamping kicks in, where using the delta lets the far edge drift; and a
+  gesture ending on `pointercancel` rather than `pointerup`. `MenuDropdown` went
+  from 40% to 91% and `MenuItem` from 57% to 90%, both now covering the role
+  derivation that was a shipped bug and the WAI-ARIA submenu keyboard pattern.
+
+  **Three accessibility checks became tests** rather than checklist items nobody
+  had actioned in six releases: every focusable component defines a focus style,
+  everything that animates answers `prefers-reduced-motion`, and everything
+  carrying a bevel has a `prefers-contrast` fallback — a `box-shadow` disappears
+  in forced-colours mode.
+
+  **The Platinum layer now has a demo**, at `/platinum.html` on the site. It is a
+  separate page rather than a route, because its whole claim is that it ships no
+  React — and a test asserts it stays that way.
+
+  Overall coverage 84.9% to 89.4%, and 733 tests.
+
 ## 2.5.1
 
 ### Patch Changes
