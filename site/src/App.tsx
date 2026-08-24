@@ -9,7 +9,7 @@
 // mock-up of it, and there is no second copy underneath to hand off to.
 
 import { MachineStage } from './components/MachineStage';
-import { Desktop } from './sections/Desktop';
+import { Desktop, COMPONENT_COUNT } from './sections/Desktop';
 
 export function App() {
 	return (
@@ -32,8 +32,8 @@ export function App() {
 				below={
 					<>
 						<p className="heroSub">
-							Sixteen typed, keyboard-operable components. The desktop in the screen is the real
-							thing — scroll in and use it.
+							{COMPONENT_COUNT()} typed, keyboard-operable components. The desktop in the screen is
+							the real thing — scroll in and use it.
 						</p>
 						<p className="scrollHint" aria-hidden="true">
 							Scroll to boot

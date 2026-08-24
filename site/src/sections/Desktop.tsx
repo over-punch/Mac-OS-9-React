@@ -17,6 +17,10 @@ import { Tabs, TabPanel } from '@lib/components/Tabs';
 import { Dialog } from '@lib/components/Dialog';
 import { Checkbox } from '@lib/components/Checkbox';
 import { Select } from '@lib/components/Select';
+import { Progress } from '@lib/components/Progress';
+import { Alert } from '@lib/components/Alert';
+import { DisclosureTriangle } from '@lib/components/DisclosureTriangle';
+import { Separator } from '@lib/components/Separator';
 import { TextField } from '@lib/components/TextField';
 import { IconLibrary } from '@lib/components/Icon';
 import { getAllIconNames } from '@lib/components/Icon/registry';
@@ -150,6 +154,34 @@ const COMPONENTS: ComponentRow[] = [
 		story: 'components-radio',
 	},
 	{
+		id: 'progress',
+		name: 'Progress',
+		role: 'Feedback',
+		keyboard: 'Not focusable',
+		story: 'components-progress',
+	},
+	{
+		id: 'alert',
+		name: 'Alert',
+		role: 'Feedback',
+		keyboard: 'Return commits, Escape cancels',
+		story: 'components-alert',
+	},
+	{
+		id: 'disclosuretriangle',
+		name: 'DisclosureTriangle',
+		role: 'Chrome',
+		keyboard: 'Space / Return toggles',
+		story: 'components-disclosuretriangle',
+	},
+	{
+		id: 'separator',
+		name: 'Separator',
+		role: 'Chrome',
+		keyboard: 'Not focusable',
+		story: 'components-separator',
+	},
+	{
 		id: 'icon',
 		name: 'Icon / IconLibrary',
 		role: 'Content',
@@ -157,6 +189,13 @@ const COMPONENTS: ComponentRow[] = [
 		story: 'components-icon',
 	},
 ];
+
+/**
+ * How many components the site claims. Derived from the index below, because
+ * the hero and the About window both used to spell it out — and both still
+ * said "Sixteen" after 2.2.0 took the library to twenty.
+ */
+export const COMPONENT_COUNT = () => COMPONENTS.length;
 
 const COLUMNS = [
 	{ key: 'name', label: 'Name', width: '38%' },
@@ -205,6 +244,8 @@ export function Desktop() {
 	const [flavour, setFlavour] = useState<Flavour>(readFlavour);
 	const [closed, setClosed] = useState<WindowId[]>([]);
 	const [whyTab, setWhyTab] = useState(0);
+	const [advancedOpen, setAdvancedOpen] = useState(false);
+	const [alertOpen, setAlertOpen] = useState(false);
 
 	const install = `npm install ${PACKAGE}`;
 
@@ -277,10 +318,10 @@ export function Desktop() {
 								<div className="pane">
 									<h2 className="pane__title">Mac OS 9, as React components.</h2>
 									<p className="pane__lead">
-										Sixteen components that render the Mac OS 9 interface — windows you can drag and
-										resize, menus that behave like menus, list views, and the full set of form
-										controls. Typed, keyboard-operable, and built from design tokens you can
-										retarget.
+										{COMPONENTS.length} components that render the Mac OS 9 interface — windows you
+										can drag and resize, menus that behave like menus, list views, progress and
+										alerts, and the full set of form controls. Typed, keyboard-operable, and built
+										from design tokens you can retarget.
 									</p>
 
 									<div className="installRow">
@@ -491,8 +532,8 @@ export function Desktop() {
 										</li>
 										<li>
 											<code>Menu.items</code> splits into <code>items</code> for data and{' '}
-											<code>content</code> for JSX, so the type tells them apart instead of a runtime
-											guess.
+											<code>content</code> for JSX, so the type tells them apart instead of a
+											runtime guess.
 										</li>
 									</ul>
 									<div className="pane__actions">
@@ -569,6 +610,43 @@ export function Desktop() {
 									<Checkbox label="Show hidden files" />
 									<Checkbox label="Use relative dates" defaultChecked />
 									<TextField label="Find" placeholder="Search…" />
+
+									<Separator />
+
+									{/* Determinate and indeterminate side by side, because the
+									    difference between them is the whole API. */}
+									<Progress value={62} max={100} label="Copying files" showValue />
+									<Progress aria-label="Connecting to server" />
+
+									<Separator />
+
+									{/* A real disclosure: the triangle owns the section below it. */}
+									<DisclosureTriangle
+										label="Advanced"
+										expanded={advancedOpen}
+										onExpandedChange={setAdvancedOpen}
+										controls="desktop-advanced"
+									/>
+									{advancedOpen && (
+										<div className="pane__disclosure" id="desktop-advanced">
+											<Checkbox label="Rebuild the desktop database on eject" />
+											<Button variant="danger" onClick={() => setAlertOpen(true)}>
+												Erase Disk…
+											</Button>
+										</div>
+									)}
+
+									<Alert
+										open={alertOpen}
+										severity="caution"
+										heading='Erase the disk named "Backup"?'
+										message="This cannot be undone."
+										confirmLabel="Erase"
+										cancelLabel="Cancel"
+										destructive
+										onClose={() => setAlertOpen(false)}
+										onConfirm={() => setAlertOpen(false)}
+									/>
 								</div>
 							</Window>
 						)}
@@ -578,8 +656,7 @@ export function Desktop() {
 					    the only way back buried in a menu. */}
 					{closed.length === WINDOW_IDS.length && (
 						<p className="desktop__empty">
-							Every window is closed.{' '}
-							<Button onClick={() => setClosed([])}>Restore windows</Button>
+							Every window is closed. <Button onClick={() => setClosed([])}>Restore windows</Button>
 						</p>
 					)}
 				</WindowManagerProvider>
