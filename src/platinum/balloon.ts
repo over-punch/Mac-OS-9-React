@@ -5,10 +5,8 @@
 // with aria-describedby rather than replacing its name, and dismisses on
 // Escape — none of which CSS can do.
 
+import { createDelayedOpen } from '../core/openDelay';
 import type { Detachable } from './disclosure';
-
-/** Delay before a balloon appears, in milliseconds. */
-const OPEN_DELAY = 400;
 
 let sequence = 0;
 
@@ -33,7 +31,6 @@ export interface BalloonOptions {
 export function balloon(trigger: HTMLElement, options: BalloonOptions): Detachable {
 	const id = `mac-balloon-${++sequence}`;
 	let node: HTMLElement | null = null;
-	let timer: number | undefined;
 
 	// The trigger needs a positioned ancestor for the balloon to sit against.
 	// Only set it where the page has not already established one.
@@ -41,16 +38,13 @@ export function balloon(trigger: HTMLElement, options: BalloonOptions): Detachab
 	const parentWasStatic = parent !== null && getComputedStyle(parent).position === 'static';
 	if (parentWasStatic && parent) parent.style.position = 'relative';
 
-	const hide = () => {
-		if (timer) window.clearTimeout(timer);
-		timer = undefined;
+	const remove = () => {
 		node?.remove();
 		node = null;
 		trigger.removeAttribute('aria-describedby');
 	};
 
-	const show = () => {
-		if (node) return;
+	const render = () => {
 		node = document.createElement('span');
 		node.id = id;
 		node.className = 'mac-balloon';
@@ -64,10 +58,14 @@ export function balloon(trigger: HTMLElement, options: BalloonOptions): Detachab
 		trigger.setAttribute('aria-describedby', id);
 	};
 
-	const showSoon = () => {
-		if (timer || node) return;
-		timer = window.setTimeout(show, OPEN_DELAY);
-	};
+	// The open delay lives in the shared core, so this and the React
+	// BalloonHelp agree on how long a hover waits.
+	const controller = createDelayedOpen({ onOpen: render, onClose: remove });
+
+	// Focus arrives all at once, so there is nothing to wait for.
+	const show = () => controller.open(true);
+	const showSoon = () => controller.open();
+	const hide = () => controller.close();
 
 	const onKeyDown = (event: KeyboardEvent) => {
 		if (event.key === 'Escape') hide();

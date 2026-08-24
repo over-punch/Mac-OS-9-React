@@ -4,13 +4,8 @@
 // when the pointer leaves. A pointer released outside the button never fires
 // pointerup on it, which is how that kind of repeat runs forever.
 
+import { createRepeater } from '../core/repeat';
 import type { Detachable } from './disclosure';
-
-/** Delay before a held arrow starts repeating, in milliseconds. */
-const REPEAT_DELAY = 400;
-
-/** Interval between repeats once started, in milliseconds. */
-const REPEAT_INTERVAL = 60;
 
 export interface StepperOptions {
 	/** Called with 1 to step up and -1 to step down. */
@@ -30,22 +25,11 @@ export interface StepperOptions {
  */
 export function stepper(element: HTMLElement, options: StepperOptions): Detachable {
 	const buttons = [...element.querySelectorAll<HTMLButtonElement>('button')];
-	let delay: number | undefined;
-	let repeat: number | undefined;
-
-	const stop = () => {
-		if (delay) window.clearTimeout(delay);
-		if (repeat) window.clearInterval(repeat);
-		delay = undefined;
-		repeat = undefined;
-	};
-
-	const start = (direction: 1 | -1) => {
-		options.onStep(direction);
-		delay = window.setTimeout(() => {
-			repeat = window.setInterval(() => options.onStep(direction), REPEAT_INTERVAL);
-		}, REPEAT_DELAY);
-	};
+	// The timing lives in the shared core, so this and the React LittleArrows
+	// cannot drift apart on how long a hold waits before it repeats.
+	const repeater = createRepeater();
+	const stop = () => repeater.stop();
+	const start = (direction: 1 | -1) => repeater.start(() => options.onStep(direction));
 
 	const listeners: Array<[HTMLElement, string, EventListener]> = [];
 	const on = (node: HTMLElement, type: string, handler: EventListener) => {

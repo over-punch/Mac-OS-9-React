@@ -28,6 +28,27 @@ to call.
 
 About 12 kB unminified for all four behaviours, and nothing imports React.
 
+### One implementation, two adapters
+
+The behaviour modules are not a reimplementation of the React components. Both
+sit on the same framework-free core in `src/core`:
+
+| Core module  | Owns                                              | Used by                              |
+| ------------ | ------------------------------------------------- | ------------------------------------ |
+| `repeat`     | Hold-to-repeat timing                             | `LittleArrows` · `stepper()`         |
+| `openDelay`  | Delayed open, immediate close                     | `BalloonHelp` · `balloon()`          |
+| `navigation` | Index stepping and wrapping over a skippable list | `Tabs` · `ContextualMenu` · `menu()` |
+
+That matters to you because it is what stops the two halves drifting. When the
+hover delay changes, it changes in one place and both get it — rather than the
+React tooltip waiting 400ms while the framework-free one waits 300 because
+somebody only edited one file.
+
+The core imports no framework and touches no DOM, which
+`src/test/core-boundary.test.ts` enforces: it fails if a React import appears,
+if `document` or `window` is reached for, or if one of the shared timings is
+re-declared as a literal anywhere else.
+
 ---
 
 ## A worked example

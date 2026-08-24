@@ -23,15 +23,12 @@ import {
 	useEffect,
 	useId,
 	useMemo,
-	useRef,
 	useState,
 	type ReactNode,
 } from 'react';
+import { createDelayedOpen } from '../../core/openDelay';
 import { mergeClasses } from '../../utils/classNames';
 import styles from './BalloonHelp.module.css';
-
-/** Delay before a balloon appears, in milliseconds. */
-const OPEN_DELAY = 400;
 
 interface BalloonHelpContextValue {
 	/** Whether balloons are switched on. */
@@ -130,39 +127,34 @@ export const BalloonHelp = forwardRef<HTMLSpanElement, BalloonHelpProps>(
 	({ content, side = 'bottom', children, className = '', classes }, ref) => {
 		const enabled = useBalloonHelp();
 		const [open, setOpen] = useState(false);
-		const timer = useRef<number | undefined>(undefined);
 		const balloonId = useId();
 
-		const cancel = useCallback(() => {
-			if (timer.current) window.clearTimeout(timer.current);
-			timer.current = undefined;
-		}, []);
+		// The open delay is shared with the framework-free balloon module, so
+		// hover timing cannot drift between the two implementations. One
+		// controller per mounted balloon.
+		const controller = useMemo(
+			() => createDelayedOpen({ onOpen: () => setOpen(true), onClose: () => setOpen(false) }),
+			[]
+		);
 
 		const show = useCallback(
 			(immediate = false) => {
 				if (!enabled) return;
-				cancel();
-				if (immediate) {
-					setOpen(true);
-					return;
-				}
-				timer.current = window.setTimeout(() => setOpen(true), OPEN_DELAY);
+				controller.open(immediate);
 			},
-			[cancel, enabled]
+			[controller, enabled]
 		);
 
-		const hide = useCallback(() => {
-			cancel();
-			setOpen(false);
-		}, [cancel]);
+		const hide = useCallback(() => controller.close(), [controller]);
 
-		useEffect(() => cancel, [cancel]);
+		useEffect(() => controller.cancel, [controller]);
 
 		// Switching balloons off should take down one that is already up,
-		// rather than leaving the last balloon stranded on screen.
+		// rather than leaving the last balloon stranded on screen. Routed
+		// through the controller so its own idea of open/closed stays true.
 		useEffect(() => {
-			if (!enabled) setOpen(false);
-		}, [enabled]);
+			if (!enabled) controller.close();
+		}, [enabled, controller]);
 
 		// Escape dismisses without moving focus, which is the documented
 		// tooltip behaviour and the only way out for a keyboard user whose

@@ -5,6 +5,7 @@
 // to whatever opened the menu. A checkbox-hack menu looks identical and
 // announces as a checkbox.
 
+import { stepThrough } from '../core/navigation';
 import type { Detachable } from './disclosure';
 
 export interface MenuOptions {
@@ -49,7 +50,13 @@ export function menu(element: HTMLElement, options: MenuOptions = {}): Detachabl
 	const move = (delta: number) => {
 		const items = selectableItems(element);
 		if (!items.length) return;
-		index = (index + delta + items.length) % items.length;
+		// The subset here is dense (0..n-1 over the selectable items), but the
+		// arithmetic is the same one ContextualMenu uses over a sparse subset.
+		index = stepThrough(
+			index,
+			delta,
+			items.map((_, i) => i)
+		);
 		paint();
 	};
 

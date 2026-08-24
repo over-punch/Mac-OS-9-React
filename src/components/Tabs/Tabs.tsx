@@ -11,6 +11,7 @@ import React, {
 	isValidElement,
 	ReactElement,
 } from 'react';
+import { stepThrough } from '../../core/navigation';
 import { mergeClasses } from '../../utils/classNames';
 import { type Size } from '../../types';
 import styles from './Tabs.module.css';
@@ -224,49 +225,41 @@ function TabsInner<TValue extends string = string>(
 		[tabs, isControlled, onValueChange]
 	);
 
-	// Keyboard navigation
+	// Keyboard navigation.
+	//
+	// The stepping and the wrap come from the shared core, which is also what
+	// ContextualMenu and the framework-free menu module use. This used to be
+	// four hand-rolled while loops that each re-derived "skip the disabled
+	// ones and wrap at the ends".
 	const handleKeyDown = useCallback(
 		(event: React.KeyboardEvent, currentIndex: number) => {
+			const enabled = tabs
+				.map((tab, index) => (tab.props.disabled ? -1 : index))
+				.filter((index) => index !== -1);
+
+			// Every tab disabled: there is nowhere to go.
+			if (!enabled.length) return;
+
 			let newIndex: number;
 
 			switch (event.key) {
 				case 'ArrowLeft':
 				case 'ArrowUp':
 					event.preventDefault();
-					newIndex = currentIndex - 1;
-					if (newIndex < 0) newIndex = tabs.length - 1;
-					// Skip disabled tabs
-					while (tabs[newIndex]?.props.disabled && newIndex !== currentIndex) {
-						newIndex--;
-						if (newIndex < 0) newIndex = tabs.length - 1;
-					}
+					newIndex = stepThrough(currentIndex, -1, enabled);
 					break;
 				case 'ArrowRight':
 				case 'ArrowDown':
 					event.preventDefault();
-					newIndex = currentIndex + 1;
-					if (newIndex >= tabs.length) newIndex = 0;
-					// Skip disabled tabs
-					while (tabs[newIndex]?.props.disabled && newIndex !== currentIndex) {
-						newIndex++;
-						if (newIndex >= tabs.length) newIndex = 0;
-					}
+					newIndex = stepThrough(currentIndex, 1, enabled);
 					break;
 				case 'Home':
 					event.preventDefault();
-					newIndex = 0;
-					// Skip disabled tabs
-					while (tabs[newIndex]?.props.disabled && newIndex < tabs.length - 1) {
-						newIndex++;
-					}
+					newIndex = enabled[0] as number;
 					break;
 				case 'End':
 					event.preventDefault();
-					newIndex = tabs.length - 1;
-					// Skip disabled tabs
-					while (tabs[newIndex]?.props.disabled && newIndex > 0) {
-						newIndex--;
-					}
+					newIndex = enabled[enabled.length - 1] as number;
 					break;
 				default:
 					return;

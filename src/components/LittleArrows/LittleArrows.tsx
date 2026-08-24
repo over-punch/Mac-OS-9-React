@@ -8,16 +8,11 @@
 // be able to reach and press either one. Where it drives a field, that field
 // stays the labelled thing and these stay unlabelled increments of it.
 
-import { forwardRef, useCallback, useEffect, useRef } from 'react';
+import { forwardRef, useCallback, useEffect, useMemo } from 'react';
+import { createRepeater } from '../../core/repeat';
 import { mergeClasses } from '../../utils/classNames';
 import { type Size } from '../../types';
 import styles from './LittleArrows.module.css';
-
-/** Delay before a held arrow starts repeating, in milliseconds. */
-const REPEAT_DELAY = 400;
-
-/** Interval between repeats once started, in milliseconds. */
-const REPEAT_INTERVAL = 60;
 
 /**
  * Classes for targeting LittleArrows sub-elements.
@@ -119,28 +114,20 @@ export const LittleArrows = forwardRef<HTMLDivElement, LittleArrowsProps>(
 		},
 		ref
 	) => {
-		// Timers live in a ref rather than state: they must survive a render
-		// without causing one, and they have to be cancellable from anywhere.
-		const timers = useRef<{ delay?: number; repeat?: number }>({});
+		// The repeat timing is shared with the framework-free stepper, so the
+		// two cannot drift on how long a hold waits. One repeater per mounted
+		// control, so two on a page do not cancel each other.
+		const repeater = useMemo(() => createRepeater(), []);
 
-		const stopRepeat = useCallback(() => {
-			if (timers.current.delay) window.clearTimeout(timers.current.delay);
-			if (timers.current.repeat) window.clearInterval(timers.current.repeat);
-			timers.current = {};
-		}, []);
+		const stopRepeat = useCallback(() => repeater.stop(), [repeater]);
 
 		// A pointer released outside the button never fires pointerup on it,
 		// so the repeat would run forever. Watch the window instead.
 		useEffect(() => stopRepeat, [stopRepeat]);
 
 		const startRepeat = useCallback(
-			(direction: 1 | -1) => {
-				onStep(direction);
-				timers.current.delay = window.setTimeout(() => {
-					timers.current.repeat = window.setInterval(() => onStep(direction), REPEAT_INTERVAL);
-				}, REPEAT_DELAY);
-			},
-			[onStep]
+			(direction: 1 | -1) => repeater.start(() => onStep(direction)),
+			[onStep, repeater]
 		);
 
 		const arrow = (direction: 1 | -1, isDisabled: boolean) => {

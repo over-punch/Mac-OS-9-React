@@ -18,6 +18,7 @@ import {
 	type ReactNode,
 } from 'react';
 import { createPortal } from 'react-dom';
+import { stepThrough } from '../../core/navigation';
 import { mergeClasses } from '../../utils/classNames';
 import { type MenuItemData } from '../MenuBar';
 import styles from './ContextualMenu.module.css';
@@ -198,11 +199,11 @@ export const ContextualMenu = forwardRef<HTMLDivElement, ContextualMenuProps>(
 			};
 		}, [anchor, close]);
 
+		// Shared with the framework-free menu module: stepping over a subset
+		// and wrapping at its ends is where the off-by-one lives, so there is
+		// one copy of it.
 		const step = (direction: 1 | -1) => {
-			if (!selectable.length) return;
-			const current = selectable.indexOf(activeIndex);
-			const next = (current + direction + selectable.length) % selectable.length;
-			setActiveIndex(selectable[next] ?? activeIndex);
+			setActiveIndex(stepThrough(activeIndex, direction, selectable));
 		};
 
 		const handleMenuKeyDown = (event: React.KeyboardEvent) => {
