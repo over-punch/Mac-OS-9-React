@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Platinum — Mac OS 9 UI without React</title>
+		<meta
+			name="description"
+			content="The Mac OS 9 interface from Vue, Svelte, Astro, htmx or a hand-written page. Stable class names and framework-free behaviour modules — this page uses no React at all."
+		/>
+		<link rel="stylesheet" href="/src/styles/platinum-page.css" />
+	</head>
+	<body class="mac-root">
+		<main class="page">
+			<header class="page__head">
+				<p class="eyebrow">@liiift-studio/mac-os9-ui/platinum</p>
+				<h1>The Mac OS 9 interface, without React.</h1>
+				<p class="lead">
+					Everything below is plain HTML with <code>mac-</code> classes and four framework-free
+					behaviour modules. <strong>There is no React on this page.</strong> Open the console and
+					check — <code>window.React</code> is undefined, and the only script is a 12&nbsp;kB ES
+					module.
+				</p>
+				<pre class="snippet"><code>import '@liiift-studio/mac-os9-ui/tokens';
+import '@liiift-studio/mac-os9-ui/platinum.css';
+import { disclosure, menu, balloon, stepper } from '@liiift-studio/mac-os9-ui/platinum';</code></pre>
+			</header>
+
+			<div class="grid">
+				<section class="col">
+					<h2 class="col__title">Paint</h2>
+					<p class="col__note">
+						Stable class names. Unlike the React components' CSS-module names, these are a public
+						API — versioned, with the list held in a test.
+					</p>
+
+					<fieldset class="mac-groupbox">
+						<legend class="mac-groupbox__title">Sharing</legend>
+						<div class="mac-groupbox__body">
+							<label class="mac-text"><input type="checkbox" checked /> Share this folder</label>
+							<label class="mac-text"><input type="checkbox" /> Allow guests to write</label>
+							<hr class="mac-separator" aria-hidden="true" />
+							<div class="row">
+								<button class="mac-button mac-button--default" type="button">Save</button>
+								<button class="mac-button" type="button">Cancel</button>
+								<button class="mac-button" type="button" disabled>Off</button>
+							</div>
+						</div>
+					</fieldset>
+
+					<fieldset class="mac-groupbox mac-groupbox--secondary">
+						<legend class="mac-groupbox__title">Tools</legend>
+						<div class="mac-groupbox__body">
+							<div class="row" role="radiogroup" aria-label="Tools">
+								<button class="mac-bevelbutton" role="radio" aria-checked="true" aria-label="Pen">
+									P
+								</button>
+								<button
+									class="mac-bevelbutton"
+									role="radio"
+									aria-checked="false"
+									aria-label="Brush"
+								>
+									B
+								</button>
+								<button class="mac-bevelbutton" role="radio" aria-checked="false" aria-label="Fill">
+									F
+								</button>
+							</div>
+						</div>
+					</fieldset>
+				</section>
+
+				<section class="col">
+					<h2 class="col__title">Chrome</h2>
+					<p class="col__note">
+						Window headers, wells, progress and the asynchronous arrows — all pure CSS, no script
+						involved.
+					</p>
+
+					<div class="mac-window">
+						<div class="mac-window__titlebar">
+							<button class="mac-window__box" type="button" aria-label="Close"></button>
+							<span class="mac-window__title">Macintosh HD</span>
+						</div>
+						<div class="mac-windowheader"><span>12 items</span><span>1.2 GB available</span></div>
+						<div class="mac-well well--list"></div>
+						<div class="foot">
+							<span class="mac-placard" id="status">Page 3 of 12</span>
+							<span
+								class="mac-chasing"
+								role="status"
+								aria-live="polite"
+								aria-label="Updating window contents"
+							></span>
+						</div>
+					</div>
+
+					<div class="mac-progress">
+						<span>Copying files</span>
+						<div class="mac-progress__track">
+							<div class="mac-progress__bar" style="width: 62%"></div>
+						</div>
+					</div>
+					<div class="mac-progress">
+						<span>Connecting to server</span>
+						<div class="mac-progress__track">
+							<div class="mac-progress__bar mac-progress__bar--indeterminate"></div>
+						</div>
+					</div>
+				</section>
+
+				<section class="col">
+					<h2 class="col__title">Behaviour</h2>
+					<p class="col__note">
+						The half a CSS-only kit leaves out. Keyboard contracts and focus management, in plain
+						DOM modules.
+					</p>
+
+					<button
+						class="mac-disclosure"
+						id="disclosure-trigger"
+						aria-expanded="false"
+						aria-controls="disclosure-region"
+					>
+						<span class="mac-disclosure__triangle"></span>Advanced
+					</button>
+					<div id="disclosure-region" hidden class="region">
+						<label class="mac-field">
+							<span class="mac-field__label">Copies</span>
+							<span class="row">
+								<input class="mac-input" id="copies" value="12" readonly />
+								<span class="mac-littlearrows" id="copies-arrows">
+									<button
+										class="mac-littlearrows__arrow"
+										aria-label="Increase copies"
+										aria-controls="copies"
+									></button>
+									<button
+										class="mac-littlearrows__arrow"
+										aria-label="Decrease copies"
+										aria-controls="copies"
+									></button>
+								</span>
+							</span>
+						</label>
+						<p class="hint">Hold an arrow — it repeats after a pause, and stops when you leave.</p>
+					</div>
+
+					<div class="balloon-host">
+						<button class="mac-button" id="trash" type="button">Trash</button>
+					</div>
+					<p class="hint">
+						Tab to it, don't hover — balloon help opens on focus too, which the original never did.
+					</p>
+
+					<div role="menu" class="mac-menu" id="demo-menu" aria-label="File actions">
+						<div role="menuitem" class="mac-menuitem" data-action="Open">Open</div>
+						<div role="menuitem" class="mac-menuitem" data-action="Get Info">
+							<span>Get Info</span><span class="mac-menuitem__shortcut">⌘I</span>
+						</div>
+						<div role="menuitem" class="mac-menuitem" aria-disabled="true">Duplicate</div>
+						<div class="mac-menu__separator"></div>
+						<div role="menuitem" class="mac-menuitem" data-action="Move to Trash">
+							Move to Trash
+						</div>
+					</div>
+					<p class="hint">
+						Click the menu, then arrow through it — the separator and the disabled item are skipped,
+						not merely unfocusable. Your choice lands in the placard.
+					</p>
+				</section>
+			</div>
+
+			<footer class="page__foot">
+				<p>
+					The harder controls — the focus trap, the roving tabindex, the listbox with type-ahead,
+					the tree — are still React-only, and
+					<a href="https://github.com/Liiift-Studio/Mac-OS-9-React/blob/main/docs/without-react.md"
+						>the docs say so plainly</a
+					>
+					rather than implying otherwise.
+				</p>
+				<p><a href="/">← Back to the React library</a></p>
+			</footer>
+		</main>
+
+		<script type="module" src="/src/platinum-page.ts"></script>
+	</body>
+</html>

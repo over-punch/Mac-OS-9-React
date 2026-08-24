@@ -1,7 +1,24 @@
-# Figma Design Map: Mac OS 9 UI Kit
+# Figma design map — the source kit
 
-File: `vy2T5MCXFz7QWf4Ba86eqN`
-Last Modified: 2026-01-08T19:26:55Z
+This maps the **community Mac OS 9 UI Kit by Michael Feeney**, which is what
+this library was originally built from. It is a reference for where a value
+came from, not a description of anything this project maintains.
+
+File: `vy2T5MCXFz7QWf4Ba86eqN` ([on Figma Community](https://www.figma.com/design/vy2T5MCXFz7QWf4Ba86eqN/Mac-OS-9--UI-Kit--Community-),
+CC BY 4.0). Read from that file on 2026-01-08.
+
+> **This is not the project's own kit.** There is a separate, private Figma
+> library generated from this codebase — three-tier variables, component pages
+> with variants, and effect and text styles, all bound rather than hardcoded.
+> It is not linked here because it is a private file; ask the maintainer for
+> access.
+>
+> Where the two disagree, **the code is the source of truth.** Tokens live in
+> `src/styles/tokens.css`, and the component behaviour follows Apple's
+> [Control Guidelines](https://dev.os9.ca/techpubs/mac/HIGOS8Guide/thig-9.html)
+> rather than this file — see [Where this comes from](../README.md#where-this-comes-from).
+
+---
 
 ## Pages Structure
 
@@ -16,6 +33,7 @@ Last Modified: 2026-01-08T19:26:55Z
 ### Colors
 
 #### Grayscale Palette
+
 - **Gray 100 / White** (`18:47`): `rgb(255, 255, 255)` - #FFFFFF
 - **Gray 200** (`19:2507`): `rgb(238, 238, 238)` - #EEEEEE (Base UI background)
 - **Gray 300** (`18:60`): Not specified in visible components
@@ -27,6 +45,7 @@ Last Modified: 2026-01-08T19:26:55Z
 - **Gray 900 / Black** (`18:48`): `rgb(38, 38, 38)` - #262626 (Strokes, borders, text)
 
 #### Accent Colors
+
 - **Lavender** (`60:134029`): `rgb(204, 204, 255)` - #CCCCFF (Cover background)
 - **Azul** (`49:36229`): Not visible in extracted data
 - **Link Red** (`102:398`, `102:3935`): Not visible in extracted data
@@ -34,6 +53,7 @@ Last Modified: 2026-01-08T19:26:55Z
 ### Typography
 
 #### Text Styles
+
 1. **Headlines** (`18:5`)
    - Font: Apple Garamond Light
    - Size: 224px
@@ -56,7 +76,9 @@ Last Modified: 2026-01-08T19:26:55Z
 ### Effects / Shadows
 
 #### Window Shadow (`67:95038`)
+
 Three-layer bevel effect:
+
 1. **DROP_SHADOW**
    - Color: `rgba(38, 38, 38, 1.0)`
    - Offset: `x: 2px, y: 2px`
@@ -74,14 +96,17 @@ Three-layer bevel effect:
    - Radius: `0px`
 
 #### Control Shadow (`127:14`)
+
 - Not extracted with specific values
 
 #### Icon Shadow (`127:103`)
+
 - Not extracted with specific values
 
 ### Base Component Properties
 
 All components in the Library share these consistent properties:
+
 - **Background fill**: Gray 200 (`#EEEEEE`)
 - **Stroke**: 1px solid Gray 900 (`#262626`)
 - **Stroke align**: Inside
@@ -94,37 +119,44 @@ All components in the Library share these consistent properties:
 ### Interactive Controls
 
 #### 1. Buttons (`68:101077`)
+
 - **Location**: x: 1840, y: -1
 - **Size**: 298w × 490h
 - **Contains**: Multiple button variants and states
 - **Node ID**: `68:101077`
 
 #### 2. Checkbox (`68:110082`)
+
 - **Location**: x: 2168, y: -1
 - **Size**: 298w × 175h
 - **Node ID**: `68:110082`
 
 #### 3. Radio Button (`68:111221`)
+
 - **Location**: x: 2168, y: 204
 - **Size**: 298w × 180h
 - **Node ID**: `68:111221`
 
 #### 4. Chevron (`68:122573`)
+
 - **Location**: x: 1840, y: 521
 - **Size**: 298w × 216h
 - **Node ID**: `68:122573`
 
 #### 5. Text Field (`68:128028`)
+
 - **Location**: x: 2496, y: 488
 - **Size**: 242w × 249h
 - **Node ID**: `68:128028`
 
 #### 6. Slider (`69:113985`)
+
 - **Location**: x: 2768, y: 488
 - **Size**: 270w × 249h
 - **Node ID**: `69:113985`
 
 #### 7. Progress Bar (`68:103634`)
+
 - **Location**: x: 2168, y: 414
 - **Size**: 298w × 323h
 - **Node ID**: `68:103634`
@@ -132,16 +164,19 @@ All components in the Library share these consistent properties:
 ### Dropdowns & Menus
 
 #### 8. Dropdown (`69:110626`)
+
 - **Location**: x: 4099, y: 767
 - **Size**: 1001w × 738h
 - **Node ID**: `69:110626`
 
 #### 9. Dropdown Menu (`69:105642`)
+
 - **Location**: x: 4099, y: -1
 - **Size**: 1001w × 738h
 - **Node ID**: `69:105642`
 
 #### 10. Menu Bar (`68:129309`)
+
 - **Location**: x: 3068, y: 488
 - **Size**: 1001w × 249h
 - **Node ID**: `68:129309`
@@ -149,11 +184,13 @@ All components in the Library share these consistent properties:
 ### Navigation & Layout
 
 #### 11. Tabs (`68:99467`)
+
 - **Location**: x: 2496, y: -1
 - **Size**: 542w × 459h
 - **Node ID**: `68:99467`
 
 #### 12. Navigation Button (`69:116209`)
+
 - **Location**: x: 5130, y: 767
 - **Size**: 423w × 218h
 - **Node ID**: `69:116209`
@@ -161,21 +198,25 @@ All components in the Library share these consistent properties:
 ### Windows & Containers
 
 #### 13. Window (`69:130300`)
+
 - **Location**: x: 7062, y: -1
 - **Size**: 612w × 1506h
 - **Node ID**: `69:130300`
 
 #### 14. Window Frame (`68:97933`)
+
 - **Location**: x: 5130, y: 1015
 - **Size**: 423w × 490h
 - **Node ID**: `68:97933`
 
 #### 15. Title Bar (`68:98697`)
+
 - **Location**: x: 5130, y: -1
 - **Size**: 1167w × 738h
 - **Node ID**: `68:98697`
 
 #### 16. Scrollbar (`69:125817`)
+
 - **Location**: x: 6327, y: 767
 - **Size**: 705w × 738h
 - **Node ID**: `69:125817`
@@ -183,21 +224,25 @@ All components in the Library share these consistent properties:
 ### List Views
 
 #### 17. List Items (`68:130074`)
+
 - **Location**: x: 1840, y: 767
 - **Size**: 2229w × 738h
 - **Node ID**: `68:130074`
 
 #### 18. Folder List (`69:117834`)
+
 - **Location**: x: 6327, y: -1
 - **Size**: 705w × 738h
 - **Node ID**: `69:117834`
 
 #### 19. Folder Tag (`69:117027`)
+
 - **Location**: x: 5583, y: 1124
 - **Size**: 714w × 381h
 - **Node ID**: `69:117027`
 
 #### 20. Column List Header (`69:115439`)
+
 - **Location**: x: 5583, y: 767
 - **Size**: 714w × 327h
 - **Node ID**: `69:115439`
@@ -205,6 +250,7 @@ All components in the Library share these consistent properties:
 ### System Elements
 
 #### 21. Control Strip (`68:120833`)
+
 - **Location**: x: 3068, y: -1
 - **Size**: 1001w × 459h
 - **Node ID**: `68:120833`
@@ -212,16 +258,19 @@ All components in the Library share these consistent properties:
 ### Assets
 
 #### 22. Icons (`68:94653`)
+
 - **Location**: x: 984, y: -1
 - **Size**: 644w × 1400h
 - **Node ID**: `68:94653`
 
 #### 23. Wallpapers (`68:94977`)
+
 - **Location**: x: 410, y: 1449
 - **Size**: 1218w × 2961h
 - **Node ID**: `68:94977`
 
 #### 24. Halftone Textures (`73:914`)
+
 - **Location**: x: 410, y: 583
 - **Size**: 544w × 816h
 - **Node ID**: `73:914`
@@ -229,11 +278,13 @@ All components in the Library share these consistent properties:
 ### Style References
 
 #### 25. Text Styles (`67:94132`)
+
 - **Location**: x: 410, y: -1
 - **Size**: 257w × 556h
 - **Node ID**: `67:94132`
 
 #### 26. Colours (`67:95057`)
+
 - **Location**: x: 697, y: -1
 - **Size**: 257w × 556h
 - **Node ID**: `67:95057`
@@ -254,7 +305,9 @@ All components in the Library share these consistent properties:
 ## Key Design Patterns
 
 ### Bevel Effect Pattern
+
 All interactive components use a consistent 3-layer bevel:
+
 1. Hard drop shadow (2px, 2px, 0 blur) - creates depth
 2. Light inner shadow (2px, 2px, 0 blur, 60% white) - top-left highlight
 3. Dark inner shadow (-2px, -2px, 0 blur, 40% black) - bottom-right shadow
@@ -262,11 +315,13 @@ All interactive components use a consistent 3-layer bevel:
 This creates the classic "pressed button" 3D effect of Mac OS 9.
 
 ### Stroke Pattern
+
 - **Width**: Always 1px
 - **Color**: Always Gray 900 (#262626)
 - **Position**: Inside (doesn't affect outer dimensions)
 
 ### Spacing & Measurements
+
 - **Minimum touch target**: Observed buttons are ~30px+ in height
 - **Border radius**: None - all components use sharp 90° corners
 - **Component padding**: Typically 2-4px based on bevel insets
@@ -276,18 +331,21 @@ This creates the classic "pressed button" 3D effect of Mac OS 9.
 ## Component Variants to Implement
 
 ### Priority 1 (Core Controls)
+
 1. **Button**: Default, Hover, Active, Disabled, Focus
 2. **Checkbox**: Unchecked, Checked, Indeterminate, Disabled
 3. **Radio**: Unselected, Selected, Disabled
 4. **TextField**: Empty, Filled, Focus, Disabled, Error
 
 ### Priority 2 (Navigation)
+
 5. **Select/Dropdown**: Closed, Open, Disabled
 6. **Tabs**: Default, Active, Hover, Disabled
 7. **MenuBar**: Default, Open, Item hover
 8. **MenuItem**: Default, Hover, Disabled, Separator
 
 ### Priority 3 (Containers)
+
 9. **Window**: Default, Active, Inactive
 10. **TitleBar**: Active, Inactive, with controls
 11. **Dialog/Modal**: Default variants

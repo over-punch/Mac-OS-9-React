@@ -519,6 +519,11 @@ export function Desktop() {
 											Source on GitHub
 										</Button>
 										<Button onClick={() => setDialogOpen(true)}>What&rsquo;s a Dialog?</Button>
+										{/* A separate page, not a route: it deliberately ships no
+										    React, so it cannot live inside this app. */}
+										<Button as="a" href="./platinum.html">
+											Without React
+										</Button>
 									</div>
 								</div>
 							</Window>

@@ -1,0 +1,131 @@
+/* The Platinum demo page.
+ *
+ * Only the layer's own tokens and classes style the controls; everything here
+ * is page furniture. */
+
+@import '../../../src/styles/platinum.css';
+
+body {
+	margin: 0;
+	padding: clamp(1.5rem, 4vw, 3rem);
+	background-color: var(--color-background);
+}
+
+.page {
+	max-width: 68rem;
+	margin: 0 auto;
+}
+
+.eyebrow {
+	margin: 0 0 0.5rem;
+	font-family: var(--font-mono);
+	font-size: var(--font-size-sm);
+	color: var(--color-gray-600);
+}
+
+h1 {
+	margin: 0 0 0.75rem;
+	font-family: var(--font-display);
+	font-size: var(--font-size-5xl);
+	line-height: 1.1;
+	color: var(--color-text);
+}
+
+.lead {
+	max-width: 60ch;
+	margin: 0 0 1.25rem;
+	font-size: var(--font-size-lg);
+	line-height: var(--line-height-relaxed);
+	color: var(--color-text);
+}
+
+.snippet {
+	overflow-x: auto;
+	max-width: 100%;
+	margin: 0 0 2.5rem;
+	padding: var(--spacing-3);
+	background-color: var(--color-surface-inset);
+	border: var(--border-width-thin) solid var(--color-border-inset);
+	box-shadow: var(--shadow-inset);
+	font-family: var(--font-mono);
+	font-size: var(--font-size-sm);
+	line-height: var(--line-height-relaxed);
+}
+
+.grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+	gap: 2rem;
+	align-items: start;
+}
+
+.col {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-3);
+	min-width: 0;
+}
+
+.col__title {
+	margin: 0;
+	font-family: var(--font-display);
+	font-size: var(--font-size-2xl);
+	color: var(--color-text);
+}
+
+.col__note,
+.hint {
+	margin: 0;
+	max-width: 40ch;
+	font-size: var(--font-size-sm);
+	line-height: var(--line-height-normal);
+	color: var(--color-gray-600);
+}
+
+.row {
+	display: flex;
+	align-items: flex-end;
+	gap: var(--spacing-1);
+	flex-wrap: wrap;
+}
+
+.region {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-2);
+	padding-left: var(--spacing-4);
+}
+
+.well--list {
+	height: 5rem;
+}
+
+.foot {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--spacing-2);
+	padding: var(--spacing-1) var(--spacing-2);
+}
+
+/* Balloon help positions itself against the nearest positioned ancestor. */
+.balloon-host {
+	position: relative;
+	align-self: flex-start;
+}
+
+.page__head {
+	margin-bottom: 2rem;
+}
+
+.page__foot {
+	margin-top: 3rem;
+	padding-top: var(--spacing-4);
+	border-top: var(--border-width-thin) solid var(--color-border);
+	font-size: var(--font-size-sm);
+	color: var(--color-gray-600);
+}
+
+.page__foot a {
+	color: var(--color-link);
+}

@@ -39,6 +39,10 @@ export default defineConfig({
 				// same component source the site uses.
 				index: fileURLToPath(new URL('./index.html', import.meta.url)),
 				capture: fileURLToPath(new URL('./capture.html', import.meta.url)),
+				// The framework-agnostic demo. A separate entry because it must
+				// not share a chunk with the React app — the page's whole claim
+				// is that it ships no React.
+				platinum: fileURLToPath(new URL('./platinum.html', import.meta.url)),
 			},
 		},
 	},
