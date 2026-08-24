@@ -36,7 +36,7 @@ import { Window, Button } from '@liiift-studio/mac-os9-ui';
 - 🪶 **No runtime dependencies** - React and React DOM are the only peers
 - 🎚️ **Themeable** - every value is a CSS custom property, in three tiers
 - 📖 **Storybook Docs** - [browse every component](https://liiift-studio.github.io/Mac-OS-9-React/storybook/), interactively
-- 🧪 **Tested** - 543 tests, including an axe sweep over every rendering component and WCAG contrast assertions on the palette
+- 🧪 **Tested** - 584 tests, including an axe sweep over every rendering component and WCAG contrast assertions on the palette
 
 ![A Mac OS 9 menu bar with the File menu open showing New Folder, Open, Print and a checked Get Info item, beside a Macintosh HD window containing a sortable file list](https://raw.githubusercontent.com/Liiift-Studio/Mac-OS-9-React/main/assets/window.png?v=1)
 
@@ -47,10 +47,10 @@ import { Window, Button } from '@liiift-studio/mac-os9-ui';
 | **React**                | 18 or 19 — both are exercised by the test matrix in CI (`react` and `react-dom` are peer dependencies)                                                                                  |
 | **Runtime dependencies** | None                                                                                                                                                                                    |
 | **Module formats**       | ESM (`dist/index.js`) and CommonJS (`dist/index.cjs`)                                                                                                                                   |
-| **Bundle**               | 255 kB ESM, 63 kB gzipped for the whole library — but see tree-shaking below                                                                                                            |
-| **Stylesheet**           | 131 kB, 24 kB gzipped                                                                                                                                                                   |
+| **Bundle**               | 276 kB ESM, 68 kB gzipped for the whole library — but see tree-shaking below                                                                                                            |
+| **Stylesheet**           | 138 kB, 25 kB gzipped                                                                                                                                                                   |
 | **Fonts**                | 20 KB fetched by an ASCII page — the family is split into `latin` and `latin-ext` subsets with `unicode-range`, so only the parts your text needs are downloaded (49 KB of woff2 total) |
-| **Published tarball**    | 356 kB (1103 kB unpacked)                                                                                                                                                               |
+| **Published tarball**    | 371 kB (1167 kB unpacked)                                                                                                                                                               |
 | **Types**                | Bundled `.d.ts` and `.d.cts`                                                                                                                                                            |
 
 ### Server components and `'use client'`
@@ -75,7 +75,7 @@ Import what you need from the package root; your bundler drops the rest.
 import { Button } from '@liiift-studio/mac-os9-ui';
 ```
 
-That produces about **3 KB** of JavaScript, against 94 kB for the whole
+That produces about **3 KB** of JavaScript, against 102 kB for the whole
 library. The package ships as preserved modules — one output file per source
 module, rather than a single flattened bundle — because a flattened bundle
 cannot be tree-shaken at all here: each component's `displayName` assignment is
@@ -114,6 +114,7 @@ the machine.
 ### Feedback
 
 - **Progress** - Determinate bar, or the indeterminate barber pole when the length of the work is unknown. `value` decides which — there is no default, because a default would claim progress nobody measured
+- **BalloonHelp** - The speech balloon from Help › Show Balloons, with the global switch that gated it. Opens on focus as well as hover, and describes its trigger rather than renaming it
 - **ChasingArrows** - Apple's asynchronous arrows, for background work with no dialog to hold a progress bar. Claims no progress value, and pulses rather than freezing under `prefers-reduced-motion`
 - **Alert** - The Mac OS 9 alert arrangement over `Dialog`: severity icon, message, buttons bottom-right with the default rightmost. Renders as `role="alertdialog"`
 
@@ -130,6 +131,8 @@ the machine.
 - **ListView** - Multi-column list with sortable headers and selection, generic over the row type
 - **FolderList** - A Window with a ListView inside it, for file browsing
 - **Scrollbar** - Custom Mac OS 9 styled scrollbars
+- **TreeView** - Finder's hierarchical list view. A tree, not a listbox with indentation: `aria-level`, nested groups, and Right/Left to open and close
+- **ContextualMenu** - Right-click menus, also reachable with the ContextMenu key or Shift+F10
 - **DisclosureTriangle** - The expand triangle from Finder lists and dialog sections. A real `<button>` with `aria-expanded`, not a clickable span
 - **GroupBox** - The etched border that groups related settings, in the HIG's two weights and all four title modes. A real `fieldset`, so the grouping reaches assistive tech
 - **WindowHeader** - Finder's "12 items, 1.2 GB available" bar. Pointedly not a heading

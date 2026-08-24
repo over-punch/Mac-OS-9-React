@@ -1,5 +1,44 @@
 # @liiift-studio/mac-os9-ui
 
+## 2.4.0
+
+### Minor Changes
+
+- Add `BalloonHelp`, `TreeView` and `ContextualMenu` — the recognisable Mac OS 9
+  elements that sit outside Apple's Controls chapter.
+
+  **`BalloonHelp`** is the balloon from Help › Show Balloons, including the global
+  switch that gated it: wrap a tree in `BalloonHelpProvider` and you get the Help
+  menu's toggle. Leave it out and balloons work, because a tooltip that silently
+  does nothing by default is a worse trap than a missing period detail.
+
+  The accessibility is the part the original had no answer for. Hover-only help is
+  invisible without a pointer, so this opens on focus too, describes its trigger
+  with `aria-describedby` rather than replacing its name, and dismisses on Escape
+  without moving focus.
+
+  **`TreeView`** is Finder's list view. It is a separate component rather than a
+  mode on `ListView` because the two are different ARIA patterns, not two looks at
+  one: `ListView` is a multi-selectable listbox of options with no way to express
+  depth, while a tree is `treeitem` with `aria-level` and nested groups. Right
+  opens a folder then steps into it, Left closes it then steps out, and the whole
+  tree is one tab stop. `children: []` is an empty folder that keeps its triangle;
+  omitting `children` is a leaf that never had one.
+
+  **`ContextualMenu`** fills a real hole — the library had no `contextmenu`
+  handling anywhere. It opens on right-click, and on the ContextMenu key or
+  Shift+F10 anchored to the focused element, because a menu reachable only by
+  right-click is unreachable without a pointer. Separators are skipped by the
+  arrow keys, the menu clamps into the viewport, scrolling dismisses it, and
+  closing returns focus to where it came from.
+
+  Also fixes `GroupBox`'s title, which stacked above the box instead of being set
+  into its border. The etched groove is meant to pass behind the words, and that
+  is most of what makes it read as Platinum.
+
+  The `--z-index-tooltip` and `--z-index-popover` tokens have been defined and
+  unused since the beginning. They now have consumers.
+
 ## 2.3.0
 
 ### Minor Changes
