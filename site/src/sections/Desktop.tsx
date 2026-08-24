@@ -217,6 +217,27 @@ const COMPONENTS: ComponentRow[] = [
 		story: 'components-clockcontrol',
 	},
 	{
+		id: 'balloonhelp',
+		name: 'BalloonHelp',
+		role: 'Feedback',
+		keyboard: 'Focus shows, Escape hides',
+		story: 'components-balloonhelp',
+	},
+	{
+		id: 'treeview',
+		name: 'TreeView',
+		role: 'Navigation',
+		keyboard: 'Right opens, Left closes',
+		story: 'components-treeview',
+	},
+	{
+		id: 'contextualmenu',
+		name: 'ContextualMenu',
+		role: 'Chrome',
+		keyboard: 'Shift+F10 or menu key',
+		story: 'components-contextualmenu',
+	},
+	{
 		id: 'progress',
 		name: 'Progress',
 		role: 'Feedback',

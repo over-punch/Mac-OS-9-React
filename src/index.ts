@@ -24,6 +24,19 @@ export {
 	type PixelIconProps,
 } from './components/Icon';
 export { IconButton, type IconButtonProps, type IconButtonClasses } from './components/IconButton';
+export { BalloonHelp, BalloonHelpProvider, useBalloonHelp } from './components/BalloonHelp';
+export type {
+	BalloonHelpProps,
+	BalloonHelpClasses,
+	BalloonHelpProviderProps,
+} from './components/BalloonHelp';
+
+export { TreeView } from './components/TreeView';
+export type { TreeViewProps, TreeViewClasses, TreeNode } from './components/TreeView';
+
+export { ContextualMenu } from './components/ContextualMenu';
+export type { ContextualMenuProps, ContextualMenuClasses } from './components/ContextualMenu';
+
 export { BevelButton } from './components/BevelButton';
 export type {
 	BevelButtonProps,

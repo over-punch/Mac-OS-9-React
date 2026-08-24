@@ -1,0 +1,75 @@
+/* TreeView Component Styles - Mac OS 9 */
+
+.tree {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	background-color: var(--color-listview-bg, var(--color-surface-inset));
+	font-family: var(--font-system);
+	font-size: var(--font-size-md);
+	color: var(--color-text);
+}
+
+.item {
+	cursor: default;
+	/* The row is the tab stop, so the outline belongs on it — not on the
+	 * triangle inside, which would put the ring around the wrong thing. */
+	outline-offset: -2px;
+}
+
+.item:focus-visible {
+	outline: var(--border-width-thin) dotted var(--color-focus);
+}
+
+.item:hover {
+	background-color: var(--color-listview-row-hover-bg, transparent);
+}
+
+/* Finder highlighted the whole row, edge to edge, rather than just the text. */
+.item--selected {
+	background-color: var(--color-listview-row-selected-bg, var(--color-highlight));
+	color: var(--color-listview-row-selected-text, var(--color-highlight-text));
+}
+
+.row {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-1);
+	padding: var(--spacing-px) var(--spacing-1);
+	min-height: 16px;
+}
+
+.twisty {
+	flex: 0 0 auto;
+}
+
+/* Leaves reserve the triangle's width so labels line up down the column
+ * whether or not a row can open. */
+.twistySpacer {
+	flex: 0 0 auto;
+	display: inline-block;
+	width: 6px;
+}
+
+.icon {
+	flex: 0 0 auto;
+	display: inline-flex;
+}
+
+.label {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+@media (prefers-contrast: high) {
+	.item--selected {
+		background-color: var(--color-foreground);
+		color: var(--color-background);
+	}
+
+	.item:focus-visible {
+		outline-width: var(--border-width-medium);
+		outline-style: solid;
+	}
+}

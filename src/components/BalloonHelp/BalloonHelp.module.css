@@ -1,0 +1,120 @@
+/* BalloonHelp Component Styles - Mac OS 9 */
+
+.anchor {
+	position: relative;
+	display: inline-flex;
+}
+
+.trigger {
+	display: inline-flex;
+}
+
+/* The balloon: rounded, hard-edged, with a tail. Mac OS 9 drew it as a solid
+ * white bubble with a 1px black outline and no shadow — the tail is what did
+ * the pointing, not depth. */
+.balloon {
+	position: absolute;
+	z-index: var(--z-index-tooltip);
+	max-width: 220px;
+	padding: var(--spacing-2) var(--spacing-3);
+	background-color: var(--color-gray-100);
+	border: var(--border-width-thin) solid var(--color-foreground);
+	border-radius: var(--border-radius-lg);
+	font-family: var(--font-system);
+	font-size: var(--font-size-sm);
+	line-height: var(--line-height-normal);
+	color: var(--color-foreground);
+	/* A balloon is commentary on something else; it must never swallow the
+	 * pointer that is hovering the thing it describes. */
+	pointer-events: none;
+	width: max-content;
+}
+
+/* The tail is two triangles: the outline, and the fill sitting 1px inside it,
+ * which is how the balloon's border appears to continue around the point. */
+.balloon::before,
+.balloon::after {
+	content: '';
+	position: absolute;
+	width: 0;
+	height: 0;
+	border: 7px solid transparent;
+}
+
+.balloon--bottom {
+	top: calc(100% + 8px);
+	left: 50%;
+	transform: translateX(-50%);
+}
+
+.balloon--bottom::before {
+	bottom: 100%;
+	left: 16px;
+	border-bottom-color: var(--color-foreground);
+}
+
+.balloon--bottom::after {
+	bottom: calc(100% - 1px);
+	left: 16px;
+	border-bottom-color: var(--color-gray-100);
+}
+
+.balloon--top {
+	bottom: calc(100% + 8px);
+	left: 50%;
+	transform: translateX(-50%);
+}
+
+.balloon--top::before {
+	top: 100%;
+	left: 16px;
+	border-top-color: var(--color-foreground);
+}
+
+.balloon--top::after {
+	top: calc(100% - 1px);
+	left: 16px;
+	border-top-color: var(--color-gray-100);
+}
+
+.balloon--right {
+	left: calc(100% + 8px);
+	top: 50%;
+	transform: translateY(-50%);
+}
+
+.balloon--right::before {
+	right: 100%;
+	top: 12px;
+	border-right-color: var(--color-foreground);
+}
+
+.balloon--right::after {
+	right: calc(100% - 1px);
+	top: 12px;
+	border-right-color: var(--color-gray-100);
+}
+
+.balloon--left {
+	right: calc(100% + 8px);
+	top: 50%;
+	transform: translateY(-50%);
+}
+
+.balloon--left::before {
+	left: 100%;
+	top: 12px;
+	border-left-color: var(--color-foreground);
+}
+
+.balloon--left::after {
+	left: calc(100% - 1px);
+	top: 12px;
+	border-left-color: var(--color-gray-100);
+}
+
+@media (prefers-contrast: high) {
+	.balloon {
+		border-width: var(--border-width-medium);
+	}
+}

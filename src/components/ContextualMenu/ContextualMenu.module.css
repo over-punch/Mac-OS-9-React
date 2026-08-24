@@ -1,0 +1,76 @@
+/* ContextualMenu Component Styles - Mac OS 9 */
+
+.region {
+	display: contents;
+}
+
+/* Floats above everything, and above the modal layer too — a contextual menu
+ * opened inside a dialog belongs on top of it. */
+.menu {
+	position: fixed;
+	z-index: var(--z-index-popover);
+	min-width: 140px;
+	padding: var(--spacing-px) 0;
+	background-color: var(--color-menu-bg, var(--color-background));
+	border: var(--border-width-thin) solid var(--color-border);
+	box-shadow: var(--shadow-drop);
+	font-family: var(--font-system);
+	font-size: var(--font-size-md);
+	color: var(--color-menu-text, var(--color-text));
+}
+
+.menu:focus {
+	/* The menu holds focus so the arrow keys reach it, but the ring belongs on
+	 * the highlighted item, not around the whole sheet. */
+	outline: none;
+}
+
+.item {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--spacing-4);
+	padding: var(--spacing-px) var(--spacing-3);
+	cursor: default;
+	white-space: nowrap;
+}
+
+/* Mac OS 9 tracked the highlight with the pointer and the arrow keys alike,
+ * as one state rather than separate hover and focus styles. */
+.item--active {
+	background-color: var(--color-menu-highlight-bg, var(--color-highlight));
+	color: var(--color-menu-highlight-text, var(--color-highlight-text));
+}
+
+.item--disabled {
+	color: var(--color-gray-500);
+	cursor: not-allowed;
+}
+
+.item--disabled.item--active {
+	background-color: transparent;
+	color: var(--color-gray-500);
+}
+
+.shortcut {
+	color: inherit;
+	opacity: 0.7;
+}
+
+.separator {
+	height: 1px;
+	margin: var(--spacing-px) 0;
+	background-color: var(--color-border);
+}
+
+@media (prefers-contrast: high) {
+	.menu {
+		border-width: var(--border-width-medium);
+		border-color: var(--color-foreground);
+	}
+
+	.item--active {
+		background-color: var(--color-foreground);
+		color: var(--color-background);
+	}
+}
