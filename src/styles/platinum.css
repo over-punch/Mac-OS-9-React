@@ -1,0 +1,737 @@
+/* Platinum — the Mac OS 9 look, without React.
+ *
+ * Stable, hand-written class names, built entirely on the design tokens. This
+ * is the one place in the package where class names ARE a public API: they are
+ * not content-hashed, they are versioned with the package, and renaming one is
+ * a breaking change.
+ *
+ * That is the whole difference between this file and the CSS Modules the React
+ * components use. Those are an implementation detail and change every build.
+ * These are a contract.
+ *
+ * Every class is prefixed `mac-`. Nothing here needs JavaScript; the controls
+ * that do have their behaviour in `@liiift-studio/mac-os9-ui/platinum`, which
+ * attaches to this same markup.
+ *
+ * Import:
+ *   @liiift-studio/mac-os9-ui/tokens     required — every value below comes from it
+ *   @liiift-studio/mac-os9-ui/platinum.css
+ */
+
+@import './tokens.css';
+
+/* ==========================================================================
+ * Surfaces
+ *
+ * Two shapes account for most of the interface: raised chrome you press, and
+ * sunken wells things sit inside. Everything else is a composition of them.
+ * ========================================================================== */
+
+.mac-bevel {
+	background-color: var(--color-background);
+	border: var(--border-width-thin) solid var(--color-border);
+	box-shadow: var(--shadow-bevel);
+}
+
+/* Pressing inverts the bevel — the light and dark edges swap, so the surface
+ * appears to go in. That inversion is the entire illusion. */
+.mac-bevel:active:not(:disabled):not([aria-disabled='true']),
+.mac-bevel[aria-pressed='true'],
+.mac-bevel[data-selected='true'] {
+	background-color: var(--color-gray-300);
+	box-shadow: var(--shadow-inset);
+}
+
+.mac-well {
+	background-color: var(--color-surface-inset);
+	border: var(--border-width-thin) solid var(--color-border-inset);
+	box-shadow: var(--shadow-inset);
+}
+
+/* ==========================================================================
+ * Typography
+ * ========================================================================== */
+
+.mac-root,
+.mac-text {
+	font-family: var(--font-system);
+	font-size: var(--font-size-md);
+	line-height: var(--line-height-normal);
+	color: var(--color-text);
+}
+
+.mac-root {
+	background-color: var(--color-background);
+}
+
+/* ==========================================================================
+ * Button
+ * ========================================================================== */
+
+.mac-button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--spacing-1);
+	min-height: 20px;
+	padding: var(--spacing-1) var(--spacing-3);
+	background-color: var(--color-background);
+	border: var(--border-width-thin) solid var(--color-border);
+	border-radius: var(--border-radius-md);
+	box-shadow: var(--shadow-bevel);
+	font-family: var(--font-system);
+	font-size: var(--font-size-md);
+	color: var(--color-text);
+	cursor: pointer;
+}
+
+.mac-button:active:not(:disabled) {
+	background-color: var(--color-gray-300);
+	box-shadow: var(--shadow-inset);
+}
+
+.mac-button:focus-visible {
+	outline: var(--border-width-medium) solid var(--color-focus);
+	outline-offset: 1px;
+}
+
+.mac-button:disabled,
+.mac-button[aria-disabled='true'] {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+/* The default button carried a heavier ring, which is how you knew Return
+ * would press it. */
+.mac-button--default {
+	border-width: var(--border-width-medium);
+	font-weight: var(--font-weight-bold);
+}
+
+.mac-button--danger {
+	color: var(--color-error);
+}
+
+.mac-button--sm {
+	min-height: 16px;
+	padding: 0 var(--spacing-2);
+	font-size: var(--font-size-sm);
+}
+
+.mac-button--lg {
+	min-height: 24px;
+	padding: var(--spacing-2) var(--spacing-4);
+	font-size: var(--font-size-lg);
+}
+
+/* ==========================================================================
+ * Bevel button
+ *
+ * A square-ish beveled surface for toolbars and palettes. Set `aria-pressed`
+ * for a toggle, or role="radio" with `aria-checked` for one of a set — the
+ * appearance follows the state you declare.
+ * ========================================================================== */
+
+.mac-bevelbutton {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--spacing-1);
+	min-width: 26px;
+	min-height: 26px;
+	padding: var(--spacing-1) var(--spacing-2);
+	background-color: var(--color-background);
+	border: var(--border-width-thin) solid var(--color-border);
+	box-shadow: var(--shadow-bevel);
+	font-family: var(--font-system);
+	font-size: var(--font-size-md);
+	color: var(--color-text);
+	cursor: pointer;
+}
+
+.mac-bevelbutton:active:not(:disabled),
+.mac-bevelbutton[aria-pressed='true'],
+.mac-bevelbutton[aria-checked='true'] {
+	background-color: var(--color-gray-300);
+	box-shadow: var(--shadow-inset);
+}
+
+.mac-bevelbutton:focus-visible {
+	outline: var(--border-width-medium) solid var(--color-focus);
+	outline-offset: 1px;
+}
+
+.mac-bevelbutton:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+/* ==========================================================================
+ * Text field
+ * ========================================================================== */
+
+.mac-field {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-px);
+	font-family: var(--font-system);
+}
+
+.mac-field__label {
+	font-size: var(--font-size-sm);
+	color: var(--color-text);
+}
+
+.mac-input {
+	padding: var(--spacing-px) var(--spacing-1);
+	background-color: var(--field-bg);
+	border: var(--border-width-thin) solid var(--field-border);
+	border-radius: var(--border-radius-none);
+	box-shadow: var(--shadow-inset);
+	font-family: var(--font-system);
+	font-size: var(--font-size-md);
+	color: var(--field-text);
+}
+
+/* Deliberately :focus, not :focus-visible — you need to know where you are
+ * typing regardless of how you got there. */
+.mac-input:focus {
+	outline: var(--border-width-thin) solid var(--color-focus);
+	outline-offset: -1px;
+}
+
+.mac-input:disabled {
+	background-color: var(--color-gray-200);
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.mac-field__error {
+	font-size: var(--font-size-xs);
+	color: var(--color-error);
+}
+
+.mac-input[aria-invalid='true'] {
+	border-color: var(--color-error);
+}
+
+/* ==========================================================================
+ * Group box
+ *
+ * A real fieldset and legend. The title is set INTO the border — positioned
+ * rather than nudged, because a <legend> ignores a negative margin — and the
+ * groove appears to pass behind the words. That is most of what makes it read
+ * as Platinum rather than as a modern card.
+ * ========================================================================== */
+
+.mac-groupbox {
+	position: relative;
+	min-width: 0;
+	margin: 0;
+	padding: calc(var(--mac-groupbox-title-line) / 2) 0 0;
+	border: none;
+	font-family: var(--font-system);
+	color: var(--color-text);
+
+	--mac-groupbox-title-line: 1.2em;
+}
+
+.mac-groupbox__title {
+	position: absolute;
+	top: 0;
+	left: var(--spacing-2);
+	z-index: 1;
+	display: flex;
+	align-items: center;
+	width: fit-content;
+	height: var(--mac-groupbox-title-line);
+	padding: 0 var(--spacing-1);
+	/* Opaque: this is what breaks the groove where the words are. */
+	background-color: var(--color-background);
+	font-size: var(--font-size-md);
+	font-weight: var(--font-weight-bold);
+	line-height: 1;
+}
+
+.mac-groupbox__body {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-2);
+	padding: var(--spacing-3);
+	border: var(--border-width-thin) solid var(--color-border-inset);
+	box-shadow: 1px 1px 0 0 var(--color-gray-100);
+}
+
+/* Secondary is for nesting inside a primary box, not for standing in for one. */
+.mac-groupbox--secondary > .mac-groupbox__body {
+	padding: var(--spacing-2);
+	border-color: var(--color-border);
+	box-shadow: none;
+}
+
+/* A title that is a control carries the control's weight, not the legend's. */
+.mac-groupbox__title:has(input),
+.mac-groupbox__title:has(select),
+.mac-groupbox__title:has(button) {
+	font-weight: var(--font-weight-normal);
+}
+
+/* ==========================================================================
+ * Separator
+ *
+ * Two 1px lines, not one: a dark line with a light line beneath it, which is
+ * what makes it read as cut into the surface rather than drawn on top.
+ * ========================================================================== */
+
+.mac-separator {
+	flex: 0 0 auto;
+	width: 100%;
+	height: 2px;
+	border: none;
+	background: none;
+	border-top: var(--border-width-thin) solid var(--color-border-inset);
+	border-bottom: var(--border-width-thin) solid var(--color-gray-100);
+}
+
+.mac-separator--vertical {
+	align-self: stretch;
+	width: 2px;
+	height: auto;
+	border-top: none;
+	border-bottom: none;
+	border-left: var(--border-width-thin) solid var(--color-border-inset);
+	border-right: var(--border-width-thin) solid var(--color-gray-100);
+}
+
+/* ==========================================================================
+ * Window header and placard
+ * ========================================================================== */
+
+.mac-windowheader {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--spacing-3);
+	padding: var(--spacing-1) var(--spacing-2);
+	background-color: var(--color-background);
+	border-bottom: var(--border-width-thin) solid var(--color-border);
+	box-shadow: var(--shadow-bevel);
+	font-family: var(--font-system);
+	font-size: var(--font-size-sm);
+	color: var(--color-text);
+	/* Counts and sizes change in place; lining the digits up stops the bar
+	 * twitching as they do. */
+	font-variant-numeric: tabular-nums;
+}
+
+/* List view ran the header into the column headings with no seam. */
+.mac-windowheader--list {
+	border-bottom: none;
+}
+
+.mac-placard {
+	display: inline-flex;
+	align-items: center;
+	min-height: 15px;
+	padding: 0 var(--spacing-2);
+	background-color: var(--color-background);
+	border: var(--border-width-thin) solid var(--color-border);
+	box-shadow: var(--shadow-inset);
+	font-family: var(--font-system);
+	font-size: var(--font-size-xs);
+	color: var(--color-text);
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+}
+
+/* ==========================================================================
+ * Progress
+ * ========================================================================== */
+
+.mac-progress {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-1);
+	width: 100%;
+	font-family: var(--font-system);
+	font-size: var(--font-size-sm);
+	color: var(--color-text);
+}
+
+.mac-progress__track {
+	position: relative;
+	overflow: hidden;
+	width: 100%;
+	height: 14px;
+	background-color: var(--color-surface-inset);
+	border: var(--border-width-thin) solid var(--color-border);
+	box-shadow: var(--shadow-inset);
+}
+
+.mac-progress__bar {
+	height: 100%;
+	background-color: var(--color-highlight);
+	box-shadow: var(--shadow-highlight);
+	/* No transition: Mac OS 9 had none, and an eased bar misreports progress
+	 * for the length of the ease. */
+	transition: none;
+}
+
+/* The barber pole, for work whose length is unknown. 6px bands at 45 degrees;
+ * 17px is the horizontal repeat of a 12px band, so the loop never jumps. */
+.mac-progress__bar--indeterminate {
+	width: 100%;
+	background-image: repeating-linear-gradient(
+		-45deg,
+		var(--color-highlight) 0,
+		var(--color-highlight) 6px,
+		var(--color-lavender) 6px,
+		var(--color-lavender) 12px
+	);
+	background-size: 17px 100%;
+	animation: mac-barber-pole 0.6s linear infinite;
+}
+
+@keyframes mac-barber-pole {
+	from {
+		background-position: 0 0;
+	}
+	to {
+		background-position: 17px 0;
+	}
+}
+
+/* ==========================================================================
+ * Chasing arrows
+ *
+ * Apple's asynchronous arrows, for background work with no dialog to hold a
+ * progress bar. Give it role="status" and an aria-label saying what is
+ * happening — "loading" tells a screen-reader user nothing.
+ * ========================================================================== */
+
+.mac-chasing {
+	display: inline-block;
+	flex: 0 0 auto;
+	width: 16px;
+	height: 16px;
+	background-color: currentColor;
+	clip-path: polygon(50% 0, 100% 38%, 68% 38%, 68% 62%, 32% 62%, 32% 38%, 0 38%);
+	/* Stepped, not smooth: the original was frames swapped in sequence, and an
+	 * eased rotation reads as a modern spinner instead. */
+	animation: mac-chase 0.8s steps(8) infinite;
+}
+
+@keyframes mac-chase {
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+/* ==========================================================================
+ * Disclosure triangle
+ *
+ * Drawn with borders rather than a glyph, so it stays crisp at any size and
+ * needs no font. Behaviour lives in the `disclosure` module.
+ * ========================================================================== */
+
+.mac-disclosure {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--spacing-1);
+	padding: 0;
+	background: none;
+	border: none;
+	font-family: var(--font-system);
+	font-size: var(--font-size-md);
+	color: var(--color-text);
+	cursor: pointer;
+	text-align: left;
+}
+
+.mac-disclosure:focus-visible {
+	outline: var(--border-width-thin) dotted var(--color-focus);
+	outline-offset: 2px;
+}
+
+.mac-disclosure__triangle {
+	display: inline-block;
+	flex: 0 0 auto;
+	width: 0;
+	height: 0;
+	border-style: solid;
+	border-width: 5px 0 5px 8px;
+	border-color: transparent transparent transparent var(--color-foreground);
+	/* Mac OS 9 rotated the triangle rather than swapping two glyphs. */
+	transform-origin: 30% 50%;
+	transition: transform var(--transition-fast) var(--transition-timing-ease-out);
+}
+
+.mac-disclosure[aria-expanded='true'] .mac-disclosure__triangle {
+	transform: rotate(90deg);
+}
+
+/* ==========================================================================
+ * Little arrows
+ * ========================================================================== */
+
+.mac-littlearrows {
+	display: inline-flex;
+	flex-direction: column;
+	flex: 0 0 auto;
+	line-height: 0;
+}
+
+.mac-littlearrows__arrow {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 13px;
+	height: 9px;
+	padding: 0;
+	background-color: var(--color-background);
+	border: var(--border-width-thin) solid var(--color-border);
+	box-shadow: var(--shadow-bevel);
+	cursor: pointer;
+}
+
+/* The pair reads as one object cut in half, so the seam is a single line. */
+.mac-littlearrows__arrow:first-child {
+	border-bottom-width: 0;
+}
+
+.mac-littlearrows__arrow:active:not(:disabled) {
+	background-color: var(--color-gray-300);
+	box-shadow: var(--shadow-inset);
+}
+
+.mac-littlearrows__arrow:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.mac-littlearrows__arrow::before {
+	content: '';
+	display: block;
+	width: 0;
+	height: 0;
+	border-style: solid;
+	border-color: transparent;
+}
+
+.mac-littlearrows__arrow:first-child::before {
+	border-width: 0 4px 4px 4px;
+	border-bottom-color: var(--color-foreground);
+}
+
+.mac-littlearrows__arrow:last-child::before {
+	border-width: 4px 4px 0 4px;
+	border-top-color: var(--color-foreground);
+}
+
+/* ==========================================================================
+ * Menu — shared by menu bars and contextual menus
+ * ========================================================================== */
+
+.mac-menu {
+	min-width: 140px;
+	padding: var(--spacing-px) 0;
+	background-color: var(--menu-bg);
+	border: var(--border-width-thin) solid var(--color-border);
+	box-shadow: var(--shadow-drop);
+	font-family: var(--font-system);
+	font-size: var(--font-size-md);
+	color: var(--menu-text);
+}
+
+.mac-menu:focus {
+	outline: none;
+}
+
+.mac-menuitem {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--spacing-4);
+	padding: var(--spacing-px) var(--spacing-3);
+	cursor: default;
+	white-space: nowrap;
+}
+
+/* Mac OS 9 tracked the highlight with the pointer and the arrow keys alike,
+ * as one state rather than separate hover and focus styles. */
+.mac-menuitem[data-active='true'] {
+	background-color: var(--menu-highlight-bg);
+	color: var(--menu-highlight-text);
+}
+
+.mac-menuitem[aria-disabled='true'] {
+	color: var(--color-gray-500);
+	cursor: not-allowed;
+}
+
+.mac-menuitem[aria-disabled='true'][data-active='true'] {
+	background-color: transparent;
+	color: var(--color-gray-500);
+}
+
+.mac-menuitem__shortcut {
+	opacity: 0.7;
+}
+
+.mac-menu__separator {
+	height: 1px;
+	margin: var(--spacing-px) 0;
+	background-color: var(--color-border);
+}
+
+/* ==========================================================================
+ * Balloon help
+ * ========================================================================== */
+
+.mac-balloon {
+	position: absolute;
+	z-index: var(--z-index-tooltip);
+	max-width: 220px;
+	width: max-content;
+	padding: var(--spacing-2) var(--spacing-3);
+	background-color: var(--color-gray-100);
+	border: var(--border-width-thin) solid var(--color-foreground);
+	border-radius: var(--border-radius-lg);
+	font-family: var(--font-system);
+	font-size: var(--font-size-sm);
+	line-height: var(--line-height-normal);
+	color: var(--color-foreground);
+	/* A balloon is commentary on something else; it must never swallow the
+	 * pointer that is hovering the thing it describes. */
+	pointer-events: none;
+}
+
+/* The tail is two triangles: the outline, and the fill 1px inside it, which is
+ * how the balloon's border appears to continue around the point. */
+.mac-balloon::before,
+.mac-balloon::after {
+	content: '';
+	position: absolute;
+	width: 0;
+	height: 0;
+	border: 7px solid transparent;
+}
+
+.mac-balloon::before {
+	bottom: 100%;
+	left: 16px;
+	border-bottom-color: var(--color-foreground);
+}
+
+.mac-balloon::after {
+	bottom: calc(100% - 1px);
+	left: 16px;
+	border-bottom-color: var(--color-gray-100);
+}
+
+/* ==========================================================================
+ * Window chrome
+ * ========================================================================== */
+
+.mac-window {
+	display: flex;
+	flex-direction: column;
+	background-color: var(--window-bg);
+	border: var(--border-width-thin) solid var(--window-border);
+	box-shadow: var(--shadow-float);
+}
+
+.mac-window__titlebar {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-1);
+	min-height: 20px;
+	padding: 0 var(--spacing-1);
+	background-color: var(--window-titlebar-bg);
+	border-bottom: var(--border-width-thin) solid var(--color-border);
+	font-family: var(--font-system);
+	font-size: var(--font-size-sm);
+	font-weight: var(--font-weight-bold);
+	color: var(--window-titlebar-text);
+}
+
+.mac-window__title {
+	flex: 1 1 auto;
+	text-align: center;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.mac-window__box {
+	flex: 0 0 auto;
+	width: 11px;
+	height: 11px;
+	padding: 0;
+	background-color: var(--color-background);
+	border: var(--border-width-thin) solid var(--color-border);
+	box-shadow: var(--shadow-bevel);
+	cursor: pointer;
+}
+
+.mac-window__box:active {
+	box-shadow: var(--shadow-inset);
+}
+
+.mac-window__body {
+	flex: 1 1 auto;
+	padding: var(--spacing-3);
+}
+
+/* ==========================================================================
+ * Reduced motion and high contrast
+ *
+ * Applied once, across the layer, rather than per component.
+ * ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+	.mac-progress__bar--indeterminate {
+		animation: none;
+	}
+
+	.mac-disclosure__triangle {
+		transition: none;
+	}
+
+	/* The chasing wheel's animation IS the control, so it cannot simply stop —
+	 * a frozen wheel reads as work that has stalled. Pulse instead. */
+	.mac-chasing {
+		animation: mac-breathe 1.6s ease-in-out infinite;
+	}
+
+	@keyframes mac-breathe {
+		0%,
+		100% {
+			opacity: 0.3;
+		}
+		50% {
+			opacity: 1;
+		}
+	}
+}
+
+@media (prefers-contrast: high) {
+	.mac-bevel,
+	.mac-button,
+	.mac-bevelbutton,
+	.mac-placard,
+	.mac-well,
+	.mac-windowheader,
+	.mac-littlearrows__arrow {
+		box-shadow: none;
+		border-width: var(--border-width-medium);
+		border-color: var(--color-foreground);
+	}
+
+	.mac-menuitem[data-active='true'],
+	.mac-bevelbutton[aria-pressed='true'],
+	.mac-bevelbutton[aria-checked='true'] {
+		background-color: var(--color-foreground);
+		color: var(--color-background);
+	}
+}

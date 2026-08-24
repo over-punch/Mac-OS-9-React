@@ -27,7 +27,18 @@
 		"./webfonts": "./dist/webfonts.css",
 		"./base": "./dist/base.css",
 		"./fonts/*": "./dist/fonts/*",
-		"./package.json": "./package.json"
+		"./package.json": "./package.json",
+		"./platinum": {
+			"import": {
+				"types": "./dist/types/platinum/index.d.ts",
+				"default": "./dist/platinum/index.js"
+			},
+			"require": {
+				"types": "./dist/types/platinum/index.d.ts",
+				"default": "./dist/cjs/platinum/index.cjs"
+			}
+		},
+		"./platinum.css": "./dist/platinum.css"
 	},
 	"files": [
 		"dist",

@@ -1,34 +1,83 @@
 # Using the look without React
 
-The README's position is that this library's value is the behaviour, not the
-paint, and that the component class names are not a public API — they are
-content-hashed by CSS Modules and change between builds. That has not changed.
-
-What follows is the other half of that argument, done rather than asserted:
-the actual CSS for the controls that are **only** paint, written against the
-published tokens, so a Vue, Svelte, Astro or plain-HTML project can have them
-without pulling in React.
-
-```html
-<link rel="stylesheet" href="node_modules/@liiift-studio/mac-os9-ui/dist/tokens.css" />
-<link rel="stylesheet" href="node_modules/@liiift-studio/mac-os9-ui/dist/base.css" />
-```
-
-Or from a bundler:
+There is a published, framework-agnostic layer. You do not have to copy CSS out
+of this document any more.
 
 ```js
 import '@liiift-studio/mac-os9-ui/tokens';
-import '@liiift-studio/mac-os9-ui/base';
+import '@liiift-studio/mac-os9-ui/platinum.css';
+import { disclosure, menu, balloon, stepper } from '@liiift-studio/mac-os9-ui/platinum';
 ```
 
-Both entry points are framework-neutral, versioned and supported. Everything
-below builds on those tokens only — no class from the package is referenced.
+Two halves, and the second is the point.
 
-Every token used here is asserted to exist in the published `tokens.css` by
-`src/test/without-react.test.ts`, so these recipes cannot quietly rot when a
-token is renamed.
+**`platinum.css`** is the paint: hand-written class names, all prefixed `mac-`,
+every value from the design tokens. Unlike the CSS-module names the React
+components use — which are content-hashed and change every build — **these are
+a public API.** They are versioned with the package, and renaming one is a
+breaking change. `src/test/platinum.test.ts` holds the list, so that promise is
+enforced rather than merely stated.
+
+**`platinum`** is the behaviour: plain DOM modules, no framework, no
+dependencies, and no `"use client"` banner — the React build stamps one on
+every file it emits, and putting an RSC directive on framework-free code would
+be a lie about what it is. They attach to markup you write yourself, which is
+what keeps them usable from Vue, Svelte, Astro, htmx or a hand-written page.
+Each returns a handle with `destroy()`, so a framework's teardown has something
+to call.
+
+About 12 kB unminified for all four behaviours, and nothing imports React.
 
 ---
+
+## A worked example
+
+```html
+<button class="mac-disclosure" id="adv" aria-expanded="false" aria-controls="advanced">
+	<span class="mac-disclosure__triangle"></span>Advanced
+</button>
+<div id="advanced" hidden>…</div>
+```
+
+```js
+import { disclosure } from '@liiift-studio/mac-os9-ui/platinum';
+
+const handle = disclosure(document.getElementById('adv'));
+// handle.destroy() when the component unmounts.
+```
+
+The module toggles `aria-expanded` and the region's `hidden` — the second being
+the bit people forget, which leaves a collapsed region still reachable by Tab.
+It also adopts whatever state the markup already declares, so a server-rendered
+open section survives hydration instead of snapping shut.
+
+### The behaviours
+
+| Module                   | What it gives you                                                                                                           |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
+| `disclosure(button)`     | Toggle, kept in step with the region's `hidden`                                                                             |
+| `menu(element, opts)`    | Arrow navigation that skips separators and disabled items, Escape, outside-press dismissal, `data-active` for the highlight |
+| `balloon(trigger, opts)` | Opens on focus **and** hover, `aria-describedby` rather than a renamed trigger, Escape to dismiss                           |
+| `stepper(element, opts)` | Hold-to-repeat after a pause, and stopping when the pointer leaves                                                          |
+
+### The classes
+
+`mac-root` · `mac-text` · `mac-bevel` · `mac-well` · `mac-button` ·
+`mac-bevelbutton` · `mac-field` · `mac-input` · `mac-groupbox` ·
+`mac-separator` · `mac-windowheader` · `mac-placard` · `mac-progress` ·
+`mac-chasing` · `mac-disclosure` · `mac-littlearrows` · `mac-menu` ·
+`mac-menuitem` · `mac-balloon` · `mac-window`
+
+Reduced-motion and high-contrast answers are built into the layer, applied once
+across it rather than per component.
+
+---
+
+## Rolling your own instead
+
+If you would rather not take the layer, the recipes below are the same CSS
+written out, so you can lift just the parts you want. Every token they use is
+asserted to exist in the published `tokens.css`.
 
 ## What you can do with CSS alone
 
@@ -242,20 +291,23 @@ These are not harder versions of the above. Each one is a keyboard contract, a
 focus-management problem, or both, and a CSS-only version is not a simpler
 implementation — it is a broken one.
 
-| Control                                     | What CSS cannot give you                                                           |
-| ------------------------------------------- | ---------------------------------------------------------------------------------- |
-| `Window`                                    | Pointer _and_ keyboard drag and resize (WCAG 2.1.1), z-ordering across a stack     |
-| `Dialog`, `Alert`                           | Focus trap, scroll lock, focus restore on close, Escape across a stack             |
-| `MenuBar`, `MenuDropdown`, `ContextualMenu` | Roving tabindex, arrow navigation, dismiss on outside press, focus restore         |
-| `Select`                                    | A listbox with type-ahead — the native `<select>` cannot be styled into this shape |
-| `Tabs`                                      | Arrow-key navigation, `aria-controls` wiring, panel mounting                       |
-| `ListView`, `TreeView`                      | Selection model, shift-range, `aria-level`, expand and collapse                    |
-| `Scrollbar`                                 | Proportional thumb, drag maths, Page Up/Down                                       |
-| `Slider`                                    | Arrow/Page/Home/End, pointer capture, tick snapping                                |
-| `LittleArrows`                              | Hold-to-repeat, and stopping when the pointer leaves the button                    |
-| `DisclosureTriangle`                        | `aria-expanded` on the thing it actually controls                                  |
-| `BalloonHelp`                               | Open on focus as well as hover, Escape to dismiss, `aria-describedby`              |
-| `ClockControl`                              | Segment selection, wrapping, and keeping display and value apart                   |
+Four of them now have framework-free implementations in `platinum`, marked
+below. The rest are still React-only.
+
+| Control                                                    | What CSS cannot give you                                                           |
+| ---------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `Window`                                                   | Pointer _and_ keyboard drag and resize (WCAG 2.1.1), z-ordering across a stack     |
+| `Dialog`, `Alert`                                          | Focus trap, scroll lock, focus restore on close, Escape across a stack             |
+| `MenuBar`, `MenuDropdown`, `ContextualMenu` **— `menu()`** | Roving tabindex, arrow navigation, dismiss on outside press, focus restore         |
+| `Select`                                                   | A listbox with type-ahead — the native `<select>` cannot be styled into this shape |
+| `Tabs`                                                     | Arrow-key navigation, `aria-controls` wiring, panel mounting                       |
+| `ListView`, `TreeView`                                     | Selection model, shift-range, `aria-level`, expand and collapse                    |
+| `Scrollbar`                                                | Proportional thumb, drag maths, Page Up/Down                                       |
+| `Slider`                                                   | Arrow/Page/Home/End, pointer capture, tick snapping                                |
+| `LittleArrows`                                             | Hold-to-repeat, and stopping when the pointer leaves the button                    |
+| `DisclosureTriangle`                                       | `aria-expanded` on the thing it actually controls                                  |
+| `BalloonHelp`                                              | Open on focus as well as hover, Escape to dismiss, `aria-describedby`              |
+| `ClockControl`                                             | Segment selection, wrapping, and keeping display and value apart                   |
 
 The `:checked` and `:has()` tricks that fake some of these produce controls
 that look right and announce wrong. A checkbox hack driving a "menu" is still
@@ -265,12 +317,17 @@ a checkbox to a screen reader.
 
 ## The honest summary
 
-If you want the **look**, everything above is real and supported, and the
-tokens are versioned so it will keep matching.
+If you want the **look**, take `platinum.css`. The class names are versioned
+and will keep matching.
 
-If you want the **controls**, the behaviour is the product. Reimplementing a
-focus trap or a roving tabindex in another framework is a genuine piece of
-work, and it is the piece this library exists to have already done.
+If you want the **simple controls** — disclosure, menus, balloons, steppers —
+take `platinum` too. They are framework-free and tested against real DOM with
+no React in the test file at all.
+
+If you want the **hard controls** — the focus trap, the roving tabindex, the
+listbox with type-ahead, the tree — those are still React-only, and that is
+where most of the work in this library actually is. Reimplementing them is a
+genuine piece of engineering, not a styling exercise.
 
 See [PITFALLS.md](../PITFALLS.md) for the specific ways these have gone wrong
 here, which is a reasonable list of what to get right if you do rebuild them.

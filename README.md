@@ -401,27 +401,36 @@ This needs to be done only once at the root of your application. All components 
 
 ### Entry points
 
-| Import                               | What you get                                                  |
-| ------------------------------------ | ------------------------------------------------------------- |
-| `@liiift-studio/mac-os9-ui/styles`   | Everything: tokens, `@font-face`, component styles, utilities |
-| `@liiift-studio/mac-os9-ui/tokens`   | Design tokens only — no `@font-face`, no font downloads       |
-| `@liiift-studio/mac-os9-ui/base`     | Optional global `html` / `body` / box-sizing styles           |
-| `@liiift-studio/mac-os9-ui/webfonts` | Opt-in Google Fonts for IBM Plex and EB Garamond              |
-| `@liiift-studio/mac-os9-ui/fonts/*`  | The raw font files                                            |
+| Import                                   | What you get                                                  |
+| ---------------------------------------- | ------------------------------------------------------------- |
+| `@liiift-studio/mac-os9-ui/styles`       | Everything: tokens, `@font-face`, component styles, utilities |
+| `@liiift-studio/mac-os9-ui/tokens`       | Design tokens only — no `@font-face`, no font downloads       |
+| `@liiift-studio/mac-os9-ui/base`         | Optional global `html` / `body` / box-sizing styles           |
+| `@liiift-studio/mac-os9-ui/webfonts`     | Opt-in Google Fonts for IBM Plex and EB Garamond              |
+| `@liiift-studio/mac-os9-ui/fonts/*`      | The raw font files                                            |
+| `@liiift-studio/mac-os9-ui/platinum.css` | The framework-agnostic paint: stable `mac-` class names       |
+| `@liiift-studio/mac-os9-ui/platinum`     | The framework-agnostic behaviour: plain DOM modules, no React |
 
 **Using the look without React.** The token entry point is framework-neutral and
 supported: `/tokens` is plain custom properties, and `/base` and `/webfonts` are
 plain CSS. Build a button in Vue, Svelte or hand-written HTML against
 `--color-surface`, `--border-width-thin` and the rest, and it will match.
 
-The component _class names_ are not a public API. They come from CSS Modules and
-are content-hashed, so they change between builds — targeting them will break on
-any release. That is deliberate rather than an oversight: what this library
-actually provides is the behaviour, not the paint. A CSS-only button is a div
-that looks right; `Button` is a control that stays a real `<button>`, resolves
-its accessible name, blocks clicks while loading, and refuses to become a link
-without an `href`. Shipping the paint alone would hand you the half we think
-matters least while implying you had both.
+The React components' _class names_ are not a public API. They come from CSS
+Modules and are content-hashed, so they change between builds — targeting them
+will break on any release.
+
+`platinum.css` is the opposite: hand-written `mac-` class names that **are** a
+public API, versioned with the package, with the list held in a test so renaming
+one has to be a deliberate breaking change.
+
+It ships with `platinum`, the behaviour half, because paint alone is the half
+that matters least — a div that looks like a button is not a button. Those
+modules are plain DOM code with no framework, no dependencies and no
+`"use client"` banner, covering disclosure, menus, balloon help and steppers.
+The harder controls — the focus trap, the roving tabindex, the listbox with
+type-ahead, the tree — remain React-only, and that is stated plainly rather than
+implied away.
 
 If you want the look in another framework,
 **[docs/without-react.md](./docs/without-react.md)** has the twenty lines

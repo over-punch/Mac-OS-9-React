@@ -208,7 +208,9 @@ export default [
 	//   ./base      global html/body element styles (opt in)
 	//   ./tokens    design tokens only — no @font-face, no font downloads
 	//   ./webfonts  the Google Fonts request (opt in; not bundled by default)
-	...['base', 'tokens', 'webfonts'].map((name) => ({
+	//   ./platinum  the framework-agnostic layer: stable, hand-written class
+	//               names, paired with the behaviour modules at ./platinum
+	...['base', 'tokens', 'webfonts', 'platinum'].map((name) => ({
 		input: `src/styles/${name}.css`,
 		output: {
 			file: `dist/${name}.css`,
@@ -219,6 +221,40 @@ export default [
 				extract: true,
 				minimize: false,
 				sourceMap: false,
+			}),
+		],
+	})),
+
+	// The framework-agnostic behaviour layer.
+	//
+	// Built separately from the main bundle for one reason that matters: the
+	// React build stamps every file with a "use client" banner, and these
+	// modules are plain DOM code with no framework in them at all. Carrying an
+	// RSC directive would be a lie about what they are, and would make a
+	// server component refuse to import something it could import fine.
+	...[
+		{ dir: 'dist', format: 'esm', ext: 'js' },
+		{ dir: 'dist/cjs', format: 'cjs', ext: 'cjs' },
+	].map(({ dir, format, ext }) => ({
+		input: 'src/platinum/index.ts',
+		output: {
+			dir,
+			format,
+			preserveModules: true,
+			preserveModulesRoot: 'src',
+			entryFileNames: `[name].${ext}`,
+			sourcemap: false,
+			...(format === 'cjs' ? { exports: 'named' } : {}),
+		},
+		plugins: [
+			resolve(),
+			commonjs(),
+			typescript({
+				tsconfig: './tsconfig.json',
+				// The typecheck pass owns declaration emit; these only transpile.
+				declaration: false,
+				declarationMap: false,
+				exclude: ['**/*.test.ts', '**/*.test.tsx', '**/*.stories.tsx', 'src/test/**'],
 			}),
 		],
 	})),
