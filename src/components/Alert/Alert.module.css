@@ -1,0 +1,52 @@
+/* Alert Component Styles - Mac OS 9 */
+
+.alert {
+	font-family: var(--font-system);
+}
+
+/* Icon left, text right — the arrangement every Mac OS 9 alert used, and the
+ * reason severity is legible before a word is read. */
+.body {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--spacing-3);
+	padding: var(--spacing-4);
+}
+
+.icon {
+	flex: 0 0 auto;
+	display: inline-flex;
+	/* Optically aligns the glyph with the cap height of the heading rather
+	 * than its line box. */
+	margin-top: 1px;
+}
+
+.message {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-2);
+	min-width: 0;
+}
+
+.heading {
+	margin: 0;
+	font-size: var(--font-size-md);
+	font-weight: var(--font-weight-bold);
+	line-height: var(--line-height-snug);
+	color: var(--color-text);
+}
+
+.detail {
+	margin: 0;
+	font-size: var(--font-size-sm);
+	line-height: var(--line-height-normal);
+	color: var(--color-text);
+}
+
+/* Bottom-right, default rightmost. */
+.actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: var(--spacing-2);
+	padding: 0 var(--spacing-4) var(--spacing-4);
+}

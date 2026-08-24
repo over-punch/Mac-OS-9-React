@@ -23,12 +23,15 @@ const COMPONENTS_DIR = join(process.cwd(), 'src/components');
 const PRIMITIVES = [
 	'Button',
 	'Checkbox',
+	'DisclosureTriangle',
 	'Icon',
 	'ListView',
 	'MenuBar',
 	'Radio',
+	'Progress',
 	'Scrollbar',
 	'Select',
+	'Separator',
 	'Tabs',
 	'TextField',
 	'WindowManager',
@@ -41,6 +44,9 @@ const PRIMITIVES = [
 const COMPOUNDS: Record<string, readonly string[]> = {
 	Window: ['WindowManager'],
 	Dialog: ['Window'],
+	// Alert is the Mac OS 9 alert arrangement over Dialog — icon, message,
+	// buttons bottom-right — not a second modal implementation.
+	Alert: ['Dialog', 'Button', 'Icon'],
 	FolderList: ['ListView', 'Window'],
 	IconButton: ['Button'],
 };

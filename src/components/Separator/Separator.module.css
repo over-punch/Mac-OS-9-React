@@ -1,0 +1,35 @@
+/* Separator Component Styles - Mac OS 9 */
+
+/* Two lines, not one. The dark line is the cut and the light line beneath is
+ * the light catching its lower edge — together they read as engraved. */
+.separator {
+	flex: 0 0 auto;
+	border: none;
+	background: none;
+}
+
+.separator--horizontal {
+	width: 100%;
+	height: 2px;
+	border-top: var(--border-width-thin) solid var(--color-border-inset);
+	border-bottom: var(--border-width-thin) solid var(--color-gray-100);
+}
+
+.separator--vertical {
+	align-self: stretch;
+	width: 2px;
+	border-left: var(--border-width-thin) solid var(--color-border-inset);
+	border-right: var(--border-width-thin) solid var(--color-gray-100);
+}
+
+@media (prefers-contrast: high) {
+	.separator--horizontal {
+		border-top-color: var(--color-foreground);
+		border-bottom-color: transparent;
+	}
+
+	.separator--vertical {
+		border-left-color: var(--color-foreground);
+		border-right-color: transparent;
+	}
+}

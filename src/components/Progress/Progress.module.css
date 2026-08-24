@@ -1,0 +1,110 @@
+/* Progress Component Styles - Mac OS 9 */
+
+.progress {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-1);
+	width: 100%;
+	font-family: var(--font-system);
+}
+
+.header {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: var(--spacing-2);
+	font-size: var(--font-size-sm);
+	color: var(--color-text);
+}
+
+.labelText {
+	font-weight: var(--font-weight-normal);
+}
+
+.value {
+	font-variant-numeric: tabular-nums;
+	color: var(--color-gray-600);
+}
+
+/* The track is a sunken well, the same recess the scrollbar and text field
+ * sit in — that is what makes the bar read as inset rather than painted on. */
+.track {
+	position: relative;
+	overflow: hidden;
+	width: 100%;
+	background-color: var(--color-surface-inset);
+	border: var(--border-width-thin) solid var(--color-border);
+	border-radius: var(--border-radius-none);
+	box-shadow: var(--shadow-inset);
+}
+
+.progress--sm .track {
+	height: 10px;
+}
+
+.progress--md .track {
+	height: 14px;
+}
+
+.progress--lg .track {
+	height: 18px;
+}
+
+.bar {
+	height: 100%;
+}
+
+/* Determinate: a solid fill in the highlight colour, with the same bevel the
+ * raised chrome uses so it reads as a physical bar filling a channel. */
+.bar--determinate {
+	background-color: var(--color-highlight);
+	box-shadow: var(--shadow-highlight);
+	/* No transition: Mac OS 9 had none, and an eased bar misreports progress
+	 * for the length of the ease. */
+	transition: none;
+}
+
+/* Indeterminate: the barber pole. Diagonal stripes marching along the track,
+ * which is what Mac OS 9 showed when the length of the work was unknown. */
+.bar--indeterminate {
+	width: 100%;
+	background-image: repeating-linear-gradient(
+		-45deg,
+		var(--color-highlight) 0,
+		var(--color-highlight) 6px,
+		var(--color-lavender) 6px,
+		var(--color-lavender) 12px
+	);
+	/* 17px is the diagonal repeat of a 12px band at 45 degrees, so the loop
+	 * lands exactly on the pattern and never visibly jumps. */
+	background-size: 17px 100%;
+	animation: barber-pole 0.6s linear infinite;
+}
+
+@keyframes barber-pole {
+	from {
+		background-position: 0 0;
+	}
+	to {
+		background-position: 17px 0;
+	}
+}
+
+/* Someone who has asked for less motion should not be given a permanently
+ * marching stripe. The pattern stays — it is what identifies the control as
+ * indeterminate — but it stops moving. */
+@media (prefers-reduced-motion: reduce) {
+	.bar--indeterminate {
+		animation: none;
+	}
+}
+
+@media (prefers-contrast: high) {
+	.track {
+		border-width: var(--border-width-medium);
+	}
+
+	.bar--determinate {
+		background-color: var(--color-foreground);
+	}
+}

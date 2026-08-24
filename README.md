@@ -106,6 +106,11 @@ the machine.
 - **TextField** - Single-line or `multiline` text input, with helper text and a live-region error slot
 - **Select** - A real `role="listbox"` popup with type-ahead, option groups, and a hidden input so native form submission still works
 
+### Feedback
+
+- **Progress** - Determinate bar, or the indeterminate barber pole when the length of the work is unknown. `value` decides which — there is no default, because a default would claim progress nobody measured
+- **Alert** - The Mac OS 9 alert arrangement over `Dialog`: severity icon, message, buttons bottom-right with the default rightmost. Renders as `role="alertdialog"`
+
 ### Layout & Chrome
 
 - **Window** - Classic Mac OS 9 window container. Optionally `draggable` and `resizable`, by pointer or arrow keys
@@ -119,6 +124,8 @@ the machine.
 - **ListView** - Multi-column list with sortable headers and selection, generic over the row type
 - **FolderList** - A Window with a ListView inside it, for file browsing
 - **Scrollbar** - Custom Mac OS 9 styled scrollbars
+- **DisclosureTriangle** - The expand triangle from Finder lists and dialog sections. A real `<button>` with `aria-expanded`, not a clickable span
+- **Separator** - The engraved rule. Decorative by default; opt into `role="separator"` when it genuinely divides
 
 ### Content
 
@@ -138,12 +145,14 @@ the machine.
 Every component works with defaults alone. These are the four where the useful
 setting is not the default, because it depends on something only you know.
 
-| Component   | Start with                                    | Then tune                                                                                                                            |
-| ----------- | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `Window`    | `draggable` on its own                        | Add `resizable` once the content can reflow; `boundary="none"` only if the window may leave its container                            |
-| `Scrollbar` | `viewportRatio={clientHeight / scrollHeight}` | There is deliberately **no default** — it sets both the thumb length and the Page Up/Down step, and omitting it warns in development |
-| `ListView`  | `columns` + `items` + `height`                | Add `onSelectionChange` for controlled selection, `onSort` once you have more rows than fit                                          |
-| `Tabs`      | `aria-label` + a `value` on each `TabPanel`   | The value is what makes the literal union survive into `onValueChange`; without it the index is the identity                         |
+| Component   | Start with                                                                 | Then tune                                                                                                                            |
+| ----------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `Window`    | `draggable` on its own                                                     | Add `resizable` once the content can reflow; `boundary="none"` only if the window may leave its container                            |
+| `Scrollbar` | `viewportRatio={clientHeight / scrollHeight}`                              | There is deliberately **no default** — it sets both the thumb length and the Page Up/Down step, and omitting it warns in development |
+| `ListView`  | `columns` + `items` + `height`                                             | Add `onSelectionChange` for controlled selection, `onSort` once you have more rows than fit                                          |
+| `Tabs`      | `aria-label` + a `value` on each `TabPanel`                                | The value is what makes the literal union survive into `onValueChange`; without it the index is the identity                         |
+| `Progress`  | `value` + `label` for a known length; **omit `value`** for the barber pole | Add `showValue` when the number itself matters; `max` when you are counting steps rather than percent                                |
+| `Alert`     | `severity`, `heading`, `onClose`                                           | Add `message` for detail, `cancelLabel` for a second button, `destructive` when the confirming action loses something                |
 
 ![Thirty-nine pixel-art icons on a Mac OS 9 desktop background, each labelled with its registry name: close, trash, search, folder, document, disk, arrows, alerts, media controls and more](https://raw.githubusercontent.com/Liiift-Studio/Mac-OS-9-React/main/assets/icons.png?v=1)
 

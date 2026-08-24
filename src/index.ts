@@ -25,6 +25,14 @@ export {
 } from './components/Icon';
 export { IconButton, type IconButtonProps, type IconButtonClasses } from './components/IconButton';
 export { Checkbox, type CheckboxProps, type CheckboxClasses } from './components/Checkbox';
+export { Alert, type AlertProps, type AlertClasses, type AlertSeverity } from './components/Alert';
+export {
+	DisclosureTriangle,
+	type DisclosureTriangleProps,
+	type DisclosureTriangleClasses,
+} from './components/DisclosureTriangle';
+export { Progress, type ProgressProps, type ProgressClasses } from './components/Progress';
+export { Separator, type SeparatorProps } from './components/Separator';
 export {
 	Radio,
 	RadioGroup,

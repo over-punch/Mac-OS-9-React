@@ -1,0 +1,79 @@
+/* DisclosureTriangle Component Styles - Mac OS 9 */
+
+.disclosure {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--spacing-1);
+	padding: 0;
+	font-family: var(--font-system);
+	font-size: var(--font-size-md);
+	color: var(--color-text);
+	background: none;
+	border: none;
+	cursor: pointer;
+	text-align: left;
+}
+
+.disclosure:focus-visible {
+	outline: var(--border-width-thin) dotted var(--color-focus);
+	outline-offset: 2px;
+}
+
+.disclosure:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+/* The triangle is drawn with borders rather than a glyph so it stays crisp at
+ * any size and needs no font to be loaded. */
+.triangle {
+	display: inline-block;
+	flex: 0 0 auto;
+	width: 0;
+	height: 0;
+	border-style: solid;
+	border-color: transparent transparent transparent var(--color-foreground);
+	/* Mac OS 9 rotated the triangle rather than swapping two glyphs. */
+	transform-origin: 30% 50%;
+	transition: transform var(--transition-fast) var(--transition-timing-ease-out);
+}
+
+.triangle--expanded {
+	transform: rotate(90deg);
+}
+
+.disclosure--sm {
+	font-size: var(--font-size-sm);
+}
+
+.disclosure--sm .triangle {
+	border-width: 4px 0 4px 6px;
+}
+
+.disclosure--md .triangle {
+	border-width: 5px 0 5px 8px;
+}
+
+.disclosure--lg {
+	font-size: var(--font-size-lg);
+}
+
+.disclosure--lg .triangle {
+	border-width: 6px 0 6px 9px;
+}
+
+/* A rotation is motion. Someone who asked for less of it still needs to see
+ * which state the control is in, so the rotation lands instantly rather than
+ * being removed. */
+@media (prefers-reduced-motion: reduce) {
+	.triangle {
+		transition: none;
+	}
+}
+
+@media (prefers-contrast: high) {
+	.disclosure:focus-visible {
+		outline-width: var(--border-width-medium);
+		outline-style: solid;
+	}
+}

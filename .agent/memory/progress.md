@@ -1,5 +1,25 @@
 # Progress: Mac OS 9 UI Component Library
 
+## 2026-08-23 — Progress, Alert, DisclosureTriangle, Separator
+
+Four controls added (PR #153): `Progress` (determinate bar and indeterminate
+barber pole), `Alert` (compound over `Dialog`, `role="alertdialog"`),
+`DisclosureTriangle` (a real button with `aria-expanded`) and `Separator` (the
+two-line engraved rule). 452 tests across React 18 and 19; axe-core clean.
+
+Fixed en route: `Alert` was rendering the media transport square for its `stop`
+severity instead of the circular stop-alert glyph. Guarded by two tests that
+were verified to fail against the old mapping.
+
+Figma kit gained four matching pages plus nine aliased Component-tier variables,
+and two existing pages were repaired — Checkbox's checked and mixed boxes had
+collapsed to slivers, and TextField's disabled variants were empty.
+
+Still outstanding, both needing the owner's hands:
+- The `NPM_TOKEN` GitHub secret is stale; CI releases fail until it is replaced.
+- `src/fonts/Pixel/*/*.otf` are not installed locally, so the kit's type ramp is
+  still the IBM Plex Sans stand-in.
+
 **Version:** 0.3.3 (unreleased changes on `main`)
 **Last synced:** 2026-08-20
 
