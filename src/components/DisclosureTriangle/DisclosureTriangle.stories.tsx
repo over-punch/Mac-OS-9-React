@@ -62,11 +62,7 @@ export const RevealingContent: Story = {
 					onExpandedChange={setOpen}
 					controls="sharing-panel"
 				/>
-				<div
-					id="sharing-panel"
-					hidden={!open}
-					style={{ padding: '8px 0 0 20px', fontSize: 12 }}
-				>
+				<div id="sharing-panel" hidden={!open} style={{ padding: '8px 0 0 20px', fontSize: 12 }}>
 					File sharing is off. Turn it on to let other computers see this Macintosh.
 				</div>
 			</div>
@@ -97,9 +93,7 @@ export const AsAnOutline: Story = {
 							expanded={open.includes('System Folder')}
 							onExpandedChange={() => toggle('System Folder')}
 						/>
-						{open.includes('System Folder') && (
-							<div style={{ paddingLeft: 20 }}>Extensions</div>
-						)}
+						{open.includes('System Folder') && <div style={{ paddingLeft: 20 }}>Extensions</div>}
 						<span style={{ paddingLeft: 14 }}>Applications</span>
 					</div>
 				)}

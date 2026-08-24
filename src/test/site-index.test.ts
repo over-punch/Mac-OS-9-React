@@ -77,3 +77,64 @@ describe('site component index', () => {
 		expect(ghosts, 'these are on the site but not exported from src/index.ts').toEqual([]);
 	});
 });
+
+describe('site story links', () => {
+	/**
+	 * Every `story:` id the index claims, and the story files that exist.
+	 *
+	 * Storybook derives a docs id from the meta `title` — 'Components/GroupBox'
+	 * becomes 'components-groupbox' — but only emits the `--docs` entry when
+	 * the meta carries `tags: ['autodocs']`, because .storybook/main.ts sets
+	 * `autodocs: 'tag'`. Miss the tag and the row still renders, still looks
+	 * clickable, and opens a Storybook 404. Nine of them nearly shipped.
+	 */
+	function storyFiles(): Map<string, string> {
+		const found = new Map<string, string>();
+		for (const dir of readdirSync(COMPONENTS_DIR)) {
+			const componentDir = join(COMPONENTS_DIR, dir);
+			if (!statSync(componentDir).isDirectory()) continue;
+			for (const file of readdirSync(componentDir)) {
+				if (!file.endsWith('.stories.tsx')) continue;
+				const src = readFileSync(join(componentDir, file), 'utf-8');
+				const title = /title:\s*'([^']+)'/.exec(src)?.[1];
+				if (title) found.set(title.toLowerCase().replace(/[^a-z0-9]+/g, '-'), src);
+			}
+		}
+		return found;
+	}
+
+	it('every story link points at a story that exists', () => {
+		const stories = storyFiles();
+		const claimed = [
+			...new Set(
+				[...readFileSync(DESKTOP, 'utf-8').matchAll(/\bstory: '([^']+)'/g)].map(
+					(m) => m[1] as string
+				)
+			),
+		];
+
+		const missing = claimed.filter((id) => !stories.has(id));
+
+		expect(missing, 'these story ids have no matching stories file').toEqual([]);
+	});
+
+	it('every linked story is tagged for autodocs', () => {
+		const stories = storyFiles();
+		const claimed = [
+			...new Set(
+				[...readFileSync(DESKTOP, 'utf-8').matchAll(/\bstory: '([^']+)'/g)].map(
+					(m) => m[1] as string
+				)
+			),
+		];
+
+		// The site links to the --docs page specifically, and that page only
+		// exists for a tagged story.
+		const untagged = claimed.filter((id) => {
+			const src = stories.get(id);
+			return src !== undefined && !src.includes("tags: ['autodocs']");
+		});
+
+		expect(untagged, "add tags: ['autodocs'] to these stories").toEqual([]);
+	});
+});

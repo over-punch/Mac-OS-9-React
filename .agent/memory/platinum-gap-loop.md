@@ -29,12 +29,12 @@ README entries, one changeset, site demo rows, Figma kit pages, `npm run measure
 | 2 | `WindowHeader` — Finder's "12 items, 1.2 GB available" bar | done |
 | 3 | `Slider` — with optional tick marks | done |
 | 4 | `LittleArrows` — the stacked up/down stepper | done |
-| 5 | `Placard` — sunken status nub by the horizontal scroll bar | todo |
-| 6 | `ImageWell` — image drop target | todo |
-| 7 | `ChasingArrows` — asynchronous arrows | todo |
-| 8 | `BevelButton` — push / radio / checkbox / pop-up behaviours | todo |
-| 9 | `ClockControl` — date-time field with little arrows | todo |
-| 10 | `Window` collapse/zoom naming — additive, deprecate old for 3.0 | todo |
+| 5 | `Placard` — sunken status nub by the horizontal scroll bar | done |
+| 6 | `ImageWell` — image drop target | done |
+| 7 | `ChasingArrows` — asynchronous arrows | done |
+| 8 | `BevelButton` — push / radio / checkbox / pop-up behaviours | done |
+| 9 | `ClockControl` — date-time field with little arrows | done |
+| 10 | `Window` collapse/zoom naming — additive, deprecate old for 3.0 | done |
 
 ## Reevaluate at the end
 

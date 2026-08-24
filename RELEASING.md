@@ -1,7 +1,7 @@
 # Releasing
 
 CI covers a lot: lint, typecheck of both programs, the library build, the site
-build, the Storybook build, 454 tests across React 18 and 19, and axe-core
+build, the Storybook build, 543 tests across React 18 and 19, and axe-core
 against every exported component on every run.
 
 This file is the part CI cannot do. Automated accessibility rules catch roughly

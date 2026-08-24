@@ -36,7 +36,7 @@ import { Window, Button } from '@liiift-studio/mac-os9-ui';
 - 🪶 **No runtime dependencies** - React and React DOM are the only peers
 - 🎚️ **Themeable** - every value is a CSS custom property, in three tiers
 - 📖 **Storybook Docs** - [browse every component](https://liiift-studio.github.io/Mac-OS-9-React/storybook/), interactively
-- 🧪 **Tested** - 454 tests, including an axe sweep over every rendering component and WCAG contrast assertions on the palette
+- 🧪 **Tested** - 543 tests, including an axe sweep over every rendering component and WCAG contrast assertions on the palette
 
 ![A Mac OS 9 menu bar with the File menu open showing New Folder, Open, Print and a checked Get Info item, beside a Macintosh HD window containing a sortable file list](https://raw.githubusercontent.com/Liiift-Studio/Mac-OS-9-React/main/assets/window.png?v=1)
 
@@ -47,10 +47,10 @@ import { Window, Button } from '@liiift-studio/mac-os9-ui';
 | **React**                | 18 or 19 — both are exercised by the test matrix in CI (`react` and `react-dom` are peer dependencies)                                                                                  |
 | **Runtime dependencies** | None                                                                                                                                                                                    |
 | **Module formats**       | ESM (`dist/index.js`) and CommonJS (`dist/index.cjs`)                                                                                                                                   |
-| **Bundle**               | 228 kB ESM, 57 kB gzipped for the whole library — but see tree-shaking below                                                                                                            |
-| **Stylesheet**           | 111 kB, 20 kB gzipped                                                                                                                                                                   |
+| **Bundle**               | 255 kB ESM, 63 kB gzipped for the whole library — but see tree-shaking below                                                                                                            |
+| **Stylesheet**           | 131 kB, 24 kB gzipped                                                                                                                                                                   |
 | **Fonts**                | 20 KB fetched by an ASCII page — the family is split into `latin` and `latin-ext` subsets with `unicode-range`, so only the parts your text needs are downloaded (49 KB of woff2 total) |
-| **Published tarball**    | 327 kB (988 kB unpacked)                                                                                                                                                                |
+| **Published tarball**    | 356 kB (1103 kB unpacked)                                                                                                                                                               |
 | **Types**                | Bundled `.d.ts` and `.d.cts`                                                                                                                                                            |
 
 ### Server components and `'use client'`
@@ -75,7 +75,7 @@ Import what you need from the package root; your bundler drops the rest.
 import { Button } from '@liiift-studio/mac-os9-ui';
 ```
 
-That produces about **3 KB** of JavaScript, against 83 kB for the whole
+That produces about **3 KB** of JavaScript, against 94 kB for the whole
 library. The package ships as preserved modules — one output file per source
 module, rather than a single flattened bundle — because a flattened bundle
 cannot be tree-shaken at all here: each component's `displayName` assignment is
@@ -102,6 +102,11 @@ the machine.
 - **Button** - Classic Mac OS 9 buttons. Variants `default` / `primary` / `danger`, sizes `sm` / `md` / `lg`, `loading`, `leftIcon` / `rightIcon`, `iconOnly`, and polymorphism via `as="a"` or [`asChild`](#router-links-with-aschild)
 - **IconButton** - Icon button with an optional label in any of four positions
 - **Checkbox** - Mac OS 9 style checkboxes, including an indeterminate state
+- **Slider** - Value dragged along a track, with optional tick marks. Ticks are behaviour, not decoration: a ticked slider snaps to them
+- **LittleArrows** - The stacked up/down stepper, for driving the field beside it. Two buttons rather than one control with halves
+- **BevelButton** - A beveled surface that behaves as a push button, toggle, radio or pop-up. The behaviour picks the semantics
+- **ImageWell** - A sunken well you can drop a picture into. A button first, so it works without a pointer
+- **ClockControl** - Time field edited a segment at a time, with one pair of arrows driving the selected segment
 - **Radio** / **RadioGroup** - Radio buttons; the group adds `role="radiogroup"` and arrow-key navigation
 - **TextField** - Single-line or `multiline` text input, with helper text and a live-region error slot
 - **Select** - A real `role="listbox"` popup with type-ahead, option groups, and a hidden input so native form submission still works
@@ -109,6 +114,7 @@ the machine.
 ### Feedback
 
 - **Progress** - Determinate bar, or the indeterminate barber pole when the length of the work is unknown. `value` decides which — there is no default, because a default would claim progress nobody measured
+- **ChasingArrows** - Apple's asynchronous arrows, for background work with no dialog to hold a progress bar. Claims no progress value, and pulses rather than freezing under `prefers-reduced-motion`
 - **Alert** - The Mac OS 9 alert arrangement over `Dialog`: severity icon, message, buttons bottom-right with the default rightmost. Renders as `role="alertdialog"`
 
 ### Layout & Chrome
@@ -125,6 +131,9 @@ the machine.
 - **FolderList** - A Window with a ListView inside it, for file browsing
 - **Scrollbar** - Custom Mac OS 9 styled scrollbars
 - **DisclosureTriangle** - The expand triangle from Finder lists and dialog sections. A real `<button>` with `aria-expanded`, not a clickable span
+- **GroupBox** - The etched border that groups related settings, in the HIG's two weights and all four title modes. A real `fieldset`, so the grouping reaches assistive tech
+- **WindowHeader** - Finder's "12 items, 1.2 GB available" bar. Pointedly not a heading
+- **Placard** - The sunken status nub beside the horizontal scroll bar. Only a button when you give it an action
 - **Separator** - The engraved rule. Decorative by default; opt into `role="separator"` when it genuinely divides
 
 ### Content
@@ -152,6 +161,8 @@ setting is not the default, because it depends on something only you know.
 | `ListView`  | `columns` + `items` + `height`                                             | Add `onSelectionChange` for controlled selection, `onSort` once you have more rows than fit                                          |
 | `Tabs`      | `aria-label` + a `value` on each `TabPanel`                                | The value is what makes the literal union survive into `onValueChange`; without it the index is the identity                         |
 | `Progress`  | `value` + `label` for a known length; **omit `value`** for the barber pole | Add `showValue` when the number itself matters; `max` when you are counting steps rather than percent                                |
+| `Slider`    | `label` + `value`/`defaultValue`                                           | Add `ticks` to make the values discrete; `valueText` where a bare number would not communicate                                       |
+| `GroupBox`  | `title` and the controls inside                                            | Use `control` for a checkbox or select title; `variant="secondary"` only for nesting                                                 |
 | `Alert`     | `severity`, `heading`, `onClose`                                           | Add `message` for detail, `cancelLabel` for a second button, `destructive` when the confirming action loses something                |
 
 ![Thirty-nine pixel-art icons on a Mac OS 9 desktop background, each labelled with its registry name: close, trash, search, folder, document, disk, arrows, alerts, media controls and more](https://raw.githubusercontent.com/Liiift-Studio/Mac-OS-9-React/main/assets/icons.png?v=1)

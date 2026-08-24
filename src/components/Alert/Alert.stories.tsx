@@ -66,7 +66,10 @@ export const Severities: Story = {
 			stop: ['The disk could not be ejected.', 'One or more files are still in use.'],
 			caution: ['Are you sure you want to empty the Trash?', 'It contains 42 items.'],
 			note: ['Your settings have been saved.', undefined],
-			question: ['Do you want to save changes before closing?', 'Your changes will be lost otherwise.'],
+			question: [
+				'Do you want to save changes before closing?',
+				'Your changes will be lost otherwise.',
+			],
 		} as const;
 
 		return (
