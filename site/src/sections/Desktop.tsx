@@ -616,7 +616,7 @@ export function Desktop() {
 									{/* Determinate and indeterminate side by side, because the
 									    difference between them is the whole API. */}
 									<Progress value={62} max={100} label="Copying files" showValue />
-									<Progress aria-label="Connecting to server" />
+									<Progress label="Connecting to server" />
 
 									<Separator />
 

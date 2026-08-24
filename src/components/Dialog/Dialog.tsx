@@ -307,6 +307,21 @@ export const Dialog = forwardRef<HTMLDivElement, DialogProps>(
 		const titleProp = (windowProps as { title?: React.ReactNode }).title;
 		const resolvedAriaLabel = label ?? (typeof titleProp === 'string' ? titleProp : undefined);
 
+		// Remember who had focus BEFORE anything in this dialog takes it.
+		//
+		// This has to be a layout effect, and it has to be declared above the
+		// initial-focus effect below: React runs all layout effects before any
+		// passive effect, and runs them in declaration order. Capturing this in
+		// a passive effect meant initialFocus had already moved focus into the
+		// dialog, so what got saved was the dialog's own button — detached by
+		// the time restore ran, so `isConnected` was false and focus silently
+		// fell to <body>.
+		useLayoutEffect(() => {
+			if (!open) return;
+			previousActiveElement.current =
+				document.activeElement instanceof HTMLElement ? document.activeElement : null;
+		}, [open]);
+
 		// Push/pop the dialog onto the stack and lock body scroll while open.
 		// Combining these into one effect ensures they unwind in the right
 		// order on close and avoids races with the other effects below.
@@ -315,8 +330,6 @@ export const Dialog = forwardRef<HTMLDivElement, DialogProps>(
 			const node = dialogRef.current;
 			if (!node) return;
 
-			previousActiveElement.current =
-				document.activeElement instanceof HTMLElement ? document.activeElement : null;
 			dialogStack.push(node);
 			lockBodyScroll();
 

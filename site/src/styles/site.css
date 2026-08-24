@@ -458,6 +458,18 @@ a {
 	gap: var(--spacing-2);
 }
 
+/* The region a DisclosureTriangle reveals. Without a layout of its own the
+ * children collapse into a row and overlap — the checkbox label ran under the
+ * Erase Disk button on the deployed site. */
+.pane__disclosure {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: var(--spacing-2);
+	/* Indented to the triangle's text, so the region reads as belonging to it. */
+	padding-left: var(--spacing-4);
+}
+
 .installRow {
 	display: flex;
 	align-items: flex-end;

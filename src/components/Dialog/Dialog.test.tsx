@@ -380,4 +380,62 @@ describe('classes', () => {
 		expect(document.querySelector('.my-backdrop')).not.toBeNull();
 		expect(document.querySelector('.my-title-bar')).not.toBeNull();
 	});
+
+	describe('focus restore', () => {
+		/** A trigger that opens a dialog, so closing has somewhere to go back to. */
+		function Harness({ initialFocus }: { initialFocus?: string }) {
+			const [open, setOpen] = useState(false);
+			return (
+				<>
+					<button type="button" onClick={() => setOpen(true)}>
+						Open
+					</button>
+					<Dialog
+						open={open}
+						title="Confirm"
+						onClose={() => setOpen(false)}
+						initialFocus={initialFocus}
+					>
+						<button type="button" data-confirm="">
+							Erase
+						</button>
+					</Dialog>
+				</>
+			);
+		}
+
+		it('returns focus to the trigger on close', async () => {
+			const user = userEvent.setup();
+			render(<Harness />);
+
+			const trigger = screen.getByRole('button', { name: 'Open' });
+			trigger.focus();
+			await user.click(trigger);
+			expect(screen.getByRole('dialog')).toBeInTheDocument();
+
+			await user.keyboard('{Escape}');
+
+			// Falling back to <body> drops a keyboard user at the top of the
+			// document with no way back to where they were.
+			expect(document.activeElement).toBe(trigger);
+		});
+
+		it('returns focus to the trigger even when initialFocus moved focus first', async () => {
+			const user = userEvent.setup();
+			render(<Harness initialFocus="[data-confirm]" />);
+
+			const trigger = screen.getByRole('button', { name: 'Open' });
+			trigger.focus();
+			await user.click(trigger);
+			// initialFocus runs in a layout effect, so it moves focus into the
+			// dialog before the open effect gets a chance to look at it. If the
+			// trigger is captured after that, what gets saved is the dialog's
+			// own button — which is unmounted by the time restore runs.
+			expect(screen.getByRole('button', { name: 'Erase' })).toHaveFocus();
+
+			await user.keyboard('{Escape}');
+
+			expect(document.activeElement).toBe(trigger);
+		});
+	});
 });
