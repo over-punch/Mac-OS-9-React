@@ -36,7 +36,7 @@ import { Window, Button } from '@liiift-studio/mac-os9-ui';
 - 🪶 **No runtime dependencies** - React and React DOM are the only peers
 - 🎚️ **Themeable** - every value is a CSS custom property, in three tiers
 - 📖 **Storybook Docs** - [browse every component](https://liiift-studio.github.io/Mac-OS-9-React/storybook/), interactively
-- 🧪 **Tested** - 247 tests, including an axe sweep over every rendering component and WCAG contrast assertions on the palette
+- 🧪 **Tested** - 454 tests, including an axe sweep over every rendering component and WCAG contrast assertions on the palette
 
 ![A Mac OS 9 menu bar with the File menu open showing New Folder, Open, Print and a checked Get Info item, beside a Macintosh HD window containing a sortable file list](https://raw.githubusercontent.com/Liiift-Studio/Mac-OS-9-React/main/assets/window.png?v=1)
 
@@ -47,10 +47,10 @@ import { Window, Button } from '@liiift-studio/mac-os9-ui';
 | **React**                | 18 or 19 — both are exercised by the test matrix in CI (`react` and `react-dom` are peer dependencies)                                                                                  |
 | **Runtime dependencies** | None                                                                                                                                                                                    |
 | **Module formats**       | ESM (`dist/index.js`) and CommonJS (`dist/index.cjs`)                                                                                                                                   |
-| **Bundle**               | 186 KB ESM, 46 KB gzipped for the whole library — but see tree-shaking below                                                                                                            |
-| **Stylesheet**           | 100 KB, 17 KB gzipped                                                                                                                                                                   |
+| **Bundle**               | 228 kB ESM, 57 kB gzipped for the whole library — but see tree-shaking below                                                                                                            |
+| **Stylesheet**           | 111 kB, 20 kB gzipped                                                                                                                                                                   |
 | **Fonts**                | 20 KB fetched by an ASCII page — the family is split into `latin` and `latin-ext` subsets with `unicode-range`, so only the parts your text needs are downloaded (49 KB of woff2 total) |
-| **Published tarball**    | 309 kB (932 kB unpacked)                                                                                                                                                                |
+| **Published tarball**    | 326 kB (987 kB unpacked)                                                                                                                                                                |
 | **Types**                | Bundled `.d.ts` and `.d.cts`                                                                                                                                                            |
 
 ### Server components and `'use client'`
@@ -75,12 +75,12 @@ Import what you need from the package root; your bundler drops the rest.
 import { Button } from '@liiift-studio/mac-os9-ui';
 ```
 
-That produces about **3 KB** of JavaScript, against 77 KB for the whole
+That produces about **3 KB** of JavaScript, against 83 kB for the whole
 library. The package ships as preserved modules — one output file per source
 module, rather than a single flattened bundle — because a flattened bundle
 cannot be tree-shaken at all here: each component's `displayName` assignment is
 a top-level statement referencing it, so nothing could be dropped and a
-Button-only import pulled 69 KB. `sideEffects` is scoped to CSS, so only the
+Button-only import pulled the entire library. `sideEffects` is scoped to CSS, so only the
 stylesheet is treated as unconditional.
 
 There are no deep subpath entry points, and they would not buy anything: the

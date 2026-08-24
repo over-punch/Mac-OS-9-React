@@ -1,7 +1,7 @@
 # Releasing
 
 CI covers a lot: lint, typecheck of both programs, the library build, the site
-build, the Storybook build, 412 tests across React 18 and 19, and axe-core
+build, the Storybook build, 454 tests across React 18 and 19, and axe-core
 against every exported component on every run.
 
 This file is the part CI cannot do. Automated accessibility rules catch roughly
@@ -39,7 +39,10 @@ Run before any minor or major. Nothing here is checkable by axe.
 ## Content
 
 - [ ] Every number in the README was measured on this build, not carried over.
-      Bundle sizes, tarball size, icon count, test count.
+      Run `npm run measure` after `npm run build` — it prints the bundle,
+      stylesheet and tarball sizes, the tree-shaking figures and the icon
+      count. Do not type any of them from memory. The test count comes from
+      `npm test`.
 - [ ] Every link in the site's menus goes somewhere that exists. Click all of
       them; three of them silently did nothing once.
 - [ ] Every code sample in the README is in `src/__readme_check__/snippets.tsx`
@@ -49,7 +52,9 @@ Run before any minor or major. Nothing here is checkable by axe.
 
 ## Package
 
-- [ ] `dist/` contains `index.js`, `index.cjs`, `index.d.ts` and `index.d.cts`.
+- [ ] `dist/` contains `index.js`, `index.d.ts` and `index.d.cts`, and
+      `dist/cjs/index.cjs` — the CJS build is nested, and the `exports` map
+      points there. The checklist said `dist/index.cjs` for three releases.
 - [ ] `files` is still `["dist", "README.md", "LICENSE", "ATTRIBUTION.md"]` —
       `assets/` and `site/` must not be in the tarball.
 - [ ] `dependencies` is still empty. Anything new belongs in `peerDependencies`

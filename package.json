@@ -1,6 +1,6 @@
 {
 	"name": "@liiift-studio/mac-os9-ui",
-	"version": "2.1.1",
+	"version": "2.2.0",
 	"description": "A pixel-perfect Mac OS 9 UI component library for React and TypeScript",
 	"private": false,
 	"sideEffects": [
@@ -54,7 +54,8 @@
 		"changeset": "changeset",
 		"version": "changeset version",
 		"release": "npm run build && changeset publish",
-		"prepublishOnly": "npm run build"
+		"prepublishOnly": "npm run build",
+		"measure": "node scripts/measure.mjs"
 	},
 	"peerDependencies": {
 		"react": "^18.0.0 || ^19.0.0",
