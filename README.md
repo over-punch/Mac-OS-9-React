@@ -36,7 +36,7 @@ import { Window, Button } from '@liiift-studio/mac-os9-ui';
 - 🪶 **No runtime dependencies** - React and React DOM are the only peers
 - 🎚️ **Themeable** - every value is a CSS custom property, in three tiers
 - 📖 **Storybook Docs** - [browse every component](https://liiift-studio.github.io/Mac-OS-9-React/storybook/), interactively
-- 🧪 **Tested** - 584 tests, including an axe sweep over every rendering component and WCAG contrast assertions on the palette
+- 🧪 **Tested** - 623 tests, including an axe sweep over every rendering component and WCAG contrast assertions on the palette
 
 ![A Mac OS 9 menu bar with the File menu open showing New Folder, Open, Print and a checked Get Info item, beside a Macintosh HD window containing a sortable file list](https://raw.githubusercontent.com/Liiift-Studio/Mac-OS-9-React/main/assets/window.png?v=1)
 
@@ -47,10 +47,10 @@ import { Window, Button } from '@liiift-studio/mac-os9-ui';
 | **React**                | 18 or 19 — both are exercised by the test matrix in CI (`react` and `react-dom` are peer dependencies)                                                                                  |
 | **Runtime dependencies** | None                                                                                                                                                                                    |
 | **Module formats**       | ESM (`dist/index.js`) and CommonJS (`dist/index.cjs`)                                                                                                                                   |
-| **Bundle**               | 276 kB ESM, 68 kB gzipped for the whole library — but see tree-shaking below                                                                                                            |
+| **Bundle**               | 288 kB ESM, 71 kB gzipped for the whole library — but see tree-shaking below                                                                                                            |
 | **Stylesheet**           | 138 kB, 25 kB gzipped                                                                                                                                                                   |
 | **Fonts**                | 20 KB fetched by an ASCII page — the family is split into `latin` and `latin-ext` subsets with `unicode-range`, so only the parts your text needs are downloaded (49 KB of woff2 total) |
-| **Published tarball**    | 371 kB (1167 kB unpacked)                                                                                                                                                               |
+| **Published tarball**    | 382 kB (1224 kB unpacked)                                                                                                                                                               |
 | **Types**                | Bundled `.d.ts` and `.d.cts`                                                                                                                                                            |
 
 ### Server components and `'use client'`
