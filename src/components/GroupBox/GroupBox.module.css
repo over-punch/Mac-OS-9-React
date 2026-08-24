@@ -1,0 +1,69 @@
+/* GroupBox Component Styles - Mac OS 9 */
+
+.groupBox {
+	min-width: 0;
+	margin: 0;
+	padding: 0;
+	border: none;
+	font-family: var(--font-system);
+	color: var(--color-text);
+}
+
+/* The etch is two lines, the same trick Separator uses: a dark line with a
+ * light one outside it reads as a groove cut into the surface. Drawn with
+ * borders on two nested boxes rather than one border, because a single
+ * border can only be one colour. */
+.groupBox--primary .content {
+	border: var(--border-width-thin) solid var(--color-border-inset);
+	box-shadow: 1px 1px 0 0 var(--color-gray-100);
+	padding: var(--spacing-3);
+}
+
+.groupBox--secondary .content {
+	border: var(--border-width-thin) solid var(--color-border);
+	padding: var(--spacing-2);
+}
+
+/* The title sits in the border, so the groove appears to pass behind it.
+ * The background is the surface colour rather than transparent, which is
+ * what breaks the line. */
+.title {
+	padding: 0 var(--spacing-1);
+	margin-left: var(--spacing-2);
+	background-color: var(--color-background);
+	font-size: var(--font-size-md);
+	font-weight: var(--font-weight-bold);
+	line-height: var(--line-height-snug);
+}
+
+/* A title that is a control carries the control's own weight, not the
+ * legend's, or a checkbox label would read as a heading. */
+.title:has(input),
+.title:has(select),
+.title:has(button) {
+	font-weight: var(--font-weight-normal);
+}
+
+.content {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-2);
+	background-color: transparent;
+}
+
+/* Only the contents grey out. The title stays legible because it is what
+ * tells you the group is there and, for a checkbox title, how to bring it
+ * back. */
+.groupBox--disabled .content {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+@media (prefers-contrast: high) {
+	.groupBox--primary .content,
+	.groupBox--secondary .content {
+		border-width: var(--border-width-medium);
+		border-color: var(--color-foreground);
+		box-shadow: none;
+	}
+}

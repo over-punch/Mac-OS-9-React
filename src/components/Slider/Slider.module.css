@@ -1,0 +1,174 @@
+/* Slider Component Styles - Mac OS 9 */
+
+.slider {
+	display: flex;
+	gap: var(--spacing-1);
+	font-family: var(--font-system);
+	color: var(--color-text);
+}
+
+.slider--horizontal {
+	flex-direction: column;
+	width: 100%;
+}
+
+.slider--vertical {
+	flex-direction: row;
+	align-items: flex-start;
+	height: 120px;
+}
+
+.label {
+	font-size: var(--font-size-sm);
+}
+
+.trackArea {
+	position: relative;
+	flex: 1 1 auto;
+}
+
+.slider--vertical .trackArea {
+	height: 100%;
+}
+
+/* The groove is sunken, the same well the scrollbar track and text fields
+ * sit in — that is what makes the thumb read as riding in a channel. */
+.track {
+	position: relative;
+	background-color: var(--color-surface-inset);
+	border: var(--border-width-thin) solid var(--color-border-inset);
+	box-shadow: var(--shadow-inset);
+	cursor: pointer;
+}
+
+.slider--horizontal .track {
+	width: 100%;
+	height: 6px;
+	margin: var(--spacing-2) 0;
+}
+
+.slider--vertical .track {
+	width: 6px;
+	height: 100%;
+	margin: 0 var(--spacing-2);
+}
+
+/* The thumb is raised chrome: same bevel as a button, because in Mac OS 9 it
+ * was the same material. */
+.thumb {
+	position: absolute;
+	background-color: var(--color-background);
+	box-shadow: var(--shadow-bevel);
+	border: var(--border-width-thin) solid var(--color-border);
+	cursor: grab;
+}
+
+.thumb:active {
+	cursor: grabbing;
+}
+
+.thumb:focus-visible {
+	outline: var(--border-width-medium) solid var(--color-focus);
+	outline-offset: 1px;
+}
+
+.slider--horizontal .thumb {
+	top: 50%;
+	transform: translate(-50%, -50%);
+}
+
+.slider--vertical .thumb {
+	left: 50%;
+	transform: translate(-50%, 50%);
+}
+
+.slider--sm .thumb {
+	width: 10px;
+	height: 14px;
+}
+
+.slider--md .thumb {
+	width: 12px;
+	height: 18px;
+}
+
+.slider--lg .thumb {
+	width: 14px;
+	height: 22px;
+}
+
+/* A ticked slider had a pointed thumb aimed at the ticks; an unticked one was
+ * a plain rounded block. The shape said whether the values were discrete. */
+.thumb--plain {
+	border-radius: var(--border-radius-sm);
+}
+
+.slider--horizontal .thumb--pointed {
+	clip-path: polygon(0 0, 100% 0, 100% 60%, 50% 100%, 0 60%);
+	border-radius: 0;
+}
+
+.slider--vertical .thumb--pointed {
+	clip-path: polygon(0 0, 60% 0, 100% 50%, 60% 100%, 0 100%);
+	border-radius: 0;
+}
+
+/* Ticks sit on the side the thumb points at. */
+.ticks {
+	position: absolute;
+	pointer-events: none;
+}
+
+.slider--horizontal .ticks {
+	left: 0;
+	right: 0;
+	top: 100%;
+	height: 5px;
+	margin-top: calc(var(--spacing-1) * -1);
+}
+
+.slider--vertical .ticks {
+	top: 0;
+	bottom: 0;
+	left: 100%;
+	width: 5px;
+	margin-left: calc(var(--spacing-1) * -1);
+}
+
+.tick {
+	position: absolute;
+	background-color: var(--color-gray-600);
+}
+
+.slider--horizontal .tick {
+	width: 1px;
+	height: 4px;
+	transform: translateX(-50%);
+}
+
+.slider--vertical .tick {
+	height: 1px;
+	width: 4px;
+	transform: translateY(50%);
+}
+
+.slider--disabled {
+	opacity: 0.5;
+}
+
+.slider--disabled .track,
+.slider--disabled .thumb {
+	cursor: not-allowed;
+}
+
+@media (prefers-contrast: high) {
+	.thumb {
+		box-shadow: none;
+		border-width: var(--border-width-medium);
+		border-color: var(--color-foreground);
+	}
+
+	.tick {
+		background-color: var(--color-foreground);
+	}
+}

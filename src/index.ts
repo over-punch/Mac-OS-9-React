@@ -24,6 +24,18 @@ export {
 	type PixelIconProps,
 } from './components/Icon';
 export { IconButton, type IconButtonProps, type IconButtonClasses } from './components/IconButton';
+export { GroupBox } from './components/GroupBox';
+export type { GroupBoxProps, GroupBoxClasses } from './components/GroupBox';
+
+export { WindowHeader } from './components/WindowHeader';
+export type { WindowHeaderProps, WindowHeaderClasses } from './components/WindowHeader';
+
+export { Slider } from './components/Slider';
+export type { SliderProps, SliderClasses } from './components/Slider';
+
+export { LittleArrows } from './components/LittleArrows';
+export type { LittleArrowsProps, LittleArrowsClasses } from './components/LittleArrows';
+
 export { Checkbox, type CheckboxProps, type CheckboxClasses } from './components/Checkbox';
 export { Alert, type AlertProps, type AlertClasses, type AlertSeverity } from './components/Alert';
 export {

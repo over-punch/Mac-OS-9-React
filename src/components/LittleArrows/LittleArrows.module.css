@@ -1,0 +1,112 @@
+/* LittleArrows Component Styles - Mac OS 9 */
+
+.arrows {
+	display: inline-flex;
+	flex-direction: column;
+	flex: 0 0 auto;
+	line-height: 0;
+}
+
+.arrow {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0;
+	background-color: var(--color-background);
+	border: var(--border-width-thin) solid var(--color-border);
+	box-shadow: var(--shadow-bevel);
+	cursor: pointer;
+}
+
+/* The pair reads as one object cut in half, so the seam between them is a
+ * single line rather than two stacked borders. */
+.arrow--up {
+	border-bottom-width: 0;
+}
+
+.arrow:active:not(:disabled) {
+	box-shadow: var(--shadow-inset);
+	background-color: var(--color-gray-300);
+}
+
+.arrow:focus-visible {
+	outline: var(--border-width-thin) dotted var(--color-focus);
+	outline-offset: 1px;
+	/* Above the sibling, or the shared seam clips the ring. */
+	position: relative;
+	z-index: 1;
+}
+
+.arrow:disabled {
+	cursor: not-allowed;
+	opacity: 0.5;
+}
+
+/* Drawn with borders rather than a glyph, the same as the disclosure
+ * triangle, so it stays crisp at these sizes and needs no font. */
+.glyph {
+	display: block;
+	width: 0;
+	height: 0;
+	border-style: solid;
+	border-color: transparent;
+}
+
+.arrow--up .glyph {
+	border-bottom-color: var(--color-foreground);
+}
+
+.arrow--down .glyph {
+	border-top-color: var(--color-foreground);
+}
+
+.arrows--sm .arrow {
+	width: 11px;
+	height: 7px;
+}
+
+.arrows--sm .arrow--up .glyph {
+	border-width: 0 3px 3px 3px;
+}
+
+.arrows--sm .arrow--down .glyph {
+	border-width: 3px 3px 0 3px;
+}
+
+.arrows--md .arrow {
+	width: 13px;
+	height: 9px;
+}
+
+.arrows--md .arrow--up .glyph {
+	border-width: 0 4px 4px 4px;
+}
+
+.arrows--md .arrow--down .glyph {
+	border-width: 4px 4px 0 4px;
+}
+
+.arrows--lg .arrow {
+	width: 15px;
+	height: 11px;
+}
+
+.arrows--lg .arrow--up .glyph {
+	border-width: 0 5px 5px 5px;
+}
+
+.arrows--lg .arrow--down .glyph {
+	border-width: 5px 5px 0 5px;
+}
+
+@media (prefers-contrast: high) {
+	.arrow {
+		box-shadow: none;
+		border-width: var(--border-width-medium);
+		border-color: var(--color-foreground);
+	}
+
+	.arrow--up {
+		border-bottom-width: 0;
+	}
+}

@@ -1,0 +1,51 @@
+/* WindowHeader Component Styles - Mac OS 9 */
+
+/* Raised rather than sunken: the header is a shelf the window content sits
+ * below, which is the opposite of the wells that fields and lists use. */
+.header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--spacing-3);
+	padding: var(--spacing-1) var(--spacing-2);
+	background-color: var(--color-background);
+	box-shadow: var(--shadow-bevel);
+	font-family: var(--font-system);
+	font-size: var(--font-size-sm);
+	color: var(--color-text);
+	/* Numbers in a header are counts and sizes, and they sit next to each
+	 * other across renders — lining them up stops the bar twitching. */
+	font-variant-numeric: tabular-nums;
+}
+
+.header--document {
+	border-bottom: var(--border-width-thin) solid var(--color-border);
+}
+
+/* List view ran the header straight into the column headings, with no seam. */
+.header--list {
+	border-bottom: none;
+}
+
+.start {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.end {
+	flex: 0 0 auto;
+	color: var(--color-gray-600);
+}
+
+@media (prefers-contrast: high) {
+	.header {
+		box-shadow: none;
+		border: var(--border-width-thin) solid var(--color-foreground);
+	}
+
+	.end {
+		color: var(--color-foreground);
+	}
+}
