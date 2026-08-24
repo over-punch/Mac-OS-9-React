@@ -1,4 +1,4 @@
-# Platinum gap: build loop
+# Platinum gap: build loop — CLOSED
 
 Closing the nine controls the library is missing against Apple's Mac OS 8/9
 Human Interface Guidelines, chapter 2 (Control Guidelines) — the list the
@@ -46,3 +46,30 @@ README entries, one changeset, site demo rows, Figma kit pages, `npm run measure
 - Decide what, if anything, is worth a tier beyond this — Balloon Help, a
   hierarchical ListView, contextual menus and Navigation Services are the
   candidates that are recognisable but sit outside the Controls chapter.
+
+---
+
+## Outcome (2026-08-24, v2.3.0)
+
+Coverage re-derived from `src/index.ts`: **23 of 24 covered, 0 missing, 1 n/a**
+(static text, which is a `<p>`). 543 tests. Bundle 228 kB → 255 kB, stylesheet
+111 kB → 131 kB, tarball 327 kB → 356 kB; a Button-only import is still 3 kB,
+so tree-shaking held.
+
+Two things the loop found that were not on the list:
+
+- **Nine dead Storybook links.** The site index links each row to a
+  `--docs` page, which Storybook only emits for a story tagged
+  `tags: ['autodocs']` (`.storybook/main.ts` sets `autodocs: 'tag'`). All nine
+  new stories were missing it. Two tests in `src/test/site-index.test.ts` now
+  check it from source.
+- **`ClockControl`'s `useCallback` was pointless** — `current` was a fresh
+  object each render, so the callback's identity changed anyway. Memoised.
+
+## Still outside the Controls chapter
+
+Recognisable, deliberately not built yet: Balloon Help (the `--z-index-tooltip`
+and `--z-index-popover` tokens are still defined and unused), a hierarchical
+`ListView` (cheap now that `DisclosureTriangle` exists), contextual menus (no
+`contextmenu` handling anywhere), the Control Strip, and Navigation Services —
+which is an application surface, not a control.
