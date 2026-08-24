@@ -1,12 +1,22 @@
 # Active Context
 
 ## Current Focus
-Four missing controls — Progress, Alert, DisclosureTriangle and Separator — are
-built, tested and on PR #153 with CI green. The Figma kit has matching pages.
+2.2.1 is published and the site is deployed. Nothing is in flight.
 
 ## Recent Changes (2026-08-23)
 
-### Four new components (PR #153, open, CI green)
+### Dialog was dropping focus to <body> (2.2.1)
+Closing any dialog left focus on `<body>` rather than the trigger, so a
+keyboard user was dropped at the top of the document. The restore target was
+captured in a passive effect, but React runs layout effects first — so
+`initialFocus` had already moved focus inside and the dialog saved its own
+button, detached by restore time.
+
+Found by driving the deployed site, not by reading the code: the logic reads
+correctly in isolation. There was no focus-restore test at all. There are two
+now, both confirmed failing beforehand.
+
+### Four new components (2.2.0, PR #153, merged)
 Three of the four were already half-present: the four alert severity icons and
 both disclosure triangles have been in the icon registry from the start, with
 nothing composing them.
@@ -22,6 +32,14 @@ nothing composing them.
 452 tests pass across React 18 and 19. Also untracked `dist/index.css` and
 `dist/index.js`, which predated the `/dist` gitignore entry and dirtied the tree
 on every build.
+
+### Numbers are measured now, not typed
+Every size figure in the README was stale — 247 tests against 454, 186 kB
+against 228. `npm run measure` (scripts/measure.mjs) prints all of them from the
+current dist/, and RELEASING.md points at it. A new test asserts the site's
+component index covers every component and lists nothing unexported; the site
+had said "Sixteen components" since 2.2.0 took it to twenty, and both counts are
+now derived from the index.
 
 ### The icon that was chosen by name
 `Alert` mapped `stop` to `StopIcon` — the media transport control, a filled
