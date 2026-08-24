@@ -1,12 +1,19 @@
 /* GroupBox Component Styles - Mac OS 9 */
 
 .groupBox {
+	position: relative;
 	min-width: 0;
 	margin: 0;
-	padding: 0;
+	/* Room above the box for the half of the title that sits outside it. A
+	 * <legend> ignores a negative margin, so the title is positioned rather
+	 * than nudged, and this padding is what the box is pushed down by. */
+	padding: calc(var(--title-line) / 2) 0 0;
 	border: none;
 	font-family: var(--font-system);
 	color: var(--color-text);
+
+	/* The title's line box. Everything above is derived from it. */
+	--title-line: 1.2em;
 }
 
 /* The etch is two lines, the same trick Separator uses: a dark line with a
@@ -24,16 +31,25 @@
 	padding: var(--spacing-2);
 }
 
-/* The title sits in the border, so the groove appears to pass behind it.
- * The background is the surface colour rather than transparent, which is
- * what breaks the line. */
+/* The title is set INTO the border, not stacked above it — the groove appears
+ * to pass behind the text. The negative bottom margin pulls the box up so its
+ * top edge runs through the middle of the legend, and the opaque background is
+ * what breaks the line where the words are. */
 .title {
+	position: absolute;
+	top: 0;
+	left: var(--spacing-2);
+	z-index: 1;
+	width: fit-content;
+	height: var(--title-line);
+	display: flex;
+	align-items: center;
 	padding: 0 var(--spacing-1);
-	margin-left: var(--spacing-2);
+	/* Opaque, because this is what breaks the groove where the words are. */
 	background-color: var(--color-background);
 	font-size: var(--font-size-md);
 	font-weight: var(--font-weight-bold);
-	line-height: var(--line-height-snug);
+	line-height: 1;
 }
 
 /* A title that is a control carries the control's own weight, not the

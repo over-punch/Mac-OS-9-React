@@ -69,8 +69,7 @@ a {
 	height: 100vh;
 	overflow: hidden;
 
-	background:
-		radial-gradient(120% 90% at 50% 40%, #2b2f38 0%, #16181c 62%, #0d0e11 100%);
+	background: radial-gradient(120% 90% at 50% 40%, #2b2f38 0%, #16181c 62%, #0d0e11 100%);
 
 	/* Set by ZoomStage on every frame. */
 	--zoom-progress: 0;
@@ -257,8 +256,6 @@ a {
 	pointer-events: none;
 }
 
-
-
 /* ==========================================================================
  * Desktop
  * ========================================================================== */
@@ -278,7 +275,6 @@ a {
 	background-size: 4px 4px;
 }
 
-
 .desktop {
 	position: relative;
 	min-height: 100vh;
@@ -294,7 +290,6 @@ a {
 	 * every window scrolled straight over the menu bar instead of under it. */
 	z-index: 200;
 }
-
 
 .desktopMenuBar__logo {
 	display: inline-flex;
@@ -470,6 +465,36 @@ a {
 	padding-left: var(--spacing-4);
 }
 
+/* The Finder window's footer: a status placard on the left, and the async
+ * spinner on the right where the Finder put it. */
+.finderFoot {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--spacing-2);
+	padding: var(--spacing-1) var(--spacing-2);
+	border-top: var(--border-width-thin) solid var(--color-border);
+}
+
+/* A field with its little arrows attached, which is the only way that pairing
+ * reads correctly — they belong to the field, not beside it. */
+.panelRow {
+	display: flex;
+	align-items: flex-end;
+	gap: var(--spacing-1);
+}
+
+.panelTools {
+	display: flex;
+	gap: 2px;
+}
+
+/* The tree fills the window rather than hugging its rows, so the highlight
+ * runs edge to edge the way Finder's did. */
+.deskWindow--finder [role='tree'] {
+	min-height: 120px;
+}
+
 .installRow {
 	display: flex;
 	align-items: flex-end;
@@ -566,7 +591,6 @@ a {
 .desktop__footer a {
 	color: #ffffff;
 }
-
 
 /* ==========================================================================
  * Getting started, footprint, and what's new

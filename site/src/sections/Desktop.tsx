@@ -21,6 +21,18 @@ import { Progress } from '@lib/components/Progress';
 import { Alert } from '@lib/components/Alert';
 import { DisclosureTriangle } from '@lib/components/DisclosureTriangle';
 import { Separator } from '@lib/components/Separator';
+import { GroupBox } from '@lib/components/GroupBox';
+import { WindowHeader } from '@lib/components/WindowHeader';
+import { Slider } from '@lib/components/Slider';
+import { LittleArrows } from '@lib/components/LittleArrows';
+import { Placard } from '@lib/components/Placard';
+import { ImageWell } from '@lib/components/ImageWell';
+import { ChasingArrows } from '@lib/components/ChasingArrows';
+import { BevelButton } from '@lib/components/BevelButton';
+import { ClockControl } from '@lib/components/ClockControl';
+import { BalloonHelp } from '@lib/components/BalloonHelp';
+import { TreeView, type TreeNode } from '@lib/components/TreeView';
+import { ContextualMenu } from '@lib/components/ContextualMenu';
 import { TextField } from '@lib/components/TextField';
 import { IconLibrary } from '@lib/components/Icon';
 import { getAllIconNames } from '@lib/components/Icon/registry';
@@ -287,6 +299,69 @@ const COLUMNS = [
 	{ key: 'keyboard', label: 'Keyboard', width: '38%' },
 ] as const;
 
+/** What the Finder window lists. Deep enough to show nesting actually work. */
+const DISK: TreeNode[] = [
+	{
+		id: 'apps',
+		label: 'Applications',
+		icon: <IconLibrary icon="folder" size="sm" label={null} />,
+		children: [
+			{
+				id: 'sherlock',
+				label: 'Sherlock 2',
+				icon: <IconLibrary icon="search" size="sm" label={null} />,
+			},
+			{
+				id: 'simpletext',
+				label: 'SimpleText',
+				icon: <IconLibrary icon="document" size="sm" label={null} />,
+			},
+		],
+	},
+	{
+		id: 'system',
+		label: 'System Folder',
+		icon: <IconLibrary icon="folder" size="sm" label={null} />,
+		children: [
+			{
+				id: 'extensions',
+				label: 'Extensions',
+				icon: <IconLibrary icon="folder" size="sm" label={null} />,
+				children: [
+					{
+						id: 'quicktime',
+						label: 'QuickTime',
+						icon: <IconLibrary icon="document" size="sm" label={null} />,
+					},
+				],
+			},
+			{
+				id: 'prefs',
+				label: 'Preferences',
+				icon: <IconLibrary icon="folder" size="sm" label={null} />,
+				children: [],
+			},
+		],
+	},
+	{
+		id: 'readme',
+		label: 'Read Me',
+		icon: <IconLibrary icon="document" size="sm" label={null} />,
+	},
+];
+
+/** The contextual menu the Finder window offers on right-click. */
+const FILE_ACTIONS = [
+	{ label: 'Open' },
+	{ label: 'Get Info', shortcut: '\u2318I' },
+	{ label: 'Duplicate', shortcut: '\u2318D' },
+	{ label: '', separator: true },
+	{ label: 'Make Alias' },
+	{ label: 'Add to Favorites', disabled: true },
+	{ label: '', separator: true },
+	{ label: 'Move to Trash' },
+];
+
 /** Every window on the desktop, in the order they are laid out. */
 const WINDOW_IDS = [
 	'about',
@@ -295,6 +370,8 @@ const WINDOW_IDS = [
 	'why',
 	'icons',
 	'controls',
+	'finder',
+	'panel',
 	'whatsnew',
 ] as const;
 
@@ -330,6 +407,18 @@ export function Desktop() {
 	const [whyTab, setWhyTab] = useState(0);
 	const [advancedOpen, setAdvancedOpen] = useState(false);
 	const [alertOpen, setAlertOpen] = useState(false);
+
+	// Finder window
+	const [expanded, setExpanded] = useState<string[]>(['apps']);
+	const [selectedFile, setSelectedFile] = useState<string | null>('sherlock');
+	const [lastAction, setLastAction] = useState<string | null>(null);
+
+	// Appearance panel
+	const [highlight, setHighlight] = useState(60);
+	const [fontSize, setFontSize] = useState(12);
+	const [tool, setTool] = useState('pen');
+	const [clock, setClock] = useState({ hours: 9, minutes: 41, seconds: 0 });
+	const [rebuilding, setRebuilding] = useState(true);
 
 	const install = `npm install ${PACKAGE}`;
 
@@ -627,6 +716,131 @@ export function Desktop() {
 										<Button as="a" href={`${REPO}/blob/main/CHANGELOG.md`} target="_blank">
 											Changelog
 										</Button>
+									</div>
+								</div>
+							</Window>
+						)}
+
+						{/* ---------- A Finder window, built from the library ---------- */}
+						{isOpen('finder') && (
+							<Window
+								id="finder"
+								maxWidth={420}
+								title="Macintosh HD"
+								className="deskWindow deskWindow--finder"
+								draggable
+								onClose={() => close('finder')}
+							>
+								<div className="pane pane--flush" id="window-finder">
+									{/* Not a heading: "6 items" in the document outline is noise. */}
+									<WindowHeader trailing="1.2 GB available">6 items</WindowHeader>
+
+									<ContextualMenu
+										aria-label="File actions"
+										items={FILE_ACTIONS}
+										onSelect={(item) => setLastAction(item.label)}
+									>
+										<TreeView
+											aria-label="Macintosh HD"
+											items={DISK}
+											expanded={expanded}
+											onExpandedChange={setExpanded}
+											selected={selectedFile}
+											onSelectedChange={setSelectedFile}
+										/>
+									</ContextualMenu>
+
+									<div className="finderFoot">
+										<Placard>{lastAction ?? 'Right-click a row \u2014 or press Shift+F10'}</Placard>
+										<ChasingArrows
+											active={rebuilding}
+											size="sm"
+											label="Rebuilding the desktop database"
+										/>
+									</div>
+								</div>
+							</Window>
+						)}
+
+						{/* ---------- A control panel, built from the library ---------- */}
+						{isOpen('panel') && (
+							<Window
+								id="panel"
+								maxWidth={380}
+								title="Appearance"
+								className="deskWindow deskWindow--panel"
+								draggable
+								onClose={() => close('panel')}
+							>
+								<div className="pane" id="window-panel">
+									<GroupBox title="Desktop">
+										<ImageWell
+											label="Desktop picture"
+											placeholder="Drop an image"
+											onBrowse={() => setLastAction('Chose a desktop picture')}
+										/>
+										<Slider
+											label={`Highlight intensity \u2014 ${highlight}%`}
+											value={highlight}
+											onValueChange={setHighlight}
+										/>
+									</GroupBox>
+
+									<GroupBox title="Fonts">
+										<div className="panelRow">
+											<TextField id="panel-size" label="Size" value={String(fontSize)} readOnly />
+											<LittleArrows
+												controls="panel-size"
+												stepLabel="font size"
+												onStep={(d) => setFontSize((n) => Math.min(24, Math.max(9, n + d)))}
+												upDisabled={fontSize >= 24}
+												downDisabled={fontSize <= 9}
+											/>
+										</div>
+									</GroupBox>
+
+									<GroupBox title="Tools" variant="secondary">
+										<div role="radiogroup" aria-label="Tools" className="panelTools">
+											{(
+												[
+													['pen', 'Pen'],
+													['brush', 'Brush'],
+													['fill', 'Fill'],
+												] as const
+											).map(([value, name]) => (
+												<BevelButton
+													key={value}
+													behaviour="radio"
+													selected={tool === value}
+													aria-label={name}
+													onClick={() => setTool(value)}
+												>
+													{name[0]}
+												</BevelButton>
+											))}
+										</div>
+									</GroupBox>
+
+									<ClockControl
+										label="Menu bar clock"
+										value={clock}
+										showSeconds
+										onValueChange={setClock}
+									/>
+
+									<Separator />
+
+									{/* Balloon help, on the one control whose name does not
+									    explain what it does. */}
+									<div className="panelRow">
+										<BalloonHelp
+											side="top"
+											content="Rebuilds the invisible file the Finder uses to remember icons. Slow, and safe."
+										>
+											<Button onClick={() => setRebuilding((r) => !r)}>
+												{rebuilding ? 'Stop rebuilding' : 'Rebuild desktop'}
+											</Button>
+										</BalloonHelp>
 									</div>
 								</div>
 							</Window>
