@@ -420,8 +420,46 @@ its accessible name, blocks clicks while loading, and refuses to become a link
 without an `href`. Shipping the paint alone would hand you the half we think
 matters least while implying you had both.
 
-If you want the look in another framework, take the tokens and write the twenty
-lines of CSS yourself — you will end up with something you can maintain.
+If you want the look in another framework,
+**[docs/without-react.md](./docs/without-react.md)** has the twenty lines
+written out: tested recipes for every control that is only paint — separators,
+group boxes, window headers, placards, bevels, wells and the chasing arrows —
+plus an honest table of the ones where a CSS-only version is not a simpler
+implementation but a broken one.
+
+## Where this comes from
+
+The controls here are not invented, and they are not copied from screenshots.
+They follow Apple's own specification for the interface — the **Platinum
+appearance**, which shipped as the default look of Mac OS 8 and carried through
+Mac OS 9.
+
+| Source                                                                                         | What it settles                                                                                                    |
+| ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| [Mac OS 8 Human Interface Guidelines](https://dev.os9.ca/techpubs/mac/HIGOS8Guide/thig-2.html) | The whole document. Six chapters: overview, controls, dialog boxes, menus, windows, control panels                 |
+| [Chapter 2 — Control Guidelines](https://dev.os9.ca/techpubs/mac/HIGOS8Guide/thig-9.html)      | The control inventory this library is measured against: 24 control types, from push buttons to asynchronous arrows |
+| [Platinum Appearance](https://dev.os9.ca/techpubs/mac/HIGOS8Guide/thig-8.html)                 | What "Platinum" means — the theme introduced in Mac OS 8 and the grey palette that defines it                      |
+
+**Coverage: 23 of the 24 controls in chapter 2.** The one that is missing is
+static text, which is a `<p>`; wrapping it would add a component that earns
+nothing. Three more — `BalloonHelp`, `TreeView` and `ContextualMenu` — are
+recognisable parts of the system that sit outside the Controls chapter, so the
+count does not include them.
+
+Where the guidelines and modern accessibility disagree, accessibility wins and
+the reason is written down in the component. Two examples:
+
+- Balloon help was hover-only, which makes it invisible without a pointer.
+  `BalloonHelp` also opens on focus and dismisses on Escape.
+- Mac OS 9 touch targets are far below the 44px WCAG guideline. The library
+  keeps the original metrics, and says so plainly rather than quietly
+  resizing the interface it claims to reproduce — see
+  [Accessibility](#accessibility).
+
+Where a name in this library differs from Apple's, Apple's is right and the
+difference is a bug. `Window`'s buttons were labelled "Minimize" and "Maximize"
+until 2.3.0; Mac OS 9 had a **collapse box** and a **zoom box**, and neither
+minimises nor maximises anything.
 
 ### Theming
 
