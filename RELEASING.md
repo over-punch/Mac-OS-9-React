@@ -28,10 +28,10 @@ Run before any minor or major. Nothing here is checkable by axe.
       returns focus to its trigger, `Window` gives focus back after a close.
 
       Not automatable, and not for want of trying: a headless or automated
-          browser reports `document.visibilityState` as hidden, which means
-          programmatic `.focus()` fires no focus event, synthetic Tab presses do
-          not move focus, and `:focus-visible` never matches because it only
-          applies to keyboard-initiated focus. This one needs a real window.
+              browser reports `document.visibilityState` as hidden, which means
+              programmatic `.focus()` fires no focus event, synthetic Tab presses do
+              not move focus, and `:focus-visible` never matches because it only
+              applies to keyboard-initiated focus. This one needs a real window.
 
 - [x] **Focus is always visible.** Now asserted by `a11y-gate.test.ts` for every
       focusable component. The test proves a focus style is _defined_; whether
@@ -41,6 +41,15 @@ Run before any minor or major. Nothing here is checkable by axe.
       things automation cannot judge: does the announced name of a control
       match what it appears to do, does a menu announce its checked state, does
       a sortable column header say which way it is sorted.
+
+      Narrower than it was. `a11y-integration.test.tsx` renders a screenful of
+          components together and now covers the structural half — duplicate ids,
+          aria references pointing at nothing, anything focusable inside an
+          `aria-hidden` subtree, and positive tabindex. None of those fail a
+          component's own suite, and all of them are things a screen-reader pass
+          would otherwise be the first to find. What is left for a human is
+          judgement: whether the words a control announces are the right words.
+
 - [ ] **Zoom to 200%** and confirm nothing is clipped or overlapping.
 - [x] **`prefers-reduced-motion`** — every component that animates is asserted
       to answer it. Still worth confirming the _site's_ zoom is skipped, which

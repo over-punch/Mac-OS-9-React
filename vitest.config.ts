@@ -23,15 +23,16 @@ export default defineConfig({
 				'src/test/**',
 				'vitest.setup.ts',
 			],
-			// Thresholds so coverage can't quietly regress. Raise these as
-			// coverage improves; they are a ratchet, not a target.
-			// Baselined against the current suite, to be raised as coverage
-			// grows. These are a ratchet against regression, not a target.
+			// A ratchet against regression, not a target. Set a few points below
+			// the current numbers so ordinary churn does not fail the build,
+			// and raised whenever coverage climbs — they had been left at the
+			// original baseline while actual coverage rose twenty points past
+			// them, which meant they were guarding nothing.
 			thresholds: {
-				statements: 65,
-				branches: 63,
-				functions: 65,
-				lines: 68,
+				statements: 86,
+				branches: 78,
+				functions: 90,
+				lines: 89,
 			},
 		},
 	},
