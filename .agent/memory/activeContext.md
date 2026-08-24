@@ -3,6 +3,34 @@
 ## Current Focus
 2.2.1 is published and the site is deployed. Nothing is in flight.
 
+## Recent Changes (2026-08-24, later)
+
+### Figma kit caught up
+All 27 exported components now have pages, across five passes. The twelve added
+here: GroupBox, WindowHeader, Slider, LittleArrows, Placard, ImageWell,
+ChasingArrows, BevelButton, ClockControl, BalloonHelp, TreeView,
+ContextualMenu. Sixteen new Component-tier variables, every one an alias.
+**930 bound fills against 1 intentional hardcode.**
+
+Two ordering traps, both now hit more than once and worth remembering:
+`resize()` resets sizing modes to FIXED, and `layoutSizingHorizontal = 'FILL'`
+throws unless the node is already inside an auto-layout parent. Set both AFTER
+appending.
+
+### The kit's type ramp is still the IBM Plex stand-in
+Not for want of installed fonts. Figma sees **none** of the local fonts —
+not the Pixel faces, and not Jubilat or InputMono either, which have been in
+`~/Library/Fonts` far longer. `listAvailableFontsAsync()` returns 8927 fonts,
+all of them Google/Figma's own set, before and after a full app restart.
+
+That points at local font access rather than the install: the desktop app reads
+system fonts directly, a browser session needs the Figma Font Helper. Worth
+checking which surface the MCP is actually attached to before trying again.
+The retarget script is written and staged at
+`scratchpad/retarget-type-ramp.js` — it moves only the `UI/*` styles, leaving
+Title on EB Garamond and code on IBM Plex Mono, because that is what the
+library's own tokens say.
+
 ## Recent Changes (2026-08-23)
 
 ### Dialog was dropping focus to <body> (2.2.1)
