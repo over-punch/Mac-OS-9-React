@@ -36,7 +36,7 @@ import { Window, Button } from '@liiift-studio/mac-os9-ui';
 - 🪶 **No runtime dependencies** - React and React DOM are the only peers
 - 🎚️ **Themeable** - every value is a CSS custom property, in three tiers
 - 📖 **Storybook Docs** - [browse every component](https://liiift-studio.github.io/Mac-OS-9-React/storybook/), interactively
-- 🧪 **Tested** - 623 tests, including an axe sweep over every rendering component and WCAG contrast assertions on the palette
+- 🧪 **Tested** - 650 tests, including an axe sweep over every rendering component and WCAG contrast assertions on the palette
 
 ![A Mac OS 9 menu bar with the File menu open showing New Folder, Open, Print and a checked Get Info item, beside a Macintosh HD window containing a sortable file list](https://raw.githubusercontent.com/Liiift-Studio/Mac-OS-9-React/main/assets/window.png?v=1)
 
