@@ -10,6 +10,7 @@ import { disclosure } from './disclosure';
 import { menu } from './menu';
 import { balloon } from './balloon';
 import { stepper } from './stepper';
+import { focusTrap } from './focusTrap';
 
 /** Build markup from a string, the way a consumer's template would. */
 function mount(html: string): HTMLElement {
@@ -193,7 +194,7 @@ describe('menu — the paths a happy click never reaches', () => {
 		const host = mount(MARKUP);
 		const el = host.querySelector('[role="menu"]') as HTMLElement;
 		menu(el);
-		const trash = [...el.querySelectorAll('[role="menuitem"]')].at(-1) as HTMLElement;
+		const trash = [...el.querySelectorAll('[role="menuitem"]')].pop() as HTMLElement;
 		// Mac OS 9 tracked pointer and arrow keys as one state, not as separate
 		// hover and focus styles.
 		trash.dispatchEvent(new PointerEvent('pointerover', { bubbles: true }));
@@ -272,6 +273,122 @@ describe('balloon', () => {
 		handle.destroy();
 		expect(document.querySelector('[role="tooltip"]')).toBeNull();
 		expect(trigger.hasAttribute('aria-describedby')).toBe(false);
+	});
+});
+
+describe('focusTrap', () => {
+	const MARKUP = `
+		<button id="outside">Outside</button>
+		<div id="dialog">
+			<button id="first">First</button>
+			<button id="mid">Mid</button>
+			<button id="last" data-confirm>Last</button>
+		</div>`;
+
+	beforeEach(() => {
+		// jsdom reports no client rects, which would make everything fail the
+		// visibility check and leave the trap with nothing to cycle.
+		Element.prototype.getClientRects = function () {
+			return [{}] as unknown as DOMRectList;
+		};
+	});
+
+	it('moves focus inside on open', () => {
+		const host = mount(MARKUP);
+		focusTrap(host.querySelector('#dialog') as HTMLElement);
+		expect(document.activeElement?.id).toBe('first');
+	});
+
+	it('honours an explicit initial focus', () => {
+		const host = mount(MARKUP);
+		focusTrap(host.querySelector('#dialog') as HTMLElement, { initialFocus: '[data-confirm]' });
+		expect(document.activeElement?.id).toBe('last');
+	});
+
+	it('cycles Tab from the last element back to the first', () => {
+		const host = mount(MARKUP);
+		const dialog = host.querySelector('#dialog') as HTMLElement;
+		focusTrap(dialog);
+		(host.querySelector('#last') as HTMLElement).focus();
+
+		document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true }));
+		expect(document.activeElement?.id).toBe('first');
+	});
+
+	it('cycles Shift+Tab from the first back to the last', () => {
+		const host = mount(MARKUP);
+		focusTrap(host.querySelector('#dialog') as HTMLElement);
+		(host.querySelector('#first') as HTMLElement).focus();
+
+		document.dispatchEvent(
+			new KeyboardEvent('keydown', { key: 'Tab', shiftKey: true, bubbles: true })
+		);
+		expect(document.activeElement?.id).toBe('last');
+	});
+
+	it('reports Escape without closing anything itself', () => {
+		const host = mount(MARKUP);
+		const onEscape = vi.fn();
+		focusTrap(host.querySelector('#dialog') as HTMLElement, { onEscape });
+		document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+		// The trap does not own the container's visibility, so it asks rather
+		// than guessing.
+		expect(onEscape).toHaveBeenCalledTimes(1);
+		expect(host.querySelector('#dialog')).toBeTruthy();
+	});
+
+	it('gives focus back to where it came from', () => {
+		const host = mount(MARKUP);
+		const outside = host.querySelector('#outside') as HTMLElement;
+		outside.focus();
+
+		const trap = focusTrap(host.querySelector('#dialog') as HTMLElement);
+		expect(document.activeElement?.id).toBe('first');
+
+		trap.destroy();
+		// Dropping focus on <body> would strand a keyboard user.
+		expect(document.activeElement?.id).toBe('outside');
+	});
+
+	it('only the topmost trap responds', () => {
+		const host = mount(`
+			<div id="outer"><button id="outer-btn">Outer</button></div>
+			<div id="inner"><button id="inner-btn">Inner</button></div>`);
+		const outerEscape = vi.fn();
+		const innerEscape = vi.fn();
+		focusTrap(host.querySelector('#outer') as HTMLElement, { onEscape: outerEscape });
+		const inner = focusTrap(host.querySelector('#inner') as HTMLElement, {
+			onEscape: innerEscape,
+		});
+
+		document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+		// Without a stack, both fire and the outer dialog closes underneath
+		// the inner one.
+		expect(innerEscape).toHaveBeenCalledTimes(1);
+		expect(outerEscape).not.toHaveBeenCalled();
+
+		inner.destroy();
+		document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+		expect(outerEscape).toHaveBeenCalledTimes(1);
+	});
+
+	it('leaves the container as it found it', () => {
+		const host = mount(MARKUP);
+		const dialog = host.querySelector('#dialog') as HTMLElement;
+		expect(dialog.hasAttribute('tabindex')).toBe(false);
+		const trap = focusTrap(dialog);
+		trap.destroy();
+		// The trap adds tabindex="-1" so its fallback works; it must not leave
+		// it behind on markup the author wrote.
+		expect(dialog.hasAttribute('tabindex')).toBe(false);
+	});
+
+	it('stops trapping after destroy', () => {
+		const host = mount(MARKUP);
+		const onEscape = vi.fn();
+		focusTrap(host.querySelector('#dialog') as HTMLElement, { onEscape }).destroy();
+		document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+		expect(onEscape).not.toHaveBeenCalled();
 	});
 });
 

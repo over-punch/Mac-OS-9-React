@@ -14,6 +14,11 @@
 // from Vue, Svelte, Astro, htmx or a hand-written page. Each returns a handle
 // with `destroy()`, so a framework's teardown has something to call.
 //
+// `focusTrap` is the one that makes a modal a modal rather than a div that
+// looks like one, and it shares its focusable-element rules with the React
+// Dialog through `src/core/focus` — so the two cannot disagree about whether
+// a `details > summary` is a tab stop.
+//
 // Unlike the CSS-module class names the React components use, the class names
 // in platinum.css are a public API: they are versioned with the package and
 // renaming one is a breaking change.
@@ -22,3 +27,4 @@ export { disclosure, type DisclosureOptions, type Detachable } from './disclosur
 export { menu, type MenuOptions } from './menu';
 export { balloon, type BalloonOptions } from './balloon';
 export { stepper, type StepperOptions } from './stepper';
+export { focusTrap, getFocusables, type FocusTrapOptions } from './focusTrap';

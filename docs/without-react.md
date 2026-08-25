@@ -35,6 +35,7 @@ sit on the same framework-free core in `src/core`:
 
 | Core module  | Owns                                              | Used by                              |
 | ------------ | ------------------------------------------------- | ------------------------------------ |
+| `focus`      | What counts as focusable, and where Tab goes next | `Dialog` · `focusTrap()`             |
 | `repeat`     | Hold-to-repeat timing                             | `LittleArrows` · `stepper()`         |
 | `openDelay`  | Delayed open, immediate close                     | `BalloonHelp` · `balloon()`          |
 | `navigation` | Index stepping and wrapping over a skippable list | `Tabs` · `ContextualMenu` · `menu()` |
@@ -74,12 +75,13 @@ open section survives hydration instead of snapping shut.
 
 ### The behaviours
 
-| Module                   | What it gives you                                                                                                           |
-| ------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
-| `disclosure(button)`     | Toggle, kept in step with the region's `hidden`                                                                             |
-| `menu(element, opts)`    | Arrow navigation that skips separators and disabled items, Escape, outside-press dismissal, `data-active` for the highlight |
-| `balloon(trigger, opts)` | Opens on focus **and** hover, `aria-describedby` rather than a renamed trigger, Escape to dismiss                           |
-| `stepper(element, opts)` | Hold-to-repeat after a pause, and stopping when the pointer leaves                                                          |
+| Module                       | What it gives you                                                                                                           |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `disclosure(button)`         | Toggle, kept in step with the region's `hidden`                                                                             |
+| `menu(element, opts)`        | Arrow navigation that skips separators and disabled items, Escape, outside-press dismissal, `data-active` for the highlight |
+| `balloon(trigger, opts)`     | Opens on focus **and** hover, `aria-describedby` rather than a renamed trigger, Escape to dismiss                           |
+| `focusTrap(container, opts)` | Tab cycles inside, Escape reports, focus returns to where it came from, stacked traps coordinate                            |
+| `stepper(element, opts)`     | Hold-to-repeat after a pause, and stopping when the pointer leaves                                                          |
 
 ### The classes
 
@@ -315,20 +317,20 @@ implementation — it is a broken one.
 Four of them now have framework-free implementations in `platinum`, marked
 below. The rest are still React-only.
 
-| Control                                                    | What CSS cannot give you                                                           |
-| ---------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| `Window`                                                   | Pointer _and_ keyboard drag and resize (WCAG 2.1.1), z-ordering across a stack     |
-| `Dialog`, `Alert`                                          | Focus trap, scroll lock, focus restore on close, Escape across a stack             |
-| `MenuBar`, `MenuDropdown`, `ContextualMenu` **— `menu()`** | Roving tabindex, arrow navigation, dismiss on outside press, focus restore         |
-| `Select`                                                   | A listbox with type-ahead — the native `<select>` cannot be styled into this shape |
-| `Tabs`                                                     | Arrow-key navigation, `aria-controls` wiring, panel mounting                       |
-| `ListView`, `TreeView`                                     | Selection model, shift-range, `aria-level`, expand and collapse                    |
-| `Scrollbar`                                                | Proportional thumb, drag maths, Page Up/Down                                       |
-| `Slider`                                                   | Arrow/Page/Home/End, pointer capture, tick snapping                                |
-| `LittleArrows`                                             | Hold-to-repeat, and stopping when the pointer leaves the button                    |
-| `DisclosureTriangle`                                       | `aria-expanded` on the thing it actually controls                                  |
-| `BalloonHelp`                                              | Open on focus as well as hover, Escape to dismiss, `aria-describedby`              |
-| `ClockControl`                                             | Segment selection, wrapping, and keeping display and value apart                   |
+| Control                                                    | What CSS cannot give you                                                              |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `Window`                                                   | Pointer _and_ keyboard drag and resize (WCAG 2.1.1), z-ordering across a stack        |
+| `Dialog`, `Alert` **— `focusTrap()`**                      | The trap itself is framework-free now; the scroll lock and surrounding chrome are not |
+| `MenuBar`, `MenuDropdown`, `ContextualMenu` **— `menu()`** | Roving tabindex, arrow navigation, dismiss on outside press, focus restore            |
+| `Select`                                                   | A listbox with type-ahead — the native `<select>` cannot be styled into this shape    |
+| `Tabs`                                                     | Arrow-key navigation, `aria-controls` wiring, panel mounting                          |
+| `ListView`, `TreeView`                                     | Selection model, shift-range, `aria-level`, expand and collapse                       |
+| `Scrollbar`                                                | Proportional thumb, drag maths, Page Up/Down                                          |
+| `Slider`                                                   | Arrow/Page/Home/End, pointer capture, tick snapping                                   |
+| `LittleArrows`                                             | Hold-to-repeat, and stopping when the pointer leaves the button                       |
+| `DisclosureTriangle`                                       | `aria-expanded` on the thing it actually controls                                     |
+| `BalloonHelp`                                              | Open on focus as well as hover, Escape to dismiss, `aria-describedby`                 |
+| `ClockControl`                                             | Segment selection, wrapping, and keeping display and value apart                      |
 
 The `:checked` and `:has()` tricks that fake some of these produce controls
 that look right and announce wrong. A checkbox hack driving a "menu" is still
@@ -345,10 +347,14 @@ If you want the **simple controls** — disclosure, menus, balloons, steppers �
 take `platinum` too. They are framework-free and tested against real DOM with
 no React in the test file at all.
 
-If you want the **hard controls** — the focus trap, the roving tabindex, the
-listbox with type-ahead, the tree — those are still React-only, and that is
-where most of the work in this library actually is. Reimplementing them is a
-genuine piece of engineering, not a styling exercise.
+**The focus trap is no longer on that list.** `focusTrap()` is what makes a
+modal a modal rather than a div that looks like one, and it shares its
+focusable-element rules with the React `Dialog` — so the two cannot disagree
+about whether a `details > summary` is a tab stop.
+
+What is still React-only is the roving tabindex, the listbox with type-ahead,
+and the tree. Those are genuine pieces of engineering rather than styling
+exercises, and they are where most of the work in this library actually is.
 
 See [PITFALLS.md](../PITFALLS.md) for the specific ways these have gone wrong
 here, which is a reasonable list of what to get right if you do rebuild them.

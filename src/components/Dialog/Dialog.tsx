@@ -26,6 +26,7 @@ import React, {
 } from 'react';
 import { createPortal } from 'react-dom';
 import { Window, type WindowProps, type WindowClasses } from '../Window/Window';
+import { initialFocusTarget, nextTrapTarget } from '../../core/focus';
 import { mergeClasses } from '../../utils/classNames';
 import styles from './Dialog.module.css';
 
@@ -95,43 +96,6 @@ function unlockBodyScroll(): void {
 
 function isTopmost(el: HTMLElement | null): boolean {
 	return el !== null && dialogStack[dialogStack.length - 1] === el;
-}
-
-// Comprehensive focusable-element selector. Covers everything the Tab key
-// can naturally reach plus author-provided overrides via [tabindex]. The
-// runtime filter excludes disabled, hidden, aria-hidden, and zero-size
-// elements that should not be tab targets.
-const FOCUSABLE_SELECTOR = [
-	'a[href]',
-	'area[href]',
-	'button',
-	'input',
-	'select',
-	'textarea',
-	'iframe',
-	'audio[controls]',
-	'video[controls]',
-	'[contenteditable="true"]',
-	'[contenteditable=""]',
-	'details > summary:first-of-type',
-	'[tabindex]',
-].join(',');
-
-function isElementFocusable(el: HTMLElement): boolean {
-	// Native disabled, programmatic disabled via aria-disabled,
-	// explicit removal from tab order, and visibility checks.
-	if ((el as HTMLInputElement).disabled) return false;
-	if (el.getAttribute('tabindex') === '-1') return false;
-	if (el.hidden) return false;
-	if (el.closest('[aria-hidden="true"]')) return false;
-	if (el.getClientRects().length === 0) return false;
-	return true;
-}
-
-function getFocusables(root: HTMLElement): HTMLElement[] {
-	return Array.from(root.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter(
-		isElementFocusable
-	);
 }
 
 // --- Props -----------------------------------------------------------------
@@ -372,16 +336,12 @@ export const Dialog = forwardRef<HTMLDivElement, DialogProps>(
 			}
 
 			if (!target) {
-				const focusables = getFocusables(root);
-				const firstFocusable = focusables[0];
-				if (firstFocusable) {
-					target = firstFocusable;
-				} else {
-					// No focusable children — focus the container itself so the
-					// trap still has somewhere to land. Make it programmatically
-					// focusable in that case.
-					if (!root.hasAttribute('tabindex')) root.setAttribute('tabindex', '-1');
-					target = root;
+				// Shared with the framework-free focusTrap: first focusable,
+				// then the container itself so the trap has somewhere to land.
+				target = initialFocusTarget(root);
+				// The container is only focusable if we make it so.
+				if (target === root && !root.hasAttribute('tabindex')) {
+					root.setAttribute('tabindex', '-1');
 				}
 			}
 
@@ -411,34 +371,14 @@ export const Dialog = forwardRef<HTMLDivElement, DialogProps>(
 				if (event.key !== 'Tab' || !dialogRef.current) return;
 				if (!isTopmost(dialogRef.current)) return;
 
-				const focusables = getFocusables(dialogRef.current);
-				if (focusables.length === 0) {
-					event.preventDefault();
-					return;
-				}
-
-				const first = focusables[0];
-				const last = focusables[focusables.length - 1];
-				// getFocusables returned a non-empty array above, so both ends
-				// exist; this narrows them for the compiler.
-				if (!first || !last) return;
-				const active = document.activeElement as HTMLElement | null;
-
-				// If focus has escaped the dialog (e.g., user clicked outside
-				// and Tabbed), pull it back in.
-				if (!active || !dialogRef.current.contains(active)) {
-					event.preventDefault();
-					(event.shiftKey ? last : first).focus();
-					return;
-				}
-
-				if (event.shiftKey && active === first) {
-					event.preventDefault();
-					last.focus();
-				} else if (!event.shiftKey && active === last) {
-					event.preventDefault();
-					first.focus();
-				}
+				// Shared with the framework-free focusTrap. It returns null when
+				// the browser's own Tab behaviour is already right, which is why
+				// preventDefault is conditional: doing it on every Tab would
+				// fight the browser and break a trap holding one element.
+				const target = nextTrapTarget(dialogRef.current, document.activeElement, event.shiftKey);
+				if (!target) return;
+				event.preventDefault();
+				target.focus();
 			};
 			document.addEventListener('keydown', handler);
 			return () => document.removeEventListener('keydown', handler);

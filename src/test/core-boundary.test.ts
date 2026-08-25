@@ -33,14 +33,16 @@ describe('the shared core', () => {
 		expect(offenders, 'src/core must stay framework-free').toEqual([]);
 	});
 
-	it('touches no DOM', () => {
-		// `document` and `window` would make the core untestable without a
-		// browser and unusable from a worker or the server.
+	it('touches no global DOM state', () => {
+		// `document.` and `window.` would tie the core to a browser globals
+		// object. focus.ts is exempt from the spirit but not the letter: it
+		// takes elements as arguments and reads from them, which is portable,
+		// but never reaches for a global.
 		const offenders = coreModules()
 			.filter(({ source }) => /\b(document|window)\./.test(source))
 			.map(({ name }) => name);
 
-		expect(offenders, 'src/core must not reach for the DOM').toEqual([]);
+		expect(offenders, 'src/core must not reach for global DOM state').toEqual([]);
 	});
 
 	it('is the only place the shared timings are written down', () => {
@@ -59,6 +61,16 @@ describe('the shared core', () => {
 		});
 
 		expect(offenders, 'these re-declare a timing the core owns').toEqual([]);
+	});
+
+	it('shares the focus rules between both implementations', () => {
+		const react = readFileSync(join(process.cwd(), 'src/components/Dialog/Dialog.tsx'), 'utf-8');
+		const vanilla = readFileSync(join(process.cwd(), 'src/platinum/focusTrap.ts'), 'utf-8');
+
+		expect(react).toContain("from '../../core/focus'");
+		expect(vanilla).toContain("from '../core/focus'");
+		// Dialog must not have grown its own copy back.
+		expect(react).not.toContain('FOCUSABLE_SELECTOR');
 	});
 
 	it('is used by both implementations, not just one', () => {
