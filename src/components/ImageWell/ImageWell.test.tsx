@@ -59,6 +59,48 @@ describe('ImageWell', () => {
 		expect(screen.getByText('Drop an image')).toHaveAttribute('aria-hidden', 'true');
 	});
 
+	describe('drag state', () => {
+		it('marks itself while something is dragged over it', () => {
+			const { container } = render(<ImageWell label="Desktop picture" />);
+			const well = screen.getByRole('button');
+			const before = well.className;
+
+			fireEvent.dragOver(well, dropWith([]));
+			// Mac OS 9 marked a drop target by highlighting its border rather
+			// than tinting the whole area, so the class has to change.
+			expect(well.className).not.toBe(before);
+
+			fireEvent.dragLeave(well);
+			expect(well.className).toBe(before);
+			expect(container).toBeTruthy();
+		});
+
+		it('clears the mark after a drop', () => {
+			render(<ImageWell label="Desktop picture" onFiles={vi.fn()} />);
+			const well = screen.getByRole('button');
+			const before = well.className;
+			fireEvent.dragOver(well, dropWith([]));
+			fireEvent.drop(well, dropWith([new File(['x'], 'a.png', { type: 'image/png' })]));
+			// Otherwise the well stays lit up after the file has landed.
+			expect(well.className).toBe(before);
+		});
+
+		it('does not mark itself when disabled', () => {
+			render(<ImageWell label="Desktop picture" disabled />);
+			const well = screen.getByRole('button');
+			const before = well.className;
+			fireEvent.dragOver(well, dropWith([]));
+			expect(well.className).toBe(before);
+		});
+
+		it('ignores a drop carrying no files', () => {
+			const onFiles = vi.fn();
+			render(<ImageWell label="Desktop picture" onFiles={onFiles} />);
+			fireEvent.drop(screen.getByRole('button'), dropWith([]));
+			expect(onFiles).not.toHaveBeenCalled();
+		});
+	});
+
 	it('has no automatically detectable accessibility violations', async () => {
 		const { container } = render(
 			<ImageWell

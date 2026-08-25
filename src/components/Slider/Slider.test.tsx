@@ -5,7 +5,7 @@
 // Page, Home and End keys, the range clamp, and the tick snapping — which is
 // behaviour, not decoration: a ticked slider lands on ticks.
 
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { Slider } from './Slider';
 import { checkA11y } from '../../test/axe';
@@ -94,6 +94,159 @@ describe('Slider', () => {
 		it('draws one tick mark per tick', () => {
 			const { container } = render(<Slider label="Speed" ticks={5} value={0} />);
 			expect(container.querySelectorAll('[aria-hidden="true"] > span')).toHaveLength(5);
+		});
+	});
+
+	describe('dragging', () => {
+		/**
+		 * jsdom gives the track a zero rect, so `valueAt` would divide by zero
+		 * and every drag would land on the same value. Give it a real one.
+		 */
+		function sizeTrack({ width = 200, height = 100 } = {}) {
+			Element.prototype.getBoundingClientRect = vi.fn(
+				() =>
+					({
+						width,
+						height,
+						top: 0,
+						left: 0,
+						right: width,
+						bottom: height,
+						x: 0,
+						y: 0,
+						toJSON: () => ({}),
+					}) as DOMRect
+			);
+		}
+
+		/** The track is what carries the pointer handlers, not the thumb. */
+		const track = (container: HTMLElement) =>
+			container.querySelector('[role="slider"]')!.parentElement!;
+
+		beforeEach(() => {
+			sizeTrack();
+			// jsdom implements neither, and the pointerdown handler calls
+			// setPointerCapture before it commits — so without these it throws
+			// and the value never changes.
+			Element.prototype.setPointerCapture = vi.fn();
+			Element.prototype.releasePointerCapture = vi.fn();
+			Element.prototype.hasPointerCapture = vi.fn(() => true);
+		});
+
+		it('sets the value from where the track was pressed', () => {
+			const onValueChange = vi.fn();
+			const { container } = render(
+				<Slider label="Volume" value={0} onValueChange={onValueChange} />
+			);
+			// Half way along a 200px track over 0..100 is 50.
+			fireEvent.pointerDown(track(container), {
+				clientX: 100,
+				clientY: 0,
+				pointerId: 1,
+				button: 0,
+				isPrimary: true,
+			});
+			expect(onValueChange).toHaveBeenLastCalledWith(50);
+		});
+
+		it('follows the pointer while it is captured', () => {
+			const onValueChange = vi.fn();
+			const { container } = render(
+				<Slider label="Volume" value={0} onValueChange={onValueChange} />
+			);
+			const el = track(container);
+			// Pointer capture is what keeps a drag working once it leaves the
+			// element; jsdom has no real implementation, so stand one in.
+			let captured = false;
+			el.setPointerCapture = () => {
+				captured = true;
+			};
+			el.hasPointerCapture = () => captured;
+
+			fireEvent.pointerDown(el, {
+				clientX: 20,
+				clientY: 0,
+				pointerId: 1,
+				button: 0,
+				isPrimary: true,
+			});
+			fireEvent.pointerMove(el, { clientX: 150, clientY: 0, pointerId: 1 });
+			expect(onValueChange).toHaveBeenLastCalledWith(75);
+		});
+
+		it('ignores a move that is not part of a capture', () => {
+			const onValueChange = vi.fn();
+			const { container } = render(
+				<Slider label="Volume" value={0} onValueChange={onValueChange} />
+			);
+			const el = track(container);
+			el.hasPointerCapture = () => false;
+			fireEvent.pointerMove(el, { clientX: 150, clientY: 0, pointerId: 1 });
+			expect(onValueChange).not.toHaveBeenCalled();
+		});
+
+		it('runs the other way up when vertical', () => {
+			const onValueChange = vi.fn();
+			const { container } = render(
+				<Slider label="Level" orientation="vertical" value={0} onValueChange={onValueChange} />
+			);
+			// A vertical slider's maximum is at the TOP, so a press a quarter of
+			// the way down the track is 75, not 25. Getting this backwards is the
+			// classic vertical-slider bug.
+			fireEvent.pointerDown(track(container), {
+				clientX: 0,
+				clientY: 25,
+				pointerId: 1,
+				button: 0,
+				isPrimary: true,
+			});
+			expect(onValueChange).toHaveBeenLastCalledWith(75);
+		});
+
+		it('clamps a press beyond either end of the track', () => {
+			const onValueChange = vi.fn();
+			const { container } = render(
+				<Slider label="Volume" value={50} onValueChange={onValueChange} />
+			);
+			fireEvent.pointerDown(track(container), {
+				clientX: 900,
+				clientY: 0,
+				pointerId: 1,
+				button: 0,
+				isPrimary: true,
+			});
+			expect(onValueChange).toHaveBeenLastCalledWith(100);
+		});
+
+		it('snaps a drag to the ticks, not just the keyboard', () => {
+			const onValueChange = vi.fn();
+			const { container } = render(
+				<Slider label="Speed" ticks={5} value={0} onValueChange={onValueChange} />
+			);
+			// 60% along lands between the 50 and 75 ticks, and must settle on 50.
+			fireEvent.pointerDown(track(container), {
+				clientX: 120,
+				clientY: 0,
+				pointerId: 1,
+				button: 0,
+				isPrimary: true,
+			});
+			expect(onValueChange).toHaveBeenLastCalledWith(50);
+		});
+
+		it('does not respond to the pointer when disabled', () => {
+			const onValueChange = vi.fn();
+			const { container } = render(
+				<Slider label="Volume" value={0} disabled onValueChange={onValueChange} />
+			);
+			fireEvent.pointerDown(track(container), {
+				clientX: 100,
+				clientY: 0,
+				pointerId: 1,
+				button: 0,
+				isPrimary: true,
+			});
+			expect(onValueChange).not.toHaveBeenCalled();
 		});
 	});
 

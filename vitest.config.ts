@@ -29,10 +29,10 @@ export default defineConfig({
 			// original baseline while actual coverage rose twenty points past
 			// them, which meant they were guarding nothing.
 			thresholds: {
-				statements: 86,
-				branches: 78,
-				functions: 90,
-				lines: 89,
+				statements: 89,
+				branches: 81,
+				functions: 93,
+				lines: 92,
 			},
 		},
 	},
