@@ -36,7 +36,7 @@ import { Window, Button } from '@liiift-studio/mac-os9-ui';
 - 🪶 **No runtime dependencies** - React and React DOM are the only peers
 - 🎚️ **Themeable** - every value is a CSS custom property, in three tiers
 - 📖 **Storybook Docs** - [browse every component](https://liiift-studio.github.io/Mac-OS-9-React/storybook/), interactively
-- 🧪 **Tested** - 733 tests, including an axe sweep over every rendering component and WCAG contrast assertions on the palette
+- 🧪 **Tested** - 804 tests, including an axe sweep over every rendering component and WCAG contrast assertions on the palette
 
 ![A Mac OS 9 menu bar with the File menu open showing New Folder, Open, Print and a checked Get Info item, beside a Macintosh HD window containing a sortable file list](https://raw.githubusercontent.com/Liiift-Studio/Mac-OS-9-React/main/assets/window.png?v=1)
 
@@ -50,7 +50,7 @@ import { Window, Button } from '@liiift-studio/mac-os9-ui';
 | **Bundle**               | 288 kB ESM, 71 kB gzipped for the whole library — but see tree-shaking below                                                                                                            |
 | **Stylesheet**           | 138 kB, 25 kB gzipped                                                                                                                                                                   |
 | **Fonts**                | 20 KB fetched by an ASCII page — the family is split into `latin` and `latin-ext` subsets with `unicode-range`, so only the parts your text needs are downloaded (49 KB of woff2 total) |
-| **Published tarball**    | 387 kB (1234 kB unpacked)                                                                                                                                                               |
+| **Published tarball**    | 391 kB (1245 kB unpacked)                                                                                                                                                               |
 | **Types**                | Bundled `.d.ts` and `.d.cts`                                                                                                                                                            |
 
 ### Server components and `'use client'`
