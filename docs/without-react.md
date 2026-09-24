@@ -4,9 +4,9 @@ There is a published, framework-agnostic layer. You do not have to copy CSS out
 of this document any more.
 
 ```js
-import '@liiift-studio/mac-os9-ui/tokens';
-import '@liiift-studio/mac-os9-ui/platinum.css';
-import { disclosure, menu, balloon, stepper } from '@liiift-studio/mac-os9-ui/platinum';
+import '@overpunch/mac-os9-ui/tokens';
+import '@overpunch/mac-os9-ui/platinum.css';
+import { disclosure, menu, balloon, stepper } from '@overpunch/mac-os9-ui/platinum';
 ```
 
 Two halves, and the second is the point.
@@ -62,7 +62,7 @@ re-declared as a literal anywhere else.
 ```
 
 ```js
-import { disclosure } from '@liiift-studio/mac-os9-ui/platinum';
+import { disclosure } from '@overpunch/mac-os9-ui/platinum';
 
 const handle = disclosure(document.getElementById('adv'));
 // handle.destroy() when the component unmounts.

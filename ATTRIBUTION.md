@@ -28,7 +28,7 @@ Under the following terms:
 
 ## Implementation
 
-This React/TypeScript component library (`@liiift-studio/mac-os9-ui`) implements Michael Feeney's designs as functional web components with:
+This React/TypeScript component library (`@overpunch/mac-os9-ui`) implements Michael Feeney's designs as functional web components with:
 
 - Pixel-accurate visual fidelity to the original designs
 - Modern accessibility features (ARIA, keyboard navigation)
@@ -51,10 +51,10 @@ All visual design decisions remain faithful to Michael Feeney's original Mac OS 
 
 When using this library in your projects, please include attribution to both:
 
-### 1. This Library (@liiift-studio/mac-os9-ui)
+### 1. This Library (@overpunch/mac-os9-ui)
 
 ```
-Built with @liiift-studio/mac-os9-ui component library
+Built with @overpunch/mac-os9-ui component library
 https://github.com/Liiift-Studio/Mac-OS-9-React
 Licensed under MIT License
 ```
@@ -76,7 +76,7 @@ For websites or applications:
 <!-- Footer or About section -->
 <p>
   UI components powered by 
-  <a href="https://github.com/Liiift-Studio/Mac-OS-9-React">@liiift-studio/mac-os9-ui</a>.
+  <a href="https://github.com/Liiift-Studio/Mac-OS-9-React">@overpunch/mac-os9-ui</a>.
   Original designs by 
   <a href="https://swallowmygraphicdesign.com/project/macostalgia">Michael Feeney</a>
   licensed under 
@@ -89,7 +89,7 @@ For documentation or README:
 ```markdown
 ## Credits
 
-- UI Components: [@liiift-studio/mac-os9-ui](https://github.com/Liiift-Studio/Mac-OS-9-React) (MIT License)
+- UI Components: [@overpunch/mac-os9-ui](https://github.com/Liiift-Studio/Mac-OS-9-React) (MIT License)
 - Original Designs: [Michael Feeney - Mac OS 9 UI Kit](https://swallowmygraphicdesign.com/project/macostalgia) (CC BY 4.0)
 ```
 

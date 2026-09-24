@@ -1,7 +1,7 @@
 /**
  * Mac OS 9 Theme — default stylesheet entry point
  *
- * This is what `@liiift-studio/mac-os9-ui/styles` resolves to. It composes:
+ * This is what `@overpunch/mac-os9-ui/styles` resolves to. It composes:
  *
  *   fonts.css   — @font-face for the bundled, self-hosted Pixel family
  *   tokens.css  — every design token as a CSS custom property
@@ -23,7 +23,7 @@
  * ======================================== */
 /* Global element styles (html, body, box-sizing) live in base.css so they
  * never override a consuming application's own styles.
- * Import '@liiift-studio/mac-os9-ui/base' if you want those global styles. */
+ * Import '@overpunch/mac-os9-ui/base' if you want those global styles. */
 
 /* ========================================
  * Utility Classes

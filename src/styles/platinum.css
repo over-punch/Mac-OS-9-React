@@ -10,12 +10,12 @@
  * These are a contract.
  *
  * Every class is prefixed `mac-`. Nothing here needs JavaScript; the controls
- * that do have their behaviour in `@liiift-studio/mac-os9-ui/platinum`, which
+ * that do have their behaviour in `@overpunch/mac-os9-ui/platinum`, which
  * attaches to this same markup.
  *
  * Import:
- *   @liiift-studio/mac-os9-ui/tokens     required — every value below comes from it
- *   @liiift-studio/mac-os9-ui/platinum.css
+ *   @overpunch/mac-os9-ui/tokens     required — every value below comes from it
+ *   @overpunch/mac-os9-ui/platinum.css
  */
 
 @import './tokens.css';

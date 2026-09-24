@@ -34,7 +34,7 @@ src/components/Icon/
 Import specific icons directly for optimal tree-shaking:
 
 ```tsx
-import { SaveIcon, FolderIcon, CloseIcon } from '@liiift-studio/mac-os9-ui';
+import { SaveIcon, FolderIcon, CloseIcon } from '@overpunch/mac-os9-ui';
 
 function MyComponent() {
 	return (
@@ -52,7 +52,7 @@ function MyComponent() {
 Use the `IconLibrary` component to select icons by name:
 
 ```tsx
-import { IconLibrary } from '@liiift-studio/mac-os9-ui';
+import { IconLibrary } from '@overpunch/mac-os9-ui';
 
 function MyComponent() {
 	return <IconLibrary icon="save" size="md" />;
@@ -64,7 +64,7 @@ function MyComponent() {
 Use the base `Icon` component with custom SVG content:
 
 ```tsx
-import { Icon } from '@liiift-studio/mac-os9-ui';
+import { Icon } from '@overpunch/mac-os9-ui';
 
 function CustomIcon() {
 	return (
@@ -223,7 +223,7 @@ After adding a new icon:
 
 2. **Import Test**: Verify the icon can be imported
    ```tsx
-   import { YourNewIcon } from '@liiift-studio/mac-os9-ui';
+   import { YourNewIcon } from '@overpunch/mac-os9-ui';
    ```
 
 3. **Size Test**: Test all size variants
@@ -269,7 +269,7 @@ export const iconRegistry = {
 
 **Step 3**: Use in your application:
 ```tsx
-import { CopyIcon } from '@liiift-studio/mac-os9-ui';
+import { CopyIcon } from '@overpunch/mac-os9-ui';
 
 <CopyIcon />
 // or
