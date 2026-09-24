@@ -4,15 +4,15 @@ A pixel-perfect Mac OS 9 UI component library for React and TypeScript. Bring au
 
 TypeScript · Zero runtime dependencies · ~3 kB for a single component · React 18 & 19
 
-[![CI](https://github.com/Liiift-Studio/Mac-OS-9-React/actions/workflows/ci.yml/badge.svg)](https://github.com/Liiift-Studio/Mac-OS-9-React/actions/workflows/ci.yml)
+[![CI](https://github.com/over-punch/Mac-OS-9-React/actions/workflows/ci.yml/badge.svg)](https://github.com/over-punch/Mac-OS-9-React/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/@overpunch/mac-os9-ui.svg)](https://www.npmjs.com/package/@overpunch/mac-os9-ui)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![React 18 | 19](https://img.shields.io/badge/React-18%20%7C%2019-149eca.svg)](#compatibility-and-footprint)
 [![No runtime dependencies](https://img.shields.io/badge/runtime%20deps-0-brightgreen.svg)](#compatibility-and-footprint)
 
-**[Live site](https://liiift-studio.github.io/Mac-OS-9-React/)** · **[Storybook](https://liiift-studio.github.io/Mac-OS-9-React/storybook/)** · **[npm](https://www.npmjs.com/package/@overpunch/mac-os9-ui)** · **[Changelog](./CHANGELOG.md)**
+**[Live site](https://over-punch.github.io/Mac-OS-9-React/)** · **[Storybook](https://over-punch.github.io/Mac-OS-9-React/storybook/)** · **[npm](https://www.npmjs.com/package/@overpunch/mac-os9-ui)** · **[Changelog](./CHANGELOG.md)**
 
-![A Preferences window with tabs, a text field, a dropdown and checkboxes, beside windows showing button variants, sizes, icon and loading states, and a radio group](https://raw.githubusercontent.com/Liiift-Studio/Mac-OS-9-React/main/assets/components.png?v=1)
+![A Preferences window with tabs, a text field, a dropdown and checkboxes, beside windows showing button variants, sizes, icon and loading states, and a radio group](https://raw.githubusercontent.com/over-punch/Mac-OS-9-React/main/assets/components.png?v=1)
 
 ```bash
 npm install @overpunch/mac-os9-ui
@@ -35,10 +35,10 @@ import { Window, Button } from '@overpunch/mac-os9-ui';
 - 🎭 **Dual Module Support** - ESM and CommonJS builds included
 - 🪶 **No runtime dependencies** - React and React DOM are the only peers
 - 🎚️ **Themeable** - every value is a CSS custom property, in three tiers
-- 📖 **Storybook Docs** - [browse every component](https://liiift-studio.github.io/Mac-OS-9-React/storybook/), interactively
+- 📖 **Storybook Docs** - [browse every component](https://over-punch.github.io/Mac-OS-9-React/storybook/), interactively
 - 🧪 **Tested** - 804 tests, including an axe sweep over every rendering component and WCAG contrast assertions on the palette
 
-![A Mac OS 9 menu bar with the File menu open showing New Folder, Open, Print and a checked Get Info item, beside a Macintosh HD window containing a sortable file list](https://raw.githubusercontent.com/Liiift-Studio/Mac-OS-9-React/main/assets/window.png?v=1)
+![A Mac OS 9 menu bar with the File menu open showing New Folder, Open, Print and a checked Get Info item, beside a Macintosh HD window containing a sortable file list](https://raw.githubusercontent.com/over-punch/Mac-OS-9-React/main/assets/window.png?v=1)
 
 ## Compatibility and footprint
 
@@ -88,12 +88,12 @@ root import already gives you only what you use.
 
 ## The demo is the library
 
-The [landing site](https://liiift-studio.github.io/Mac-OS-9-React/) is built out
+The [landing site](https://over-punch.github.io/Mac-OS-9-React/) is built out
 of these components — the windows are `Window`, the component index is a
 `ListView`, the controls are the real form controls. Scroll and it zooms into
 the machine.
 
-[![The Mac OS 9 UI landing site: a beige CRT monitor on a dark background, its screen showing a Mac OS 9 desktop with a menu bar and a window](https://raw.githubusercontent.com/Liiift-Studio/Mac-OS-9-React/main/assets/hero.png?v=1)](https://liiift-studio.github.io/Mac-OS-9-React/)
+[![The Mac OS 9 UI landing site: a beige CRT monitor on a dark background, its screen showing a Mac OS 9 desktop with a menu bar and a window](https://raw.githubusercontent.com/over-punch/Mac-OS-9-React/main/assets/hero.png?v=1)](https://over-punch.github.io/Mac-OS-9-React/)
 
 ## Components
 
@@ -168,7 +168,7 @@ setting is not the default, because it depends on something only you know.
 | `GroupBox`  | `title` and the controls inside                                            | Use `control` for a checkbox or select title; `variant="secondary"` only for nesting                                                 |
 | `Alert`     | `severity`, `heading`, `onClose`                                           | Add `message` for detail, `cancelLabel` for a second button, `destructive` when the confirming action loses something                |
 
-![Thirty-nine pixel-art icons on a Mac OS 9 desktop background, each labelled with its registry name: close, trash, search, folder, document, disk, arrows, alerts, media controls and more](https://raw.githubusercontent.com/Liiift-Studio/Mac-OS-9-React/main/assets/icons.png?v=1)
+![Thirty-nine pixel-art icons on a Mac OS 9 desktop background, each labelled with its registry name: close, trash, search, folder, document, disk, arrows, alerts, media controls and more](https://raw.githubusercontent.com/over-punch/Mac-OS-9-React/main/assets/icons.png?v=1)
 
 ```tsx
 import { IconLibrary, getAllIconNames } from '@overpunch/mac-os9-ui';
@@ -308,7 +308,7 @@ function MyForm() {
 `Dialog` portals to `document.body`, traps focus, closes on Escape, restores
 focus to whatever opened it, and locks page scroll without the layout shifting.
 
-![A Mac OS 9 alert reading Save changes? with the message Do you want to save the changes you made to Read Me, and Don't Save, Cancel and Save buttons](https://raw.githubusercontent.com/Liiift-Studio/Mac-OS-9-React/main/assets/dialog.png?v=1)
+![A Mac OS 9 alert reading Save changes? with the message Do you want to save the changes you made to Read Me, and Don't Save, Cancel and Save buttons](https://raw.githubusercontent.com/over-punch/Mac-OS-9-React/main/assets/dialog.png?v=1)
 
 ```tsx
 import { Dialog, Button } from '@overpunch/mac-os9-ui';
@@ -487,7 +487,7 @@ need to be one.
 Each tier defaults to the one above it, so retargeting a semantic moves
 everything downstream, while a component hook moves exactly one component.
 
-![Two identical Finder windows side by side. The left is the default grey Mac OS 9 palette; the right is tinted lilac, with a purple title bar and border, produced by overriding six custom properties](https://raw.githubusercontent.com/Liiift-Studio/Mac-OS-9-React/main/assets/theming.png?v=1)
+![Two identical Finder windows side by side. The left is the default grey Mac OS 9 palette; the right is tinted lilac, with a purple title bar and border, produced by overriding six custom properties](https://raw.githubusercontent.com/over-punch/Mac-OS-9-React/main/assets/theming.png?v=1)
 
 The window on the right is the same markup as the one on the left. The entire
 difference is six declarations:
@@ -696,7 +696,7 @@ right, so it does not — but if you are shipping to touch, use `size="lg"` (32p
 and give controls a padded hit area of your own rather than assuming the
 defaults are finger-friendly.
 
-Accessibility bugs are worth reporting — [open an issue](https://github.com/Liiift-Studio/Mac-OS-9-React/issues).
+Accessibility bugs are worth reporting — [open an issue](https://github.com/over-punch/Mac-OS-9-React/issues).
 
 ## TypeScript Support
 
@@ -921,12 +921,12 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## Links
 
-- [Live site](https://liiift-studio.github.io/Mac-OS-9-React/)
-- [Storybook](https://liiift-studio.github.io/Mac-OS-9-React/storybook/)
-- [GitHub Repository](https://github.com/Liiift-Studio/Mac-OS-9-React)
-- [Report Issues](https://github.com/Liiift-Studio/Mac-OS-9-React/issues)
+- [Live site](https://over-punch.github.io/Mac-OS-9-React/)
+- [Storybook](https://over-punch.github.io/Mac-OS-9-React/storybook/)
+- [GitHub Repository](https://github.com/over-punch/Mac-OS-9-React)
+- [Report Issues](https://github.com/over-punch/Mac-OS-9-React/issues)
 - [Changelog](./CHANGELOG.md)
 
 ---
 
-Made with 💾 by [Liiift Studio](https://github.com/Liiift-Studio)
+Made with 💾 by [Liiift Studio](https://github.com/over-punch)

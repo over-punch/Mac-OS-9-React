@@ -138,11 +138,11 @@
 	"license": "MIT",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/Liiift-Studio/Mac-OS-9-React.git"
+		"url": "https://github.com/over-punch/Mac-OS-9-React.git"
 	},
-	"homepage": "https://liiift-studio.github.io/Mac-OS-9-React/",
+	"homepage": "https://over-punch.github.io/Mac-OS-9-React/",
 	"bugs": {
-		"url": "https://github.com/Liiift-Studio/Mac-OS-9-React/issues"
+		"url": "https://github.com/over-punch/Mac-OS-9-React/issues"
 	},
 	"attribution": {
 		"designs": "Mac OS 9 UI Kit by Michael Feeney (https://swallowmygraphicdesign.com/project/macostalgia)",

@@ -117,7 +117,7 @@ Git: >= 2.x
 ### Initial Setup
 ```bash
 # Clone repository
-git clone https://github.com/Liiift-Studio/Mac-OS-9-React.git
+git clone https://github.com/over-punch/Mac-OS-9-React.git
 cd Mac-OS-9-React
 
 # Install dependencies

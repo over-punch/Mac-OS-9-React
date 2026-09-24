@@ -141,7 +141,7 @@
 
   The harder controls — the focus trap, the roving tabindex, the listbox with
   type-ahead, the tree — remain React-only, and
-  [docs/without-react.md](https://github.com/Liiift-Studio/Mac-OS-9-React/blob/main/docs/without-react.md)
+  [docs/without-react.md](https://github.com/over-punch/Mac-OS-9-React/blob/main/docs/without-react.md)
   says so plainly rather than implying otherwise.
 
 ## 2.4.0
