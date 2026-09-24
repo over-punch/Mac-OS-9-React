@@ -55,7 +55,7 @@ When using this library in your projects, please include attribution to both:
 
 ```
 Built with @overpunch/mac-os9-ui component library
-https://github.com/Liiift-Studio/Mac-OS-9-React
+https://github.com/over-punch/Mac-OS-9-React
 Licensed under MIT License
 ```
 
@@ -76,7 +76,7 @@ For websites or applications:
 <!-- Footer or About section -->
 <p>
   UI components powered by 
-  <a href="https://github.com/Liiift-Studio/Mac-OS-9-React">@overpunch/mac-os9-ui</a>.
+  <a href="https://github.com/over-punch/Mac-OS-9-React">@overpunch/mac-os9-ui</a>.
   Original designs by 
   <a href="https://swallowmygraphicdesign.com/project/macostalgia">Michael Feeney</a>
   licensed under 
@@ -89,7 +89,7 @@ For documentation or README:
 ```markdown
 ## Credits
 
-- UI Components: [@overpunch/mac-os9-ui](https://github.com/Liiift-Studio/Mac-OS-9-React) (MIT License)
+- UI Components: [@overpunch/mac-os9-ui](https://github.com/over-punch/Mac-OS-9-React) (MIT License)
 - Original Designs: [Michael Feeney - Mac OS 9 UI Kit](https://swallowmygraphicdesign.com/project/macostalgia) (CC BY 4.0)
 ```
 

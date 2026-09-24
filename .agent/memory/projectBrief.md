@@ -45,5 +45,5 @@ Building an NPM-publishable React + TypeScript UI component library that faithfu
 ## Package Details
 - **Name**: @overpunch/mac-os9-ui
 - **License**: MIT
-- **Repository**: https://github.com/Liiift-Studio/Mac-OS-9-React.git
+- **Repository**: https://github.com/over-punch/Mac-OS-9-React.git
 - **Exports**: Dual ESM/CJS with TypeScript declarations

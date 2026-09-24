@@ -18,7 +18,7 @@ const pkg = JSON.parse(
 
 export default defineConfig({
 	root: fileURLToPath(new URL('.', import.meta.url)),
-	// Served from https://liiift-studio.github.io/Mac-OS-9-React/
+	// Served from https://over-punch.github.io/Mac-OS-9-React/
 	base: process.env.SITE_BASE ?? '/',
 	plugins: [react()],
 	define: {

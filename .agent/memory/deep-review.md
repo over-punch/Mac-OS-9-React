@@ -18,7 +18,7 @@ Saved: 2026-05-27
 - 15 reviewers ran in parallel (10 core + 5 specialists)
 - ~180 raw findings consolidated to 124 distinct
 - Severity: 20 Critical, 70 Major, 34 Minor
-- All 124 opened as GitHub issues #1–#124 in Liiift-Studio/Mac-OS-9-React with label `review`
+- All 124 opened as GitHub issues #1–#124 in over-punch/Mac-OS-9-React with label `review`
 - No fixes attempted (per user selection)
 - Results report: `.agent/tmp/panel-review-results.json`
 - Notable thematic clusters:

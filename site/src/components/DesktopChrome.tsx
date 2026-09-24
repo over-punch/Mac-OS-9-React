@@ -151,8 +151,8 @@ export function DesktopIcons() {
 	);
 }
 
-export const REPO = 'https://github.com/Liiift-Studio/Mac-OS-9-React';
-export const STORYBOOK = 'https://liiift-studio.github.io/Mac-OS-9-React/storybook/';
+export const REPO = 'https://github.com/over-punch/Mac-OS-9-React';
+export const STORYBOOK = 'https://over-punch.github.io/Mac-OS-9-React/storybook/';
 export const PACKAGE = PKG;
 
 function open(url: string) {
