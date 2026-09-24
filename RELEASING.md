@@ -96,7 +96,7 @@ Run before any minor or major. Nothing here is checkable by axe.
 - [ ] Tag the release commit — `git tag -a vX.Y.Z` — and push the tag. The
       repo went three published versions with no tags at all.
 - [ ] After publishing, confirm the registry actually has it:
-      `npm view @liiift-studio/mac-os9-ui version`.
+      `npm view @overpunch/mac-os9-ui version`.
 
 ---
 

@@ -12,19 +12,19 @@ import { DividerIcon } from './categories/ui';
  *
  * 1. **Direct Import** (Recommended for tree-shaking):
  * ```tsx
- * import { DividerIcon } from '@liiift-studio/mac-os9-ui';
+ * import { DividerIcon } from '@overpunch/mac-os9-ui';
  * <DividerIcon />
  * ```
  *
  * 2. **By Name** (Convenient for dynamic icons):
  * ```tsx
- * import { IconLibrary } from '@liiift-studio/mac-os9-ui';
+ * import { IconLibrary } from '@overpunch/mac-os9-ui';
  * <IconLibrary icon="divider" size="md" />
  * ```
  *
  * 3. **Custom SVG** (For one-off icons):
  * ```tsx
- * import { Icon } from '@liiift-studio/mac-os9-ui';
+ * import { Icon } from '@overpunch/mac-os9-ui';
  * <Icon size="md" label="Custom" viewBox="0 0 10 32">
  *   <path d="..." />
  * </Icon>
@@ -85,7 +85,7 @@ export const Divider: Story = {
 					fontSize: '12px',
 				}}
 			>
-				{`import { DividerIcon } from '@liiift-studio/mac-os9-ui';
+				{`import { DividerIcon } from '@overpunch/mac-os9-ui';
 
 <DividerIcon />
 

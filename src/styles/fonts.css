@@ -2,10 +2,10 @@
  * Mac OS 9 UI — Self-hosted font faces
  *
  * Declares the bundled "Pixel" bitmap family (Pixel Operator, CC0). Imported
- * by theme.css so the default `@liiift-studio/mac-os9-ui/styles` entry point
+ * by theme.css so the default `@overpunch/mac-os9-ui/styles` entry point
  * works out of the box.
  *
- * Opting out: import `@liiift-studio/mac-os9-ui/tokens` instead of `/styles`
+ * Opting out: import `@overpunch/mac-os9-ui/tokens` instead of `/styles`
  * to get the design tokens with no @font-face declarations and no font
  * downloads, then point --font-system / --font-pixel at your own faces.
  *

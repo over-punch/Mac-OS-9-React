@@ -1,4 +1,4 @@
-# @liiift-studio/mac-os9-ui
+# @overpunch/mac-os9-ui
 
 ## 2.6.0
 
@@ -12,7 +12,7 @@
   It is now available without a framework:
 
   ```js
-  import { focusTrap } from '@liiift-studio/mac-os9-ui/platinum';
+  import { focusTrap } from '@overpunch/mac-os9-ui/platinum';
 
   const trap = focusTrap(dialogElement, {
   	initialFocus: '[data-confirm]',
@@ -105,9 +105,9 @@
   Svelte, Astro, htmx or a hand-written page, with no React involved.
 
   ```js
-  import '@liiift-studio/mac-os9-ui/tokens';
-  import '@liiift-studio/mac-os9-ui/platinum.css';
-  import { disclosure, menu, balloon, stepper } from '@liiift-studio/mac-os9-ui/platinum';
+  import '@overpunch/mac-os9-ui/tokens';
+  import '@overpunch/mac-os9-ui/platinum.css';
+  import { disclosure, menu, balloon, stepper } from '@overpunch/mac-os9-ui/platinum';
   ```
 
   **`platinum.css`** is the paint: twenty hand-written class names, all prefixed
@@ -492,9 +492,9 @@
 
   **Added**
 
-  - `@liiift-studio/mac-os9-ui/tokens` — design tokens with no `@font-face`
+  - `@overpunch/mac-os9-ui/tokens` — design tokens with no `@font-face`
     declarations and no font downloads, for consumers supplying their own faces.
-  - `@liiift-studio/mac-os9-ui/webfonts` — opt-in Google Fonts request.
+  - `@overpunch/mac-os9-ui/webfonts` — opt-in Google Fonts request.
   - `./package.json` export, which modern resolvers require.
 
   **Breaking**
@@ -502,7 +502,7 @@
   - The Google Fonts `@import` has been removed from the default stylesheet. It
     was a render-blocking third-party request on every consuming page. If your app
     relies on `--font-body`, `--font-title` or `--font-mono` resolving to IBM Plex
-    or EB Garamond, add `import '@liiift-studio/mac-os9-ui/webfonts'`, or
+    or EB Garamond, add `import '@overpunch/mac-os9-ui/webfonts'`, or
     self-host those families. The library's own components never needed them.
   - `typography.fontFamily.chicago` is removed from the token export.
 
@@ -512,7 +512,7 @@
 
 - Remove global element styles from main stylesheet to prevent overriding consumer project styles
 
-  **Breaking-ish Change:** The main stylesheet (`@liiift-studio/mac-os9-ui/styles`) no longer includes global styles for `html` and `body` elements. This prevents the library from overriding your application's base styles.
+  **Breaking-ish Change:** The main stylesheet (`@overpunch/mac-os9-ui/styles`) no longer includes global styles for `html` and `body` elements. This prevents the library from overriding your application's base styles.
 
   **What Changed:**
   - ✅ CSS variables still global (`:root`)
@@ -527,8 +527,8 @@
   If you want the global Mac OS 9 styling (body background, typography, etc.), import the optional base stylesheet:
 
   ```tsx
-  import '@liiift-studio/mac-os9-ui/styles'; // Required - components & variables
-  import '@liiift-studio/mac-os9-ui/base'; // Optional - global html/body styles
+  import '@overpunch/mac-os9-ui/styles'; // Required - components & variables
+  import '@overpunch/mac-os9-ui/base'; // Optional - global html/body styles
   ```
 
   **Benefits:**
@@ -613,7 +613,7 @@
 
 - Fix build configuration where fonts were being copied to a nested `dist/fonts` folder instead of the root `fonts` folder in the distribution.
 - Updated dependencies
-  - @liiift-studio/mac-os9-ui@0.2.20
+  - @overpunch/mac-os9-ui@0.2.20
 
 ## 0.2.19
 
@@ -645,7 +645,7 @@
 
 - Initial release of Mac OS 9 UI Component Library
 
-This is the first public release of the @liiift-studio/mac-os9-ui component library, featuring pixel-perfect Mac OS 9 styled React components.
+This is the first public release of the @overpunch/mac-os9-ui component library, featuring pixel-perfect Mac OS 9 styled React components.
 
 #### Components Included
 

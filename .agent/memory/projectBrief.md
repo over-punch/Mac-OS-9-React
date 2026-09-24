@@ -43,7 +43,7 @@ Building an NPM-publishable React + TypeScript UI component library that faithfu
 - All components are keyboard accessible with proper ARIA attributes
 
 ## Package Details
-- **Name**: @liiift-studio/mac-os9-ui
+- **Name**: @overpunch/mac-os9-ui
 - **License**: MIT
 - **Repository**: https://github.com/Liiift-Studio/Mac-OS-9-React.git
 - **Exports**: Dual ESM/CJS with TypeScript declarations

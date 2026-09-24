@@ -21,7 +21,7 @@ export function App() {
 			<MachineStage
 				above={
 					<>
-						<p className="kicker">@liiift-studio/mac-os9-ui</p>
+						<p className="kicker">@overpunch/mac-os9-ui</p>
 						<h1 className="heroTitle">
 							The Mac OS 9 interface,
 							<br />

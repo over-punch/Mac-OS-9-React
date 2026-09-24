@@ -99,7 +99,7 @@ synthesises a weight. See the note in `src/styles/tokens.css` for why
 imports. Consuming the default stylesheet gets them:
 
 ```ts
-import '@liiift-studio/mac-os9-ui/styles';
+import '@overpunch/mac-os9-ui/styles';
 ```
 
 `font-display: block` is deliberate — see the comment in `fonts.css`.
@@ -109,7 +109,7 @@ import '@liiift-studio/mac-os9-ui/styles';
 To supply your own faces and download nothing, import the tokens alone:
 
 ```ts
-import '@liiift-studio/mac-os9-ui/tokens';
+import '@overpunch/mac-os9-ui/tokens';
 ```
 
 Then point `--font-system` and `--font-pixel` at whatever you host.
@@ -117,8 +117,8 @@ Then point `--font-system` and `--font-pixel` at whatever you host.
 ### Opting in to the web fonts
 
 ```ts
-import '@liiift-studio/mac-os9-ui/styles';
-import '@liiift-studio/mac-os9-ui/webfonts';
+import '@overpunch/mac-os9-ui/styles';
+import '@overpunch/mac-os9-ui/webfonts';
 ```
 
 This makes a request to `fonts.googleapis.com`. Under a strict CSP you will
@@ -136,5 +136,5 @@ Self-hosting those two families instead is recommended for production.
 The font files are published, so you can reference them directly:
 
 ```
-@liiift-studio/mac-os9-ui/fonts/Pixel/Normal/Pixel.woff2
+@overpunch/mac-os9-ui/fonts/Pixel/Normal/Pixel.woff2
 ```

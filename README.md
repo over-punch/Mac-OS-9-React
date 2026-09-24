@@ -5,22 +5,22 @@ A pixel-perfect Mac OS 9 UI component library for React and TypeScript. Bring au
 TypeScript · Zero runtime dependencies · ~3 kB for a single component · React 18 & 19
 
 [![CI](https://github.com/Liiift-Studio/Mac-OS-9-React/actions/workflows/ci.yml/badge.svg)](https://github.com/Liiift-Studio/Mac-OS-9-React/actions/workflows/ci.yml)
-[![npm](https://img.shields.io/npm/v/@liiift-studio/mac-os9-ui.svg)](https://www.npmjs.com/package/@liiift-studio/mac-os9-ui)
+[![npm](https://img.shields.io/npm/v/@overpunch/mac-os9-ui.svg)](https://www.npmjs.com/package/@overpunch/mac-os9-ui)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![React 18 | 19](https://img.shields.io/badge/React-18%20%7C%2019-149eca.svg)](#compatibility-and-footprint)
 [![No runtime dependencies](https://img.shields.io/badge/runtime%20deps-0-brightgreen.svg)](#compatibility-and-footprint)
 
-**[Live site](https://liiift-studio.github.io/Mac-OS-9-React/)** · **[Storybook](https://liiift-studio.github.io/Mac-OS-9-React/storybook/)** · **[npm](https://www.npmjs.com/package/@liiift-studio/mac-os9-ui)** · **[Changelog](./CHANGELOG.md)**
+**[Live site](https://liiift-studio.github.io/Mac-OS-9-React/)** · **[Storybook](https://liiift-studio.github.io/Mac-OS-9-React/storybook/)** · **[npm](https://www.npmjs.com/package/@overpunch/mac-os9-ui)** · **[Changelog](./CHANGELOG.md)**
 
 ![A Preferences window with tabs, a text field, a dropdown and checkboxes, beside windows showing button variants, sizes, icon and loading states, and a radio group](https://raw.githubusercontent.com/Liiift-Studio/Mac-OS-9-React/main/assets/components.png?v=1)
 
 ```bash
-npm install @liiift-studio/mac-os9-ui
+npm install @overpunch/mac-os9-ui
 ```
 
 ```tsx
-import '@liiift-studio/mac-os9-ui/styles';
-import { Window, Button } from '@liiift-studio/mac-os9-ui';
+import '@overpunch/mac-os9-ui/styles';
+import { Window, Button } from '@overpunch/mac-os9-ui';
 
 <Window title="My Application">
 	<Button variant="primary">Click Me</Button>
@@ -64,7 +64,7 @@ The stylesheet is a side-effect import and belongs in your root layout:
 
 ```tsx
 // app/layout.tsx — a server component
-import '@liiift-studio/mac-os9-ui/styles';
+import '@overpunch/mac-os9-ui/styles';
 ```
 
 ### Tree-shaking
@@ -72,7 +72,7 @@ import '@liiift-studio/mac-os9-ui/styles';
 Import what you need from the package root; your bundler drops the rest.
 
 ```ts
-import { Button } from '@liiift-studio/mac-os9-ui';
+import { Button } from '@overpunch/mac-os9-ui';
 ```
 
 That produces about **3 KB** of JavaScript, against 102 kB for the whole
@@ -171,7 +171,7 @@ setting is not the default, because it depends on something only you know.
 ![Thirty-nine pixel-art icons on a Mac OS 9 desktop background, each labelled with its registry name: close, trash, search, folder, document, disk, arrows, alerts, media controls and more](https://raw.githubusercontent.com/Liiift-Studio/Mac-OS-9-React/main/assets/icons.png?v=1)
 
 ```tsx
-import { IconLibrary, getAllIconNames } from '@liiift-studio/mac-os9-ui';
+import { IconLibrary, getAllIconNames } from '@overpunch/mac-os9-ui';
 
 <IconLibrary icon="folder" size="lg" />;
 <IconLibrary icon="trash" label="Move to Trash" />;
@@ -194,7 +194,7 @@ uncontrolled (`defaultOpenMenuIndex`).
 
 ```tsx
 import { useState } from 'react';
-import { Window, MenuBar, MenuItem } from '@liiift-studio/mac-os9-ui';
+import { Window, MenuBar, MenuItem } from '@overpunch/mac-os9-ui';
 
 function MyApp() {
 	const [openMenu, setOpenMenu] = useState<number | undefined>();
@@ -261,7 +261,7 @@ The same menu as data:
 ### Using Form Controls
 
 ```tsx
-import { Button, Checkbox, TextField, Select } from '@liiift-studio/mac-os9-ui';
+import { Button, Checkbox, TextField, Select } from '@overpunch/mac-os9-ui';
 import { useState } from 'react';
 
 function MyForm() {
@@ -311,7 +311,7 @@ focus to whatever opened it, and locks page scroll without the layout shifting.
 ![A Mac OS 9 alert reading Save changes? with the message Do you want to save the changes you made to Read Me, and Don't Save, Cancel and Save buttons](https://raw.githubusercontent.com/Liiift-Studio/Mac-OS-9-React/main/assets/dialog.png?v=1)
 
 ```tsx
-import { Dialog, Button } from '@liiift-studio/mac-os9-ui';
+import { Dialog, Button } from '@overpunch/mac-os9-ui';
 import { useState } from 'react';
 
 function MyComponent() {
@@ -352,7 +352,7 @@ disabled behaviour:
 
 ```tsx
 import Link from 'next/link';
-import { Button } from '@liiift-studio/mac-os9-ui';
+import { Button } from '@overpunch/mac-os9-ui';
 
 <Button asChild variant="primary">
 	<Link href="/dashboard">Go to Dashboard</Link>
@@ -364,7 +364,7 @@ import { Button } from '@liiift-studio/mac-os9-ui';
 Wrap them in a `WindowManagerProvider` and clicking a window brings it forward:
 
 ```tsx
-import { WindowManagerProvider, Window } from '@liiift-studio/mac-os9-ui';
+import { WindowManagerProvider, Window } from '@overpunch/mac-os9-ui';
 
 <WindowManagerProvider>
 	<Window id="finder" title="Finder" draggable>
@@ -387,7 +387,7 @@ Import the component styles **once** in your application's entry point:
 
 ```tsx
 // In your app's main file (e.g., main.tsx, _app.tsx, app/layout.tsx)
-import '@liiift-studio/mac-os9-ui/styles';
+import '@overpunch/mac-os9-ui/styles';
 ```
 
 This provides:
@@ -403,13 +403,13 @@ This needs to be done only once at the root of your application. All components 
 
 | Import                                   | What you get                                                  |
 | ---------------------------------------- | ------------------------------------------------------------- |
-| `@liiift-studio/mac-os9-ui/styles`       | Everything: tokens, `@font-face`, component styles, utilities |
-| `@liiift-studio/mac-os9-ui/tokens`       | Design tokens only — no `@font-face`, no font downloads       |
-| `@liiift-studio/mac-os9-ui/base`         | Optional global `html` / `body` / box-sizing styles           |
-| `@liiift-studio/mac-os9-ui/webfonts`     | Opt-in Google Fonts for IBM Plex and EB Garamond              |
-| `@liiift-studio/mac-os9-ui/fonts/*`      | The raw font files                                            |
-| `@liiift-studio/mac-os9-ui/platinum.css` | The framework-agnostic paint: stable `mac-` class names       |
-| `@liiift-studio/mac-os9-ui/platinum`     | The framework-agnostic behaviour: plain DOM modules, no React |
+| `@overpunch/mac-os9-ui/styles`       | Everything: tokens, `@font-face`, component styles, utilities |
+| `@overpunch/mac-os9-ui/tokens`       | Design tokens only — no `@font-face`, no font downloads       |
+| `@overpunch/mac-os9-ui/base`         | Optional global `html` / `body` / box-sizing styles           |
+| `@overpunch/mac-os9-ui/webfonts`     | Opt-in Google Fonts for IBM Plex and EB Garamond              |
+| `@overpunch/mac-os9-ui/fonts/*`      | The raw font files                                            |
+| `@overpunch/mac-os9-ui/platinum.css` | The framework-agnostic paint: stable `mac-` class names       |
+| `@overpunch/mac-os9-ui/platinum`     | The framework-agnostic behaviour: plain DOM modules, no React |
 
 **Using the look without React.** The token entry point is framework-neutral and
 supported: `/tokens` is plain custom properties, and `/base` and `/webfonts` are
@@ -510,7 +510,7 @@ the naming convention and the override recipe, is at the top of
 from JavaScript:
 
 ```ts
-import { tokens, colors, spacing } from '@liiift-studio/mac-os9-ui';
+import { tokens, colors, spacing } from '@overpunch/mac-os9-ui';
 ```
 
 ### Targeting inner elements
@@ -581,8 +581,8 @@ If you want the **full Mac OS 9 experience** with global styles applied to your 
 
 ```tsx
 // In your app's main file
-import '@liiift-studio/mac-os9-ui/styles'; // Required
-import '@liiift-studio/mac-os9-ui/base'; // Optional global styles
+import '@overpunch/mac-os9-ui/styles'; // Required
+import '@overpunch/mac-os9-ui/base'; // Optional global styles
 ```
 
 The optional base styles include:
@@ -703,7 +703,7 @@ Accessibility bugs are worth reporting — [open an issue](https://github.com/Li
 All components are written in TypeScript and include full type definitions. Import types as needed:
 
 ```tsx
-import type { ButtonProps, WindowProps } from '@liiift-studio/mac-os9-ui';
+import type { ButtonProps, WindowProps } from '@overpunch/mac-os9-ui';
 ```
 
 Several components are generic, so your own types survive into the callbacks:
@@ -831,7 +831,7 @@ Other breaking changes in 1.0:
 
 | Change                                                                                      | What to do                                                                                                  |
 | ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| Google Fonts no longer imported by `/styles`                                                | add `import '@liiift-studio/mac-os9-ui/webfonts'` if you use `--font-body`, `--font-title` or `--font-mono` |
+| Google Fonts no longer imported by `/styles`                                                | add `import '@overpunch/mac-os9-ui/webfonts'` if you use `--font-body`, `--font-title` or `--font-mono` |
 | `Variant` is `'default' \| 'primary' \| 'danger'`, `Size` is `'sm' \| 'md' \| 'lg'`         | they now match what the components always accepted                                                          |
 | `BaseComponentProps`, `RenderState`, `State`, `ButtonRef` and the other ref aliases removed | nothing referenced them                                                                                     |
 | `ComponentClasses` index signature removed                                                  | a misspelled slot is now a compile error                                                                    |
@@ -851,8 +851,8 @@ relied on that — a Mac OS 9 body background, the responsive `<html>` font
 scaling — add the opt-in import:
 
 ```tsx
-import '@liiift-studio/mac-os9-ui/styles';
-import '@liiift-studio/mac-os9-ui/base'; // restores the previous global styles
+import '@overpunch/mac-os9-ui/styles';
+import '@overpunch/mac-os9-ui/base'; // restores the previous global styles
 ```
 
 ## Development

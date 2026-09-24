@@ -1,7 +1,7 @@
 // Mac OS 9 UI Component Library
 // Main export file for all components and utilities
 
-// Note: Users must import '@liiift-studio/mac-os9-ui/styles' in their app entry point
+// Note: Users must import '@overpunch/mac-os9-ui/styles' in their app entry point
 // This import is for internal use during development/build only
 import './styles/theme.css';
 

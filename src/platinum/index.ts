@@ -2,8 +2,8 @@
 //
 // Two halves, and the second is the point:
 //
-//   @liiift-studio/mac-os9-ui/platinum.css   the paint, with stable class names
-//   @liiift-studio/mac-os9-ui/platinum       the behaviour, as plain modules
+//   @overpunch/mac-os9-ui/platinum.css   the paint, with stable class names
+//   @overpunch/mac-os9-ui/platinum       the behaviour, as plain modules
 //
 // The README's position on CSS-only kits is that they hand you the half that
 // matters least — a div that looks like a button is not a button. These

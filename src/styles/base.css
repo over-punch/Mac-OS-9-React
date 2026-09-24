@@ -8,8 +8,8 @@
  * to your entire application.
  * 
  * Usage:
- *   import '@liiift-studio/mac-os9-ui/styles';  // Required
- *   import '@liiift-studio/mac-os9-ui/base';    // Optional global styles
+ *   import '@overpunch/mac-os9-ui/styles';  // Required
+ *   import '@overpunch/mac-os9-ui/base';    // Optional global styles
  * 
  * What this includes:
  * - Universal box-sizing reset

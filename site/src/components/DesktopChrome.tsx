@@ -6,7 +6,7 @@ import { MenuBar, type Menu } from '@lib/components/MenuBar';
 import { IconLibrary } from '@lib/components/Icon';
 import { FLAVOURS, FLAVOUR_LABELS, applyFlavour, type Flavour } from '../flavours';
 
-const PKG = '@liiift-studio/mac-os9-ui';
+const PKG = '@overpunch/mac-os9-ui';
 
 // Injected by Vite from package.json, so the menu bar can't show a stale
 // version after a release.

@@ -22,7 +22,7 @@ This guide explains how to customize and target sub-elements within Mac OS 9 UI 
 Import the component styles once in your application:
 
 ```tsx
-import '@liiift-studio/mac-os9-ui/styles';
+import '@overpunch/mac-os9-ui/styles';
 ```
 
 This includes:
@@ -36,8 +36,8 @@ This includes:
 For the full Mac OS 9 experience with global HTML/body styles:
 
 ```tsx
-import '@liiift-studio/mac-os9-ui/styles';  // Required
-import '@liiift-studio/mac-os9-ui/base';    // Optional
+import '@overpunch/mac-os9-ui/styles';  // Required
+import '@overpunch/mac-os9-ui/base';    // Optional
 ```
 
 The optional `base` styles include:
@@ -553,7 +553,7 @@ const renderCell = useCallback((value, item, column, state) => {
 The library exports helper utilities:
 
 ```tsx
-import { mergeClasses, createClassBuilder } from '@liiift-studio/mac-os9-ui';
+import { mergeClasses, createClassBuilder } from '@overpunch/mac-os9-ui';
 
 // Merge multiple class names
 const className = mergeClasses('base', isActive && 'active', 'custom');
@@ -577,7 +577,7 @@ import type {
 	HeaderCellDefaultProps,
 	WindowClasses,
 	FolderListClasses,
-} from '@liiift-studio/mac-os9-ui';
+} from '@overpunch/mac-os9-ui';
 ```
 
 ---

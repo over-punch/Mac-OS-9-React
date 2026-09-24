@@ -25,7 +25,7 @@ Modern web developers who want to create retro-styled applications or nostalgic 
 ### User Experience Goals
 
 #### For Developers
-- **Simple Installation**: `npm install @liiift-studio/mac-os9-ui`
+- **Simple Installation**: `npm install @overpunch/mac-os9-ui`
 - **Easy Integration**: Import components and styles, use immediately
 - **Predictable API**: Consistent props and behavior across components
 - **Comprehensive Documentation**: Storybook examples for every variant

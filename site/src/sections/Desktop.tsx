@@ -391,8 +391,8 @@ const SECTIONS: Record<DesktopSection, { window: WindowId; tab?: number }> = {
 };
 
 /** The four lines that actually get you running. */
-const QUICKSTART = `import '@liiift-studio/mac-os9-ui/styles';
-import { Window, Button } from '@liiift-studio/mac-os9-ui';
+const QUICKSTART = `import '@overpunch/mac-os9-ui/styles';
+import { Window, Button } from '@overpunch/mac-os9-ui';
 
 <Window title="Untitled" draggable resizable>
   <Button variant="primary">Save</Button>

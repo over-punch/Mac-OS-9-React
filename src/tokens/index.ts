@@ -76,7 +76,7 @@ export const typography = {
 			"'Pixel', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif",
 
 		// Body text. Mirrors --font-body. IBM Plex Sans is only present when
-		// the consumer opts in to '@liiift-studio/mac-os9-ui/webfonts'.
+		// the consumer opts in to '@overpunch/mac-os9-ui/webfonts'.
 		body: "'IBM Plex Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif",
 
 		// Display / headline face. Mirrors --font-display.

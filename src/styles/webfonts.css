@@ -4,7 +4,7 @@
  * OPT-IN ONLY. Importing this file makes a runtime request to
  * fonts.googleapis.com, which is a third-party dependency with privacy,
  * availability, and render-blocking implications. It is deliberately NOT
- * part of `@liiift-studio/mac-os9-ui/styles`.
+ * part of `@overpunch/mac-os9-ui/styles`.
  *
  * The library's own components never depend on these families — the bundled,
  * self-hosted Pixel face covers every component surface. These are here only
@@ -12,8 +12,8 @@
  * editorial copy via --font-body, --font-title, and --font-mono.
  *
  * Usage:
- *   import '@liiift-studio/mac-os9-ui/styles';
- *   import '@liiift-studio/mac-os9-ui/webfonts';
+ *   import '@overpunch/mac-os9-ui/styles';
+ *   import '@overpunch/mac-os9-ui/webfonts';
  *
  * Self-hosting these families instead is recommended for production.
  */
