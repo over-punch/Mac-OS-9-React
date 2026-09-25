@@ -10,7 +10,7 @@ TypeScript · Zero runtime dependencies · ~3 kB for a single component · React
 [![React 18 | 19](https://img.shields.io/badge/React-18%20%7C%2019-149eca.svg)](#compatibility-and-footprint)
 [![No runtime dependencies](https://img.shields.io/badge/runtime%20deps-0-brightgreen.svg)](#compatibility-and-footprint)
 
-**[Live site](https://liiift-studio.github.io/Mac-OS-9-React/)** · **[Storybook](https://liiift-studio.github.io/Mac-OS-9-React/storybook/)** · **[npm](https://www.npmjs.com/package/@liiift-studio/mac-os9-ui)** · **[Changelog](./CHANGELOG.md)**
+**[Live site](https://over-punch.github.io/Mac-OS-9-React/)** · **[Storybook](https://over-punch.github.io/Mac-OS-9-React/storybook/)** · **[npm](https://www.npmjs.com/package/@liiift-studio/mac-os9-ui)** · **[Changelog](./CHANGELOG.md)**
 
 ![A Preferences window with tabs, a text field, a dropdown and checkboxes, beside windows showing button variants, sizes, icon and loading states, and a radio group](https://raw.githubusercontent.com/Liiift-Studio/Mac-OS-9-React/main/assets/components.png?v=1)
 
@@ -35,7 +35,7 @@ import { Window, Button } from '@liiift-studio/mac-os9-ui';
 - 🎭 **Dual Module Support** - ESM and CommonJS builds included
 - 🪶 **No runtime dependencies** - React and React DOM are the only peers
 - 🎚️ **Themeable** - every value is a CSS custom property, in three tiers
-- 📖 **Storybook Docs** - [browse every component](https://liiift-studio.github.io/Mac-OS-9-React/storybook/), interactively
+- 📖 **Storybook Docs** - [browse every component](https://over-punch.github.io/Mac-OS-9-React/storybook/), interactively
 - 🧪 **Tested** - 804 tests, including an axe sweep over every rendering component and WCAG contrast assertions on the palette
 
 ![A Mac OS 9 menu bar with the File menu open showing New Folder, Open, Print and a checked Get Info item, beside a Macintosh HD window containing a sortable file list](https://raw.githubusercontent.com/Liiift-Studio/Mac-OS-9-React/main/assets/window.png?v=1)
@@ -88,12 +88,12 @@ root import already gives you only what you use.
 
 ## The demo is the library
 
-The [landing site](https://liiift-studio.github.io/Mac-OS-9-React/) is built out
+The [landing site](https://over-punch.github.io/Mac-OS-9-React/) is built out
 of these components — the windows are `Window`, the component index is a
 `ListView`, the controls are the real form controls. Scroll and it zooms into
 the machine.
 
-[![The Mac OS 9 UI landing site: a beige CRT monitor on a dark background, its screen showing a Mac OS 9 desktop with a menu bar and a window](https://raw.githubusercontent.com/Liiift-Studio/Mac-OS-9-React/main/assets/hero.png?v=1)](https://liiift-studio.github.io/Mac-OS-9-React/)
+[![The Mac OS 9 UI landing site: a beige CRT monitor on a dark background, its screen showing a Mac OS 9 desktop with a menu bar and a window](https://raw.githubusercontent.com/Liiift-Studio/Mac-OS-9-React/main/assets/hero.png?v=1)](https://over-punch.github.io/Mac-OS-9-React/)
 
 ## Components
 
@@ -921,8 +921,8 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## Links
 
-- [Live site](https://liiift-studio.github.io/Mac-OS-9-React/)
-- [Storybook](https://liiift-studio.github.io/Mac-OS-9-React/storybook/)
+- [Live site](https://over-punch.github.io/Mac-OS-9-React/)
+- [Storybook](https://over-punch.github.io/Mac-OS-9-React/storybook/)
 - [GitHub Repository](https://github.com/Liiift-Studio/Mac-OS-9-React)
 - [Report Issues](https://github.com/Liiift-Studio/Mac-OS-9-React/issues)
 - [Changelog](./CHANGELOG.md)
