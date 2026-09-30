@@ -31,7 +31,6 @@
       "mcp__claude_ai_Vercel__list_deployments",
       "Bash(sed -i '' '130s|skipIfFileContains: \"^['\"'\"'\\\\\\\\\"]use client['\"'\"'\\\\\\\\\"]\"|skipIfFileContains: \"^['\"'\"'\\\\\\\\\"]use client['\"'\"'\\\\\\\\\"]|new URL\\(request\"|' /Users/quinn-keaveney/.claude/plugins/cache/vercel-vercel-plugin/vercel-plugin/0.32.0/skills/nextjs/overlay.yaml)",
       "Bash(sed -i '' '135s|skipIfFileContains: \"^['\"'\"'\\\\\\\\\"]use client['\"'\"'\\\\\\\\\"]\"|skipIfFileContains: \"^['\"'\"'\\\\\\\\\"]use client['\"'\"'\\\\\\\\\"]|new URL\\(request\"|' /Users/quinn-keaveney/.claude/plugins/cache/vercel-vercel-plugin/vercel-plugin/0.32.0/skills/nextjs/overlay.yaml)"
-    
     ],
     "deny": [
       "Bash(rm -rf *)",
@@ -52,5 +51,10 @@
   "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "firecrawl"
-  ]
+  ],
+  "attribution": {
+    "commit": "",
+    "pr": "",
+    "sessionUrl": false
+  }
 }
