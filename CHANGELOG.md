@@ -19,6 +19,11 @@
   `classes.listbox` that relied on inherited page typography should set it
   directly.
 
+  It also moves to the popover layer (`--z-index-popover`) so a Select inside
+  a modal still shows its options above it. Theme tokens scoped to an ancestor
+  rather than `:root` no longer reach the listbox, the same trade-off
+  `ContextualMenu` already makes.
+
 ## 2.6.0
 
 ### Minor Changes

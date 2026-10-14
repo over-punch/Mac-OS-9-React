@@ -281,7 +281,8 @@
 /* The listbox is portalled to <body>, so it inherits nothing from the
  * wrapper and sets its own type to match the trigger. */
 .listbox {
-	z-index: 1000;
+	/* Popover layer, like ContextualMenu: portalled, it must clear a modal. */
+	z-index: var(--z-index-popover);
 	min-width: 120px;
 	font-family: var(--font-system);
 	font-weight: var(--font-weight-normal);
