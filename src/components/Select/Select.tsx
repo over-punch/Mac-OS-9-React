@@ -250,15 +250,22 @@ function SelectInner<TValue extends string | number = string>(
 	);
 
 	// Scroll the active option into view as the cursor moves, so keyboard
-	// navigation through a long list stays visible.
+	// navigation through a long list stays visible. Only the listbox scrolls:
+	// scrollIntoView also scrolls every ancestor, and on the first open the
+	// portalled listbox can still be unpositioned at the end of <body>, which
+	// threw the whole page to its bottom.
 	useEffect(() => {
 		if (!isOpen || activeIndex < 0) return;
-		const node = listboxRef.current?.querySelector<HTMLElement>(
-			`[data-option-index="${activeIndex}"]`
-		);
-		// Optional-called: scrollIntoView is absent in non-browser DOM
-		// implementations, and losing the scroll nicety must not throw.
-		node?.scrollIntoView?.({ block: 'nearest' });
+		const listbox = listboxRef.current;
+		const node = listbox?.querySelector<HTMLElement>(`[data-option-index="${activeIndex}"]`);
+		if (!listbox || !node) return;
+		const listRect = listbox.getBoundingClientRect();
+		const nodeRect = node.getBoundingClientRect();
+		if (nodeRect.top < listRect.top) {
+			listbox.scrollTop -= listRect.top - nodeRect.top;
+		} else if (nodeRect.bottom > listRect.bottom) {
+			listbox.scrollTop += nodeRect.bottom - listRect.bottom;
+		}
 	}, [isOpen, activeIndex]);
 
 	// Type-ahead buffer: typing "ba" jumps to the first option starting "ba".
