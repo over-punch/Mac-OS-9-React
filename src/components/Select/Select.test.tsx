@@ -47,6 +47,27 @@ describe('Select', () => {
 		expect(screen.getAllByRole('option')).toHaveLength(4);
 	});
 
+	it('portals the listbox to body so a transformed ancestor cannot displace it', () => {
+		const { container } = render(
+			<div style={{ transform: 'translateZ(0)' }}>
+				<Select label="Colour" options={options} />
+			</div>
+		);
+		fireEvent.click(trigger());
+		const listbox = screen.getByRole('listbox');
+		expect(listbox.parentElement).toBe(document.body);
+		expect(container.contains(listbox)).toBe(false);
+	});
+
+	it('selects an option clicked inside the portalled listbox', () => {
+		const onValueChange = vi.fn();
+		render(<Select options={options} onValueChange={onValueChange} />);
+		fireEvent.click(trigger());
+		fireEvent.click(screen.getByRole('option', { name: /Green/ }));
+		expect(onValueChange).toHaveBeenCalledWith('green');
+		expect(screen.queryByRole('listbox')).toBeNull();
+	});
+
 	it('takes its accessible name from the label', () => {
 		render(<Select label="Colour" options={options} />);
 		expect(trigger()).toHaveAccessibleName('Colour');

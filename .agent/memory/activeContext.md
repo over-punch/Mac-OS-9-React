@@ -3,6 +3,18 @@
 ## Current Focus
 2.2.1 is published and the site is deployed. Nothing is in flight.
 
+## Recent Changes (2026-10-13)
+
+### Select listbox portalled to body (branch `fix/select-listbox-portal`)
+Reported from The Designers Foundry WIP page: the style dropdown opened
+hundreds of px from its trigger. `useMenuPosition` places the listbox with
+fixed, viewport-measured coords; a transformed/filtered/contained ancestor
+re-bases fixed onto itself. The listbox now goes through `createPortal` to
+`document.body` (same as ContextualMenu), and `.listbox` / `.listbox--{size}`
+set their own type since nothing is inherited. Two new Select tests. Patch
+changeset added. `without-react.test.ts` fails on Windows checkouts only
+(CRLF vs its `\n` regex); unrelated.
+
 ## Recent Changes (2026-08-24, later)
 
 ### Figma kit caught up

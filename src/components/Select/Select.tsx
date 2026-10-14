@@ -11,12 +11,16 @@
 //    'red' | 'blue' survives into onValueChange instead of widening (#49)
 //  - A hidden input carries the value, so the control still participates in
 //    native form submission and FormData exactly as the old <select> did
+//  - The listbox is portalled to <body>. Its fixed position is measured
+//    against the viewport, and any transformed/filtered/contained ancestor
+//    would otherwise become its containing block and displace it
 
 // Note: no per-file 'use client' directive. The library ships as a single
 // bundle and Rollup applies the "use client" banner to the whole output,
 // so per-file directives are silently dropped at bundle time.
 
 import React, { forwardRef, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useOutsideClick } from '../../hooks/useOutsideClick';
 import { useMenuPosition } from '../../hooks/useMenuPosition';
 import { mergeClasses } from '../../utils/classNames';
@@ -427,11 +431,17 @@ function SelectInner<TValue extends string | number = string>(
 				<span className={styles.arrow} aria-hidden="true" />
 			</button>
 
-			{isOpen && (
+			{/* Portalled to <body> so the fixed, viewport-measured position from
+			    useMenuPosition is never re-based by a transformed, filtered or
+			    contained ancestor, which made fixed resolve against that
+			    ancestor and opened the list far from its trigger. */}
+			{isOpen &&
+				typeof document !== 'undefined' &&
+				createPortal(
 				<div
 					ref={listboxRef}
 					id={listboxId}
-					className={mergeClasses(styles.listbox, classes?.listbox)}
+					className={mergeClasses(styles.listbox, styles[`listbox--${size}`], classes?.listbox)}
 					style={popupStyle}
 					role="listbox"
 					aria-labelledby={label ? labelId : undefined}
@@ -482,7 +492,8 @@ function SelectInner<TValue extends string | number = string>(
 							</React.Fragment>
 						);
 					})}
-				</div>
+				</div>,
+				document.body
 			)}
 
 			{labelElement && labelPosition === 'right' && labelElement}
