@@ -281,6 +281,11 @@
 /* The listbox is portalled to <body>, so it inherits nothing from the
  * wrapper and sets its own type to match the trigger. */
 .listbox {
+	/* Fixed at the viewport origin until useMenuPosition measures it, so the
+	 * first, unpositioned render never sits in flow at the end of <body>. */
+	position: fixed;
+	top: 0;
+	left: 0;
 	/* Popover layer, like ContextualMenu: portalled, it must clear a modal. */
 	z-index: var(--z-index-popover);
 	min-width: 120px;

@@ -59,6 +59,20 @@ describe('Select', () => {
 		expect(container.contains(listbox)).toBe(false);
 	});
 
+	it('never scrolls the page when opening or moving through the list', () => {
+		const scrollIntoView = vi.fn();
+		const original = Element.prototype.scrollIntoView;
+		Element.prototype.scrollIntoView = scrollIntoView;
+		try {
+			render(<Select options={options} value="green" />);
+			fireEvent.click(trigger());
+			fireEvent.keyDown(trigger(), { key: 'ArrowDown' });
+			expect(scrollIntoView).not.toHaveBeenCalled();
+		} finally {
+			Element.prototype.scrollIntoView = original;
+		}
+	});
+
 	it('selects an option clicked inside the portalled listbox', () => {
 		const onValueChange = vi.fn();
 		render(<Select options={options} onValueChange={onValueChange} />);
