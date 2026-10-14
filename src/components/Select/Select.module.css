@@ -133,6 +133,21 @@
 	line-height: var(--line-height-normal);
 }
 
+.listbox--sm {
+	font-size: var(--font-size-xs);
+	line-height: var(--line-height-tight);
+}
+
+.listbox--md {
+	font-size: var(--font-size-md);
+	line-height: var(--line-height-snug);
+}
+
+.listbox--lg {
+	font-size: var(--font-size-lg);
+	line-height: var(--line-height-normal);
+}
+
 .select--full-width {
 	width: 100%;
 }
@@ -263,9 +278,15 @@
 
 /* Drawn by the library rather than the OS, so the open list keeps the
  * Mac OS 9 look (issue #38). Positioned by useMenuPosition. */
+/* The listbox is portalled to <body>, so it inherits nothing from the
+ * wrapper and sets its own type to match the trigger. */
 .listbox {
-	z-index: 1000;
+	/* Popover layer, like ContextualMenu: portalled, it must clear a modal. */
+	z-index: var(--z-index-popover);
 	min-width: 120px;
+	font-family: var(--font-system);
+	font-weight: var(--font-weight-normal);
+	color: var(--color-text);
 	padding: var(--border-width-thin) 0;
 	background-color: var(--color-surface);
 	border: var(--border-width-thin) solid var(--color-border);
