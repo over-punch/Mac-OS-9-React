@@ -3,6 +3,18 @@
 ## Current Focus
 2.2.1 is published and the site is deployed. Nothing is in flight.
 
+## Recent Changes (2026-10-14)
+
+### `?boot=1` auto-boot link (branch `feat/boot-link`, site only)
+overpunch.ca's Loose Parts page links its iMac to the demo with `?boot=1`.
+App reads the param at module load and strips it with `replaceState`, so a
+reload or copied URL opens the normal hero. MachineStage's `autoBoot` prop
+waits for `gl`, holds 500ms, then drives the real `window.scrollTo` (with
+`behavior: 'instant'`, since html has `scroll-behavior: smooth`) over 1.5s to
+the offset where progress hits 1. Wheel/touch/key/pointerdown cancel it. On
+finish (and in the flat/reduced-motion path) focus goes to
+`.machineScreen__page` (tabindex -1, preventScroll).
+
 ## Recent Changes (2026-10-13)
 
 ### Select listbox portalled to body (branch `fix/select-listbox-portal`)

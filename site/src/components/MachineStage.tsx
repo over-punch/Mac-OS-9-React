@@ -20,6 +20,11 @@
 // WebGL is loaded on demand and is never on the critical path: if it fails, is
 // unsupported, or the visitor prefers reduced motion, the desktop is simply
 // there, at full size, with no machine around it.
+//
+// `autoBoot` plays the zoom without the visitor scrolling, for links that
+// promise to open straight into the desktop. It drives the real scroll
+// position rather than a parallel animation, so the page ends exactly where a
+// scrolling visitor would be and scrolling back up reverses it as usual.
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
@@ -32,6 +37,8 @@ export interface MachineStageProps {
 	above: ReactNode;
 	/** Copy rendered below the machine in the hero. */
 	below: ReactNode;
+	/** Scroll through the zoom automatically and hand focus to the desktop. */
+	autoBoot?: boolean;
 }
 
 /** Fraction of the scroll track over which the zoom completes. */
@@ -52,6 +59,17 @@ const TILT_EASE = 0.09;
 /** Clear space kept between the machine and the copy above and below it. */
 const HERO_GUTTER = 16;
 
+/** Milliseconds the hero is held before an auto-boot starts moving. */
+const AUTO_BOOT_DELAY = 500;
+
+/** Milliseconds an auto-boot takes to scroll from the hero to the release. */
+const AUTO_BOOT_DURATION = 1500;
+
+/** Ease-in-out cubic, for t in [0, 1]. */
+function easeInOutCubic(t: number): number {
+	return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+}
+
 function clamp(value: number, min: number, max: number): number {
 	return Math.min(max, Math.max(min, value));
 }
@@ -66,7 +84,7 @@ function hasWebGL(): boolean {
 	}
 }
 
-export function MachineStage({ children, above, below }: MachineStageProps) {
+export function MachineStage({ children, above, below, autoBoot = false }: MachineStageProps) {
 	// Created once and never re-created. `host` is the whole 4:3 aperture and
 	// is what gets moved between homes; `page` is the viewport-sized region
 	// inside it that React actually portals the desktop into. The rest of the
@@ -112,6 +130,10 @@ export function MachineStage({ children, above, below }: MachineStageProps) {
 		let frame: number | null = null;
 		let cancelled = false;
 
+		// Auto-boot timers, and the input listeners that hand control back.
+		let bootDelay: number | null = null;
+		let bootFrame: number | null = null;
+
 		// null rather than false so the first call always applies the
 		// attributes, instead of being skipped by the no-op guard.
 		let released: boolean | null = null;
@@ -148,6 +170,12 @@ export function MachineStage({ children, above, below }: MachineStageProps) {
 			return clamp(raw / ZOOM_COMPLETE_AT, 0, 1);
 		};
 
+		/** Moves focus to the released desktop without scrolling anything. */
+		const focusDesktop = () => {
+			if (!page.hasAttribute('tabindex')) page.setAttribute('tabindex', '-1');
+			page.focus({ preventScroll: true });
+		};
+
 		// --- Flat fallback: no machine, just the desktop ---------------------
 		const runFlat = () => {
 			release.appendChild(page);
@@ -156,6 +184,9 @@ export function MachineStage({ children, above, below }: MachineStageProps) {
 			stage.dataset.released = 'true';
 			released = true;
 			setMode('flat');
+			// The desktop already fills the viewport here, so booting is only
+			// a matter of where focus starts.
+			if (autoBoot) focusDesktop();
 		};
 
 		if (reduceMotion.matches || !hasWebGL()) {
@@ -207,6 +238,58 @@ export function MachineStage({ children, above, below }: MachineStageProps) {
 			schedule();
 		};
 
+		// --- Auto-boot -------------------------------------------------------
+		const bootInputs = ['wheel', 'touchstart', 'keydown', 'pointerdown'] as const;
+
+		const stopAutoBoot = () => {
+			if (bootDelay !== null) window.clearTimeout(bootDelay);
+			if (bootFrame !== null) cancelAnimationFrame(bootFrame);
+			bootDelay = null;
+			bootFrame = null;
+			for (const type of bootInputs) window.removeEventListener(type, stopAutoBoot, true);
+		};
+
+		/** Scroll offset at which the zoom is complete and the desktop released. */
+		const releaseScrollY = () => {
+			const rect = track.getBoundingClientRect();
+			const scrollable = rect.height - window.innerHeight;
+			return Math.ceil(rect.top + window.scrollY + scrollable * ZOOM_COMPLETE_AT);
+		};
+
+		const startAutoBoot = () => {
+			// Any input from the visitor means they have taken over.
+			for (const type of bootInputs) {
+				window.addEventListener(type, stopAutoBoot, { capture: true, passive: true });
+			}
+
+			bootDelay = window.setTimeout(() => {
+				bootDelay = null;
+				const from = window.scrollY;
+				const to = releaseScrollY();
+				const start = performance.now();
+
+				const step = (now: number) => {
+					const t = clamp((now - start) / AUTO_BOOT_DURATION, 0, 1);
+					// `instant` overrides the page's smooth scroll-behavior, which
+					// would otherwise turn every frame into its own animation.
+					window.scrollTo({ top: from + (to - from) * easeInOutCubic(t), behavior: 'instant' });
+
+					if (t < 1) {
+						bootFrame = requestAnimationFrame(step);
+						return;
+					}
+
+					stopAutoBoot();
+					// Apply now rather than on the next frame, so the page is
+					// released (and no longer inert) before focus moves into it.
+					apply();
+					if (released) focusDesktop();
+				};
+
+				bootFrame = requestAnimationFrame(step);
+			}, AUTO_BOOT_DELAY);
+		};
+
 		const onResize = () => {
 			handle?.resize();
 			const band = measureBand();
@@ -235,6 +318,8 @@ export function MachineStage({ children, above, below }: MachineStageProps) {
 				window.addEventListener('resize', onResize);
 				window.addEventListener('pointermove', onPointerMove, { passive: true });
 				document.addEventListener('pointerleave', onPointerLeave);
+
+				if (autoBoot) startAutoBoot();
 			} catch (error) {
 				// A machine is decoration; the desktop is the content. Losing the
 				// first must never cost the second.
@@ -245,6 +330,7 @@ export function MachineStage({ children, above, below }: MachineStageProps) {
 
 		return () => {
 			cancelled = true;
+			stopAutoBoot();
 			window.removeEventListener('scroll', schedule);
 			window.removeEventListener('resize', onResize);
 			window.removeEventListener('pointermove', onPointerMove);
@@ -252,7 +338,7 @@ export function MachineStage({ children, above, below }: MachineStageProps) {
 			if (frame !== null) cancelAnimationFrame(frame);
 			handle?.dispose();
 		};
-	}, [host, page]);
+	}, [host, page, autoBoot]);
 
 	return (
 		<div className="zoomTrack" ref={trackRef} data-mode={mode}>
